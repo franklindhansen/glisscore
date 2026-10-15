@@ -579,7 +579,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -4084,12 +4084,21 @@ function trimLimitsFor(vs, ve) {
   return { startMax, endMin };
 }
 const trimLimits = () => trimLimitsFor(S.vStart, vEnd());
+/* Where the grabbed handle may go: the others give way, so only the video's ends stop it (room is kept for the turns behind it and ahead of it). */
 function clampTurn(i, t) {
-  const D = turnGap(), off = refOffset(), dur = vEnd();
-  const lo = Math.max(turnMin(), i > 0 ? S.turns[i - 1] + D : turnMin());
-  let hi = Math.min(dur - D + off, i < S.turns.length - 1 ? S.turns[i + 1] - D : Infinity);
+  const D = turnGap(), off = refOffset(), dur = vEnd(), n = S.turns.length;
+  const lo = turnMin() + i * D;
+  let hi = dur - D + off - (n - 1 - i) * D;
   if (hi < lo) hi = lo;
   return clamp(t, lo, hi);
+}
+/* Puts the grabbed turn at t and pushes its neighbors along, at the least gap, from where they stood when the drag began (base). */
+function nudgeTurns(base, i, t) {
+  const D = turnGap(), n = base.length, out = base.slice();
+  out[i] = t;
+  for (let j = i + 1; j < n; j++) out[j] = Math.max(base[j], out[j - 1] + D);
+  for (let j = i - 1; j >= 0; j--) out[j] = Math.min(base[j], out[j + 1] - D);
+  return out;
 }
 TL.canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
@@ -4106,7 +4115,7 @@ TL.canvas.addEventListener('pointerdown', e => {
     TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
   } else if (hi >= 0) {
-    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, dx: S.turns[hi] - x2t(p.x), moved: false, rb, live: Transport.playing };
+    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, dx: S.turns[hi] - x2t(p.x), base: S.turns.slice(), moved: false, rb, live: Transport.playing };
     if (!TL.drag.live) { S.time = clamp(S.turns[hi], S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true); }          // paused: the playhead goes to the marker. Playing: the video keeps going, untouched, while the marker moves
   } else {
     TL.drag = { kind: 'scrub', resume: Transport.playing };
@@ -4135,8 +4144,9 @@ TL.canvas.addEventListener('pointermove', e => {
     TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
   } else if (d && d.kind === 'turn') {
     const t = clampTurn(d.i, x2t(p.x) + d.dx);
-    if (t !== S.turns[d.i]) {
-      d.moved = true; S.turns[d.i] = t; S.turnsEdited = true; S.ph[d.i] = false;
+    const next = nudgeTurns(d.base, d.i, t);
+    if (next.some((v, j) => v !== S.turns[j])) {
+      d.moved = true; S.turns = next; S.turnsEdited = true; S.ph[d.i] = false;
       if (!d.live) S.time = clamp(t, S.vStart, vEnd());   // the playhead stays exactly on the marker, so you see the frame at the moment the turn starts, is halfway, or finishes (whatever the handle marks); not while the video plays
       TL.staticDirty = true; stageDirty = true; updateTimeUI(true);
     }
