@@ -1,0 +1,19 @@
+// The EQ's filters measured straight on the shared code (audio-fx.js), no browser needed: how far each kind of band strays from the analog curve it stands for, 20Hz to 20kHz,
+// with the usual digital formula and with the EQ's own (matched) one, at each sample rate. Also that every result is stable and that a real sound through the filter shows the same curve.
+// Run:  node tests/accuracy/eq-direct.js
+const G = {}; new Function('self', require('fs').readFileSync(process.argv[2] || require('path').join(__dirname, '../../audio-fx.js'), 'utf8'))(G); const { bqCoef, bqMatched, bqMag, plan } = G.KFX;
+function proto(type, f, q, gain) { const w = 2 * Math.PI * f, A = Math.pow(10, gain / 40), Qs = Math.SQRT1_2, rA = Math.sqrt(A);
+  return type === 'peaking' ? { n: [w * w, w * A / q, 1], d: [w * w, w / (A * q)] } : type === 'lowpass' ? { n: [w * w, 0, 0], d: [w * w, w / q] } : type === 'highpass' ? { n: [0, 0, 1], d: [w * w, w / q] } : type === 'lowshelf' ? { n: [A * w * w, rA / Qs * w, 1], d: [w * w / A, w / (Qs * rA)] } : { n: [A * w * w, A * rA / Qs * w, A * A], d: [A * w * w, rA / Qs * w] }; }
+const amag = (p, f) => { const W = 2 * Math.PI * f, nr = p.n[0] - p.n[2] * W * W, ni = p.n[1] * W, dr = p.d[0] - W * W, di = p.d[1] * W; return 10 * Math.log10((nr * nr + ni * ni) / (dr * dr + di * di) + 1e-30); }, db = v => 20 * Math.log10(v + 1e-15);
+let fails = 0; const sets = [['peaking', [40, 100, 1000, 5000, 10000, 16000], [0.2, 0.4, 1, 4, 10], [-12, -3, 6, 12]], ['highshelf', [2000, 6000, 10000, 15000], [0.71], [-12, 6, 12]], ['lowshelf', [60, 300, 2000], [0.71], [-12, 6, 12]], ['lowpass', [2000, 8000, 16000], [0.71, 2], [0]], ['highpass', [30, 200, 5000], [0.71, 2], [0]]];
+for (const sr of [44100, 48000, 96000]) for (const [type, fs, qs, gs] of sets) { let wm = 0, wr = 0, arg = '', unstable = 0;
+  for (const f of fs) for (const q of qs) for (const g of gs) { const p = proto(type, f, q, g), m = bqMatched(type, f, q, g, sr), o = bqCoef(type, f, q, g, sr); let em = 0, er = 0;
+    for (let i = 0; i < 400; i++) { const fi = 20 * Math.pow(1000, i / 399); if (amag(p, fi) < -60) continue; em = Math.max(em, Math.abs(db(bqMag(m, fi, sr)) - amag(p, fi))); er = Math.max(er, Math.abs(db(bqMag(o, fi, sr)) - amag(p, fi))); }
+    if (!(Math.abs(m[4]) < 1 && Math.abs(m[3]) < 1 + m[4])) unstable++; if (em > wm) { wm = em; arg = `${f}Hz, q ${q}, ${g}dB`; } if (er > wr) wr = er; }
+  const pass = wm <= 1.3 && !unstable; if (!pass) fails++; console.log(`${pass ? 'PASS' : 'FAIL'} ${type.padEnd(9)} at ${sr}Hz: furthest from the analog curve ${wm.toFixed(2)}dB (${arg}); the usual formula ${wr.toFixed(2)}dB` + (unstable ? `; ${unstable} unstable` : '')); }
+{ // a sound through the filter: tones at a few frequencies through plan()'s steps, their level out against the curve
+  const sr = 44100, bands = [{ type: 'peaking', f: 9000, q: 1.2, g: 6 }, { type: 'highshelf', f: 12000, q: 0.71, g: -4 }, { type: 'highpass', f: 40, q: 0.71, g: 0 }], P = plan([{ k: 'eq', bands, auto: false }], sr, 1); let worst = 0;
+  for (const f of [50, 400, 3000, 9000, 14000, 18000]) { const n = sr, x = new Float64Array(n); for (let i = 0; i < n; i++) x[i] = Math.sin(2 * Math.PI * f * i / sr); let y = x; for (const c of P.coefs) { const o = new Float64Array(n); let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for (let i = 0; i < n; i++) { const v = c[0] * y[i] + c[1] * x1 + c[2] * x2 - c[3] * y1 - c[4] * y2; x2 = x1; x1 = y[i]; y2 = y1; y1 = v; o[i] = v; } y = o; }
+    let e = 0; for (let i = n / 2; i < n; i++) e += y[i] * y[i]; const got = 10 * Math.log10(e / (n / 2) * 2), want = bands.reduce((s, b) => s + db(bqMag(bqMatched(b.type, b.f, b.q, b.g, sr), f, sr)), 0); worst = Math.max(worst, Math.abs(got - want)); }
+  const pass = worst < 0.02 && P.coefs.length === 3; if (!pass) fails++; console.log(`${pass ? 'PASS' : 'FAIL'} tones through three bands come out at the level the curve says (largest difference ${worst.toFixed(4)}dB)`); }
+process.exit(fails ? 1 : 0);

@@ -1,0 +1,103 @@
+// PDF Editor, Crop and Re-kilter: Crop works on the ticked pages and draws each page's frame on the page grid; Auto fits the frame to the music (one frame for all pages, or each page its own),
+// Manual lets you drag it on one page; a page with no music takes the shared frame; a crop follows a page that is leveled;
+// a page opens large from its corner button, and in Re-kilter the original shows beside the leveled page with a line to drag.
+// A made PDF: five pages of staves (wide margins, narrow music, a blank page, a page tilted by 2 degrees, one more).
+// Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-crop.js   (SHOTS=folder also saves pictures)
+const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb, degrees, pushGraphicsState, popGraphicsState, concatTransformationMatrix } = require('../vendor/pdf-lib.min.js');
+const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
+async function makePdf() {
+  const doc = await PDFDocument.create(), W = 612, H = 792;
+  const staves = (pg, x0, x1, y0, y1) => { for (let y = y1; y > y0 + 40; y -= 74) { for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: x0, y: y - k * 7 }, end: { x: x1, y: y - k * 7 }, thickness: 1, color: rgb(0, 0, 0) }); for (let x = x0; x <= x1 + 0.5; x += (x1 - x0) / 4) pg.drawLine({ start: { x, y }, end: { x, y: y - 28 }, thickness: 1.2, color: rgb(0, 0, 0) }); } };
+  staves(doc.addPage([W, H]), 70, 542, 80, 700);
+  staves(doc.addPage([W, H]), 150, 470, 200, 600);
+  doc.addPage([W, H]);
+  { const pg = doc.addPage([W, H]), a = 2 * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), cx = W / 2, cy = H / 2; pg.pushOperators(pushGraphicsState(), concatTransformationMatrix(c, s, -s, c, cx - c * cx + s * cy, cy - s * cx - c * cy)); staves(pg, 110, 500, 150, 650); pg.pushOperators(popGraphicsState()); }
+  staves(doc.addPage([W, H]), 90, 520, 120, 680);
+  const f = path.join(os.tmpdir(), 'kf-crop-test.pdf'); fs.writeFileSync(f, await doc.save()); return f;
+}
+(async () => {
+  const file = await makePdf(), b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 5); await p.waitForTimeout(800);
+  await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
+  const shot = async name => { if (process.env.SHOTS) await p.screenshot({ path: path.join(process.env.SHOTS, name + '.png') }); };
+  const read = () => p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || PE.busy || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); });
+  const near = (a, c, t = 0.012) => a && c && a.every((v, i) => Math.abs(v - c[i]) < t);
+  // Crop: a tick tool, frames on the grid
+  await p.evaluate(() => peTool('crop')); await p.waitForTimeout(900); await read();
+  const g = await p.evaluate(() => { const cards = [...document.querySelectorAll('#peGrid .page-card')]; return { grid: getComputedStyle(document.querySelector('#peWrap')).display !== 'none', one: document.querySelector('#peWin').classList.contains('one'), ticks: document.querySelector('#peGrid').classList.contains('ticks'), bar: getComputedStyle(document.querySelector('#peBar')).display !== 'none', count: document.querySelector('#peCount').textContent, labels: [...document.querySelectorAll('.pe-cmode span')].map(s => s.textContent), mode: PE.cropMode, boxes: PE.d.order.map(id => peCropBox(id)), shared: cards.map(c => c.classList.contains('shared')), tag: getComputedStyle(cards[2].querySelector('.pe-lvl')).opacity, tagText: cards[2].querySelector('.pe-lvl').textContent, sameOn: document.querySelector('#peCropSame').checked && !document.querySelector('#peCropSame').disabled,
+    blue: cards.map(c => { const cv = c.querySelector('canvas'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i + 2] > 180 && d[i] < 120) n++; return n; }) }; });
+  ok('Crop shows the page grid with ticks and the count, and the choices read Auto, Manual with Same on all pages on', g.grid && !g.one && g.ticks && g.bar && /5 \/ 5 selected/.test(g.count) && g.labels.join('|') === 'Auto|Manual' && g.mode === 'auto' && g.sameOn, JSON.stringify({ count: g.count, labels: g.labels, mode: g.mode }));
+  const u = g.boxes[0] && g.boxes[0].box;
+  ok('Auto with Same on all pages: every page gets one frame that covers all the music', g.boxes.every(q => q && near(q.box, u, 1e-9)) && near(u, [70 / 612 - 0.02, 92 / 792 - 0.02, 542 / 612 + 0.02, 1 - 118 / 792 + 0.02], 0.03), JSON.stringify(u && u.map(v => +v.toFixed(3))));
+  ok('the blank page takes the shared frame and says so', g.shared.join() === 'false,false,true,false,false' && g.tag === '1' && g.tagText === 'Shared', JSON.stringify({ shared: g.shared, tag: g.tag, text: g.tagText }));
+  ok('each card has its frame drawn on it', g.blue.every(n => n > 300), g.blue.join(' '));
+  await shot('crop-same-1300');
+  // Each page
+  await p.evaluate(() => { { const sw = document.querySelector('#peCropSame'); if (sw.checked) sw.click(); } }); await p.waitForTimeout(300);
+  const e = await p.evaluate(() => ({ boxes: PE.d.order.map(id => peCropBox(id)), shared: [...document.querySelectorAll('#peGrid .page-card')].map(c => c.classList.contains('shared')) }));
+  ok('Auto with Same on all pages off: every page fits its own music, and the blank page still takes the shared frame', near(e.boxes[1].box.slice(0, 3), [150 / 612 - 0.02, 192 / 792 - 0.02, 470 / 612 + 0.02], 0.03) && e.boxes[1].box[0] > e.boxes[0].box[0] + 0.1 && e.shared[2] && near(e.boxes[2].box, u, 1e-9), JSON.stringify(e.boxes.map(q => q.box.map(v => +v.toFixed(3)))));
+  await shot('crop-each-1300');
+  // ticks: an unticked page is left alone, and the shared frame no longer counts it
+  await p.evaluate(() => { { const sw = document.querySelector('#peCropSame'); if (!sw.checked) sw.click(); } peAct('toggle', 0); }); await p.waitForTimeout(300);
+  const t = await p.evaluate(async () => { const before = peCropBox(1).box.slice(), off = document.querySelector('#peGrid .page-card').classList.contains('off'); document.querySelector('#peCropAuto').click(); for (let i = 0; i < 300 && (PE.busy || !PE.d.slots[1].crop); i++) await sleep(25); await sleep(700); return { before, off, crops: PE.d.slots.map(s => s.crop), go: document.querySelector('#peCropAuto').disabled, rev: document.querySelector('#peCropClear').disabled, count: document.querySelector('#peCount').textContent }; });
+  ok('Crop leaves an unticked page alone and frames the rest by the ticked pages only', t.off && !t.crops[0] && t.crops.slice(1).every(c => near(c, t.before, 1e-3)) && t.before[0] > u[0] + 0.02 && /4 \/ 5/.test(t.count), JSON.stringify({ off: t.off, before: t.before, u, crops: t.crops, count: t.count }));
+  ok('with nothing left to crop the Crop button is greyed out and Revert is ready', t.go && !t.rev);
+  await shot('crop-done-1300');
+  // Re-kilter after the crop: the crop keeps its size and follows the page
+  await p.evaluate(() => peTool('skew')); await p.waitForTimeout(800);
+  const k = await p.evaluate(async () => { const c0 = PE.d.slots[3].crop.slice(); document.querySelector('#peSkewGo').click(); for (let i = 0; i < 600 && (PE.busy || !PE.d.slots[3].skew); i++) await sleep(25); await sleep(600); const sl = PE.d.slots[3], raw = await peRawBox(sl); return { c0, c1: sl.crop, skew: sl.skew, raw, others: [1, 2, 4].map(i => PE.d.slots[i].skew), said: document.querySelector('#peSkewStatus').textContent, note: !!document.querySelector('#peViewSkew .pe-notice') }; });
+  const sz = c => [c[2] - c[0], c[3] - c[1]];
+  ok('Re-kilter levels the tilted page (2 degrees) and leaves the level ones', Math.abs(Math.abs(k.skew) - 2) < 0.25 && k.others.every(v => !v) && /Leveled 1 page/.test(k.said), 'turn ' + k.skew + ', ' + k.said);
+  ok('its crop keeps its size and still holds the music of the leveled page', near(sz(k.c1), sz(k.c0), 2e-4) && k.raw && k.c1[0] <= k.raw[0] + 0.004 && k.c1[1] <= k.raw[1] + 0.004 && k.c1[2] >= k.raw[2] - 0.004 && k.c1[3] >= k.raw[3] - 0.004, JSON.stringify({ was: k.c0, now: k.c1, music: k.raw && k.raw.map(v => +v.toFixed(4)) }));
+  // one page, large, with the original beside the leveled page
+  const o = await p.evaluate(async () => { document.querySelector('#peGrid .page-card[data-id="3"] [data-act=open]').click(); await sleep(900); const win = document.querySelector('#peWin'), pg = document.querySelector('#peCropPg'), cmp = document.querySelector('#peOneCmp'), q = { one: win.classList.contains('one'), wipe: win.classList.contains('wipe'), name: document.querySelector('#peCropName').textContent, orig: getComputedStyle(document.querySelector('#peOneOrig')).display, clip: getComputedStyle(document.querySelector('#peOneOrig')).clipPath, pressed: cmp.getAttribute('aria-pressed'), bar: getComputedStyle(document.querySelector('#peBar')).display, w: pg.offsetWidth };
+    const a = document.querySelector('#peCropCv'), o2 = document.querySelector('#peOneOrig'), row = c => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, rows = new Float64Array(c.height); for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4] < 128) rows[y]++; let s = 0; rows.forEach(v => { s += v * v; }); return s; }; q.sharp = row(a) / row(o2); return q; });
+  ok('a page opens large from its corner button, in place of the grid, with the original over the leveled page up to a line', o.one && o.wipe && o.name === 'Page 3 of 4' && o.orig === 'block' && /inset\(0(px)? 50% 0(px)? 0(px)?\)/.test(o.clip) && o.pressed === 'true' && o.bar === 'none' && o.sharp > 1.5, JSON.stringify(o));
+  await shot('skew-one-1300');
+  const w = await p.evaluate(async () => { const wp = document.querySelector('#peWipe'); wp.focus(); wp.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); const v = +wp.getAttribute('aria-valuenow'); document.querySelector('#peOneCmp').click(); await sleep(100); const off = !document.querySelector('#peWin').classList.contains('wipe'); document.querySelector('#peOneCmp').click(); document.querySelector('#peCropNext').click(); await sleep(700); const n = document.querySelector('#peCropName').textContent, dis = document.querySelector('#peOneCmp').disabled, nw = !document.querySelector('#peWin').classList.contains('wipe'); document.querySelector('#peOneBack').click(); await sleep(400); return { v, off, n, dis, nw, back: !document.querySelector('#peWin').classList.contains('one') && getComputedStyle(document.querySelector('#peWrap')).display !== 'none' }; });
+  ok('the line moves with the arrow keys, Original hides it, a level page has nothing to compare, and All pages goes back', w.v === 55 && w.off && w.n === 'Page 4 of 4' && w.dis && w.nw && w.back, JSON.stringify(w));
+  // Revert in Re-kilter puts the crop back where it was
+  const rv = await p.evaluate(async () => { document.querySelector('#peSkewClear').click(); for (let i = 0; i < 400 && (PE.busy || PE.d.slots[3].skew); i++) await sleep(25); await sleep(500); return { skew: PE.d.slots[3].skew, crop: PE.d.slots[3].crop }; });
+  ok('Revert un-levels the page and its crop goes back', !rv.skew && near(rv.crop, k.c0, 0.003), JSON.stringify(rv));
+  // Manual: opens a page, the frame is dragged, and it is set on all pages
+  await p.evaluate(() => { peUndo(); peTool('crop'); }); await p.waitForTimeout(900); await read();
+  await p.evaluate(() => document.querySelector('input[name=peCropMode][value=hand]').click()); await p.waitForTimeout(900);
+  const m0 = await p.evaluate(() => { const r = document.querySelector('#peCropBox .se').getBoundingClientRect(), pg = document.querySelector('#peCropPg').getBoundingClientRect(); return { one: document.querySelector('#peWin').classList.contains('one'), hand: document.querySelector('#peWin').classList.contains('hand'), same: !document.querySelector('#peCropSame').disabled, dim: document.querySelector('#peCropPadF').classList.contains('dim'), x: r.right - 4, y: r.bottom - 4, pw: pg.width, ph: pg.height, box: peBoxNow.slice() }; });
+  await p.mouse.move(m0.x, m0.y); await p.mouse.down(); await p.mouse.move(m0.x - m0.pw * 0.1, m0.y - m0.ph * 0.1, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(300);
+  await shot('crop-manual-1300');
+  const m1 = await p.evaluate(async () => { const hb = PE.handAll && [...PE.handAll.values()][0].slice(); document.querySelector('#peOneBack').click(); await sleep(300); const boxes = peTargets().map(id => peCropBox(id).box); document.querySelector('#peCropAuto').click(); for (let i = 0; i < 300 && (PE.busy || !PE.undo.length); i++) await sleep(25); await sleep(600); return { hb, boxes, crops: PE.d.slots.map(s => s.crop) }; });
+  ok('Manual opens a page with the frame to drag, the margin slider steps back and Same on all pages shows', m0.one && m0.hand && m0.same && m0.dim, JSON.stringify(m0));
+  ok('the dragged frame is the frame of every ticked page, and Crop sets it', m1.hb && near(m1.hb, [m0.box[0], m0.box[1], m0.box[2] - 0.1, m0.box[3] - 0.1], 0.01) && m1.boxes.every(c => near(c, m1.hb, 1e-9)) && !m1.crops[0] && m1.crops.slice(1).every(c => near(c, m1.hb, 1e-3)), JSON.stringify({ frame: m1.hb, crops: m1.crops }));
+  await shot('crop-manual-grid-1300');
+  // keys: Enter opens, the arrows step, Escape goes back; undo while a page is open
+  const ky = await p.evaluate(async () => { const key = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); const c = document.querySelector('#peGrid .page-card[data-id="2"]'); c.focus(); key(c, 'Enter'); await sleep(500); const a = PE.one; key(document.activeElement, 'ArrowRight'); await sleep(300); const b2 = PE.one; peUndo(); await sleep(500); const still = PE.one, cr = PE.d.slots[2].crop; key(document.activeElement, 'Escape'); await sleep(300); return { a, b2, still, cr, closed: PE.one == null && PE.mode === 'crop' }; });
+  ok('Enter opens the page, the arrows step through the ticked pages, undo works with a page open, Escape goes back to the grid', ky.a === 2 && ky.b2 === 3 && ky.still === 3 && ky.cr && Math.abs(ky.cr[2] - 0.8713) < 0.001 && ky.closed, JSON.stringify(ky));
+  // Arrange is untouched: no frames, the rotate and repeat buttons, no open button
+  const ar = await p.evaluate(async () => { peTool('pages'); await sleep(700); const c = document.querySelector('#peGrid .page-card'), vis = s => getComputedStyle(c.querySelector(s)).display !== 'none'; return { rot: vis('[data-act=rot]'), open: vis('[data-act=open]'), one: document.querySelector('#peWin').classList.contains('one') }; });
+  ok('Arrange keeps rotate and repeat and has no open button', ar.rot && !ar.open && !ar.one, JSON.stringify(ar));
+  // a window that changes size while a page is open: the page is drawn again to fit; on a narrow phone the three choices stay inside the window
+  const rs = await p.evaluate(async () => { peTool('crop'); await sleep(900); peOneOpen(peTargets()[0]); await sleep(900); return document.querySelector('#peCropPg').offsetWidth; });
+  await p.setViewportSize({ width: 1300, height: 700 }); await p.waitForTimeout(900);
+  const rs2 = await p.evaluate(() => { const pg = document.querySelector('#peCropPg').getBoundingClientRect(), st = document.querySelector('#peCropStage').getBoundingClientRect(); return { w: Math.round(pg.width), fits: pg.top >= st.top - 1 && pg.bottom <= st.bottom + 1 && pg.left >= st.left - 1 && pg.right <= st.right + 1 }; });
+  await p.setViewportSize({ width: 320, height: 700 }); await p.waitForTimeout(700);
+  const nar = await p.evaluate(() => { const sg = document.querySelector('.pe-cmode').getBoundingClientRect(), w = document.querySelector('#peWin').getBoundingClientRect(); peOneClose(); return sg.right <= w.right + 0.5 && sg.left >= w.left - 0.5 && document.documentElement.scrollWidth <= innerWidth + 1; });
+  await p.setViewportSize({ width: 1300, height: 900 }); await p.waitForTimeout(500);
+  ok('an open page is drawn again to fit when the window changes size', rs2.fits && rs2.w !== rs, 'was ' + rs + 'px wide, now ' + rs2.w);
+  ok('at 320px wide the choices stay inside the window', nar);
+  // a spread among single pages: Same size gives each shape its own frame, so the wide page does not stretch the others
+  { const doc = await PDFDocument.create(), line = (pg, x0, x1) => { for (let y = 640; y > 200; y -= 70) for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: x0, y: y - k * 7 }, end: { x: x1, y: y - k * 7 }, thickness: 1, color: rgb(0, 0, 0) }); };
+    line(doc.addPage([612, 792]), 180, 430); line(doc.addPage([612, 792]), 200, 450); line(doc.addPage([1224, 792]), 40, 1180); const f2 = path.join(os.tmpdir(), 'kf-crop-shapes.pdf'); fs.writeFileSync(f2, await doc.save());
+    const q = await b.newPage({ viewport: { width: 1300, height: 900 } }); q.on('pageerror', e => errs.push(e.message)); await q.goto('http://localhost:8123/index.html'); await q.setInputFiles('#pdfIn', f2); await q.waitForFunction(() => S.pdf && S.pdf.n === 3); await q.waitForTimeout(600);
+    const sh = await q.evaluate(async () => { openPdfEditor(); await sleep(400); peTool('crop'); for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(300); return [0, 1, 2].map(id => peCropBox(id).box); }); await q.close();
+    ok('pages of another shape (a spread) keep a frame of their own', near(sh[0], sh[1], 1e-9) && near([sh[0][0], sh[0][2]], [180 / 612 - 0.02, 450 / 612 + 0.02], 0.02) && near([sh[2][0], sh[2][2]], [40 / 1224 - 0.02, 1180 / 1224 + 0.02], 0.02), JSON.stringify(sh.map(c => c.map(v => +v.toFixed(3))))); }
+  if (process.env.SHOTS) {
+    await p.evaluate(() => { peTool('crop'); document.querySelector('input[name=peCropMode][value=auto]').click(); }); await p.waitForTimeout(900);
+    for (const [w2, h2] of [[1040, 820], [760, 900], [390, 900]]) { await p.setViewportSize({ width: w2, height: h2 }); await p.waitForTimeout(600); await shot('crop-same-' + w2); }
+    await p.setViewportSize({ width: 1040, height: 820 }); await p.emulateMedia({ colorScheme: 'dark' }); await p.waitForTimeout(500); await shot('crop-same-dark');
+    await p.evaluate(async () => { peTool('skew'); await sleep(700); document.querySelector('#peSkewGo').click(); for (let i = 0; i < 600 && (PE.busy || !PE.d.slots[3].skew); i++) await sleep(25); await sleep(800); }); await shot('skew-grid-dark');
+    await p.evaluate(() => peOneOpen(3)); await p.waitForTimeout(900); await shot('skew-one-dark'); await p.emulateMedia({ colorScheme: 'light' });
+    for (const [w2, h2] of [[760, 900], [390, 900]]) { await p.setViewportSize({ width: w2, height: h2 }); await p.waitForTimeout(700); await shot('skew-one-' + w2); }
+  }
+  ok('no page errors', !errs.length, errs.join(' | '));
+  await b.close();
+})();

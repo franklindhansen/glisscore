@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disk store check</title>
+<link rel="stylesheet" href="../vendor/fonts.css">
+<style>
+:root{
+  --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
+  --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12); --ok:#2fb872; --bad:#e5484d;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
+  --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 'Instrument Sans',system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 16px 48px}
+h1{font:600 28px/1.2 'Newsreader',Georgia,serif;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.row:last-child{margin-bottom:0}
+.btn{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font:inherit;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.note{color:var(--muted);font-size:13px;margin:0}
+label.chk{display:inline-flex;gap:6px;align-items:center}
+.bar{height:6px;border-radius:3px;background:var(--panel2);border:1px solid var(--line);overflow:hidden;flex:1;min-width:160px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+#busy{color:var(--muted);font-variant-numeric:tabular-nums;min-width:160px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td{padding:5px 6px;border-top:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--muted);width:34%}
+td.s{width:18px;padding-right:0}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}
+tr.g td{border-top:0;padding-top:14px;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input[type=file]{display:none}
+iframe{position:absolute;left:-2000px;top:0;width:1040px;height:800px;visibility:hidden;border:0}
+@media (max-width:520px){td:first-child{width:44%}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Disk store check</h1>
+  <p class="sub">Reads a recording into the disk store the way the app will for long files, reads it back, and compares it with the way the app reads files today.</p>
+
+  <div class="card">
+    <h2>Recording</h2>
+    <div class="row"><button class="btn" id="bPick" disabled>Choose file</button><button class="btn" id="bClear" disabled>Delete</button><label class="chk"><input type="checkbox" id="cmp" checked> Compare with today's import</label><label class="chk"><input type="checkbox" id="again"> Read in again</label></div>
+    <div class="row"><div class="bar"><i id="prog"></i></div><span id="busy">Starting…</span></div>
+    <p class="note">WAV, M4A or MP4. The comparison holds the whole recording in memory, so it turns itself off for files over 20 minutes. A file that is already in the store is used as it is, unless Read in again is on. Play runs straight from the disk: drag the slider to jump. With Play through the tools on, the sound is worked out as it plays (noise reduction, Spectra, EQ, Imager), and Change the EQ swaps between a bright and a muffled EQ without stopping. Delete frees the disk space.</p>
+    <div class="row"><button class="btn" id="bPlay" disabled>Play</button><input type="range" id="seek" min="0" max="1000" value="0" disabled aria-label="Position" style="flex:1;min-width:160px"><span id="pos" class="note" style="min-width:150px;font-variant-numeric:tabular-nums">0:00:00</span></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="viaFx"> Play through the tools</label><button class="btn" id="bSwap" disabled>Change the EQ</button><span class="note" id="swapped"></span></div>
+    <input type="file" id="file" accept=".wav,.m4a,.mp4,.m4b,audio/*,video/mp4">
+  </div>
+
+  <div class="card">
+    <h2>Results</h2>
+    <div class="row"><button class="btn" id="bCopy">Copy results</button><span class="note" id="copied"></span></div>
+    <table id="out"></table>
+  </div>
+</main>
+<iframe id="app" src="../index.html" title="The app"></iframe>
+<script>
+/* The app runs in a hidden frame, so this page uses its real import code and its real disk store. */
+const $ = id => document.getElementById(id), rows = [];
+window.results = rows; window.done = 0;
+const fx = (x, d = 1) => Number(x).toFixed(d), db = v => v > 1e-7 ? (20 * Math.log10(v) >= 0.05 ? '+' : '') + fx(20 * Math.log10(v), 2).replace('-', '−') + 'dB' : 'silent';
+const clock = s => { s = Math.round(s); return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+function add(name, value, state) { rows.push({ name, value: String(value), state: state || '' }); const tr = $('out').insertRow(); tr.insertCell().textContent = name; tr.insertCell().textContent = value; const c = tr.insertCell(); c.className = 's'; c.innerHTML = '<span class="dot ' + (state || '') + '"></span>'; }
+function group(name) { rows.push({ group: name }); const tr = $('out').insertRow(); tr.className = 'g'; const c = tr.insertCell(); c.colSpan = 3; c.textContent = name; }
+function busy(text, frac) { $('busy').textContent = text; $('prog').style.width = (frac == null ? 0 : Math.round(frac * 100)) + '%'; }
+const piece = Number(new URLSearchParams(location.search).get('piece')) || undefined;
+let W = null, DISK = null; const g = name => W.eval(name);
+
+async function today(file) {          // the app's import as it is now: everything in memory
+  const ab = await file.arrayBuffer(), rate0 = g('sniffRateFile')(ab), ac = g('ctxForRate')(rate0 || g('sniffRate')(new Uint8Array(ab, 0, Math.min(ab.byteLength, 262144))));
+  let buf = null; try { buf = g('wavFloatBuffer')(ab); } catch (e) {}
+  if (!buf && new Uint8Array(ab, 4, 4).every((b, i) => b === 'ftyp'.charCodeAt(i))) buf = await g('mp4DecodeAac')(ab, f => busy('Today\'s import ' + Math.round(f * 100) + '%', f));
+  if (!buf) buf = await new Promise((res, rej) => { const p = ac.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); });
+  if (buf.numberOfChannels > 2) buf = g('downmixStereo')(buf);
+  return buf;
+}
+
+async function run(file) {
+  group(file.name);
+  let kept = null; try { kept = await DISK.open(file); } catch (e) {}
+  add('Kept from an earlier visit', kept ? 'Yes, ' + clock(kept.duration) + ' (' + kept.frames + ' frames)' : 'No');
+  let t = performance.now(), m = null; stopPlay(); setRec(null);
+  if (kept && !$('again').checked) { m = kept; add('Read into the store', 'Using the stored copy: ' + clock(m.duration) + ', ' + m.sr + 'Hz, ' + m.frames + ' frames', 'ok'); }
+  else {
+    try { m = await DISK.importFile(file, { piece, onProgress: f => busy('Reading in ' + Math.round(f * 100) + '%', f) }); } catch (e) { add('Read into the store', 'Failed: ' + (e && e.message || e), 'bad'); return; }
+    if (!m) { add('Read into the store', 'Not this way (the app uses today\'s import for this file)'); return; }
+  }
+  const secs = (performance.now() - t) / 1000, CH = m.ch; setRec(m);
+  if (m !== kept) {
+  add('Read into the store', clock(m.duration) + ', ' + m.sr + 'Hz, ' + (m.srcCh > 2 ? m.srcCh + ' channels folded to stereo' : CH === 1 ? 'mono' : 'stereo') + (m.bits ? ', ' + m.bits + '-bit' + (m.float ? ' float' : '') : '') + ', ' + m.frames + ' frames', 'ok');
+  add('Time to read in', fx(secs) + 's (' + fx(m.duration / secs, 0) + 'X real time)'); }
+  add('Highest sample', db(m.peak) + (m.peak > 1 ? ' (above full scale, kept)' : ''));
+  add('Samples stuck at full scale', m.full);
+  try { const e = await navigator.storage.estimate(); add('Disk used', fx(e.usage / 1e6, 0) + 'MB of ' + fx(e.quota / 1e9) + 'GB allowed'); } catch (e) {}
+
+  /* read everything back in order: the peaks and the pyramid the store made must be exactly what the samples say */
+  const BL = 10 * m.sr, per = Math.max(1, Math.floor(m.sr / 100)), pk = new Float32Array(Math.ceil(m.frames / per)), lvN = m.levels.map(L => Math.ceil(m.frames / L)), lv = m.levels.map((L, k) => { const a = new Float32Array(lvN[k] * 2); for (let i = 0; i < a.length; i += 2) { a[i] = Infinity; a[i + 1] = -Infinity; } return a; });
+  let peak = 0, hash = 0x811c9dc5, bad = ''; t = performance.now();
+  for (let at = 0; at < m.frames; at += BL) {
+    const r = await DISK.read(at, BL), n = r.chans[0].length; if (r.chans.length !== CH || n !== Math.min(BL, m.frames - at)) { bad = 'short read at frame ' + at; break; }
+    for (let c = 0; c < CH; c++) {
+      const x = r.chans[c], u = new Uint32Array(x.buffer, 0, n);
+      for (let i = 0; i < n; i++) { const v = x[i], a = v < 0 ? -v : v, f = at + i, q = (f / per) | 0; if (a > pk[q]) pk[q] = a; if (a > peak) peak = a; hash = Math.imul(hash ^ u[i], 16777619); for (let k = 0; k < lv.length; k++) { const p = Math.floor(f / m.levels[k]) * 2; if (v < lv[k][p]) lv[k][p] = v; if (v > lv[k][p + 1]) lv[k][p + 1] = v; } }
+    }
+    busy('Reading back ' + Math.round((at + n) / m.frames * 100) + '%', (at + n) / m.frames);
+  }
+  const rsecs = (performance.now() - t) / 1000;
+  if (bad) { add('Read back', 'Failed: ' + bad, 'bad'); return; }
+  add('Read back', 'All ' + m.frames + ' frames in ' + fx(rsecs) + 's (' + fx(m.duration / rsecs, 0) + 'X real time)', 'ok');
+  add('Fingerprint', (hash >>> 0).toString(16).padStart(8, '0'));
+  let d = -1; if (m.peaks.length !== pk.length) d = 0; else for (let i = 0; i < pk.length; i++) if (pk[i] !== m.peaks[i]) { d = i; break; }
+  add('Waveform peaks (100 per second)', d < 0 && peak === m.peak ? 'Match the samples (' + pk.length + ' values)' : 'Differ at value ' + d, d < 0 && peak === m.peak ? 'ok' : 'bad');
+  for (let k = 0; k < m.levels.length; k++) {
+    let at = 0, dif = -1;
+    while (at < lvN[k] && dif < 0) { const r = await DISK.peaks(m.levels[k], at, 262144), n = r.pairs.length / 2; if (!n) { dif = at; break; } for (let i = 0; i < n * 2; i++) if (r.pairs[i] !== lv[k][at * 2 + i]) { dif = at + (i >> 1); break; } at += n; }
+    add('Pyramid, ' + m.levels[k] + ' frames', dif < 0 ? 'Matches the samples (' + lvN[k] + ' buckets)' : 'Differs at bucket ' + dif, dif < 0 ? 'ok' : 'bad');
+  }
+
+  /* one-second reads from random places, as scrubbing and playback will ask for */
+  { const times = [], P = m.piece; let cross = 0;
+    if (m.frames > m.sr) { for (let k = 0; k < 200; k++) { const s = Math.floor(Math.random() * (m.frames - m.sr)); if (Math.floor(s / P) !== Math.floor((s + m.sr - 1) / P)) cross++; const t1 = performance.now(), r = await DISK.read(s, m.sr); times.push(performance.now() - t1); if (r.chans[0].length !== m.sr) { bad = 'short'; break; } }
+      times.sort((a, b) => a - b); add('Read one second, 200 places', bad ? 'Failed' : '~' + fx(times.reduce((a, b) => a + b, 0) / times.length, 2) + 'ms each, slowest ' + fx(times[times.length - 1], 2) + 'ms, ' + cross + ' across two pieces', bad ? 'bad' : 'ok'); } }
+
+  /* the joins: ~35 seconds from a random place go through the player exactly as Play does it, block after block, and what the player puts out must be the stored samples.
+     The player's own output is compared, not the browser's finished render: Safari's silent render changes the sound slightly on its own (see the next row). */
+  { const span = Math.min(m.frames, 35 * m.sr), from = Math.floor(Math.random() * (m.frames - span + 1)), chunk = Math.min(10 * m.sr, Math.ceil(span / 4)), OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    try { const oc = new OC(CH, span + m.sr, m.sr), h = await DISK.play(oc, from, oc.destination, { chunk, ahead: Infinity, once: true, end: from + span, echo: true }); await oc.startRendering(); const r = await DISK.read(from, span);
+      for (let k = 0; k < 40 && !h.ended(); k++) await new Promise(res => setTimeout(res, 50));
+      let got = 0, dif = 0, worst = 0; for (const blk of h.heard()) { for (let c = 0; c < CH; c++) { const y = blk[c], x = r.chans[c]; for (let i = 0; i < y.length && got + i < span; i++) { const e = Math.abs(y[i] - x[got + i]); if (e) { dif++; if (e > worst) worst = e; } } } got += blk[0].length; }
+      const fine = got === span && !dif && !h.gaps(); add('Playback joins', fine ? Math.ceil(span / chunk) - 1 + ' joins from ' + clock(from / m.sr) + ': every sample in place' : got !== span ? 'The player put out ' + got + ' of ' + span + ' frames' : dif ? dif + ' samples differ, largest ' + worst.toExponential(2) + ' (' + db(worst) + ')' : 'Ran dry ' + h.gaps() + ' times', fine ? 'ok' : 'bad'); }
+    catch (e) { add('Playback joins', 'Failed: ' + (e && e.message || e), 'bad'); }
+    /* does this browser's silent render (the one the app's effects and export go through) hand back a plain buffer untouched? One second of a test sound at each rate, its first 2000 samples silent */
+    try { const parts = []; let hw = 0, hush = 0, rel = 0; try { const a = new (window.AudioContext || window.webkitAudioContext)(); hw = a.sampleRate; a.close(); } catch (e) {}
+      for (const sr of [44100, 48000, 88200, 96000]) { let o; try { o = new OC(2, sr, sr); } catch (e) { parts.push(sr + 'Hz not offered'); continue; } const b = o.createBuffer(2, sr, sr), src = o.createBufferSource(), x = [b.getChannelData(0), b.getChannelData(1)]; for (let i = 2000; i < sr; i++) { x[0][i] = 0.5 * Math.sin(i * 0.31) + 0.3 * Math.sin(i * 1.7); x[1][i] = 0.6 * Math.sin(i * 0.05 + 1); } const keep = [x[0].slice(), x[1].slice()]; src.buffer = b; src.connect(o.destination); src.start(0);
+        const y = await o.startRendering(); let w = 0; for (let c = 0; c < 2; c++) { const d = y.getChannelData(c); for (let i = 0; i < sr; i++) { const e = Math.abs(d[i] - keep[c][i]), a = Math.abs(keep[c][i]); if (e > w) w = e; if (e) { if (i < 2000) hush++; else if (a > 0.1 && e / a > rel) rel = e / a; } } } parts.push(sr + 'Hz ' + (w < 1e-9 ? 'untouched' : 'changed (' + db(w) + ')') + (y.sampleRate !== sr ? ' at ' + y.sampleRate + 'Hz' : '')); }
+      add('Browser\'s silent render', parts.join(', ') + (hw ? '; sound output runs at ' + hw + 'Hz' : '') + (rel ? '; each sample is off by up to ' + (rel * 100).toFixed(2) + '% of its own size, silence ' + (hush ? 'is changed too' : 'stays silent') : '')); } catch (e) { add('Browser\'s silent render', 'Failed: ' + (e && e.message || e)); } }
+
+  let fxs = null; try { fxs = await tools(m); } catch (e) { add('Tools', 'Failed: ' + (e && e.message || e), 'bad'); }
+
+  /* against today's import, sample for sample */
+  if (!$('cmp').checked || m.duration > 1200) { add('Compared with today\'s import', m.duration > 1200 ? 'Skipped (over 20 minutes)' : 'Skipped'); return; }
+  let buf = null; busy('Today\'s import…');
+  try { buf = await today(file); } catch (e) { add('Compared with today\'s import', 'Today\'s import cannot read this file', ''); return; }
+  if (buf.sampleRate !== m.sr) { add('Compared with today\'s import', 'Today\'s import changes the rate to ' + buf.sampleRate + 'Hz; the store keeps the file\'s own ' + m.sr + 'Hz'); return; }
+  if (buf.numberOfChannels !== CH || buf.length !== m.frames) { add('Compared with today\'s import', 'Different shape: today ' + buf.length + ' frames, ' + buf.sampleRate + 'Hz, ' + buf.numberOfChannels + 'ch', 'bad'); return; }
+  let max = 0, first = -1;
+  for (let at = 0; at < m.frames; at += BL) { const r = await DISK.read(at, BL); for (let c = 0; c < CH; c++) { const x = r.chans[c], y = buf.getChannelData(c); for (let i = 0; i < x.length; i++) { const e = Math.abs(x[i] - y[at + i]); if (e > max) max = e; if (e && first < 0) first = at + i; } } busy('Comparing ' + Math.round(at / m.frames * 100) + '%', at / m.frames); }
+  /* some browsers scale 8- and 16-bit samples their own way (Chromium divides positive values by 32767, the store by 32768 as the WAV format says): under one step of the file's bit depth */
+  const step = m.bits && !m.float && m.bits <= 16 && m.srcCh <= 2 ? 1 / (1 << (m.bits - 1)) : m.bits && !m.float && m.bits <= 16 ? 2 / (1 << (m.bits - 1)) : 0, near = max > 0 && max < step;
+  add('Compared with today\'s import', max === 0 ? 'Every sample the same' : near ? 'Within one ' + m.bits + '-bit step (largest difference ' + db(max) + '): this browser scales ' + m.bits + '-bit its own way' : 'Largest difference ' + max.toExponential(2) + ' (' + db(max) + '), first at frame ' + first, max === 0 || near ? 'ok' : 'bad');
+  const cp = g('calcPeaks')(buf); let pd = cp.peaks.length === m.peaks.length ? -1 : 0; if (pd < 0) for (let i = 0; i < cp.peaks.length; i++) if (Math.abs(cp.peaks[i] - m.peaks[i]) > (near ? step : 0)) { pd = i; break; }
+  add('Waveform against today\'s', pd < 0 ? (near ? 'The same, within one step' : 'The same') : 'Differs at value ' + pd, pd < 0 ? 'ok' : 'bad');
+  if (fxs && max === 0) { try { await toolsToday(file, m, buf, fxs); } catch (e) { add('Tools against today\'s', 'Failed: ' + (e && e.message || e), 'bad'); } }
+}
+
+/* The tools on the stored recording (audio-fx.js): noise reduction (its profile learned from the first two seconds), three Spectra rectangles, an EQ with hard bands and, for stereo, the Imager.
+   The first minute is worked out in order, then again in uneven stretches in a mixed order, which must give the very same samples; then five seconds from a far-off place with a short run-in. */
+async function tools(m) {
+  const sr = m.sr, CH = m.ch, N = g('fxNorm'), span = Math.min(m.frames, 60 * sr), T = span / sr, names = [];
+  let profile = null; try { const r = await DISK.read(0, Math.min(m.frames, 2 * sr)); profile = g('NR').nrLearn(r.chans, sr, 0, r.chans[0].length, Array.from(g('eqAxis'))); } catch (e) {}
+  const noise = profile ? { on: true, profile, reduction: 14, sensitivity: 60, smoothing: 70 } : undefined, spec = { edits: [{ a: T * 0.3, b: T * 0.3 + 0.05, f0: 800, f1: 6000, mode: 'heal' }, { a: T * 0.5, b: T * 0.5 + Math.min(4, T * 0.1), f0: 950, f1: 1050, mode: 'heal' }, { a: T * 0.7, b: T * 0.7 + Math.min(1, T * 0.1), f0: 2000, f1: 9000, mode: 'cut', db: 30 }] };
+  const eq = { on: true, auto: true, bands: [{ type: 'highpass', f: 35, q: 0.71 }, { type: 'lowshelf', f: 120, g: 3.5, q: 1 }, { type: 'peaking', f: 1000, g: -6.3, q: 4.2 }, { type: 'peaking', f: 30, g: 8, q: 18 }, { type: 'notch', f: 3300, q: 12 }, { type: 'highshelf', f: 8000, g: -4.1, q: 1 }, { type: 'lowpass', f: 15000, q: 1.3 }] }, imager = { on: true, width: 120, monoBass: 400, bw: [80, 130, 160], bal: 1.5 };
+  const fxs = { clean: N({ noise, spec }), filt: N({ eq, imager }), all: N({ noise, spec, eq, imager }), names: (profile ? 'Noise reduction, ' : '') + 'Spectra, EQ' + (CH === 2 ? ', Imager' : '') }, fresh = async f => { await DISK.fx(N({})); await DISK.fx(f); };
+  await fresh(fxs.all); const ref = Array.from({ length: CH }, () => new Float32Array(span)); let t = performance.now();
+  for (let at = 0; at < span; at += 10 * sr) { const r = await DISK.render(at, Math.min(10 * sr, span - at), true); for (let c = 0; c < CH; c++) ref[c].set(r.chans[c], at); busy('Tools ' + Math.round(at / span * 100) + '%', at / span); }
+  const secs = (performance.now() - t) / 1000; add('Tools, first ' + clock(T), fxs.names + ': ' + fx(secs) + 's (' + fx(T / secs, 0) + 'X real time)');
+  await fresh(fxs.all); const starts = []; for (let at = 0; at < span; at += 70001) starts.push(at); for (let i = starts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [starts[i], starts[j]] = [starts[j], starts[i]]; }
+  let dif = 0, worst = 0, loose = 0; for (const at of starts) { const r = await DISK.render(at, Math.min(70001, span - at), true); if (!r.exact) loose++; for (let c = 0; c < CH; c++) { const x = r.chans[c], y = ref[c]; for (let i = 0; i < x.length; i++) { const e = Math.abs(x[i] - y[at + i]); if (e) { dif++; if (e > worst) worst = e; } } } }
+  add('Tools, read in stretches', dif || loose ? dif + ' samples differ, largest ' + db(worst) : starts.length + ' stretches in a mixed order: every sample the same', dif || loose ? 'bad' : 'ok');
+  if (m.frames > span + 30 * sr) {
+    const at = span + 20 * sr + Math.floor(Math.random() * (m.frames - span - 25 * sr)), n = 5 * sr; await fresh(fxs.all); t = performance.now(); const r = await DISK.render(at, n, false), ms = performance.now() - t; let txt = 'Five seconds from ' + clock(at / sr) + ' in ' + fx(ms, 0) + 'ms', state = '';
+    if (m.duration <= 1200) { busy('Tools, far-off place…'); const ex = await DISK.render(at, n, true); let w = 0; for (let c = 0; c < CH; c++) for (let i = 0; i < n; i++) { const e = Math.abs(r.chans[c][i] - ex.chans[c][i]); if (e > w) w = e; } txt += w > 1e-7 ? '; with a run-in it differs from the exact result by at most ' + db(w) : '; with a run-in it is the same as the exact result'; state = w <= 1e-5 ? 'ok' : 'bad'; }
+    add('Tools, far-off place', txt, state);
+  }
+  /* the whole recording through the tools once, kept on disk as a processed copy with its waveform heights; then the loudness and the limiter read that copy */
+  await DISK.fx(fxs.all); t = performance.now(); const sc = await DISK.scan({ onProgress: f => busy('Tools, whole recording ' + Math.round(f * 100) + '%', f) }), ss = (performance.now() - t) / 1000;
+  let top = 0; for (const v of sc.tp) if (v > top) top = v;
+  add('Tools, whole recording', 'Processed copy on disk in ' + fx(ss) + 's (' + fx(m.duration / ss, 0) + 'X real time), highest true peak ' + db(top), sc.peaks.length === m.peaks.length ? 'ok' : 'bad');
+  const d = { vStart: Math.min(3, m.duration * 0.05), vEndSet: m.duration - Math.min(3, m.duration * 0.05), audioFades: true, audioFadeLen: 1.5, audioFadeShape: 'smooth', normLufs: -14 }, lu = v => isFinite(v) ? fx(v, 2).replace('-', '−') + ' LUFS' : 'silent';
+  t = performance.now(); const l1 = await DISK.loud(d, { onProgress: f => busy('Loudness ' + Math.round(f * 100) + '%', f) }), ls = (performance.now() - t) / 1000; let txt = lu(l1.I) + ', range ' + fx(l1.LRA) + ' LU, in ' + fx(ls) + 's (' + fx(m.duration / ls, 0) + 'X real time)', state = '', buf = null;
+  if (m.duration <= 1200) {          // the app's own whole-file code on the same processed sound must give the same numbers
+    const all = await DISK.render(0, m.frames, true); buf = new W.AudioBuffer({ length: m.frames, numberOfChannels: CH, sampleRate: sr }); all.chans.forEach((x, c) => buf.copyToChannel(x, c));
+    const mm = g('masterMaker')(buf, CH, d.vStart, d.vEndSet, 1, t2 => g('aeF')(d, d.vStart, d.vEndSet, t2)), l0 = await g('LU').measure((pos, len, o) => mm.fill(pos, len, o), mm.total, mm.sr, CH), same = ['I', 'LRA', 'M', 'S'].every(k => l0[k] === l1[k]);
+    txt += same ? '; the same as the app\'s own measurement' : '; the app\'s own measurement gives ' + lu(l0.I) + ', range ' + fx(l0.LRA); state = same ? 'ok' : 'bad';
+  }
+  add('Loudness of the kept part', txt, state);
+  t = performance.now(); const r1 = await DISK.limit(d, { onProgress: f => busy('Limiter ' + Math.round(f * 100) + '%', f) }), rs = (performance.now() - t) / 1000;
+  txt = r1.silent ? 'Silent' : 'Volume ' + db(r1.g) + ' lands on ' + lu(r1.I) + ', the limiter takes off up to ' + fx(-r1.gr) + 'dB, in ' + fx(rs) + 's (' + (r1.part === 1 ? 'the whole recording' : fx(r1.part * 100, 0) + '% of it') + ' went through the limiter)'; state = '';
+  if (buf && !r1.silent) {
+    const spec = DISK.spec(d, r1.g, { limit: g('LIM_CEIL') - g('LIM_GUARD'), clamp: true }), mm = g('masterMaker')(buf, CH, d.vStart, d.vEndSet, r1.g, t2 => g('aeF')(d, d.vStart, d.vEndSet, t2), { clamp: true, limit: g('LIM_CEIL') }), ref = new Float32Array(65536 * CH); let dif = 0;
+    for (let pos = 0; pos < mm.total; pos += 65536) { const len = Math.min(65536, mm.total - pos), a = ref.subarray(0, len * CH); mm.fill(pos, len, a); const r = await DISK.master(spec, pos, len); for (let i = 0; i < a.length; i++) if (a[i] !== r.data[i]) dif++; busy('Final samples ' + Math.round(pos / mm.total * 100) + '%', pos / mm.total); }
+    txt += dif ? '; ' + dif + ' final samples differ from the app\'s own' : '; every final sample the same as the app\'s own'; state = dif ? 'bad' : 'ok';
+  }
+  add('Loudness target through the limiter', txt, state);
+  swap = { a: fxs.all, b: N({ noise, spec, eq: { on: true, bands: [{ type: 'lowpass', f: 700, q: 0.71 }, { type: 'lowshelf', f: 200, g: 4, q: 1 }] }, imager }), on: 'a' };
+  return fxs;
+}
+/* against today's whole-file tools. Noise reduction and Spectra must give every sample the same. EQ and Imager are today the browser's own filters, which round as they go: these come within a small distance of them.
+   (Where the browser's silent render changes the sound, see that row, today's EQ and Imager carry that change and the distance is large.) */
+async function toolsToday(file, m, buf, fxs) {
+  const S0 = g('S'), was = S0.audio, wipe = () => ['FXC', 'NRC', 'SEC'].forEach(k => g(k).clear()), BL = 10 * m.sr; wipe(); S0.audio = { buffer: buf, name: file.name, duration: buf.duration, peaks: new Float32Array(0), peakMax: 1 };
+  try {
+    for (const [name, f, near] of [[fxs.names.split(', EQ')[0], fxs.clean, 0], ['EQ' + fxs.names.split('EQ')[1], fxs.filt, 1e-4]]) {
+      busy(name + ', today\'s way…'); const whole = (await g('fxGet')(f)).buffer; await DISK.fx(f); let max = 0, first = -1;
+      for (let at = 0; at < m.frames; at += BL) { const r = await DISK.render(at, BL, true); for (let c = 0; c < m.ch; c++) { const x = r.chans[c], y = whole.getChannelData(c); for (let i = 0; i < x.length; i++) { const e = Math.abs(x[i] - y[at + i]); if (e > max) max = e; if (e && first < 0) first = at + i; } } busy(name + ', comparing ' + Math.round(at / m.frames * 100) + '%', at / m.frames); }
+      add(name + ' against today\'s', max === 0 ? 'Every sample the same' : 'Largest difference ' + db(max) + (near ? '' : ', first at frame ' + first), max <= near ? 'ok' : 'bad');
+    }
+  } finally { S0.audio = was; wipe(); }
+}
+
+/* play from the disk */
+let ac = null, pl = null, now = null, raf = 0, swap = null;
+function setRec(m) { now = m; if (!m) swap = null; $('bPlay').disabled = $('seek').disabled = !m; $('seek').value = 0; $('pos').textContent = m ? '0:00:00 of ' + clock(m.duration) : '0:00:00'; }
+function stopPlay() { if (pl) { pl.stop(); pl = null; } cancelAnimationFrame(raf); $('bPlay').textContent = 'Play'; $('bSwap').disabled = true; }
+$('bSwap').onclick = async () => { if (!pl || !pl.via || !swap) return; swap.on = swap.on === 'a' ? 'b' : 'a'; const t = performance.now(), g0 = pl.gaps(); await DISK.fx(swap[swap.on]); await pl.refresh(); $('swapped').textContent = (swap.on === 'a' ? 'Bright' : 'Muffled') + ' EQ, new sound with the player in ' + fx(performance.now() - t, 0) + 'ms (it has 250ms)'; };
+$('viaFx').onchange = () => { if (pl) startPlay().catch(e => add('Play', 'Failed: ' + (e && e.message || e), 'bad')); };
+async function startPlay() {
+  if (!now) return; if (pl) pl.stop(); pl = null;
+  if (!ac || ac.sampleRate !== now.sr) { if (ac) ac.close(); ac = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: now.sr }); }
+  const via = $('viaFx').checked && !!swap; if (via) await DISK.fx(swap[swap.on]);
+  const res = ac.resume(), mine = pl = await DISK.play(ac, $('seek').value / 1000 * now.frames, ac.destination, { fx: via }); mine.via = via; await res; $('bPlay').textContent = 'Stop'; $('bSwap').disabled = !via;
+  const draw = () => { if (pl !== mine) return; const f = mine.frame(); if (!held) $('seek').value = f / now.frames * 1000; $('pos').textContent = clock(f / now.sr) + ' of ' + clock(now.duration) + (mine.gaps() ? ' (ran dry ' + mine.gaps() + ' times)' : ''); if (mine.ended()) return stopPlay(); raf = requestAnimationFrame(draw); }; draw();
+}
+$('bPlay').onclick = () => { if (pl) stopPlay(); else startPlay().catch(e => add('Play', 'Failed: ' + (e && e.message || e), 'bad')); };
+$('seek').onchange = () => { held = false; if (pl) startPlay().catch(e => add('Play', 'Failed: ' + (e && e.message || e), 'bad')); else if (now) $('pos').textContent = clock($('seek').value / 1000 * now.duration) + ' of ' + clock(now.duration); };
+let held = false; $('seek').addEventListener('pointerdown', () => { held = true; }); addEventListener('pointerup', () => setTimeout(() => { held = false; }, 0)); $('seek').addEventListener('input', () => { held = true; });          // while the slider is being moved, the playhead does not pull it back
+$('bPick').onclick = () => $('file').click();
+$('file').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('bPick').disabled = $('bClear').disabled = true; try { await run(f); } catch (err) { add('Stopped', err && err.message || String(err), 'bad'); } busy('Done'); $('bPick').disabled = $('bClear').disabled = false; e.target.value = ''; window.done++; };
+$('bClear').onclick = async () => { stopPlay(); setRec(null); try { const r = await DISK.remove(), e = await navigator.storage.estimate(); add('Deleted', r.left ? r.left + ' stored recording could not be deleted (open in another tab?)' : 'The store is empty. The browser counts ' + fx(e.usage / 1e6, 0) + 'MB for now; reload the page for the settled number', r.left ? 'bad' : 'ok'); } catch (err) { add('Deleted', 'Failed: ' + err.message, 'bad'); } };
+$('bCopy').onclick = async () => { const text = rows.map(r => r.group ? '\n' + r.group : r.name + ': ' + r.value + (r.state === 'bad' ? '  [FAIL]' : '')).join('\n').trim(); try { await navigator.clipboard.writeText(navigator.userAgent + '\n' + text); $('copied').textContent = 'Copied.'; } catch (e) { $('copied').textContent = 'Could not copy. Select the table and copy it by hand.'; } };
+
+$('app').addEventListener('load', async () => {
+  W = $('app').contentWindow;
+  try { DISK = W.__keyframes.DISK; } catch (e) {}
+  group('This browser');
+  if (!DISK || !DISK.can()) { add('Disk store', 'Not available here (needs http://localhost and private storage)', 'bad'); busy('Cannot run'); return; }
+  try { const e = await DISK.call('env'); add('Disk store', e.sync ? 'Available' : 'No fast file access in a worker', e.sync ? 'ok' : 'bad'); if (e.quota) add('Disk allowed', fx(e.quota / 1e9) + 'GB, ' + fx(e.usage / 1e6, 0) + 'MB used'); if (!e.sync) { busy('Cannot run'); return; } }
+  catch (err) { add('Disk store', 'Failed: ' + err.message, 'bad'); busy('Cannot run'); return; }
+  $('bPick').disabled = $('bClear').disabled = false; busy('Ready'); window.ready = true;
+});
+</script>
+</body>
+</html>
