@@ -490,6 +490,7 @@
         </div>
       </span>
       <button class="btn small" id="bSpace" type="button" disabled title="Place all turns at equal intervals">Space turns evenly</button>
+      <button class="btn small" id="bToEnd" type="button" disabled title="Move every turn after the playhead to the end">Turns to end</button>
       <span class="vsep" aria-hidden="true"></span>
       <div class="zoom">
         <button class="btn small" id="bFit" type="button">Fit</button>
@@ -579,7 +580,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -1752,6 +1753,28 @@ function autoSpace(record = true) {
   S.turnsEdited = false;
   onTurnsChanged();
 }
+/* the turns after the playhead that "Turns to end" would move: the credits turn stays where it is */
+function toEndIdx() {
+  const n = S.turns.length, hasC = n > 0 && S.spreads.length > 0 && !!S.spreads[S.spreads.length - 1].credits, out = [];
+  for (let i = 0; i < n - (hasC ? 1 : 0); i++) if (S.turns[i] > S.time) out.push(i);
+  return out;
+}
+/* packs the turns after the playhead against the end (or against the credits turn) at the least gap, in order; they become placeholders (dashed) to place with Tap a Turn */
+function turnsToEnd() {
+  const idx = toEndIdx(); if (!idx.length) return;
+  const D = turnGap(), n = S.turns.length, hasC = n > 0 && S.spreads.length > 0 && !!S.spreads[S.spreads.length - 1].credits;
+  pushHistory();
+  const top = hasC ? S.turns[n - 1] - D : vEnd() - D + refOffset();
+  idx.forEach((g, k) => { S.turns[g] = top - (idx.length - 1 - k) * D; S.ph[g] = true; });
+  S.turnsEdited = true; TL.sel = [];
+  onTurnsChanged();
+  toast(idx.length === 1 ? tx('vid.toend.one') : tx('vid.toend', { n: idx.length }));
+}
+function syncToEnd() {
+  const b = $('#bToEnd'); if (!b) return;
+  const none = !toEndIdx().length; b.disabled = none;
+  const t = none ? tx('vid.toend.none') : 'Move every turn after the playhead to the end'; if (b.title !== t) b.title = t;
+}
 function fixPh() { while (S.ph.length < S.turns.length) S.ph.push(false); S.ph.length = S.turns.length; }
 function normalizeTurns() {
   fixPh();
@@ -1870,7 +1893,7 @@ function onTrimChanged() {
   S.time = clamp(S.time, S.vStart, vEnd()); fixCreditsEnd();
   layoutTimeline(); TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateInfo(); updateTimeUI(true);
 }
-function onTurnsChanged() { fixCreditsEnd(); TL.staticDirty = true; stageDirty = true; updateInfo(); updateHint(); }
+function onTurnsChanged() { if (TL.sel.length && TL.selN !== S.turns.length) TL.sel = []; fixCreditsEnd(); TL.staticDirty = true; stageDirty = true; updateInfo(); updateHint(); }
 function afterStructureChange() {
   prefetchAround(); fixCreditsEnd();
   TL.staticDirty = true; stageDirty = true; layoutTimeline(); updateInfo(); updateButtons(); applyCreditsUI();
@@ -3713,7 +3736,7 @@ function drawStage() {
 const TL = {
   canvas: $('#tl'), scroller: $('#tlScroll'), inner: $('#tlInner'), dpr: 1, vw: 800, h: 190,
   rulerH: 26, trackY: 34, trackH: 64, waveY: 108, waveH: 70,
-  staticDirty: true, overlayDirty: true, drag: null, hover: -1, hoverX: 0, C: {}
+  staticDirty: true, overlayDirty: true, drag: null, hover: -1, hoverX: 0, C: {}, sel: [], selN: 0, box: null
 };
 TL.ctx = TL.canvas.getContext('2d');
 TL.sc = document.createElement('canvas'); TL.sctx = TL.sc.getContext('2d');
@@ -3892,8 +3915,13 @@ function hsStep(dt) {
   }
   return moving;
 }
+/* a selected turn gets a ring in the ink color, which reads on both themes, around its handle */
+function selRing(c, x, cy, w, h, on) {
+  if (!on) return;
+  c.save(); c.strokeStyle = TL.C.ink; c.lineWidth = 2; c.globalAlpha = 1; roundRect(c, x - w / 2 - 3, cy - h / 2 - 3, w + 6, h + 6, 8); c.stroke(); c.restore();
+}
 function drawHandles(c) {
-  const { C, vw, trackY, trackH, waveY, waveH } = TL, D = flipDur(), off = refOffset();
+  const { C, vw, trackY, trackH, waveY, waveH } = TL, D = flipDur(), off = refOffset(), selSet = new Set(turnSel());
   for (let i = 0; i < S.turns.length; i++) {
     const t = S.turns[i], x = t2x(t), bx0 = t2x(t - off), bx1 = t2x(t - off + D), ph = !!S.ph[i];
     if (bx1 < -20 || bx0 > vw + 20) continue;
@@ -3903,7 +3931,7 @@ function drawHandles(c) {
       c.globalAlpha = .75; c.strokeStyle = col; c.lineWidth = 1.5; c.setLineDash([4, 3]);
       c.beginPath(); c.moveTo(x + .5, trackY - 3); c.lineTo(x + .5, waveY + waveH); c.stroke();
       roundRect(c, x - pw_ / 2, cy - ph_ / 2, pw_, ph_, 6); c.fillStyle = C.bg; c.fill(); c.stroke();
-      c.setLineDash([]); c.lineWidth = 1; c.globalAlpha = 1; continue;
+      c.setLineDash([]); c.lineWidth = 1; c.globalAlpha = 1; selRing(c, x, cy, pw_, ph_, selSet.has(i)); continue;
     }
     if (D > 0) { c.fillStyle = soft; c.fillRect(bx0, trackY, Math.max(1, bx1 - bx0), trackH); c.fillRect(bx0, waveY, Math.max(1, bx1 - bx0), waveH); }
     c.strokeStyle = col; c.globalAlpha = .55; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x + .5, trackY + trackH); c.lineTo(x + .5, waveY + waveH); c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
@@ -3911,6 +3939,7 @@ function drawHandles(c) {
     c.save(); if (sc > 1.02) { c.shadowColor = col; c.shadowBlur = (sc - 1) * 60; }
     roundRect(c, x - pw_ / 2, cy - ph_ / 2, pw_, ph_, 6); c.fillStyle = col; c.fill(); c.restore();
     c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 2 * sc, cy - 7 * sc); c.lineTo(x - 2 * sc, cy + 7 * sc); c.moveTo(x + 2 * sc, cy - 7 * sc); c.lineTo(x + 2 * sc, cy + 7 * sc); c.stroke(); c.lineWidth = 1;       // the grip lines move with the handle
+    selRing(c, x, cy, pw_, ph_, selSet.has(i));
   }
 }
 /* a thin teal strip under the pages shows how long the credits are up; with "End credits early" a teal marker ends it */
@@ -4018,6 +4047,7 @@ function drawTimeline() {
   const c = TL.ctx, C = TL.C; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, c.canvas.width, c.canvas.height); c.drawImage(TL.sc, 0, 0);       // clear first: in full screen the layer is see-through, and old frames would pile up
   c.setTransform(TL.dpr, 0, 0, TL.dpr, 0, 0);
   drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
+  if (TL.box) { c.save(); c.globalAlpha = .12; c.fillStyle = C.accent; c.fillRect(TL.box.a, TL.trackY - 6, TL.box.z - TL.box.a, TL.trackH + 12); c.globalAlpha = .8; c.strokeStyle = C.accent; c.lineWidth = 1; c.strokeRect(TL.box.a + .5, TL.trackY - 5.5, TL.box.z - TL.box.a, TL.trackH + 11); c.restore(); }        // the selection box
   // tooltip
   let tipI = TL.drag && TL.drag.kind === 'turn' ? TL.drag.i : TL.hover;
   if (tipI >= 0 && S.turns[tipI] != null) {
@@ -4100,6 +4130,21 @@ function nudgeTurns(base, i, t) {
   for (let j = i - 1; j >= 0; j--) out[j] = Math.min(base[j], out[j + 1] - D);
   return out;
 }
+/* The group moves rigidly by delta, kept inside the video; the turns outside it give way at the least gap (the ones between group members too). */
+function clampGroupDelta(base, idx, delta) {
+  const D = turnGap(), off = refOffset(), n = base.length, a = idx[0], z = idx[idx.length - 1];
+  const lo = turnMin() + a * D - base[a], hi = vEnd() - D + off - (n - 1 - z) * D - base[z];
+  return clamp(delta, lo, Math.max(lo, hi));
+}
+function nudgeGroup(base, idx, delta) {
+  const D = turnGap(), n = base.length, out = base.slice(), inG = new Set(idx);
+  for (const g of idx) out[g] = base[g] + delta;
+  for (let j = 1; j < n; j++) if (!inG.has(j)) out[j] = Math.max(base[j], out[j - 1] + D);
+  for (let j = n - 2; j >= 0; j--) if (!inG.has(j)) out[j] = Math.min(out[j], out[j + 1] - D);
+  return out;
+}
+const turnSel = () => (TL.selN === S.turns.length ? TL.sel : []);
+function setTurnSel(a) { TL.sel = a.slice().sort((x, y) => x - y); TL.selN = S.turns.length; TL.staticDirty = true; }
 TL.canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
   const p = tlPoint(e), hi = hitTurn(p), tr = hitTrim(p), ce = hitCredEnd(p);
@@ -4114,9 +4159,17 @@ TL.canvas.addEventListener('pointerdown', e => {
     const rb = S.redo.slice(); pushHistory();
     TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
+  } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
+    const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
+    TL.drag = { kind: 'noop' };
   } else if (hi >= 0) {
-    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, dx: S.turns[hi] - x2t(p.x), base: S.turns.slice(), moved: false, rb, live: Transport.playing };
+    if (!turnSel().includes(hi)) setTurnSel([]);                // a plain grab of an unselected turn drops the selection; a selected one takes the group along
+    const grp = turnSel().length > 1 ? turnSel().slice() : null;
+    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, dx: S.turns[hi] - x2t(p.x), base: S.turns.slice(), group: grp, moved: false, rb, live: Transport.playing };
     if (!TL.drag.live) { S.time = clamp(S.turns[hi], S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true); }          // paused: the playhead goes to the marker. Playing: the video keeps going, untouched, while the marker moves
+  } else if (p.y >= TL.trackY && p.y <= TL.trackY + TL.trackH) {   // empty track: a click clears the selection and moves the playhead; a drag draws a box
+    TL.drag = { kind: 'box', x0: p.x, resume: Transport.playing, keep: e.shiftKey ? turnSel().slice() : [], moved: false };
+    if (Transport.playing) Transport.pause();
   } else {
     TL.drag = { kind: 'scrub', resume: Transport.playing };
     if (Transport.playing) Transport.pause();
@@ -4143,13 +4196,19 @@ TL.canvas.addEventListener('pointermove', e => {
     }
     TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
   } else if (d && d.kind === 'turn') {
-    const t = clampTurn(d.i, x2t(p.x) + d.dx);
-    const next = nudgeTurns(d.base, d.i, t);
+    const want = x2t(p.x) + d.dx, delta = d.group ? clampGroupDelta(d.base, d.group, want - d.base[d.i]) : 0;
+    const t = d.group ? d.base[d.i] + delta : clampTurn(d.i, want);
+    const next = d.group ? nudgeGroup(d.base, d.group, delta) : nudgeTurns(d.base, d.i, t);
     if (next.some((v, j) => v !== S.turns[j])) {
-      d.moved = true; S.turns = next; S.turnsEdited = true; S.ph[d.i] = false;
+      d.moved = true; S.turns = next; S.turnsEdited = true; for (const g of d.group || [d.i]) S.ph[g] = false;
       if (!d.live) S.time = clamp(t, S.vStart, vEnd());   // the playhead stays exactly on the marker, so you see the frame at the moment the turn starts, is halfway, or finishes (whatever the handle marks); not while the video plays
       TL.staticDirty = true; stageDirty = true; updateTimeUI(true);
     }
+  } else if (d && d.kind === 'box') {
+    if (!d.moved && Math.abs(p.x - d.x0) < 4) return;
+    d.moved = true; d.x1 = p.x; const a = Math.min(d.x0, p.x), z = Math.max(d.x0, p.x);
+    setTurnSel(d.keep.concat(S.turns.map((t, i) => i).filter(i => { const x = t2x(S.turns[i]); return x >= a && x <= z && !d.keep.includes(i); })));
+    TL.box = { a, z }; TL.overlayDirty = true;
   } else if (d && d.kind === 'scrub') {
     S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
   } else {
@@ -4162,7 +4221,14 @@ TL.canvas.addEventListener('pointermove', e => {
 });
 function endDrag(e) {
   const d = TL.drag; if (!d) return;
-  TL.drag = null;
+  TL.drag = null; TL.box = null;
+  if (d.kind === 'box') {
+    if (d.moved) { TL.overlayDirty = true; if (d.resume) Transport.play(); return; }
+    if (!d.keep.length) setTurnSel([]);
+    const p = tlPoint(e); S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
+    if (d.resume) Transport.play(); return;
+  }
+  if (d.kind === 'noop') return;
   if (d.kind === 'turn' && !d.moved) { S.history.pop(); S.redo = d.rb || []; updateHistoryButtons(); }
   if (d.kind === 'turn' && d.moved) onTurnsChanged();
   if (d.kind === 'credEnd') {
@@ -4324,7 +4390,7 @@ function updateButtons() {
   $('#tTot').textContent = fmt(duration());
 }
 function updateInfo() {
-  const n = S.spreads.length;
+  const n = S.spreads.length; syncToEnd();
   if (!n) { $('#spreadInfo').textContent = ''; return; }
   const st = frameState(S.time), sp = S.spreads[st.spread];
   const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
@@ -5746,7 +5812,7 @@ function openAudioEditor() {
   sheetShow($('#audioDlg')); aeRefresh(); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
 }
 /* MESSAGES:BEGIN (the playful lines and the wording; keep it valid JSON) */
-const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.first":"Like a book cover: p. 1 alone, pp. 2–3 side by side, etc.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown at the end, under the last page. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","ae.hum.short":"This recording is too short to look for a hum in.","ae.hum.none":"No steady mains hum was found.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
+const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.first":"Like a book cover: p. 1 alone, pp. 2–3 side by side, etc.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown at the end, under the last page. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","ae.hum.short":"This recording is too short to look for a hum in.","ae.hum.none":"No steady mains hum was found.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","vid.toend":"{n} turns moved to the end","vid.toend.one":"1 turn moved to the end","vid.toend.none":"No turns lie after the playhead, so there is nothing to move","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
 /* MESSAGES:END */
 /* the opening screen always fits its box: at full size when there is room, scaled down evenly when there is not, never with a scroll bar */
 function introFit() {
@@ -9755,6 +9821,7 @@ function boot() {
   $('#bUndo').addEventListener('click', undo);
   $('#bRedo').addEventListener('click', redo);
   $('#bSpace').addEventListener('click', () => { autoSpace(true); toast(tx('app.spaced')); });
+  $('#bToEnd').addEventListener('click', turnsToEnd);
   $('#bFit').addEventListener('click', zoomFit);
   $('#zoom').addEventListener('input', e => setZoom(sliderToZoom(+e.target.value), TL.vw / 2));
   $('#btnExport').addEventListener('click', () => onExportClick());
@@ -9850,7 +9917,7 @@ function boot() {
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
 }
-window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
+window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
 dbg('glisscore loaded'); envInfo().forEach(dbg);
 async function checkHevc() {
   const opt = document.querySelector('#codec option[value="hevc"]'); let ok = false;
