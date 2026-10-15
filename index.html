@@ -2156,9 +2156,9 @@ async function renderPdfPage(doc, idx, w, h, rot = 0, wm = null, geo = null) {
     const m = new DOMMatrix(); m.translateSelf(w / 2, h / 2); m.scaleSelf(sc); m.rotateSelf(rot); m.translateSelf(-(cr[0] + cr[2]) / 2 * Ws, -(cr[1] + cr[3]) / 2 * Hs);
     m.translateSelf(Ws / 2, Hs / 2); m.multiplySelf(skewMat(geo.skew, geo.vskew)); m.translateSelf(-Ws / 2, -Hs / 2);
     pw = vw0 * sc; ph = vh0 * sc; px = (w - pw) / 2; py = (h - ph) / 2;
-    ctx.save(); { const cx0 = Math.round(px), cy0 = Math.round(py), cx1 = Math.round(px + pw), cy1 = Math.round(py + ph); if (cx0 > 0 || cy0 > 0 || cx1 < w || cy1 < h) { ctx.beginPath(); ctx.rect(cx0, cy0, cx1 - cx0, cy1 - cy0); ctx.clip(); } }          // nothing outside the cropped page shows
     await page.render({ canvasContext: ctx, viewport: v0, transform: [m.a, m.b, m.c, m.d, m.e, m.f], background: '#ffffff' }).promise;
-    ctx.restore();
+    { const cx0 = Math.round(px), cy0 = Math.round(py), cx1 = Math.round(px + pw), cy1 = Math.round(py + ph); if (cx0 > 0 || cy0 > 0 || cx1 < w || cy1 < h) {          // nothing outside the cropped page shows: painted over white afterward, because a clip set before the render makes a large scan vanish
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, Math.max(0, cy0)); ctx.fillRect(0, cy1, w, Math.max(0, h - cy1)); ctx.fillRect(0, cy0, Math.max(0, cx0), cy1 - cy0); ctx.fillRect(cx1, cy0, Math.max(0, w - cx1), cy1 - cy0); } }
   }
   try { page.cleanup(); } catch (e) {}
   if (geo && (geo.bg || geo.sp)) await pdfCleanCanvas(cv, geo.bg || 0, geo.sp || 0, [px, py, pw, ph]);
