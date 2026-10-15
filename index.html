@@ -1753,6 +1753,26 @@ function autoSpace(record = true) {
   S.turnsEdited = false;
   onTurnsChanged();
 }
+/* After a button moves the turns, only their drawing travels: each handle keeps an offset in seconds (where it is drawn minus where it is) that a small spring brings to zero, with a slight landing bounce */
+const shownTurn = i => S.turns[i] + ((TL.glide && TL.glide[i]) ? TL.glide[i].d : 0);
+function glideFrom(was) {
+  if (reducedMotion() || was.length !== S.turns.length) { TL.glide = null; return; }
+  const g = {}; let any = false;
+  was.forEach((t, i) => { const d = t - S.turns[i]; if (Math.abs(d) > 0.005) { g[i] = { d, v: 0 }; any = true; } });
+  TL.glide = any ? g : null; TL.overlayDirty = true;
+}
+function glideStep(dt) {
+  const g = TL.glide; if (!g) return false; TL.staticDirty = true;   // page blocks and the waveform follow the drawn handles
+  if ((TL.drag && TL.drag.kind === 'turn') || reducedMotion()) { TL.glide = null; return true; }       // dragging and nudging are never delayed
+  const w = 2 * Math.PI / 0.4, z = 0.78, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n; let moving = false;
+  for (const k in g) {
+    const s = g[k];
+    for (let i = 0; i < n; i++) { s.v += (-w * w * s.d - 2 * z * w * s.v) * h; s.d += s.v * h; }
+    if (Math.abs(s.d) > 0.002 || Math.abs(s.v) > 0.01) moving = true; else delete g[k];
+  }
+  if (!moving) TL.glide = null;
+  return true;
+}
 /* the turns after the playhead that "Turns to end" would move: the credits turn stays where it is */
 function toEndIdx() {
   const n = S.turns.length, hasC = n > 0 && S.spreads.length > 0 && !!S.spreads[S.spreads.length - 1].credits, out = [];
@@ -1763,11 +1783,11 @@ function toEndIdx() {
 function turnsToEnd() {
   const idx = toEndIdx(); if (!idx.length) return;
   const D = turnGap(), n = S.turns.length, hasC = n > 0 && S.spreads.length > 0 && !!S.spreads[S.spreads.length - 1].credits;
-  pushHistory();
+  pushHistory(); const was = S.turns.map((_, i) => shownTurn(i));
   const top = hasC ? S.turns[n - 1] - D : vEnd() - D + refOffset();
   idx.forEach((g, k) => { S.turns[g] = top - (idx.length - 1 - k) * D; S.ph[g] = true; });
   S.turnsEdited = true; TL.sel = [];
-  onTurnsChanged();
+  onTurnsChanged(); glideFrom(was);
   toast(idx.length === 1 ? tx('vid.toend.one') : tx('vid.toend', { n: idx.length }));
 }
 function syncToEnd() {
@@ -1893,7 +1913,7 @@ function onTrimChanged() {
   S.time = clamp(S.time, S.vStart, vEnd()); fixCreditsEnd();
   layoutTimeline(); TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateInfo(); updateTimeUI(true);
 }
-function onTurnsChanged() { if (TL.sel.length && TL.selN !== S.turns.length) TL.sel = []; fixCreditsEnd(); TL.staticDirty = true; stageDirty = true; updateInfo(); updateHint(); }
+function onTurnsChanged() { TL.glide = null; if (TL.sel.length && TL.selN !== S.turns.length) TL.sel = []; fixCreditsEnd(); TL.staticDirty = true; stageDirty = true; updateInfo(); updateHint(); }
 function afterStructureChange() {
   prefetchAround(); fixCreditsEnd();
   TL.staticDirty = true; stageDirty = true; layoutTimeline(); updateInfo(); updateButtons(); applyCreditsUI();
@@ -3828,7 +3848,7 @@ function trimShown() {
 }
 function spreadBounds(i) {
   const n = S.spreads.length, sh = trimShown();
-  return [i === 0 ? sh.s : S.turns[i - 1], i === n - 1 ? sh.e : S.turns[i]];
+  return [i === 0 ? sh.s : shownTurn(i - 1), i === n - 1 ? sh.e : shownTurn(i)];
 }
 /* the waveform and page blocks ease in when they first appear */
 const REVEAL = { wave: 1400, blocks: 900 };
@@ -3923,7 +3943,7 @@ function selRing(c, x, cy, w, h, on) {
 function drawHandles(c) {
   const { C, vw, trackY, trackH, waveY, waveH } = TL, D = flipDur(), off = refOffset(), selSet = new Set(turnSel());
   for (let i = 0; i < S.turns.length; i++) {
-    const t = S.turns[i], x = t2x(t), bx0 = t2x(t - off), bx1 = t2x(t - off + D), ph = !!S.ph[i];
+    const t = shownTurn(i), x = t2x(t), bx0 = t2x(t - off), bx1 = t2x(t - off + D), ph = !!S.ph[i];
     if (bx1 < -20 || bx0 > vw + 20) continue;
     const isCr = hasCreditsSpread() && i === S.turns.length - 1, col = isCr ? C.cred : C.turn, soft = isCr ? C.credSoft : C.turnSoft;     // the credits marker has its own color
     const grabbed = !!(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i), sc = hsGet('t' + i, grabbed ? 1.16 : TL.hover === i ? 1.07 : 1), pw_ = 13 * sc, ph_ = 28 * sc, cy = trackY + trackH / 2;
@@ -4051,7 +4071,7 @@ function drawTimeline() {
   // tooltip
   let tipI = TL.drag && TL.drag.kind === 'turn' ? TL.drag.i : TL.hover;
   if (tipI >= 0 && S.turns[tipI] != null) {
-    const x = t2x(S.turns[tipI]), txt = (hasCreditsSpread() && tipI === S.turns.length - 1 ? 'Credits' : turnNoun() + ' ' + (tipI + 1)) + ' · ' + fmt(S.turns[tipI] - S.vStart);
+    const x = t2x(shownTurn(tipI)), txt = (hasCreditsSpread() && tipI === S.turns.length - 1 ? 'Credits' : turnNoun() + ' ' + (tipI + 1)) + ' · ' + fmt(shownTurn(tipI) - S.vStart);
     c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
     const bx = clamp(x - w / 2, 4, TL.vw - w - 4), by = TL.trackY - 26 < TL.rulerH ? TL.trackY + TL.trackH + 2 : TL.trackY - 26;
     c.fillStyle = C.ink; roundRect(c, bx, by, w, 20, 6); c.fill();
@@ -4092,7 +4112,7 @@ function tlPoint(e) { const r = TL.canvas.getBoundingClientRect(); return { x: e
 function hitTurn(p) {
   if (p.y < TL.trackY - 8 || p.y > TL.trackY + TL.trackH + 8) return -1;
   let best = -1, bd = 10;
-  for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(S.turns[i]) - p.x); if (d <= bd) { bd = d; best = i; } }
+  for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(shownTurn(i)) - p.x); if (d <= bd) { bd = d; best = i; } }
   return best;
 }
 function hitCredEnd(p) {
@@ -4207,7 +4227,7 @@ TL.canvas.addEventListener('pointermove', e => {
   } else if (d && d.kind === 'box') {
     if (!d.moved && Math.abs(p.x - d.x0) < 4) return;
     d.moved = true; d.x1 = p.x; const a = Math.min(d.x0, p.x), z = Math.max(d.x0, p.x);
-    setTurnSel(d.keep.concat(S.turns.map((t, i) => i).filter(i => { const x = t2x(S.turns[i]); return x >= a && x <= z && !d.keep.includes(i); })));
+    setTurnSel(d.keep.concat(S.turns.map((t, i) => i).filter(i => { const x = t2x(shownTurn(i)); return x >= a && x <= z && !d.keep.includes(i); })));
     TL.box = { a, z }; TL.overlayDirty = true;
   } else if (d && d.kind === 'scrub') {
     S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
@@ -9820,7 +9840,7 @@ function boot() {
   $('#bTap').addEventListener('click', tapTurn);
   $('#bUndo').addEventListener('click', undo);
   $('#bRedo').addEventListener('click', redo);
-  $('#bSpace').addEventListener('click', () => { autoSpace(true); toast(tx('app.spaced')); });
+  $('#bSpace').addEventListener('click', () => { const was = S.turns.map((_, i) => shownTurn(i)); autoSpace(true); glideFrom(was); toast(tx('app.spaced')); });
   $('#bToEnd').addEventListener('click', turnsToEnd);
   $('#bFit').addEventListener('click', zoomFit);
   $('#zoom').addEventListener('input', e => setZoom(sliderToZoom(+e.target.value), TL.vw / 2));
@@ -9912,12 +9932,12 @@ function boot() {
     }
     if (stageDirty) { stageDirty = false; try { drawStage(); } catch (e) { console.error(e); } }
     if (TL.glow) TL.overlayDirty = true;
-    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
+    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
     if (rvActive()) TL.staticDirty = true;
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
 }
-window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
+window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, shownTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
 dbg('glisscore loaded'); envInfo().forEach(dbg);
 async function checkHevc() {
   const opt = document.querySelector('#codec option[value="hevc"]'); let ok = false;
