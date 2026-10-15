@@ -798,6 +798,9 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about a{white-space:nowrap;color:var(--accent);text-underline-offset:2px}
 .about a:hover{text-decoration-thickness:2px}
 .about .row{margin-top:10px}
+.about .fine{margin:0 auto 0 0;font-size:12.5px}
+.about .fine a{color:inherit}
+.about .fine a:hover{color:var(--ink)}      /* fine print sits left of Close and wraps above it on a narrow screen */
 #keysDlg .dlg{width:max-content;min-width:min(260px,92vw);max-width:calc(100vw - 32px)}
 /* a control that is switched off dims smoothly */
 .field.dim{opacity:.45}
