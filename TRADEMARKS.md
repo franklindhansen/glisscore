@@ -1,8 +1,8 @@
-# *glisscore*™ names, logos and the official project
+# *glisscore™* names, logos and the official project
 
 The code of *glisscore* is open source under the [AGPL-3.0](LICENSE), and you are free to use, study, change and share it under that license. The license does not give you the right to use the project's name or look as your own. As that license permits (section 7), I keep those rights.
 
-This page says what that means in practice. It is a policy, not a registration: *glisscore*™ is an unregistered mark that I use and enforce.
+This page says what that means in practice. It is a policy, not a registration: *glisscore™* is an unregistered mark that I use and enforce.
 
 ## What is reserved
 
@@ -48,4 +48,4 @@ Using the name or logo as the main brand of anything other than the official pro
 
 ## Changes
 
-I may update this page. Past versions stay in the repository's history.
+This page may be updated. Past versions stay in the repository's history.

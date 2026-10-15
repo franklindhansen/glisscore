@@ -1,4 +1,4 @@
-# *glisscore*™
+# *glisscore™*
 
 Turn a score PDF and an audio file into a page-turning video. Clean up the PDF and the recording first, right in the same app.
 
@@ -24,7 +24,7 @@ The checks in `tests/` need Playwright; `tests/README.md` has the setup.
 
 ## Feedback
 
-Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen/glisscore/issues). I'm not taking code changes yet.
+Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen/glisscore/issues). Code changes aren't being accepted yet.
 
 ## Support
 
