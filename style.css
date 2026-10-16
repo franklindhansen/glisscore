@@ -304,7 +304,7 @@ body.dragging .dropveil{display:flex}
 .exp-overlay>.dlg{margin:auto;max-width:100%}      /* auto margins centre a short window and let a tall one start at the top and scroll, so nothing is ever cut off */
 .exp-overlay[hidden]{display:none}
 .dlg.wide{width:min(780px,94vw)}
-#diagLog{width:100%;height:min(46vh,380px);font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px;resize:vertical}
+#diagLog{width:100%;height:min(46vh,380px);font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px;resize:none}
 
 /* ----- Dialog box, buttons row, progress bar ----- */
 .dlg .row{flex-wrap:wrap}
@@ -796,7 +796,13 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about .fine{margin:0 auto 0 0;font-size:12.5px}
 .about .fine a{color:inherit}
 .about .fine a:hover{color:var(--ink)}      /* fine print sits left of Close and wraps above it on a narrow screen */
-#keysDlg .dlg{width:max-content;min-width:min(260px,92vw);max-width:calc(100vw - 32px)}
+.dlg.page{width:min(600px,92vw);min-height:380px}
+.dlg.page:not(.how){display:flex;flex-direction:column}      /* extra height goes above the buttons, not into stretched rows and tall buttons */
+.dlg.page:not(.how)>.row:last-child{margin-top:auto}
+#diagDlg .dlg.page{width:min(720px,92vw)}      /* About, How it works, Import/Export, Keyboard shortcuts and Diagnostics share one size */
+#keysDlg .dlg.page,.dlg.page.how{width:min(900px,92vw)}      /* the reading window and the two-column shortcuts get the editors' width */
+.dlg.page .keys{grid-template-columns:1fr auto 1fr auto;gap:6px 28px}
+@media (max-width:820px){.dlg.page .keys{grid-template-columns:1fr auto}}
 /* a control that is switched off dims smoothly */
 .field.dim{opacity:.45}
 .field{transition:opacity .35s var(--ease-ui)}

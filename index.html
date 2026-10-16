@@ -513,7 +513,7 @@
 <!-- ==================== 6. Dialogs & Overlays ==================== -->
 <!-- ----- DIALOG: Diagnostics ----- -->
 <div id="diagDlg" class="exp-overlay z-diag" role="dialog" aria-modal="true" aria-labelledby="diagTitle" hidden>
-  <div class="dlg wide">
+  <div class="dlg page">
     <h2 id="diagTitle">Diagnostics</h2>
     <p class="hint">If something goes wrong, please run the self-test and copy this log.</p>
     <textarea id="diagLog" readonly spellcheck="false"></textarea>
@@ -535,7 +535,7 @@
 </div>
 <!-- ----- DIALOG: Import / Export settings ----- -->
 <div id="ioDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="ioTitle" hidden>
-  <div class="dlg">
+  <div class="dlg page">
     <h2 id="ioTitle">Import / Export</h2>
     <p class="hint">Save your work to a small text file, or load one back in.</p>
     <div class="field">
@@ -557,7 +557,7 @@
 </div>
 <!-- ----- DIALOG: How it works ----- -->
 <div id="howDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="howTitle" hidden>
-  <div class="dlg wide how">
+  <div class="dlg page how">
     <h2 id="howTitle">How it works</h2>
     <p class="how-lead">Everything happens inside your browser, on your own device. Your score and audio are never uploaded.</p>
     <div class="how-body">
@@ -596,7 +596,7 @@
 </div>
 <!-- ----- DIALOG: About ----- -->
 <div id="aboutDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
-  <div class="dlg about">
+  <div class="dlg page about">
     <h2 id="aboutTitle">About</h2>
     <p><em>glisscore</em> was made by composer, conductor, and grad student (who should probably be writing music), <a href="https://franklindhansen.com/" target="_blank" rel="noopener">Franklin D. Hansen</a>.</p>
     <p><em>glisscore</em> is free and open source under the AGPL-3.0. <a href="https://github.com/franklindhansen/glisscore" target="_blank" rel="noopener">View the source</a>.</p>
@@ -607,7 +607,7 @@
 </div>
 <!-- ----- DIALOG: Keyboard shortcuts ----- -->
 <div id="keysDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="keysTitle" hidden>
-  <div class="dlg">
+  <div class="dlg page">
     <h2 id="keysTitle">Keyboard shortcuts</h2>
     <dl class="keys" id="keysList">
       <dt>Play or pause</dt><dd><kbd>Space</kbd></dd>
@@ -3785,7 +3785,11 @@ const tlHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.hi : Math.max(vE
 const tlInnerWidth = () => Math.max(TL.vw, Math.ceil(2 * TL_ROOM + (tlHi() - tlLo()) * S.pxPerSec - 1e-6));
 const t2x = t => TL_ROOM + (t - tlLo()) * S.pxPerSec - TL.scroller.scrollLeft;
 const x2t = x => (x + TL.scroller.scrollLeft - TL_ROOM) / S.pxPerSec + tlLo();
-const fitPps = () => clamp((TL.vw - 2 * TL_ROOM) / Math.max(1, tlHi() - tlLo()), 1, 400);
+/* Fit shows the video, bracket to bracket (the axis still holds the whole audio, so the rest is a scroll away). A dragged bracket holds the span it started from. */
+const fitLo = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.fitLo : S.vStart;
+const fitHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.fitHi : vEnd();
+const fitPps = () => clamp((TL.vw - 2 * TL_ROOM) / Math.max(1, fitHi() - fitLo()), 1, 400);
+const fitScroll = () => { TL.scroller.scrollLeft = Math.max(0, (fitLo() - tlLo()) * S.pxPerSec); };
 function layoutTimeline() {
   const sc = TL.scroller, vw = Math.max(200, sc.clientWidth), h = Math.max(150, sc.clientHeight);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -3794,7 +3798,7 @@ function layoutTimeline() {
   TL.canvas.style.width = vw + 'px'; TL.canvas.style.height = h + 'px';
   TL.sc.width = TL.canvas.width; TL.sc.height = TL.canvas.height;
   TL.trackH = clamp(Math.round(h * 0.42), 68, 92); TL.waveY = TL.trackY + TL.trackH + 10; TL.waveH = Math.max(36, h - TL.waveY - 8);
-  if (S.fitMode) { setZoom(fitPps(), 0, true); sc.scrollLeft = 0; }
+  if (S.fitMode) { setZoom(fitPps(), 0, true); fitScroll(); }
   else TL.inner.style.width = tlInnerWidth() + 'px';
   TL.staticDirty = true;
 }
@@ -3810,8 +3814,8 @@ function setZoom(pps, anchorX, keepFit) {
   if (!keepFit) S.fitMode = false;
   TL.staticDirty = true;
 }
-/* Fit: the whole timeline exactly fills the window, so there is nothing to scroll (and it stays fitted when the window resizes) */
-function zoomFit() { layoutTimeline(); S.fitMode = true; setZoom(fitPps(), 0, true); TL.scroller.scrollLeft = 0; }
+/* Fit: the video, bracket to bracket, fills the window less the room at each end (and it stays fitted when the window resizes); the rest of the audio is a scroll away */
+function zoomFit() { layoutTimeline(); S.fitMode = true; setZoom(fitPps(), 0, true); fitScroll(); }
 
 function drawRuler(c) {
   const { C, vw, rulerH } = TL;
@@ -4188,7 +4192,7 @@ TL.canvas.addEventListener('pointerdown', e => {
     if (Transport.playing) Transport.pause();
   } else if (tr && (hi < 0 || dTrim < dTurn)) {
     const rb = S.redo.slice(); pushHistory();
-    TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
+    TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
   } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
     const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
@@ -4450,8 +4454,8 @@ function updateHint() {
   h.classList.remove('warn');
   const where = { start: 'starts', middle: 'is halfway through', end: 'finishes' }[S.set.ref], tr = S.set.transition, noun = tr === 'slide' ? 'slide' : 'page turn';
   const term = (k, t) => '<span class="term" data-glow="' + k + '" tabindex="0">' + t + '</span>';
-  if (tr === 'cut') { h.innerHTML = 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video.'; return; }
-  h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', tr === 'slide' ? 'Slide length' : 'Turn length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video.';
+  if (tr === 'cut') { h.innerHTML = 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.'; return; }
+  h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', tr === 'slide' ? 'Slide length' : 'Turn length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
 }
 function syncControls() {
   const s = S.set;
