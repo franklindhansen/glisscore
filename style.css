@@ -2200,12 +2200,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
    One outline round the group, flat buttons inside it, a thin divider between them. The group corner is the button corner plus the gap (7px + 2px = 9px), so the curves nest.
    Mark up a group as <span class="btn-group"> with .btn buttons and <span class="vsep"> dividers; a lone button, a slider or a toggle that stands apart is not in one. ---- */
 .btn-group{display:inline-flex;align-items:center;gap:0;padding:2px;border-radius:calc(var(--r-sm) + 2px);border:1px solid var(--line);background:var(--panel2)}
-.btn-group .btn{box-sizing:border-box;height:23px;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:13px}
-.btn-group .btn:hover:not([disabled]){background:var(--accent-soft)}
-.btn-group .btn[aria-pressed=true]{background:var(--accent-soft)}
+.btn-group>.btn{box-sizing:border-box;height:23px;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:13px}
+.btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
+.btn-group>.btn[aria-pressed=true]{background:var(--accent-soft)}
 .btn-group .vsep{display:block;width:1px;height:16px;margin:0 3px;background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
 .btn-group.hist-wrap{gap:0}
 /* full screen: the group floats over the wave, so it is glass with a shadow; its buttons stay flat inside it */
 #audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
-#audioDlg.afull .ed-head .btn-group .btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-#audioDlg.afull .ed-head .btn-group .btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group .btn:hover:not([disabled]){background:var(--accent-soft)}
+#audioDlg.afull .ed-head .btn-group>.btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#audioDlg.afull .ed-head .btn-group>.btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
