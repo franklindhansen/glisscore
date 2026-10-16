@@ -226,7 +226,8 @@ input.bad{border-color:var(--danger)}
 .combo-list li[aria-selected="true"]{font-weight:600;color:var(--accent)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .subhead{margin:16px 0 8px;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
-.group-head+.subhead,.group-head+#turnShadowBlock>.subhead{margin-top:4px}
+
+.group-head+#turnShadowBlock>#centerFold>.subhead,#centerFold[hidden]+.subhead{margin-top:4px}
 /* Video: Advanced */
 .adv{margin:0 0 14px}
 .adv summary{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:13px;color:var(--muted);cursor:pointer;list-style:none}
@@ -512,6 +513,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 /* the parts of a group keep their margins inside, so opening and closing never shifts anything at the start or the end */
 .group-body,.sub,#turnShadowBlock,details.adv{display:flow-root}
 .group-body>:first-child,.group-body>#turnShadowBlock>.subhead:first-child{margin-top:0}
+.group-body>#turnShadowBlock>#centerFold:first-child>.subhead,.group-body>#turnShadowBlock>#centerFold[hidden]+.subhead{margin-top:0}
 .group>.group-head,.group>h3{transition:margin-bottom .45s cubic-bezier(.32,.72,0,1)}
 /* the loading status */
 .st{display:inline-flex;align-items:center;gap:7px;transition:color .3s var(--ease-color)}

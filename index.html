@@ -210,7 +210,15 @@
       <!-- ----- PANEL GROUP: PAGE LAYOUT ----- -->
       <div class="group" data-sum="layout">
         <h3>Page layout</h3>
-        <div class="field">
+        <div class="field" id="pagesField">
+          <span class="lbl" id="pagesLbl">Pages</span>
+          <div class="seg" role="radiogroup" aria-labelledby="pagesLbl">
+            <label><input type="radio" name="pageLayout" value="spread" checked><span>Spread</span></label>
+            <label><input type="radio" name="pageLayout" value="single"><span>Single page</span></label>
+          </div>
+          <p class="hint" id="pageLayoutHint">Two pages side by side, like an open book.</p>
+        </div>
+        <div class="field" id="firstAloneField">
           <div class="check-row">
             <label class="check" for="firstAlone">First page alone</label>
             <button class="info-i" type="button" aria-label="About showing the first page alone" aria-expanded="false">i</button>
@@ -268,15 +276,17 @@
           <label class="group-toggle"><input type="checkbox" class="switch" id="shadowsOn" aria-label="Shadows on or off" checked></label>
         </div>
         <div id="turnShadowBlock" data-motion="flip">
-          <div class="subhead">Center fold</div>
-          <div class="sub">
-            <div class="field">
-              <label for="gutter">Crease shading <output id="gutterOut">35%</output></label>
-              <input type="range" id="gutter" min="0" max="100" step="1" value="35">
-            </div>
-            <div class="field">
-              <label for="divider">Divider line <output id="dividerOut">30%</output></label>
-              <input type="range" id="divider" min="0" max="100" step="1" value="30">
+          <div id="centerFold">
+            <div class="subhead">Center fold</div>
+            <div class="sub">
+              <div class="field">
+                <label for="gutter">Crease shading <output id="gutterOut">35%</output></label>
+                <input type="range" id="gutter" min="0" max="100" step="1" value="35">
+              </div>
+              <div class="field">
+                <label for="divider">Divider line <output id="dividerOut">30%</output></label>
+                <input type="range" id="divider" min="0" max="100" step="1" value="30">
+              </div>
             </div>
           </div>
           <div class="subhead">Page turn</div>
@@ -587,7 +597,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page swings off its left edge and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -1614,7 +1624,7 @@ function prePeek(fx, listen) {
 }
 
 /* ---------------- state ---------------- */
-const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
+const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, pageLayout: 'spread', margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
 const ASPECTS = { '16:9': 16 / 9, '4:3': 4 / 3, '1:1': 1, '4:5': 4 / 5, '9:16': 9 / 16 };
 const S = {
   set: Object.assign({}, DEFAULTS),
@@ -1670,8 +1680,9 @@ function jumpMarker(dir) {           // to the nearest marker before or after th
 const turnNoun = () => S.set.transition === 'slide' ? 'Slide' : S.set.transition === 'cut' ? 'Cut' : 'Turn';       // what a marker is called
 const flipDur = () => S.set.transition === 'cut' ? 0 : +S.set[lenKey()];            // a straight cut has no animation time
 const shOn = () => S.set.shadowsOn !== false;                                     // the Shadows switch
-const gutterAmt = () => shOn() ? S.set.gutter / 100 : 0;
-const dividerAmt = () => shOn() ? S.set.divider / 100 : 0;
+const singleOn = () => S.set.pageLayout === 'single';                    // Page layout: one centered page per turn, not a spread
+const gutterAmt = () => shOn() && !singleOn() ? S.set.gutter / 100 : 0;          // a single page has no center fold
+const dividerAmt = () => shOn() && !singleOn() ? S.set.divider / 100 : 0;
 const turnGap = () => Math.max(flipDur(), 0.1);                                   // least time between two page changes
 const turnMin = () => S.vStart + (S.set.transition === 'cut' ? turnGap() : refOffset());   // earliest time the first handle can sit
 const refOffset = (ref = S.set.ref, D = flipDur()) => ref === 'start' ? 0 : ref === 'middle' ? D / 2 : D;
@@ -1697,7 +1708,7 @@ function toast(msg, ms = 4200) {
 /* the pages the video uses (left-out pages do not count) */
 const pageTotal = () => S.pdf ? S.pdf.keep.length : 0;
 /* a two-page score is one spread (page 1 left, page 2 right), so First page alone cannot apply; the saved choice comes back for other page counts */
-const firstAloneOn = () => !!S.set.firstAlone && pageTotal() !== 2;
+const firstAloneOn = () => !!S.set.firstAlone && pageTotal() !== 2 && !singleOn();
 function syncFirstAlone() {
   const two = pageTotal() === 2, el = $('#firstAlone');
   el.checked = firstAloneOn(); el.disabled = two; el.closest('.field').classList.toggle('dim', two);
@@ -1705,6 +1716,7 @@ function syncFirstAlone() {
 function baseSpreads() {
   const pages = S.pdf ? S.pdf.keep : [], n = pages.length, out = [];
   if (!n) return out;
+  if (singleOn()) return pages.map(p => [-1, p]);          // each page sits in the right-hand slot, which the layout centers
   if (firstAloneOn()) {
     out.push([-1, pages[0]]);
     for (let i = 1; i < n; i += 2) out.push([pages[i], i + 1 < n ? pages[i + 1] : -1]);
@@ -1718,6 +1730,7 @@ const lastPageAlone = () => { const b = baseSpreads(), l = b[b.length - 1]; retu
 function buildSpreads() {
   const out = baseSpreads();
   if (!out.length || !creditsActive()) return out;
+  if (singleOn()) { out.push(Object.assign([-1, CARD], { credits: true })); return out; }       // the credits are their own centered card after the last page
   const last = out[out.length - 1];
   if (last[1] === -1) {
     if (S.set.creditsWithLast !== false) { out[out.length - 1] = Object.assign([last[0], CARD], { inlineCredits: true }); return out; }
@@ -1726,16 +1739,35 @@ function buildSpreads() {
   out.push(Object.assign([BLANK, CARD], { credits: true }));                     // two pages: the last one folds closed, revealing the credits
   return out;
 }
-function rebuildSpreads(forceSpace) {
+const spreadsText = () => singleOn() ? 'one page at a time' : peN(S.spreads.length, 'spread', 'spreads');
+function rebuildSpreads(forceSpace, noHistory) {
   const before = S.spreads.length, old = { turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice() };
   syncFirstAlone();
   S.spreads = buildSpreads();
   S.manualDur = Math.max(S.manualDur || 0, 20, S.spreads.length * 8);
   if (forceSpace || S.spreads.length !== before || S.turns.length !== Math.max(0, S.spreads.length - 1)) {
-    if (old.edited && S.history) { S.history.push(old); S.redo = []; updateHistoryButtons(); }
+    if (old.edited && S.history && !noHistory) { S.history.push(old); S.redo = []; updateHistoryButtons(); }
     autoSpace(false);
   }
   afterStructureChange();
+}
+/* Page layout: the choice, and what only makes sense in a spread (First page alone and the center fold shading fold away in Single page) */
+function syncPageLayout(glide) {
+  const one = singleOn();
+  document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === (one ? 'single' : 'spread'); });
+  const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
+  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one;
+  swapText($('#pageLayoutHint'), one ? 'One page at a time, centered in the frame.' : 'Two pages side by side, like an open book.');
+}
+/* changing it is one History step; the turns are spaced evenly again for the new number of pages, and it says so when they had been placed by hand */
+function setPageLayout(v) {
+  if (S.set.pageLayout === v) return;
+  const hadEdits = S.turnsEdited && S.turns.length > 0;
+  if (S.pdf) pushHistory();
+  S.set.pageLayout = v; saveSettings(); syncPageLayout(true);
+  if (!S.pdf) return;
+  S.time = S.vStart; rebuildSpreads(true, true); onTurnsChanged();
+  if (hadEdits) toast(tx('turns.layout'));
 }
 /* where the turn to the credits goes by default: finishing just as the audio ends */
 const creditsTurn = () => audioLen() - flipDur() + refOffset();
@@ -1839,10 +1871,11 @@ function normalizeTurns() {
   }
 }
 const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
-function applySnap(h) { if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
+const snap = () => ({ lay: S.set.pageLayout, turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
+function applySnap(h) { const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
+  if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
-  reconcileTurns(); }
+  reconcileTurns(); if (layChanged && S.pdf) afterStructureChange(); }
 function updateHistoryButtons() { const u = $('#bUndo'), r = $('#bRedo'); if (u) u.disabled = S.history.length === 0; if (r) r.disabled = S.redo.length === 0; try { MAIN_HIST.refresh(); } catch (e) {} }
 /* History: a list of the steps taken, newest on top; pick one to go back (or forward) to it. The PDF Editor and the main view use this, the way the Audio Editor does.
    c: btn, pop, list, foot, sum, sub, no, go (ids), first (name of step 0), states() oldest to newest with the current one inside, cur() the index of the current one, label(a, b) the name of the step from a to b, apply(t) goes to step t, can() true when there is any history */
@@ -1906,6 +1939,7 @@ function peStepLabel(a, b) {
 /* what a step in the main view did: the PDF's and the audio's changes made in their own editors are named as they are there */
 function mainStepLabel(a, b) {
   const parts = [];
+  if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');
   if (a.aud && b.aud && JSON.stringify(a.aud) !== JSON.stringify(b.aud)) { let t = 'Audio'; try { const r = aeRecords(a.aud, b.aud); if (r.length) t = 'Audio: ' + r[0].label + (r.length > 1 ? ' + ' + (r.length - 1) + ' more' : ''); } catch (e) {} parts.push(t); }
@@ -2491,7 +2525,7 @@ async function loadPdf(file) {
     leaveEmpty();
     zoomFit();
     stageDirty = true;
-    toast(tx('pdf.loaded', { pages: peN(doc.numPages), spreads: peN(S.spreads.length, 'spread', 'spreads') }));
+    toast(tx('pdf.loaded', { pages: peN(doc.numPages), spreads: spreadsText() }));
     S.savedTurns = adoptPriorTurns(prior) ? null : prior;
     makeThumbs(token);
   } catch (e) {
@@ -3449,12 +3483,13 @@ class Renderer {
   }
   resize(W, H) { this.canvas.width = W; this.canvas.height = H; this.W = W; this.H = H; }
   layout() {
-    const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H;
-    let pw = Math.floor(Math.min(W * (1 - 2 * m) / 2, H * (1 - 2 * m) * pa));
+    const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H, one = singleOn();
+    let pw = Math.floor(Math.min(W * (1 - 2 * m) / (one ? 1 : 2), H * (1 - 2 * m) * pa));
     pw = Math.max(8, pw);
     const ph = Math.max(8, Math.floor(pw / pa));
-    const x0 = Math.round((W - 2 * pw) / 2), y0 = Math.round((H - ph) / 2);
-    return { pw, ph, x0, y0, cx: x0 + pw, cy: y0 + ph / 2 };
+    /* a single page is the right-hand page with the left one empty, moved so the page itself is centered: the turn swings it around its left edge */
+    const x0 = one ? Math.round((W - pw) / 2) - pw : Math.round((W - 2 * pw) / 2), y0 = Math.round((H - ph) / 2);
+    return { pw, ph, x0, y0, cx: x0 + pw, cy: y0 + ph / 2, xs: one ? x0 + pw : x0 };      // xs: where the left-most page starts
   }
   clearTextures() {
     const gl = this.gl; this.tex.forEach(e => gl.deleteTexture(e.t)); this.tex.clear(); this.pending.clear(); this.sizeKey = '';
@@ -3693,7 +3728,7 @@ class Renderer {
     } else if (slide) {
       /* Slide: one spread stays put and the other slides over it, like stacked sheets. "In" brings the next spread in
          from the right on top of the current one; "Out" slides the current spread off to the left, uncovering the next. */
-      const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip), dist = this.W - lay.x0, inMode = S.set.slideDir !== 'out';
+      const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip), dist = this.W - lay.xs, inMode = S.set.slideDir !== 'out';
       const under = inMode ? sp : nx, over = inMode ? nx : sp, dOver = inMode ? (1 - p) * dist : -p * dist, k = inMode ? 1 - p : p;
       const base = this.scoreFade, cover = s => isSheet(over[s]) ? 1 : k;    // a page the moving spread does not cover fades instead of popping
       this.useShadow = false;
@@ -3724,7 +3759,11 @@ class Renderer {
         this.useShadow = true;
         drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
         this.useShadow = false;
+        /* a single page has no page to land on: the sheet swings over and melts into the background as it arrives, so nothing pops when the turn ends */
+        const kept = this.scoreFade, melt = singleOn() ? clamp((p - 0.5) / 0.45, 0, 1) : 0;
+        if (melt > 0) this.scoreFade = kept * (1 - melt * melt * (3 - 2 * melt));
         this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null);
+        this.scoreFade = kept;
       }
     }
     if (!scoreOnly) this.drawFade(1 - fade);
@@ -4448,7 +4487,7 @@ function updateInfo() {
   if (!n) { $('#spreadInfo').textContent = ''; return; }
   const st = frameState(S.time), sp = S.spreads[st.spread];
   const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
-  $('#spreadInfo').textContent = 'Spread ' + (st.spread + 1) + ' / ' + n + ' · ' + pg;
+  $('#spreadInfo').textContent = singleOn() ? 'Page ' + (st.spread + 1) + ' / ' + n + (sp.credits ? ' · credits' : '') : 'Spread ' + (st.spread + 1) + ' / ' + n + ' · ' + pg;
   $('#tTot').textContent = fmt(duration());
 }
 let lastTimeStr = '';
@@ -4480,7 +4519,7 @@ function syncControls() {
   const s = S.set;
   $('#bend').value = s.bend; $('#bendOut').textContent = s.bend + '%';
   document.querySelectorAll('input[name=ref]').forEach(r => r.checked = r.value === s.ref);
-  syncFirstAlone();
+  syncFirstAlone(); syncPageLayout(false);
   $('#margin').value = s.margin; $('#marginOut').textContent = s.margin + '%';
   const pre = Array.from($('#bgPreset').options).find(o => o.value.toLowerCase() === String(s.bg).toLowerCase());
   $('#bgPreset').value = pre ? pre.value : 'custom'; $('#bgCustom').hidden = !!pre;
@@ -4697,7 +4736,7 @@ function groupSummary(k) {
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
     return [j('Flip', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Flip', 'Turn ' + sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Flip', 'Turn ' + sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Flip', 'Turn ' + sec(s.flipDur))];
   }
-  if (k === 'layout') { const fa = firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
+  if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
   if (k === 'fades') return [fd(false), fd(true)];
   if (k === 'credits') {
@@ -4743,7 +4782,7 @@ function initGroupFolds() {
 }
 /* Anything in the side panel that is shown or hidden slides open or closed instead of jumping. The code just sets `hidden`
    as before; this watches for the change and animates it (a hiding element is kept on screen until its animation ends). */
-const SMOOTH = '.field, .sub, .colorrow, .line-style, .combo, .hint, .group-body, #turnShadowBlock, #fileStatus, details';
+const SMOOTH = '.field, .sub, .colorrow, .line-style, .combo, .hint, .group-body, #turnShadowBlock, #centerFold, #fileStatus, details';
 const SMOOTH_PROPS = ['height', 'opacity', 'marginTop', 'marginBottom', 'paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'];
 /* text that changes in place: it rises in, and a block of text eases to its new height (so a dialog or panel never jumps) */
 function swapText(el, txt, flat) {
@@ -4839,6 +4878,7 @@ function bindSettings() {
     S.set.ref = e.target.value; const nOff = refOffset(); updateHint();
     S.turns = S.turns.map(t => t - oldOff + nOff); normalizeTurns(); onTurnsChanged(); dirty();
   }));
+  document.querySelectorAll('input[name=pageLayout]').forEach(r => r.addEventListener('change', e => { if (e.target.checked) { setPageLayout(e.target.value); stageDirty = true; } }));
   $('#firstAlone').addEventListener('change', e => {
     S.set.firstAlone = e.target.checked; saveSettings();
     if (S.pdf) { S.time = S.vStart; rebuildSpreads(false); }
@@ -5875,7 +5915,7 @@ function openAudioEditor() {
   sheetShow($('#audioDlg')); aeRefresh(); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
 }
 /* MESSAGES:BEGIN (the playful lines and the wording; keep it valid JSON) */
-const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.first":"Like a book cover: p. 1 alone, pp. 2–3 side by side, etc.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown at the end, under the last page. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","vid.toend":"{n} turns moved to the end","vid.toend.one":"1 turn moved to the end","vid.toend.none":"No turns lie after the playhead, so there is nothing to move","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
+const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.first":"Like a book cover: p. 1 alone, pp. 2–3 side by side, etc.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown at the end, under the last page. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","turns.layout":"Page turns spaced evenly for the new layout.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","vid.toend":"{n} turns moved to the end","vid.toend.one":"1 turn moved to the end","vid.toend.none":"No turns lie after the playhead, so there is nothing to move","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
 /* MESSAGES:END */
 /* the opening screen always fits its box: at full size when there is room, scaled down evenly when there is not, never with a scroll bar */
 function introFit() {
@@ -9213,7 +9253,7 @@ function peApply() {
   setRecipe(d); S.time = was ? clamp(at, S.vStart, vEnd()) : S.vStart; rebuildSpreads(false);
   if (S.history.length > base) S.history.length = base;
   setChips(); updateTimeUI(true); TL.staticDirty = true; stageDirty = true;
-  toast(tx('pdf.invideo', { pages: peN(S.pdf.keep.length), spreads: peN(S.spreads.length, 'spread', 'spreads') }));
+  toast(tx('pdf.invideo', { pages: peN(S.pdf.keep.length), spreads: spreadsText() }));
   if (was) Transport.play();
 }
 const peSvg = {
@@ -9628,7 +9668,7 @@ function peKey(e) {
    ==================================================================== */
 /* The file is plain text (compact JSON) holding only what is needed to read it back. */
 const IO_RANGES = { normLufs: [-36, -6], normPeakDb: [-12, 0], audioFadeLen: [0.1, 3], audioFadeOutLen: [0, 3], flipDur: [0.3, 3], slideDur: [0.1, 3], bend: [0, 100], margin: [0, 10], gutter: [0, 100], divider: [0, 100], turnShadow: [0, 150], turnSoft: [0, 100], scoreAmt: [0, 100], scoreSoft: [0, 100], fadeLen: [0.2, 3], fadeOutLen: [0.2, 3], gainDb: [-12, 12] };
-const IO_CHOICES = { normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
+const IO_CHOICES = { pageLayout: ['spread', 'single'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
 const IO_HINTS = {
   all: 'Your settings, the work title, your credits text, and your page markings: page turns, where the video starts and ends, and any pages you left out.',
   settings: 'Only the settings in the side panel. Page markings are not included.',
@@ -9762,12 +9802,12 @@ async function onExportClick() {
 
 /* ---------- settings menu ---------- */
 function restoreDefaults() {
-  const oldOff = refOffset(), oldFirst = S.set.firstAlone;
+  const oldOff = refOffset(), oldFirst = S.set.firstAlone, oldLayout = S.set.pageLayout;
   S.set = Object.assign({}, DEFAULTS, { fx: fxClone(FX_DEFAULT) }); saveSettings();
   const nOff = refOffset();
   if (S.turns.length) { S.turns = S.turns.map(t => t - oldOff + nOff); normalizeTurns(); }
   syncControls(); layoutStage(); stageDirty = true; TL.staticDirty = true;
-  if (S.pdf && oldFirst !== S.set.firstAlone) { S.time = S.vStart; rebuildSpreads(false); }
+  if (S.pdf && (oldFirst !== S.set.firstAlone || oldLayout !== S.set.pageLayout)) { S.time = S.vStart; rebuildSpreads(false); }
   syncCredits(); onTrimChanged();
   onTurnsChanged();
   toast(tx('app.reset'));
