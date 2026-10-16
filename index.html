@@ -962,7 +962,7 @@
               <div class="pe-acts"><span class="pe-status" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
             <div class="pe-opts">
               <div class="seg pe-cmode" role="radiogroup" aria-label="Frame"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div>
-              <div class="pe-range" id="peCropPadF"><label for="peCropPad">Margin</label><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2"><output id="peCropPadVal" for="peCropPad">2%</output></div>
+              <div class="pe-range" id="peCropPadF"><label for="peCropPad">Margin</label><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2" data-default="2"><output id="peCropPadVal" for="peCropPad">2%</output></div>
               <label class="check-row pe-check pe-end" id="peCropSameF" for="peCropSame"><span>Same on all pages</span><input type="checkbox" class="switch" id="peCropSame" checked></label>
             </div>
           </div>
@@ -985,7 +985,7 @@
               <label class="pe-wl" for="peWmText">Text</label>
               <div class="line-style"><input type="text" id="peWmText" maxlength="60" placeholder="Perusal score" autocomplete="off" spellcheck="false"><button type="button" class="fmt-btn pe-fmt" id="peWmB" aria-label="Bold" title="Bold" aria-pressed="true"><b>B</b></button><button type="button" class="fmt-btn pe-fmt" id="peWmI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></div>
               <label class="pe-wl" for="peWmOpacity">Opacity</label>
-              <div class="pe-range"><input type="range" id="peWmOpacity" min="5" max="60" step="1" value="20"><output id="peWmOpacityVal">20%</output></div>
+              <div class="pe-range"><input type="range" id="peWmOpacity" min="5" max="60" step="1" value="20" data-default="20"><output id="peWmOpacityVal">20%</output></div>
               <span class="pe-wl" id="peWmAngleLbl">Direction</span>
               <div class="pe-dir"><div class="seg" role="radiogroup" aria-labelledby="peWmAngleLbl"><label><input type="radio" name="peWmAngle" value="45" checked><span>Diagonal</span></label><label><input type="radio" name="peWmAngle" value="0"><span>Straight</span></label><label><input type="radio" name="peWmAngle" value="custom"><span>Custom</span></label></div>
                 <span class="pe-deg"><input type="number" id="peWmDeg" min="-180" max="180" step="1" value="45" inputmode="numeric" aria-label="Degrees"><span aria-hidden="true">°</span></span></div>
@@ -4789,6 +4789,12 @@ function bindSettings() {
   initGroupFolds(); initSmooth(); initSegs();
   document.querySelectorAll('.combo').forEach(initCombo);
   const dirty = () => { saveSettings(); stageDirty = true; TL.overlayDirty = true; };      // the timeline's fade lines follow the settings
+  /* Reset to default: a double-click on a slider glides it back to its default, as in the Audio Editor; a drag in progress stops a glide. The Audio Editor and the Fade length slider have their own. */
+  ['flipDur', 'bend', 'margin', 'gutter', 'divider', 'turnShadow', 'turnSoft', 'scoreAmt', 'scoreSoft', 'peCropPad', 'peWmOpacity'].forEach(id => {
+    const r = $('#' + id);
+    r.addEventListener('pointerdown', () => { if (r._glide) { cancelAnimationFrame(r._glide.raf); r._glide = null; } });
+    r.addEventListener('dblclick', () => aeGlideTo(r, id === 'flipDur' ? DEFAULTS[lenKey()] : id in DEFAULTS ? DEFAULTS[id] : r.dataset.default));
+  });
   $('#flipDur').addEventListener('input', e => {
     S.set[lenKey()] = +e.target.value; $('#flipDurOut').textContent = S.set[lenKey()].toFixed(1) + 's';
     normalizeTurns(); onTurnsChanged(); dirty();
