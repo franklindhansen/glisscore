@@ -609,22 +609,37 @@
 <div id="keysDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="keysTitle" hidden>
   <div class="dlg page">
     <h2 id="keysTitle">Keyboard shortcuts</h2>
-    <dl class="keys" id="keysList">
-      <dt>Play or pause</dt><dd><kbd>Space</kbd></dd>
-      <dt>Jump to start</dt><dd><kbd>Enter</kbd></dd>
-      <dt>Tap a page turn</dt><dd><kbd>T</kbd></dd>
-      <dt>Jump 1s</dt><dd><kbd>←</kbd> <kbd>→</kbd></dd>
-      <dt>Jump 5s</dt><dd><kbd>Shift</kbd> <kbd>←</kbd> <kbd>→</kbd></dd>
-      <dt>Jump to next or previous marker</dt><dd><kbd data-alt></kbd> <kbd>←</kbd> <kbd>→</kbd></dd>
-      <dt>Zoom timeline</dt><dd><kbd data-mod></kbd> <kbd>+</kbd> <kbd>−</kbd></dd>
-      <dt>Fit timeline</dt><dd><kbd data-mod></kbd> <kbd>0</kbd></dd>
-      <dt>Undo</dt><dd><kbd data-mod></kbd> <kbd>Z</kbd></dd>
-      <dt>Redo</dt><dd><kbd>Shift</kbd> <kbd data-mod></kbd> <kbd>Z</kbd></dd>
-      <dt>Full screen</dt><dd><kbd>F</kbd></dd>
-      <dt>Bypass (Audio Editor)</dt><dd><kbd>B</kbd></dd>
-      <dt>Hide tools (Audio Editor)</dt><dd><kbd>T</kbd></dd>
-      <dt>Leave full screen</dt><dd><kbd>Esc</kbd></dd>
-    </dl>
+    <div class="keys-groups" id="keysList">
+      <section><h3>Playback</h3>
+      <dl class="keys">
+        <dt>Play / pause</dt><dd><kbd>Space</kbd></dd>
+        <dt>Jump to start</dt><dd><kbd>Enter</kbd></dd>
+        <dt>Jump 1s</dt><dd><kbd>←</kbd> <kbd>→</kbd></dd>
+        <dt>Jump 5s</dt><dd><kbd>Shift</kbd> <kbd>←</kbd> <kbd>→</kbd></dd>
+        <dt>Previous / next marker</dt><dd><kbd data-alt></kbd> <kbd>←</kbd> <kbd>→</kbd></dd>
+        <dt>Add page turn</dt><dd><kbd>T</kbd></dd>
+      </dl></section>
+      <section><h3>Timeline</h3>
+      <dl class="keys">
+        <dt>Zoom in / out</dt><dd><kbd data-mod></kbd> <kbd>+</kbd> <kbd>−</kbd></dd>
+        <dt>Fit</dt><dd><kbd data-mod></kbd> <kbd>0</kbd></dd>
+      </dl></section>
+      <section><h3>Editing</h3>
+      <dl class="keys">
+        <dt>Undo</dt><dd><kbd data-mod></kbd> <kbd>Z</kbd></dd>
+        <dt>Redo</dt><dd><kbd>Shift</kbd> <kbd data-mod></kbd> <kbd>Z</kbd></dd>
+      </dl></section>
+      <section><h3>Audio Editor</h3>
+      <dl class="keys">
+        <dt>Bypass</dt><dd><kbd>B</kbd></dd>
+        <dt>Hide tools</dt><dd><kbd>T</kbd></dd>
+      </dl></section>
+      <section><h3>Display</h3>
+      <dl class="keys">
+        <dt>Full screen</dt><dd><kbd>F</kbd></dd>
+        <dt>Exit full screen</dt><dd><kbd>Esc</kbd></dd>
+      </dl></section>
+    </div>
     <div class="row"><button class="btn primary" id="keysClose" type="button">Close</button></div>
   </div>
 </div>

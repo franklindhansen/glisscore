@@ -41,8 +41,8 @@ const K = '__keyframes';
   // the shortcuts list
   await p.evaluate(() => document.querySelector('#menuKeys').click());
   const txt = await p.evaluate(() => [...document.querySelectorAll('#keysList dt')].map(d => d.textContent));
-  ok('the shortcuts list has "Jump to next or previous marker"', txt.includes('Jump to next or previous marker'), txt.join('|'));
-  const dd = await p.evaluate(() => { const dt = [...document.querySelectorAll('#keysList dt')].find(d => d.textContent === 'Jump to next or previous marker'); return dt ? dt.nextElementSibling.textContent.replace(/\s+/g, ' ').trim() : ''; });
+  ok('the shortcuts list has "Previous / next marker"', txt.includes('Previous / next marker'), txt.join('|'));
+  const dd = await p.evaluate(() => { const dt = [...document.querySelectorAll('#keysList dt')].find(d => d.textContent === 'Previous / next marker'); return dt ? dt.nextElementSibling.textContent.replace(/\s+/g, ' ').trim() : ''; });
   ok('its keys read Option or Alt, then the arrows', /^(Option|Alt) ← →$/.test(dd), dd);
   ok('no page errors', errs.length === 0, errs.join('|'));
   await b.close();
