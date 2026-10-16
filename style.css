@@ -1295,6 +1295,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull>.dlg.editor.ae{position:fixed;inset:0;width:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:14px;gap:10px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;align-content:stretch}
 #audioDlg.afull .ae-wave{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;z-index:0;transition:top .5s var(--ease-out),bottom .5s var(--ease-out)}
 #audioDlg.afull .ae-wave canvas{border-radius:0}
+/* while the window grows or shrinks, one animation moves it and nothing else glides on its own */
+#audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
 #audioDlg.afull .ed-lead{display:none}
 #audioDlg.afull .ed-head{grid-row:1;z-index:2}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
