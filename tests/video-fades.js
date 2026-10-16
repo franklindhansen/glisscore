@@ -120,16 +120,16 @@ const K = '__keyframes';
     ok('then Out off too: they fold', f && !f.open && f.inert, JSON.stringify([f, await ons()]));
     await pick('in'); await slide(N(1.0)); await settle(); f = await fold(); const o2 = await ons();
     ok('only Out off: they stay open', o2[0] && !o2[1] && f.open, JSON.stringify([f, o2]));
-    // undo and redo re-read the fades (the fade settings are not Undo steps, so a change that arrives without the slider shows whether the fold follows)
+    // undo and redo re-read the fades (a Fades change is an Undo step, so undoing it must open the fold again and redoing it fold them)
     await p.evaluate(() => document.activeElement && document.activeElement.blur());
     await pick('both'); await slide(N(1.2)); await settle(); await p.evaluate(K => { const k = window[K]; const v = k.S.vStart; k.S.turns = [v + 3, v + 6, v + 9]; k.Transport.seek(v + 4); }, K); await p.keyboard.press('t');
     const nt = await p.evaluate(K => window[K].S.history.length, K); ok('a turn is moved, so there is a step to undo', nt >= 1, String(nt));
-    await p.evaluate(K => Object.assign(window[K].S.set, { fadeIn: false, fadeOut: false }), K);
-    await p.keyboard.press('Control+z'); await settle(); f = await fold(); let o3 = await ons();
-    ok('undo with both fades off folds them', !o3[0] && !o3[1] && !f.open && f.inert, JSON.stringify([f, o3]));
-    await p.evaluate(K => Object.assign(window[K].S.set, { fadeIn: true }), K);
+    await slide(0); await settle(); f = await fold(); let o3 = await ons();
+    ok('turning both fades off folds them', !o3[0] && !o3[1] && !f.open && f.inert, JSON.stringify([f, o3]));
+    await p.keyboard.press('Control+z'); await settle(); f = await fold(); o3 = await ons();
+    ok('undoing the Fades step opens them', (o3[0] || o3[1]) && f.open && !f.inert, JSON.stringify([f, o3]));
     await p.keyboard.press('Control+Shift+z'); await settle(); f = await fold(); o3 = await ons();
-    ok('redo with a fade on opens them', o3[0] && f.open && !f.inert, JSON.stringify([f, o3]));
+    ok('redoing it folds them', !o3[0] && !o3[1] && !f.open && f.inert, JSON.stringify([f, o3]));
     // a loaded settings file
     const load = o => p.evaluate(async ([K, o]) => { await window[K].importSettings(new File([JSON.stringify({ glisscore: 1, settings: o })], 'x.json')); }, [K, o]);
     await load({ fadeIn: true, fadeOut: true, fadesOn: true }); await settle(); f = await fold(); ok('a settings file with a fade on opens them', f.open && !f.inert, JSON.stringify(f));

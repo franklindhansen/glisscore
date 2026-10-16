@@ -1654,7 +1654,9 @@ try {
   if (sv) { Object.assign(S.set, sv); if (sv.pageLayout === 'single' && !('turnStyle' in sv)) S.set.turnStyle = 'fade'; }          // a Single page video saved before Peel existed keeps the turn it had
 } catch (e) {}
 S.set.fx = fxNorm(S.set.fx);
-function saveSettings() { try { localStorage.setItem('glisscore.settings', JSON.stringify(S.set)); } catch (e) {} if (typeof updateGroupSummaries === 'function') updateGroupSummaries(); }
+/* (declared here so that saveSettings can reach it from the first moment) */
+const HB = { base: null, open: false, quiet: false, timer: 0 };
+function saveSettings() { hsNote(); try { localStorage.setItem('glisscore.settings', JSON.stringify(S.set)); } catch (e) {} if (typeof updateGroupSummaries === 'function') updateGroupSummaries(); }
 
 const audioLen = () => S.audio ? S.audio.duration : S.manualDur;           // the audio's own length (a stand-in when there is no audio)
 const vStart = () => S.vStart;
@@ -1874,14 +1876,46 @@ function normalizeTurns() {
     if (S.turns[i] < lo) S.turns[i] = lo;
   }
 }
+/* History for the settings: every setting that alters the video's result is part of a step. The audio ones (and the EQ and Imager) belong to the Audio Editor's steps, the page layout and turn style have their own fields, and where you are in the app is never a step. */
+const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'turnStyle', 'fx'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsWithLast'];
+const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!HS_OWN.includes(k) && !AE_SET.includes(k)) o[k] = S.set[k]; }); return o; };
+const HS_GROUPS = [
+  ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
+  ['Transition', ['transition', 'slideDir']], ['Turn length', ['flipDur', 'slideDur']], ['Turn reference', ['ref']], ['Bend', ['bend']], ['First page alone', ['firstAlone']],
+  ['Margin', ['margin']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
+  ['Aspect', ['aspect']], ['Resolution', ['res']], ['Frame rate', ['fps']], ['Render method', ['method']], ['Codec', ['codec']], ['Video quality', ['videoQuality']],
+  ['Credits', ['creditsOn', 'creditsWithLast', 'creditsEarly', 'creditsFont', 'creditsFontEach', 'credTitleB', 'credTitleI', 'credTitleFont', 'credL2B', 'credL2I', 'credL2Font', 'credL3B', 'credL3I', 'credL3Font']],
+  ['Audio format', ['audioFormat', 'audioKbps', 'audioRate']], ['Tags', ['tagsOn', 'tagTitle', 'tagArtist', 'tagAlbumArtist', 'tagAlbum', 'tagYear', 'tagTrack', 'tagDisc', 'tagComposer', 'tagWork', 'tagMovement', 'tagMovementNo', 'tagGenre', 'tagComment', 'tagShowWork', 'tagCompilation']]];
+const setStepNames = (a, b) => { const out = []; Object.keys(b).forEach(k => { if (a[k] === b[k] || (a[k] == null && b[k] == null)) return; const g = HS_GROUPS.find(x => x[1].includes(k)), nm = g ? g[0] : 'Setting'; if (!out.includes(nm)) out.push(nm); }); out.sort((x, y) => HS_GROUPS.findIndex(g => g[0] === x) - HS_GROUPS.findIndex(g => g[0] === y)); return out; };
+/* A change to a setting is a step taken just before it: HB.base is how things stood when you pressed, typed or tapped. A slider drag, a burst of typing or a glide
+   is one gesture (open until you let go, or 0.7s of quiet), and the changes within it join the step already taken. */
+const lightSnap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd });
+function hsClose() { clearTimeout(HB.timer); HB.open = false; if (!HB.quiet) HB.base = lightSnap(); }
+function hsOpen() { HB.open = true; clearTimeout(HB.timer); HB.timer = setTimeout(hsClose, 700); }
+function hsNote() {
+  if (HB.quiet) return;
+  if (HB.open) { hsOpen(); return; }
+  const b = HB.base; if (!b) return;
+  if (JSON.stringify(b.set) === JSON.stringify(outSet()) && b.lay === S.set.pageLayout && b.ts === S.set.turnStyle) return;
+  pushSnap(Object.assign(snap(), b));
+}
+const HS_TEXT = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]), textarea';
+document.addEventListener('pointerdown', () => { hsClose(); }, true);
+document.addEventListener('keydown', e => { if (e.repeat) return; if (e.target.matches && e.target.matches(HS_TEXT)) { if (!HB.open) HB.base = lightSnap(); } else hsClose(); }, true);
+document.addEventListener('pointerup', () => { if (HB.open) setTimeout(hsClose, 0); });
+document.addEventListener('change', () => { if (HB.open) setTimeout(hsClose, 0); });
 const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
-function applySnap(h) { if (h.ts && h.ts !== S.set.turnStyle) { S.set.turnStyle = h.ts; document.querySelectorAll('input[name=turnStyle]').forEach(r => { r.checked = r.value === h.ts; }); saveSettings(); stageDirty = true; }
+const snap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
+function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
+function applySnapIn(h) { if (h.ts && h.ts !== S.set.turnStyle) { S.set.turnStyle = h.ts; document.querySelectorAll('input[name=turnStyle]').forEach(r => { r.checked = r.value === h.ts; }); saveSettings(); stageDirty = true; }
+  let struct = false;
+  if (h.set) { const ch = Object.keys(h.set).filter(k => h.set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = h.set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
   const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
   if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
-  reconcileTurns(); if (layChanged && S.pdf) afterStructureChange(); }
-function updateHistoryButtons() { const u = $('#bUndo'), r = $('#bRedo'); if (u) u.disabled = S.history.length === 0; if (r) r.disabled = S.redo.length === 0; try { MAIN_HIST.refresh(); } catch (e) {} }
+  if (struct && !layChanged && S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; }
+  reconcileTurns(); if ((layChanged || struct) && S.pdf) afterStructureChange(); }
+function updateHistoryButtons() { if (!HB.open && !HB.quiet) HB.base = lightSnap(); const u = $('#bUndo'), r = $('#bRedo'); if (u) u.disabled = S.history.length === 0; if (r) r.disabled = S.redo.length === 0; try { MAIN_HIST.refresh(); } catch (e) {} }
 /* History: a list of the steps taken, newest on top; pick one to go back (or forward) to it. The PDF Editor and the main view use this, the way the Audio Editor does.
    c: btn, pop, list, foot, sum, sub, no, go (ids), first (name of step 0), states() oldest to newest with the current one inside, cur() the index of the current one, label(a, b) the name of the step from a to b, apply(t) goes to step t, can() true when there is any history */
 function histPanel(c) {
@@ -1946,6 +1980,7 @@ function mainStepLabel(a, b) {
   const parts = [];
   if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
   if (a.ts && b.ts && a.ts !== b.ts) parts.push('Turn style');
+  if (a.set && b.set) parts.push(...setStepNames(a.set, b.set));
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');
   if (a.aud && b.aud && JSON.stringify(a.aud) !== JSON.stringify(b.aud)) { let t = 'Audio'; try { const r = aeRecords(a.aud, b.aud); if (r.length) t = 'Audio: ' + r[0].label + (r.length > 1 ? ' + ' + (r.length - 1) + ' more' : ''); } catch (e) {} parts.push(t); }
@@ -1958,11 +1993,12 @@ const mainHist = () => ({ st: S.history.concat([snap()], S.redo.slice().reverse(
 const MAIN_HIST = histPanel({ btn: 'bHist', pop: 'mHist', list: 'mHistList', foot: 'mHistFoot', sum: 'mHistSum', sub: 'mHistSub', no: 'mHistNo', go: 'mHistGo', first: 'Opened',
   states: () => mainHist().st, cur: () => S.history.length, label: mainStepLabel, can: () => S.history.length > 0 || S.redo.length > 0,
   apply: t => { const m = mainHist(), st = m.st; S.history = st.slice(0, t); S.redo = st.slice(t + 1).reverse(); applySnap(st[t]); updateHistoryButtons(); onTurnsChanged(); onTrimChanged(); } });
-function pushHistory() {
-  S.history.push(snap()); S.redo = [];
+function pushSnap(h) {
+  S.history.push(h); S.redo = [];
   if (S.history.length > 60) S.history.shift();
-  updateHistoryButtons();
+  hsOpen(); updateHistoryButtons();
 }
+function pushHistory() { pushSnap(snap()); }
 function undo() {
   const h = S.history.pop(); if (!h) return;
   S.redo.push(snap()); applySnap(h); updateHistoryButtons(); onTurnsChanged(); onTrimChanged();
@@ -9750,6 +9786,7 @@ async function importSettings(file) {
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }
   Transport.pause();
+  const was = JSON.stringify(snap()), redoWas = S.redo; pushHistory();
   if (data.credits && typeof data.credits === 'object') { const cr = data.credits, s = (v, n) => typeof v === 'string' ? v.slice(0, n) : ''; S.credits = { title: s(cr.title, 120), l2: s(cr.l2, 160), l3: s(cr.l3, 120), titleEdited: !!s(cr.title, 1) }; }
   else if (clean && marks) S.credits = { title: '', l2: '', l3: '', titleEdited: false };         // an "Everything" file with no credits means none
   const oldRef = S.set.ref;
@@ -9770,7 +9807,7 @@ async function importSettings(file) {
     if (vEnd() - S.vStart < 1) { S.vStart = 0; S.vEndSet = null; }
     S.creditsEnd = Number.isFinite(data.creditsEnd) ? data.creditsEnd : null;
   }
-  if (S.pdf && (marks || clean)) { S.time = S.vStart; rebuildSpreads(false); }
+  if (S.pdf && (marks || clean)) { S.time = S.vStart; rebuildSpreads(false, true); }
   syncCredits();
   if (marks) {
     const turns = Array.isArray(data.turns) ? data.turns.filter(Number.isFinite).sort((a, b) => a - b) : [];
@@ -9781,6 +9818,7 @@ async function importSettings(file) {
   let msg = tx(clean && marks ? 'app.imp.both' : marks ? 'app.imp.marks' : 'app.imp.settings');
   if (adopted && adopted.added) msg += ' ' + tx(adopted.added === 1 ? 'app.imp.added.one' : 'app.imp.added.many', { n: adopted.added });
   if (adopted && adopted.dropped) msg += ' ' + tx(adopted.dropped === 1 ? 'app.imp.dropped.one' : 'app.imp.dropped.many', { n: adopted.dropped });
+  if (JSON.stringify(snap()) === was) { S.history.pop(); S.redo = redoWas; updateHistoryButtons(); }          // nothing changed: no step, and Redo stays
   closeIO(); toast(msg, adopted && (adopted.added || adopted.dropped) ? 8000 : 4200);
 }
 function initImportExport() {
@@ -9817,14 +9855,16 @@ async function onExportClick() {
 
 /* ---------- settings menu ---------- */
 function restoreDefaults() {
+  const was = JSON.stringify(snap()), redoWas = S.redo; pushHistory();
   const oldOff = refOffset(), oldFirst = S.set.firstAlone, oldLayout = S.set.pageLayout;
   S.set = Object.assign({}, DEFAULTS, { fx: fxClone(FX_DEFAULT) }); saveSettings();
   const nOff = refOffset();
   if (S.turns.length) { S.turns = S.turns.map(t => t - oldOff + nOff); normalizeTurns(); }
   syncControls(); layoutStage(); stageDirty = true; TL.staticDirty = true;
-  if (S.pdf && (oldFirst !== S.set.firstAlone || oldLayout !== S.set.pageLayout)) { S.time = S.vStart; rebuildSpreads(false); }
+  if (S.pdf && (oldFirst !== S.set.firstAlone || oldLayout !== S.set.pageLayout)) { S.time = S.vStart; rebuildSpreads(false, true); }
   syncCredits(); onTrimChanged();
   onTurnsChanged();
+  if (JSON.stringify(snap()) === was) { S.history.pop(); S.redo = redoWas; updateHistoryButtons(); }          // nothing changed: no step, and Redo stays
   toast(tx('app.reset'));
 }
 function initMenu() {
