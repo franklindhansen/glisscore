@@ -9843,8 +9843,8 @@ function initMenu() {
   $('#menuHow').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#howDlg')); $('#howClose').focus(); });
   $('#howClose').addEventListener('click', () => sheetHide($('#howDlg')));
   $('#menuAbout').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#aboutDlg')); $('#aboutClose').focus(); });
-  /* the number comes from the VERSION file, the one place it is written, read once at the start so About never grows when it opens; if it cannot be read the line stays hidden */
-  function aboutVersion() { fetch('VERSION', { cache: 'no-cache' }).then(r => r.ok ? r.text() : '').then(t => { t = t.trim(); const el = $('#aboutVersion'); el.textContent = /^\d+\.\d+\.\d+$/.test(t) ? 'Version ' + t : ''; el.hidden = !el.textContent; }).catch(() => {}); }
+  /* the number comes from the VERSION.txt file, the one place it is written, read once at the start so About never grows when it opens; if it cannot be read the line stays hidden */
+  function aboutVersion() { fetch('VERSION.txt', { cache: 'no-cache' }).then(r => r.ok ? r.text() : '').then(t => { t = t.trim(); const el = $('#aboutVersion'); el.textContent = /^\d+\.\d+\.\d+$/.test(t) ? 'Version ' + t : ''; el.hidden = !el.textContent; }).catch(() => {}); }
   aboutVersion();
   $('#aboutClose').addEventListener('click', () => sheetHide($('#aboutDlg')));
   $('#aboutDlg').addEventListener('click', e => { if (e.target === $('#aboutDlg')) sheetHide($('#aboutDlg')); });

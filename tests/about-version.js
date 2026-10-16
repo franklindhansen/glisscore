@@ -1,4 +1,4 @@
-// About shows "Version x.y.z" read from the VERSION file (no second place to edit), small, inside the dialog, nothing scrolling.
+// About shows "Version x.y.z" read from the VERSION.txt file (no second place to edit), small, inside the dialog, nothing scrolling.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/about-version.js
 const { chromium } = require('playwright-core');
 const fs = require('fs');
@@ -9,7 +9,9 @@ const read = p => p.evaluate(() => { const o = document.querySelector('#aboutDlg
     inside: !!v && v.getBoundingClientRect().right <= d.getBoundingClientRect().right + 0.5, ov: o.scrollHeight - o.clientHeight, dlg: d.scrollHeight - d.clientHeight }; });
 (async () => {
   const b = await chromium.launch(), errs = [];
-  const file = fs.readFileSync(__dirname + '/../VERSION', 'utf8').trim();
+  const file = fs.readFileSync(__dirname + '/../VERSION.txt', 'utf8').trim();
+  // Live Server (VS Code) warns about files with no extension or .html/.htm/.xhtml/.php/.svg that lack a head or body tag; a .txt file is left alone
+  ok('the version file has an extension Live Server does not inspect', require('path').extname('VERSION.txt') === '.txt' && fs.existsSync(__dirname + '/../VERSION.txt') && !fs.existsSync(__dirname + '/../VERSION'));
   ok('VERSION holds a major.minor.patch number', /^\d+\.\d+\.\d+$/.test(file), file);
   let p = await b.newPage({ viewport: { width: 1280, height: 720 } }); p.on('pageerror', e => errs.push(e.message));
   await open(p); let r = await read(p);
@@ -17,7 +19,7 @@ const read = p => p.evaluate(() => { const o = document.querySelector('#aboutDlg
   ok('the line is small and inside the dialog, nothing scrolls at 1280x720', r.vis && r.size <= 13 && r.inside && r.ov <= 0 && r.dlg <= 0, JSON.stringify(r));
   await p.close();
   p = await b.newPage({ viewport: { width: 1280, height: 720 } }); p.on('pageerror', e => errs.push(e.message));
-  await p.route('**/VERSION*', rt => rt.fulfill({ status: 200, contentType: 'text/plain', body: '9.8.7\n' }));
+  await p.route('**/VERSION.txt*', rt => rt.fulfill({ status: 200, contentType: 'text/plain', body: '9.8.7\n' }));
   await open(p); r = await read(p);
   ok('changing VERSION changes About', r.text === 'Version 9.8.7', r.text);
   await p.close();
