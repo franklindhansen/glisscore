@@ -9,7 +9,7 @@ const K = '__keyframes';
   const pdf = path.join(os.tmpdir(), 'kf-turn-nudge.pdf'); fs.writeFileSync(pdf, await doc.save());
   const b = await chromium.launch(); const errs = [];
   const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
   await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500);
   const near = (a, b) => Math.abs(a - b) < 0.02;
   const nearAll = (a, b) => a.length === b.length && a.every((v, i) => near(v, b[i]));

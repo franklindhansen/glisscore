@@ -7,7 +7,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const d = await PDFDocument.create(); for (let i = 0; i < 4; i++) { const pg = d.addPage([612, 792]); for (let y = 700; y > 160; y -= 74) for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: 90 + i * 20, y: y - k * 7 }, end: { x: 520 - i * 20, y: y - k * 7 }, thickness: 1, color: rgb(0, 0, 0) }); }          // music, so Crop has something to find
   const file = path.join(os.tmpdir(), 'kf-loading.pdf'); fs.writeFileSync(file, await d.save());
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 4); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 4); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   // hold the work: the first page goes through, the rest wait until the gate opens
   await p.evaluate(() => { window.__gate = new Promise(r => { window.__open = r; }); const raw = peRawBox, scan = peScan; let a = 0, c = 0; peRawBox = async sl => { if (a++ >= 1) await window.__gate; return raw(sl); }; peScan = async (...x) => { if (c++ >= 1) await window.__gate; return scan(...x); }; });

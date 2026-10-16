@@ -7,7 +7,7 @@ const ok = (name, pass, info = '') => { results.push((pass ? 'PASS ' : 'FAIL ') 
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 900, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  const open = async () => { await p.goto('http://localhost:8123/tests/long-file-store.html?piece=10007'); await p.waitForFunction(() => window.ready, null, { timeout: 30000 }); };
+  const open = async () => { await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/tests/long-file-store.html?piece=10007'); await p.waitForFunction(() => window.ready, null, { timeout: 30000 }); };
   const run = async file => {
     const from = await p.evaluate(() => window.results.length), n = await p.evaluate(() => window.done);
     await p.setInputFiles('#file', F + '/' + file); await p.waitForFunction(k => window.done > k, n, { timeout: 120000 });

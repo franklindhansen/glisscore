@@ -8,7 +8,7 @@ const K = '__keyframes';
   const pdf = path.join(os.tmpdir(), 'kf-bar-groups.pdf'); fs.writeFileSync(pdf, await doc.save());
   const b = await chromium.launch(); const errs = [];
   const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
   await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500);
   const read = () => p.evaluate(() => {
     const g = id => document.querySelector(id), box = el => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; };

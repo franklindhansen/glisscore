@@ -5,7 +5,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 (async () => {
   const d = await PDFDocument.create(); for (let i = 0; i < 4; i++) d.addPage([612, 792]); const f = path.join(os.tmpdir(), 'kf-ticks.pdf'); fs.writeFileSync(f, await d.save());
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(600);
   const look = () => p.evaluate(() => [...document.querySelectorAll('#peGrid .page-card')].map(c => { const t = c.querySelector('.tick'), s = getComputedStyle(t), e = c.querySelector('.pe-hid'); return { op: +s.opacity, tf: s.transform, hid: !!e && getComputedStyle(e).display !== 'none' && +getComputedStyle(e).opacity > 0, cv: +getComputedStyle(c.querySelector('canvas')).opacity }; }));
   const count = () => p.evaluate(() => $('#peCount').textContent);

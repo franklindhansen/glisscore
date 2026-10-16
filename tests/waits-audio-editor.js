@@ -9,7 +9,7 @@ const STRAY = '/\\b(Preparing|Measuring|Working out|Loading|Finding|Finishing)\\
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ';
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     // every change on the page is scanned: any text with a stray word, and any text that is a wait, is noted
     await p.evaluate(stray => {

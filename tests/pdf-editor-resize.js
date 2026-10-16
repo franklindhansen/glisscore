@@ -6,7 +6,7 @@ const FX = process.env.S || 'tests/fixtures';
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800); await p.click('#peRail .pe-tab[data-tool=resize]'); await p.waitForTimeout(900);
   const st = () => p.evaluate(() => ({ undo: PE.undo.length, size: PE.d.size ? [PE.d.size.w, PE.d.size.h] : null, go: !document.querySelector('#peRzGo').disabled, now: document.querySelector('#peRzNew').textContent, sel: Array.from(document.querySelectorAll('.rz-opt[aria-pressed=true]')).map(x => x.dataset.k) }));
   const s0 = await st(); ok('before a choice: no step, Re-size greyed out', s0.undo === 0 && !s0.go && s0.size === null, JSON.stringify(s0));

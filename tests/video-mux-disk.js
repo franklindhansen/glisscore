@@ -13,7 +13,7 @@ for (const n of nals) { const t = n[0] & 31; if (t === 7) { sps = n; continue; }
 const avcC = Buffer.concat([Buffer.from([1, sps[1], sps[2], sps[3], 0xff, 0xe1, sps.length >> 8, sps.length & 255]), sps, Buffer.from([1, pps.length >> 8, pps.length & 255]), pps]).toString('base64');
 (async () => {
   const br = await chromium.launch(); const p = await br.newPage(); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=1'); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio && S.audio.disk); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio && S.audio.disk); await p.waitForTimeout(800);
   for (const [name, aud, co64] of [['24-bit sound', 'pcm', false], ['24-bit sound, 64-bit places', 'pcm', true], ['no sound', null, false]]) {
     const out = await p.evaluate(async ({ samples, avcC, aud, co64 }) => {
       const un = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)), fakes = samples.map(x => { const d = un(x.d); return { byteLength: d.length, type: x.key ? 'key' : 'delta', copyTo: t => t.set(d) }; });

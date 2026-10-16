@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ';
     const p = await b.newPage({ viewport: { width: 1240, height: 900 } }); p.setDefaultTimeout(15000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => { window.saveFile = async () => { await new Promise(r => setTimeout(r, 600)); }; document.querySelector('[data-audio]').click(); }); await p.waitForTimeout(800);
     // record every text the two places show while the export runs
     await p.evaluate(() => {

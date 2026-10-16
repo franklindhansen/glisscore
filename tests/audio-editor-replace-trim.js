@@ -8,7 +8,7 @@ let s = 9; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647 * 2 - 1
 const quiet = wav('gc-quiet.wav', t => 0.001 * rnd() + (t > 2 && t < 6 ? 0.4 * Math.sin(2 * Math.PI * 330 * t) * Math.min(1, (t - 2) * 20, (6 - t) * 20) : 0), 8), other = wav('gc-other.wav', t => 0.3 * Math.sin(2 * Math.PI * 440 * t), 20);
 (async () => {
   { const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=1'); await p.setInputFiles('#audioIn', quiet); await p.waitForFunction(() => S.audio); await p.waitForTimeout(800);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); await p.setInputFiles('#audioIn', quiet); await p.waitForFunction(() => S.audio); await p.waitForTimeout(800);
     // Replace on the title page: the card shows the new file coming in
     await p.evaluate(() => { window.__seen = []; const o = DISK.importFile; DISK.importFile = async function (f, opt) { await sleep(600); return o.call(this, f, opt); }; const t = setInterval(() => { const b = document.querySelector('#btnAudio2'); window.__seen.push([b.textContent, b.disabled, document.querySelector('#scAudT').textContent, document.querySelector('#scAudD').textContent, document.querySelector('#btnAudio3').hidden].join('|')); }, 60); window.__stop = () => clearInterval(t); });
     await p.setInputFiles('#audioIn', other); await p.waitForFunction(() => S.audio && S.audio.name === 'gc-other.wav'); await p.waitForTimeout(500);

@@ -6,7 +6,7 @@ const ok = (name, pass, info = '') => { results.push((pass ? 'PASS ' : 'FAIL ') 
   const page = async (w = 1040, h = 900) => {
     const p = await b.newPage({ viewport: { width: w, height: h } });
     p.errs = []; p.on('pageerror', e => p.errs.push(String(e))); p.on('console', m => { if (m.type() === 'error') p.errs.push(m.text()); });
-    await p.goto('http://localhost:8123/index.html?disk=0');
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0');
     return p;
   };
   const load = async (p, file) => {

@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   for (const disk of [0, 1]) for (const fmt of ['wav24', 'flac24']) {
     const tag = (disk ? 'disk store, ' : 'memory, ') + fmt + ': ';
     const p = await b.newPage({ viewport: { width: 1240, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(800);
     const run = mid => p.evaluate(async ([mid, fmt]) => {
       const sleep = ms => new Promise(r => setTimeout(r, ms)); let out = null; window.saveFile = async blob => { out = new Uint8Array(await blob.arrayBuffer()); }; S.set.audioFormat = fmt;

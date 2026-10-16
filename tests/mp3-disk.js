@@ -14,7 +14,7 @@ const cases = [
 ];
 (async () => {
   const br = await chromium.launch(); const errs = [];
-  const open = async disk => { const p = await br.newPage(); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:8123/index.html?disk=' + disk); return p; };
+  const open = async disk => { const p = await br.newPage(); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); return p; };
   const m = await open(0), d = await open(1); let n = 0;
   for (const [name, args] of cases) {
     const nm = 'm' + (n++) + '.mp3', f = path.join(tmp, nm); sh(`ffmpeg -v error -y ${args} ${f}`);

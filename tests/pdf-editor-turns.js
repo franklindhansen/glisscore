@@ -6,7 +6,7 @@ async function mk(name, n) { const d = await PDFDocument.create(); for (let i = 
 (async () => {
   const A = await mk('kf-turns-a.pdf', 6), B = await mk('kf-turns-b.pdf', 6), One = await mk('kf-turns-one.pdf', 1);
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html');
   const load = async f => { await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500); };
   const st = () => p.evaluate(() => ({ t: S.turns.map(x => +x.toFixed(2)), e: S.turnsEdited })), mine = '3,4.7,6.4';
   await load(A); await p.evaluate(() => { S.turns = S.turns.map((t, i) => 3 + i * 1.7); S.turnsEdited = true; onTurnsChanged(); });

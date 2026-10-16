@@ -8,7 +8,7 @@ const K = '__keyframes';
   const b = await chromium.launch(); const errs = [];
   const open = async reduced => {
     const c = await b.newContext({ viewport: { width: 1300, height: 900 }, reducedMotion: reduced ? 'reduce' : 'no-preference' }), p = await c.newPage(); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500); return p;
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500); return p;
   };
   // sets a slider off its default, double-clicks it, and reports where it ends and how many input events it fired on the way
   const reset = (p, id, away, wait = 900) => p.evaluate(async ([id, away, wait]) => {

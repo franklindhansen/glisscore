@@ -13,7 +13,7 @@ const file = path.join(os.tmpdir(), 'kf-noise-auto.wav'); fs.writeFileSync(file,
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }), cut = [];
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ', p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(90000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
       const press = async () => { document.querySelector('#aeNrFind').click(); await sleep(60); const bar = document.querySelector('#aeNrFind').classList.contains('loading'); for (let i = 0; i < 400 && AE.nrAutoBusy; i++) await sleep(25); await sleep(150); return bar; };

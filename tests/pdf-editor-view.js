@@ -12,7 +12,7 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
 (async () => {
   const A = await makePdf('kf-view-a.pdf', 80, 530), B = await makePdf('kf-view-b.pdf', 0, 612, 3, 800, -40), C = await makePdf('kf-view-c.pdf', 200, 400);
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   // double-click
   for (const tool of ['clean', 'skew', 'crop']) {

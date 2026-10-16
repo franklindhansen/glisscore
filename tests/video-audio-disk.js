@@ -5,7 +5,7 @@ const FX = process.env.S || 'tests/fixtures';
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
-  const open = async disk => { const p = await b.newPage(); p.setDefaultTimeout(60000); p.errs = []; p.on('pageerror', e => p.errs.push(e.message)); await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForFunction(() => S.audio.buffer ? (tpGet(S.audio.buffer, S.audio.peaks), TPK.get(S.audio.buffer).tp) : S.audio.tp); await p.waitForTimeout(500); return p; };
+  const open = async disk => { const p = await b.newPage(); p.setDefaultTimeout(60000); p.errs = []; p.on('pageerror', e => p.errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForFunction(() => S.audio.buffer ? (tpGet(S.audio.buffer, S.audio.peaks), TPK.get(S.audio.buffer).tp) : S.audio.tp); await p.waitForTimeout(500); return p; };
   const m = await open(0), d = await open(1);
   const grab = (p, set) => p.evaluate(async set => {
     Object.assign(S.set, { normalize: false, limiter: false, gainDb: 0, audioFades: true }, set); S.vStart = 0.3; S.vEndSet = null; await fxGet(S.set.fx);

@@ -15,7 +15,7 @@ const cases = [
 ];
 (async () => {
   const br = await chromium.launch(); const p = await br.newPage(); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=1');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1');
   for (const [name, nm, args, rate] of cases) {
     const f = path.join(tmp, nm), raw = path.join(tmp, 't.raw'); sh(`ffmpeg -v error -y -f lavfi -i "${src}" ${args} ${f}`); sh(`ffmpeg -v error -y -i ${f} -f f32le -c:a pcm_f32le ${raw}`);
     const info = JSON.parse(sh(`ffprobe -v error -show_entries stream=sample_rate,channels -of json ${f}`)).streams[0], buf = fs.readFileSync(raw), ref = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4);

@@ -8,7 +8,7 @@ const K = '__keyframes';
   const pdf = path.join(os.tmpdir(), 'kf-turns-glide.pdf'); fs.writeFileSync(pdf, await doc.save());
   const b = await chromium.launch(); const errs = [];
   const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
   await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500);
   const near = (a, b, e = 0.02) => Math.abs(a - b) < e;
   const setup = (time) => p.evaluate(([K, time]) => { const k = window[K], vs = k.S.vStart; k.S.turns = k.S.turns.map((_, i) => vs + 3 + i * 2); k.S.ph = k.S.turns.map(() => false); k.S.history.length = 0; k.S.time = time; k.onTurnsChanged(); k.TL.glide = null; }, [K, time]);

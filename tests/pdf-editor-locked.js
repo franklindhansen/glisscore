@@ -6,7 +6,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 const fx = n => path.join(__dirname, 'fixtures', n);
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html');
   const dlgBtn = name => p.locator('#pwDlg button', { hasText: name });
   const askShown = async () => { try { await p.waitForSelector('#pwDlg:not([hidden])', { timeout: 5000 }); return true; } catch (e) { return false; } };
   const pick = async f => { await p.setInputFiles('#pdfIn', fx(f)); };

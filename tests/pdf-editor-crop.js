@@ -17,7 +17,7 @@ async function makePdf() {
 }
 (async () => {
   const file = await makePdf(), b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 5); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 5); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const shot = async name => { if (process.env.SHOTS) await p.screenshot({ path: path.join(process.env.SHOTS, name + '.png') }); };
   const read = () => p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || PE.busy || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); });
@@ -87,7 +87,7 @@ async function makePdf() {
   // a spread among single pages: Same size gives each shape its own frame, so the wide page does not stretch the others
   { const doc = await PDFDocument.create(), line = (pg, x0, x1) => { for (let y = 640; y > 200; y -= 70) for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: x0, y: y - k * 7 }, end: { x: x1, y: y - k * 7 }, thickness: 1, color: rgb(0, 0, 0) }); };
     line(doc.addPage([612, 792]), 180, 430); line(doc.addPage([612, 792]), 200, 450); line(doc.addPage([1224, 792]), 40, 1180); const f2 = path.join(os.tmpdir(), 'kf-crop-shapes.pdf'); fs.writeFileSync(f2, await doc.save());
-    const q = await b.newPage({ viewport: { width: 1300, height: 900 } }); q.on('pageerror', e => errs.push(e.message)); await q.goto('http://localhost:8123/index.html'); await q.setInputFiles('#pdfIn', f2); await q.waitForFunction(() => S.pdf && S.pdf.n === 3); await q.waitForTimeout(600);
+    const q = await b.newPage({ viewport: { width: 1300, height: 900 } }); q.on('pageerror', e => errs.push(e.message)); await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await q.setInputFiles('#pdfIn', f2); await q.waitForFunction(() => S.pdf && S.pdf.n === 3); await q.waitForTimeout(600);
     const sh = await q.evaluate(async () => { openPdfEditor(); await sleep(400); peTool('crop'); for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(300); return [0, 1, 2].map(id => peCropBox(id).box); }); await q.close();
     ok('pages of another shape (a spread) keep a frame of their own', near(sh[0], sh[1], 1e-9) && near([sh[0][0], sh[0][2]], [180 / 612 - 0.02, 450 / 612 + 0.02], 0.02) && near([sh[2][0], sh[2][2]], [40 / 1224 - 0.02, 1180 / 1224 + 0.02], 0.02), JSON.stringify(sh.map(c => c.map(v => +v.toFixed(3))))); }
   if (process.env.SHOTS) {

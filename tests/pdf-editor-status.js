@@ -6,7 +6,7 @@ async function mk(name, n) { const d = await PDFDocument.create(); for (let i = 
 (async () => {
   const A = await mk('kf-status-a.pdf', 4), B = await mk('kf-status-b.pdf', 4);
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html');
   const load = async f => { await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500); };
   const lines = () => p.evaluate(() => [...document.querySelectorAll('#peBand .pe-status')].map(e => e.textContent).filter(Boolean));
   await load(A); await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);

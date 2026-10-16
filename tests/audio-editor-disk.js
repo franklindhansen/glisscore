@@ -10,7 +10,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Ma
   const open = async (disk, file, pdf) => {
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(15000);
     p.errs = []; p.on('pageerror', e => p.errs.push('PAGEERR ' + (e.stack || e).toString().slice(0, 300))); p.on('console', m => { if (m.type() === 'error') p.errs.push('CONSOLE ' + m.text().slice(0, 300)); });
-    await p.goto('http://localhost:8123/index.html' + (disk === null ? '' : '?disk=' + disk));
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html' + (disk === null ? '' : '?disk=' + disk));
     if (pdf) { await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); }
     await p.setInputFiles('#audioIn', FX + '/' + file); await p.waitForFunction(() => S.audio, null, { timeout: 30000 });
     await p.waitForFunction(() => S.audio.buffer ? (tpGet(S.audio.buffer, S.audio.peaks), TPK.get(S.audio.buffer).tp) : S.audio.tp, null, { timeout: 30000 }); await p.waitForTimeout(300);

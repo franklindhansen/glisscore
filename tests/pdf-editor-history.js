@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const doc = await PDFDocument.create(); for (let i = 0; i < 8; i++) { const pg = doc.addPage([612, 792]); if (i !== 2) for (let y = 700; y > 100; y -= 70) for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: 70 + i * 3, y: y - k * 7 }, end: { x: 540, y: y - k * 7 }, thickness: 1, color: rgb(0, 0, 0) }); }
   const f = path.join(os.tmpdir(), 'kf-history.pdf'); fs.writeFileSync(f, await doc.save());
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', f); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.pdf && S.pdf.n === 8 && S.audio); await p.waitForTimeout(1000);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', f); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.pdf && S.pdf.n === 8 && S.audio); await p.waitForTimeout(1000);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800);
   // the two band sizes
   const hs = {}; for (const t of ['pages', 'clean', 'skew', 'crop', 'split', 'resize', 'wm']) { await p.click('#peRail .pe-tab[data-tool=' + t + ']'); await p.waitForTimeout(900); hs[t] = await p.evaluate(() => Math.round(document.querySelector('#peBand').getBoundingClientRect().height)); }

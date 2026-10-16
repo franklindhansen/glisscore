@@ -14,7 +14,7 @@ async function makePdf() {
 const marks = () => [...document.querySelectorAll('#peGrid .page-card')].map(c => { const cv = c.querySelector('canvas'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let dim = 0, blue = 0; for (let i = 0; i < d.length; i += 4) { if (d[i + 2] > 180 && d[i] < 120) blue++; else if (d[i + 2] - d[i] >= 6 && d[i] < 175) dim++; } return { dim, blue }; });
 (async () => {
   const file = await makePdf(), b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const read = () => p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || PE.busy || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(300); });
   const press = () => p.evaluate(async () => { document.querySelector('#peCropAuto').click(); for (let i = 0; i < 300 && (PE.busy || !PE.undo.length); i++) await sleep(25); await sleep(900); });

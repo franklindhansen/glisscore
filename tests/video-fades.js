@@ -6,7 +6,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 const K = '__keyframes';
 (async () => {
   const b = await chromium.launch(); const errs = [];
-  const open = async w => { const p = await b.newPage({ viewport: { width: w, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500); return p; };
+  const open = async w => { const p = await b.newPage({ viewport: { width: w, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500); return p; };
   const p = await open(1300);
   const fade = (t) => p.evaluate(([K, t]) => window[K].frameState(t).fade, [K, t]);
   const setSet = o => p.evaluate(([K, o]) => { Object.assign(window[K].S.set, o); }, [K, o]);

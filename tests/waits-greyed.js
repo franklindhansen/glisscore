@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ';
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     // the Emulator: sampled while the reference is read
     await p.evaluate(() => { aeTool('emu'); window.__em = []; const q = document.querySelector.bind(document); const t = setInterval(() => { if (AE.em && (AE.em.busy || AE.em.busyOwn)) window.__em.push({ go: q('#aeEmGo').disabled, state: q('#aeEmState').textContent.trim() }); }, 10); window.__emStop = () => clearInterval(t); });

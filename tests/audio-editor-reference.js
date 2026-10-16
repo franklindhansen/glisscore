@@ -13,7 +13,7 @@ function wav() {
   const file = wav(), b = await chromium.launch();
   for (const disk of [0, 1]) {
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(120000); const errs = []; p.on('pageerror', e => errs.push(e.message)); const tag = disk ? 'store: ' : 'memory: ';
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio && (S.audio.buffer || S.audio.disk)); await p.waitForTimeout(1000);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio && (S.audio.buffer || S.audio.disk)); await p.waitForTimeout(1000);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const m = await p.evaluate(async () => {
       const s = document.querySelector('#aeEqPreset'); s.value = 'ref:Wind ensemble'; s.dispatchEvent(new Event('change', { bubbles: true })); for (let i = 0; i < 200 && !(AE.match && AE.match.target); i++) await sleep(50); await sleep(200);

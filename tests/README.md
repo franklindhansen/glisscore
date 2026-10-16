@@ -27,7 +27,7 @@ Pixel checks on the page grid and the large view: Crop dims everything outside i
 
 `zsh tests/run-all.sh pdf-editor` runs just the PDF Editor checks; it also names any check missing from the list.
 
-Run a check once and read its PASS and FAIL lines together. A full run takes minutes: start it in the background. Never pipe it through `tail` or `head`: they hold back every line until the run ends. `run-all.sh` prints each check's line as it finishes, and it serves the app itself and stops that server when it ends, so never start one by hand.
+Run a check once and read its PASS and FAIL lines together. A full run takes minutes: start it in the background. Never pipe it through `tail` or `head`: they hold back every line until the run ends. `run-all.sh` prints each check's line as it finishes, and it serves the app itself on its own free port (the `PORT` variable, which the checks read; 8123 when it is not set) and stops only that server when it ends, so never start one by hand and runs at the same time do not disturb each other.
 
 ## Run everything
 

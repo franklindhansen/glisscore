@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ';
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(15000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     await p.evaluate(() => { document.querySelector('.ae-tool[data-tool=level]').click(); const g = document.querySelector('#aeGain'); g.value = 12; g.dispatchEvent(new Event('input', { bubbles: true })); g.dispatchEvent(new Event('change', { bubbles: true })); });
     const st = () => p.evaluate(() => ({ clip: !document.querySelector('#aeClip').hidden, note: !document.querySelector('#aeClipNote').hidden, badge: document.querySelector('#aeLvBadge').textContent, hold: document.querySelector('#aePeakNow').textContent }));

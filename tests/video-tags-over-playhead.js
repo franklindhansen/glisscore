@@ -7,7 +7,7 @@ const K = '__keyframes';
 (async () => {
   const b = await chromium.launch(); const errs = [];
   const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', FX + '/score.pdf');
   await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500);
   await p.evaluate(K => { const s = window[K].S; s.turns = [s.vStart + 3, s.vStart + 6, s.vStart + 9]; s.set.creditsOn = true; s.credits.title = 'Test'; s.set.creditsEarly = true; s.creditsEnd = Math.min(s.turns[2] + 6, window[K].vEnd() - 0.5); }, K);
   // draw with the playhead at time t and the given hover state, then read pixels of the column at x, and of the column 10px to its right

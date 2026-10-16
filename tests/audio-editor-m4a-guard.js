@@ -20,7 +20,7 @@ function wav() { const sr = 48000, n = sr * 4, b = Buffer.alloc(44 + n * 4); let
         decode(c) { if (!c.pcm) return; const k = window.__rise, n = c.n; this.o.output({ numberOfFrames: n, numberOfChannels: c.ch, copyTo(t, q) { for (let i = 0; i < n; i++) t[i] = c.pcm[q.planeIndex * n + i] * k; }, close() {} }); }
         async flush() {} close() { this.state = 'closed'; } };
     });
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio && (S.audio.buffer || S.audio.disk)); await p.waitForTimeout(1000);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio && (S.audio.buffer || S.audio.disk)); await p.waitForTimeout(1000);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
       window.saveFile = async blob => { window.__size = blob.size; }; S.set.audioFormat = 'm4a256'; const run = async (set, rise) => { Object.assign(AE.d, { normalize: false, limiter: false }, set); aeRefresh(); if (AE.d.limiter) await limEnsure(AE.d); window.__rise = rise; window.__passes = 0; AE.m4aLast = null; await aeExportM4a(AE.d, () => {}); return Object.assign({ passes: window.__passes, size: window.__size }, AE.m4aLast); };

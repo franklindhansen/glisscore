@@ -5,7 +5,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 (async () => {
   const b = await chromium.launch(); const bad = [];
   const sizes = []; for (const w of [320, 360, 375, 390, 414, 430, 600, 700, 768, 820, 834, 960, 1024, 1280]) for (const h of [320, 400, 500, 600, 664, 760, 900]) sizes.push([w, h]);
-  const p = await b.newPage(); await p.goto('http://localhost:8123/index.html'); await p.waitForTimeout(1800);
+  const p = await b.newPage(); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.waitForTimeout(1800);
   for (const [w, h] of sizes) {
     await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(120);
     const r = await p.evaluate(() => {

@@ -11,7 +11,7 @@ async function makePdf(name, n) {
 (async () => {
   const A = await makePdf('kf-switch.pdf', 60);
   const b = await chromium.launch({ ignoreDefaultArgs: ['--hide-scrollbars'] }), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 60); await p.waitForTimeout(1500);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 60); await p.waitForTimeout(1500);
   await p.evaluate(() => openPdfEditor()); await p.waitForFunction(() => document.querySelectorAll('#peGrid .page-card:not(.loading)').length === 60); await p.waitForTimeout(800);
 
   // unchanged cards stay put: the same elements, and nothing drawn on them

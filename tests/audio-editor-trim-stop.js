@@ -8,7 +8,7 @@ function wav(file, secs) { const sr = 48000, n = sr * secs, b = Buffer.alloc(44 
 (async () => {
   const f = path.join(os.tmpdir(), 'kf-trim-stop.wav'); wav(f, 120);
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
   await p.evaluate(() => { S.turns = [30, 90]; document.querySelector('[data-audio]').click(); }); await p.waitForTimeout(1500);
   const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(); return { x: r.x, y: r.y + r.height / 2, xs: aeX(0), xe: aeX(S.audio.duration), x60: aeX(60) }; });
   await p.mouse.move(g.x + g.xs + 2, g.y); await p.mouse.down(); for (let i = 1; i <= 10; i++) await p.mouse.move(g.x + g.xs + (g.x60 - g.xs) * i / 10, g.y); 

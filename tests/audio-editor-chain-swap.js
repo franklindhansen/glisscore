@@ -6,7 +6,7 @@ const { chromium } = require('playwright-core');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
   const b = await chromium.launch(), p = await b.newPage(); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.waitForTimeout(500);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.waitForTimeout(500);
   const r = await p.evaluate(async () => {
     const sr = 48000, secs = 3, n = sr * secs, L = new Float32Array(n), R = new Float32Array(n);
     for (let i = 0; i < n; i++) { const t = i / sr, v = 0.2 * Math.sin(2 * Math.PI * 55 * t) + 0.12 * Math.sin(2 * Math.PI * 95 * t + 1) + 0.1 * Math.sin(2 * Math.PI * 300 * t + 2) + 0.05 * Math.sin(2 * Math.PI * 1700 * t + 3); L[i] = v; R[i] = v * 0.9; }

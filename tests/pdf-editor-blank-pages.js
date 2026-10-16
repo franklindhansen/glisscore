@@ -7,7 +7,7 @@ const file = process.env.PDF && fs.existsSync(process.env.PDF) ? process.env.PDF
 (async () => {
   if (!file) { console.log('SKIP no PDF given (set PDF=path to a scanned score to run it)'); return; }
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(240000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n > 1 && S.thumbs.filter(Boolean).length === S.pdf.n); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n > 1 && S.thumbs.filter(Boolean).length === S.pdf.n); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800);
   const settle = () => p.evaluate(async () => { for (let i = 0; i < 4800 && PE.busy; i++) await sleep(25); for (let i = 0; i < 4800 && VTpending.size; i++) await sleep(25); await sleep(800); });
   const blank = () => p.evaluate(() => { const bad = []; document.querySelectorAll('#peGrid .page-card').forEach(c => { const cv = c.querySelector('canvas'), im = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 0; i < im.length && !n; i += 4) if (im[i] < 250) n = 1; if (!n && !PE.d.slots[+c.dataset.id].x) bad.push(+c.dataset.id + 1); }); return { bad, cards: document.querySelectorAll('#peGrid .page-card').length }; });

@@ -5,7 +5,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 3; i++) { const pg = d.addPage([612, 792]); for (let k = 0; k < 5; k++) pg.drawLine({ start: { x: 60, y: 600 - k * 8 }, end: { x: 550, y: 600 - k * 8 }, thickness: 1, color: rgb(0, 0, 0) }); } const f = path.join(os.tmpdir(), 'kf-reasons.pdf'); fs.writeFileSync(f, await d.save()); return f; }
 (async () => {
   const A = await mk(), b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const st = sel => p.evaluate(s => ({ t: $(s).textContent, err: $(s).classList.contains('err') }), sel);
   const dis = sel => p.evaluate(s => $(s).disabled, sel);

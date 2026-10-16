@@ -3,7 +3,7 @@
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 (async () => { const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.setDefaultTimeout(60000);
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.setInputFiles('#audioIn', 'tests/fixtures/s24.wav'); await p.waitForFunction(() => S.audio && S.audio.buffer); await p.waitForTimeout(800); await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', 'tests/fixtures/s24.wav'); await p.waitForFunction(() => S.audio && S.audio.buffer); await p.waitForTimeout(800); await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
   const r = await p.evaluate(async () => {
     aeTool('eq'); aeFx(fx => { fx.eq.on = true; fx.eq.auto = true; fx.eq.bands = [{ type: 'peaking', f: 9000, g: 9, q: 1.2, on: true }, { type: 'highshelf', f: 12000, g: -5, q: 0.71, on: true }, { type: 'highpass', f: 60, g: 0, q: 0.71, on: true }]; }); await sleep(300);
     const curve = eqCurve(AE.d.fx.eq.bands), at = f => { let i = 0; while (i < 239 && eqAxis[i] < f) i++; return curve[i]; };

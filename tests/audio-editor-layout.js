@@ -4,7 +4,7 @@ const { chromium } = require('playwright-core');
   const [w, h, tag] = [+process.argv[2], +process.argv[3], process.argv[4]];
   const p = await b.newPage({ viewport: { width: w, height: h } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await p.goto('http://localhost:8123/index.html?disk=0');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0');
   await p.setInputFiles('#audioIn', process.env.S + '/loud.mp3');
   await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer, null, { timeout: 30000 });
   await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400);

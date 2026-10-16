@@ -6,7 +6,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await p.goto('http://localhost:8123/index.html?disk=0');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0');
   await p.setInputFiles('#audioIn', FX + '/loud.mp3'); await p.waitForFunction(() => S.audio && S.audio.buffer, null, { timeout: 30000 });
   await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400); await p.evaluate(() => aeTool('fades')); await p.waitForTimeout(500);
   const set = async v => { await p.evaluate(v => { const r = document.querySelector('#aeFadeLen'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new Event('change', { bubbles: true })); }, v); await p.waitForTimeout(100); };
@@ -32,7 +32,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   // the sound itself: the exported samples against the envelope, on a recording held in memory and on one held on the disk store
   for (const disk of [0, 1]) {
     const q = await b.newPage({ viewport: { width: 1300, height: 900 } }); q.setDefaultTimeout(30000); q.on('pageerror', e => errs.push(String(e)));
-    await q.goto('http://localhost:8123/index.html?disk=' + disk); await q.setInputFiles('#audioIn', FX + '/stereo.wav'); await q.waitForFunction(() => S.audio, null, { timeout: 30000 }); await q.waitForTimeout(1200);
+    await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await q.setInputFiles('#audioIn', FX + '/stereo.wav'); await q.waitForFunction(() => S.audio, null, { timeout: 30000 }); await q.waitForTimeout(1200);
     await q.evaluate(() => openAudioEditor()); await q.waitForTimeout(500);
     const r = await q.evaluate(async () => {
       const mk = async fades => { const d = aeCopy(AE.d); d.audioFades = fades; d.audioFadeLen = 0.5; d.audioFadeOutLen = 1.0; d.audioFadeShape = 'smooth'; const dk = !!S.audio.disk, ch = 2;

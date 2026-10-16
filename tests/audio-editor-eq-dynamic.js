@@ -8,7 +8,7 @@ function wav(secs, amp, skew) { const sr = 48000, n = sr * secs, ch = 2, bytes =
   for (let i = 0; i < n; i++) { const v0 = amp(i / sr) * Math.sin(2 * Math.PI * 6000 * i / sr); for (let c = 0; c < ch; c++) { const v = Math.round(v0 * (skew && c ? 0.1 : 1) * 8388607) & 0xffffff, o = 44 + (i * ch + c) * 3; bytes[o] = v & 255; bytes[o + 1] = (v >> 8) & 255; bytes[o + 2] = (v >> 16) & 255; } } return bytes; }
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }), errs = [];
-  const open = async (disk, buffer) => { const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:8123/index.html?disk=' + disk);
+  const open = async (disk, buffer) => { const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk);
     await p.setInputFiles('#audioIn', { name: 'tone.wav', mimeType: 'audio/wav', buffer }); await p.waitForFunction(() => S.audio); await p.waitForTimeout(900); await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     await p.evaluate(() => { window.saveFile = async (blob, name) => { const ab = new Uint8Array(await blob.arrayBuffer()); let s = ''; for (let i = 0; i < ab.length; i += 30000) s += String.fromCharCode.apply(null, ab.subarray(i, i + 30000)); window.__saved = { name, b64: btoa(s) }; }; }); return p; };
   // 12s: quiet (0.01) for the first 8s, loud (0.3) after

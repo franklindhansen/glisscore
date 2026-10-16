@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   for (const disk of [0, 1]) {
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message)); const tag = disk ? 'store: ' : 'memory: ';
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1000);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1000);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
       const o = {}, at = (c, f) => { let i = 0; while (i < 239 && eqAxis[i] < f) i++; return c[i]; }, vis = id => { const e = document.querySelector(id); return !e.hidden && e.getBoundingClientRect().width > 0; };

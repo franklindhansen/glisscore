@@ -8,7 +8,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const open = async disk => {
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(20000);
     p.errs = []; p.on('pageerror', e => p.errs.push('PAGEERR ' + (e.stack || e).toString().slice(0, 300))); p.on('console', m => { if (m.type() === 'error') p.errs.push('CONSOLE ' + m.text().slice(0, 300)); });
-    await p.goto('http://localhost:8123/index.html?disk=' + disk);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk);
     await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio, null, { timeout: 30000 });
     await p.waitForFunction(() => S.audio.buffer ? (tpGet(S.audio.buffer, S.audio.peaks), TPK.get(S.audio.buffer).tp) : S.audio.tp, null, { timeout: 30000 }); await p.waitForTimeout(300);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
@@ -54,7 +54,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const e = await run(d, {}, 'wav24'); ok('an export works after a stopped one', !!e && e.size > 1e6); }
   // old export files are cleared when the recording is opened again (a new visit)
   { const left = p => p.evaluate(async () => { const t = DISK.meta.token, dir = await (await (await navigator.storage.getDirectory()).getDirectoryHandle('kf-audio')).getDirectoryHandle(t), out = []; for await (const n of dir.keys()) if (/^export/.test(n)) out.push(n); return out.length; });
-    const before = await left(d); const q = await b.newPage(); q.setDefaultTimeout(30000); await q.goto('http://localhost:8123/index.html?disk=1'); await q.setInputFiles('#audioIn', FX + '/s24.wav'); await q.waitForFunction(() => S.audio && S.audio.disk); await q.waitForTimeout(500);
+    const before = await left(d); const q = await b.newPage(); q.setDefaultTimeout(30000); await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); await q.setInputFiles('#audioIn', FX + '/s24.wav'); await q.waitForFunction(() => S.audio && S.audio.disk); await q.waitForTimeout(500);
     const after = await left(q); ok('export files are cleared when the recording is opened again', before > 0 && after === 0, before + ' before, ' + after + ' after'); await q.close(); }
   // the RF64 header (a file over 4GB cannot be made here): read back what wavHead writes
   { const r = await d.evaluate(() => { const total = 3e9, h = new DataView(wavHead(24, 2, 48000, total, 10, true)), tag = o => String.fromCharCode(h.getUint8(o), h.getUint8(o + 1), h.getUint8(o + 2), h.getUint8(o + 3)), u64 = o => h.getUint32(o, true) + h.getUint32(o + 4, true) * 4294967296;

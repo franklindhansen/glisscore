@@ -8,7 +8,7 @@ async function mk(name, n) { const d = await PDFDocument.create(); for (let i = 
   const b = await chromium.launch(); const errs = [];
   for (const [label, vp] of [['desktop', { width: 1300, height: 900 }], ['phone', { width: 390, height: 800 }]]) {
     const p = await b.newPage({ viewport: vp }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html');
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html');
     await p.setInputFiles('#pdfIn', A); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(1500);
     await p.evaluate(() => openPdfEditor()); await p.waitForFunction(() => !$('#pdfDlg').hidden && PE.d); await p.evaluate(() => peTool('pages')); await p.waitForTimeout(500);
     await p.evaluate(() => { window.__hold = true; const real = renderPdfPage; renderPdfPage = async (...a) => { while (window.__hold) await new Promise(r => setTimeout(r, 50)); return real(...a); }; });          // hold the new thumbnails back

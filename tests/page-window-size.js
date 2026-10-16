@@ -6,7 +6,7 @@ const WINS = { About: '#aboutDlg', 'How it works': '#howDlg', 'Import/Export': '
 (async () => {
   const b = await chromium.launch(); const errs = [];
   const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.waitForTimeout(800);
   const read = sel => p.evaluate(sel => {
     const o = document.querySelector(sel); o.hidden = false; o.style.animation = 'none'; const d = o.querySelector('.dlg'); d.style.animation = 'none';
     const r = d.getBoundingClientRect(), body = d.querySelector('.how-body'), close = d.querySelector('.row .btn.primary, .row .btn:last-child'), cr = close.getBoundingClientRect();

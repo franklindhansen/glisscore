@@ -14,7 +14,7 @@ const humFile = write('kf-hum.wav', true), cleanFile = write('kf-nohum.wav', fal
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }), cut = [];
   for (const disk of [0, 1]) {
     const tag = disk ? 'disk store: ' : 'memory: ', p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(90000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', humFile); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', humFile); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
       const press = async id => { document.querySelector(id).click(); await sleep(60); const bar = (id === '#aeNrHum' ? document.querySelector('#aeNrHumRow') : document.querySelector(id)).classList.contains(id === '#aeNrHum' ? 'busy' : 'loading'); for (let i = 0; i < 400 && (AE.humBusy || AE.nrAutoBusy); i++) await sleep(25); await sleep(150); return bar; };
@@ -35,7 +35,7 @@ const humFile = write('kf-hum.wav', true), cleanFile = write('kf-nohum.wav', fal
     // a recording with no hum
     await p.evaluate(() => closeAudioEditor && document.querySelector('#aeCancel').click()); await p.waitForTimeout(500); { const y = await p.$('dialog[open] .btn.primary, .ask .btn.primary'); if (y) await y.click().catch(() => {}); }
     const q = await b.newPage({ viewport: { width: 1300, height: 900 } }); q.setDefaultTimeout(90000); q.on('pageerror', e => errs.push(e.message));
-    await q.goto('http://localhost:8123/index.html?disk=' + disk); await q.setInputFiles('#audioIn', cleanFile); await q.waitForFunction(() => S.audio); await q.waitForTimeout(1200); await q.evaluate(() => document.querySelector('[data-audio]').click()); await q.waitForTimeout(700);
+    await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await q.setInputFiles('#audioIn', cleanFile); await q.waitForFunction(() => S.audio); await q.waitForTimeout(1200); await q.evaluate(() => document.querySelector('[data-audio]').click()); await q.waitForTimeout(700);
     const none = await q.evaluate(async () => { aeTool('noise'); await sleep(300); document.querySelector('#aeNrHum').click(); for (let i = 0; i < 400 && (AE.humBusy || i < 4); i++) await sleep(25); await sleep(200); return { hum: AE.d.fx.noise.hum, on: document.querySelector('#aeNrHum').classList.contains('on'), said: /No steady mains hum/.test(document.body.innerText) }; });
     ok(tag + 'a recording with no hum: it says so and changes nothing', !none.hum && !none.on && none.said, JSON.stringify(none));
     ok(tag + 'no errors', errs.length === 0, errs.join(' | ')); await q.close(); await p.close();

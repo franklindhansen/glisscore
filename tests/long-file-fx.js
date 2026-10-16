@@ -11,7 +11,7 @@ const dB = v => v > 0 ? (20 * Math.log10(v)).toFixed(1) + 'dB' : 'none';
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1040, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await p.goto('http://localhost:8123/index.html?disk=0'); await p.waitForFunction(() => window.__keyframes);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.waitForFunction(() => window.__keyframes);
   /* a recording: 1.5s of hiss alone (for the noise profile), then notes that move between left and right over the hiss */
   const make = (sr, ch, secs) => p.evaluate(async ({ sr, ch, secs }) => {
     const n = sr * secs, il = new Float32Array(n * ch); let seed = 12345; const rnd = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 4294967296 - 0.5);

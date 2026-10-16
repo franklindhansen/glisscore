@@ -5,7 +5,7 @@ const { chromium } = require('playwright-core'), fs = require('fs'), os = requir
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
   const b = await chromium.launch(), p = await b.newPage(); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.waitForTimeout(500);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.waitForTimeout(500);
   const r = await p.evaluate(() => {
     const fx = fxClone(FX_DEFAULT); fx.eq.on = true; fx.eq.bands = [{ type: 'peaking', f: 1000, g: 6, q: 1, on: true }]; fx.imager.on = true; fx.imager.width = 150; fx.noise.on = true; fx.noise.hum = { f: 50 }; fx.spec.on = true; fx.spec.edits = [{ x: 1 }];
     AE.d = { fx, gainDb: 3, normalize: false, vStart: 0, vEndSet: null, audioFades: true }; const out = {};

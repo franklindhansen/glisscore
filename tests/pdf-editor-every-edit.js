@@ -24,7 +24,7 @@ const bigPx = sel => { const cv = document.querySelector(sel), w = cv.width, h =
 const bigShown = async (p, sel) => { await p.evaluate(async () => { for (let i = 0; i < 400 && (document.querySelector('#peCropPg').classList.contains('loading') || document.querySelector('#peCropPg').classList.contains('busy') || PE.busy); i++) await sleep(25); await sleep(900); }); return p.evaluate(bigPx, sel); };
 (async () => {
   const file = await makePdf(), b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const settle = () => p.evaluate(async () => { for (let i = 0; i < 400 && (PE.busy || VTpending.size || PE.full.size && [...PE.full.values()].some(v => v && v.then)); i++) await sleep(25); await sleep(500); });
   const white = c => c[0] > 250 && c[1] > 250 && c[2] > 250;

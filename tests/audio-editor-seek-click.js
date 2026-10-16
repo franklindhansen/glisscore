@@ -10,7 +10,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const tag = (video ? 'video timeline, ' : 'Audio Editor, ') + (disk ? 'disk store: ' : 'memory: ');
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(15000); const errs = []; p.on('pageerror', e => errs.push(e.message));
     await p.addInitScript(() => { const c = AudioNode.prototype.connect; window.REC = []; AudioNode.prototype.connect = function (t, ...r) { if (t instanceof AudioDestinationNode && !this._rec) { const self = this, sp = this.context.createScriptProcessor(1024, 1, 1); sp.onaudioprocess = e => { window.REC.push({ id: self._rec, d: new Float32Array(e.inputBuffer.getChannelData(0)) }); }; c.call(this, sp); c.call(sp, t); this._rec = (window.NID = (window.NID || 0) + 1); } return c.call(this, t, ...r); }; });
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     if (video) {
       await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(500);
       await p.evaluate(() => Transport.play()); await p.waitForTimeout(1000);

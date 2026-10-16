@@ -6,7 +6,7 @@ const FX = process.env.S || 'tests/fixtures';
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }); const errs = [];
-  const open = async (w, h, audio) => { const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:8123/index.html?disk=1'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf && S.pdf.n > 0); if (audio) { await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); } await p.waitForTimeout(1200); return p; };
+  const open = async (w, h, audio) => { const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(60000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf && S.pdf.n > 0); if (audio) { await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); } await p.waitForTimeout(1200); return p; };
   // full screen button
   const bad = [];
   for (const [w, h] of [[1300, 800], [1000, 640], [820, 560], [700, 500], [560, 640], [390, 800], [1000, 420], [1300, 440]]) {

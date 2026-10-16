@@ -11,7 +11,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000);
   const errs = [], dialogs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') console.log('console:', m.text().slice(0, 300)); }); p.on('dialog', d => { dialogs.push(d.message()); d.dismiss(); });
   const sizesAfter = async shape => {
-    await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', { name: 'mixed.pdf', mimeType: 'application/pdf', buffer: pdf }); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', { name: 'mixed.pdf', mimeType: 'application/pdf', buffer: pdf }); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
     await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800); await p.click('#peRail .pe-tab[data-tool=resize]'); await p.waitForTimeout(700);
     await p.click('.rz-opt[data-k=tabloid]'); await p.waitForTimeout(300);
     if (shape) { await p.click('.rz-shape[data-k=' + shape + ']'); await p.waitForTimeout(300); }

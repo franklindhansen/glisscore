@@ -6,7 +6,7 @@ async function mk(name, sizes) { const d = await PDFDocument.create(); sizes.for
 (async () => {
   const A = await mk('kf-add-a.pdf', [[612, 792], [612, 792], [612, 792], [612, 792]]);
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html');
   const open = async (f, n) => { await p.setInputFiles('#pdfIn', f); await p.waitForFunction(n => S.pdf && S.pdf.n === n, n); await p.waitForTimeout(1500); await p.evaluate(() => openPdfEditor()); await p.waitForFunction(() => PE.d); await p.waitForTimeout(500); };
   const idle = () => p.waitForFunction(() => !PE.busy, null, { timeout: 60000 });
   const addState = () => p.evaluate(() => ({ busy: !!PE.busy, go: !$('#peAddGo').disabled, at: !$('#peAddAt').disabled, n: S.pdf.n, line: $('#peAddStatus').textContent }));

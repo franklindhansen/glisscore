@@ -10,7 +10,7 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
   const b = await chromium.launch(); const errs = [];
   async function fresh(clearAspects) {
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); p.on('pageerror', e => errs.push(e.message));
-    await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 4); await p.waitForTimeout(800);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 4); await p.waitForTimeout(800);
     await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
     await p.evaluate(clear => { if (clear) PE.asp = new Map(); window.__gate = new Promise(r => { window.__open = r; }); const raw = peRawBox; peRawBox = async sl => { await window.__gate; return raw(sl); }; }, clearAspects);          // nothing is read until the gate opens
     await p.evaluate(() => peTool('crop')); await p.waitForTimeout(900);

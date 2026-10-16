@@ -12,7 +12,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const tag = disk ? 'disk store: ' : 'memory: ';
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
     await p.addInitScript(() => { window.READERS = []; const W = window.AudioWorkletNode; window.AudioWorkletNode = function (ctx, name, o) { if (!(ctx instanceof OfflineAudioContext) && (!o || o.numberOfInputs !== 0)) window.READERS.push(name); return new W(ctx, name, o); }; window.AudioWorkletNode.prototype = W.prototype; });          // every worklet made on the live context that takes sound in
-    await p.goto('http://localhost:8123/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/stereo.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/stereo.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
       aeFx(fx => { fx.eq.on = true; fx.eq.auto = true; fx.eq.bands = [{ type: 'peaking', f: 900, g: 5, q: 1, on: true }, { type: 'highshelf', f: 7000, g: -3, q: 0.71, on: true }, { type: 'peaking', f: 2500, g: 4, q: 1.4, on: true, place: 'side' }, { type: 'highpass', f: 50, g: 0, q: 0.71, slope: 24, on: true }];

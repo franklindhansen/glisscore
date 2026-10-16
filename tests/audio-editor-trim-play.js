@@ -10,7 +10,7 @@ function wav(file, secs) { const sr = 48000, n = sr * secs, b = Buffer.alloc(44 
 (async () => {
   const f = path.join(os.tmpdir(), 'kf-trim-play.wav'); wav(f, 600);
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] }), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(120000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio && S.audio.disk); await p.waitForTimeout(1500);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio && S.audio.disk); await p.waitForTimeout(1500);
   await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(1500);
   await p.evaluate(() => { const d = AE.d; d.normalize = true; d.normBy = 'loud'; d.normLufs = -14; d.normPreset = 'custom'; d.limiter = true; aeFx(fx => { fx.eq.on = true; fx.eq.bands = [{ type: 'peaking', f: 900, g: 5, q: 1, on: true }, { type: 'highshelf', f: 7000, g: -3, q: 0.71, on: true }]; fx.imager.on = true; fx.imager.width = 140; }); aeRefresh(); });
   await p.waitForTimeout(600); await p.click('#aePlay'); await p.waitForFunction(() => AE.playing); await p.waitForTimeout(2000);

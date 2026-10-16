@@ -9,7 +9,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const pdf = Buffer.from(await mk.save());
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000);
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:8123/index.html'); await p.setInputFiles('#pdfIn', { name: 'red.pdf', mimeType: 'application/pdf', buffer: pdf }); await p.waitForFunction(() => S.pdf);
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', { name: 'red.pdf', mimeType: 'application/pdf', buffer: pdf }); await p.waitForFunction(() => S.pdf);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(1200);
   const card = id => p.evaluate(id => {
     const c = document.querySelector('#peGrid .page-card[data-id="' + id + '"] canvas'), r = c.getBoundingClientRect(), x = c.getContext('2d'), px = (a, b) => Array.from(x.getImageData(a, b, 1, 1).data.slice(0, 3));

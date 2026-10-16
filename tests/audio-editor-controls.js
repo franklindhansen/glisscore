@@ -4,7 +4,7 @@ const results = []; const ok = (n, pass, info = '') => results.push((pass ? 'PAS
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1040, height: 900 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e)));
-  await p.goto('http://localhost:8123/index.html?disk=0');
+  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0');
   await p.setInputFiles('#audioIn', process.env.S + '/stereo.wav');
   await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer, null, { timeout: 30000 });
   await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400);
