@@ -590,8 +590,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .ed-lead.quip{color:var(--accent);font-style:italic}
 .ed-lead{transition:color .3s var(--ease-ui)}
 
-/* ----- Editor tidy-ups: a divider before Reset, room for focus rings, grid footer, gain ----- */
-.ed-sep{width:1px;align-self:stretch;margin:2px 6px;background:var(--line)}
+/* ----- Editor tidy-ups: room for focus rings, grid footer, gain ----- */
 
 .ae-bar .push-right{margin-left:auto}
 #aeGainField{margin-top:10px;transition:opacity .3s var(--ease-ui)}
@@ -724,16 +723,12 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .title-pill,.title-pill:focus-within{flex:1 1 100%;order:5}
   .chips{flex:1 1 100%;order:6}
   /* timeline bar: a clean two-row grid instead of buttons wrapping wherever they land */
-  .tl-bar{display:grid;grid-template-columns:auto auto 1fr auto auto auto;grid-template-areas:"ttl inf . und red his" "spc spc spc spc zm zm";align-items:center;gap:8px;padding:8px 16px 10px;min-height:0}
+  .tl-bar{display:grid;grid-template-columns:auto auto 1fr auto;grid-template-areas:"ttl inf . his" "trn trn trn trn" "zm zm zm zm";align-items:center;gap:8px;padding:8px 16px 10px;min-height:0}
   .tl-bar h2{grid-area:ttl}
   .tl-bar .tl-info{grid-area:inf;margin:0}
-  .tl-bar #bUndo{grid-area:und}
-  .tl-bar #bRedo{grid-area:red}
-  .tl-bar #bHist{grid-area:his}
-  .tl-bar .hist-wrap{display:contents}
-  .tl-bar #bSpace{grid-area:spc;justify-self:start}
+  .tl-bar .hist-wrap{grid-area:his}
+  .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end}
-  .tl-bar .vsep{display:none}
   .tl-bar .hint.warn{grid-column:1/-1}
 }
 /* touch screens: 16px text in fields stops iPhones zooming the page in when you tap one */
@@ -2062,13 +2057,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg-run p{margin:0}
 .pg-run .row{display:flex;justify-content:flex-end;gap:8px}
 
-/* ---- the Audio Editor's glass groups (the Undo group and the controls bar) share one recipe: a soft glass edge, buttons the same height and corner,
+/* ---- the Audio Editor's controls bar and its buttons share one recipe (the Undo group is a .btn-group, see the end of this file): a soft glass edge, buttons the same height and corner,
    and a group corner that is the button corner plus the gap around it (7px + 4px = 11px), so the curves nest ---- */
-#audioDlg .ed-head .ed-tools,#pdfDlg .ed-head .ed-tools{align-items:center;gap:4px;padding:4px;border-radius:calc(var(--r-sm) + 4px);border:1px solid var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
-#audioDlg:not(.afull) .ed-head .ed-tools,#pdfDlg .ed-head .ed-tools{box-shadow:none}          /* it sits on the window, not over a picture, so it has no shadow; the shadow comes back in full screen where it floats over the wave */
-#audioDlg .ed-head .ed-tools .ed-sep,#pdfDlg .ed-head .ed-tools .ed-sep{display:block;margin:2px 3px}
-#audioDlg .ed-head .ed-tools .btn,#pdfDlg .ed-head .ed-tools .btn,#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:28px;box-sizing:border-box;border-radius:var(--r-sm);background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
-#audioDlg .ae-bar .btn.small,#audioDlg .ed-head .ed-tools .btn,#pdfDlg .ed-head .ed-tools .btn{padding:0 9px;font-size:13px}
+#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:28px;box-sizing:border-box;border-radius:var(--r-sm);background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#audioDlg .ae-bar .btn.small{padding:0 9px;font-size:13px}
 #audioDlg .ae-bar .ae-view{font-size:13px}
 #audioDlg .ae-bar .ae-view label{display:flex;align-items:center;justify-content:center;padding:0 11px;height:100%;box-sizing:border-box}
 #audioDlg .ae-bar .ae-view span{padding:0}
@@ -2203,3 +2195,17 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #fadeLenField .fade-ends .sl-end[data-v="0"]{left:-4px}
 #fadeLenField .fade-ends .sl-end.auto{left:calc(8px + (100% - 16px) * var(--apos,.333));transform:translateX(-50%)}
 #fadeLenField .fade-ends .sl-end:last-child{right:-4px}
+
+/* ---- Button group: the one pill for buttons that belong together (the Undo group in the video, Audio and PDF editors; the video's turn tools).
+   One outline round the group, flat buttons inside it, a thin divider between them. The group corner is the button corner plus the gap (7px + 2px = 9px), so the curves nest.
+   Mark up a group as <span class="btn-group"> with .btn buttons and <span class="vsep"> dividers; a lone button, a slider or a toggle that stands apart is not in one. ---- */
+.btn-group{display:inline-flex;align-items:center;gap:0;padding:2px;border-radius:calc(var(--r-sm) + 2px);border:1px solid var(--line);background:var(--panel2)}
+.btn-group .btn{box-sizing:border-box;height:23px;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:13px}
+.btn-group .btn:hover:not([disabled]){background:var(--accent-soft)}
+.btn-group .btn[aria-pressed=true]{background:var(--accent-soft)}
+.btn-group .vsep{display:block;width:1px;height:16px;margin:0 3px;background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
+.btn-group.hist-wrap{gap:0}
+/* full screen: the group floats over the wave, so it is glass with a shadow; its buttons stay flat inside it */
+#audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
+#audioDlg.afull .ed-head .btn-group .btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#audioDlg.afull .ed-head .btn-group .btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group .btn:hover:not([disabled]){background:var(--accent-soft)}

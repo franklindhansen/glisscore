@@ -479,9 +479,11 @@
         <button class="info-i" type="button" aria-label="About the timeline" aria-expanded="false">i</button>
         <p class="hint" id="tlHint"></p>
       </div>
-      <span class="hist-wrap">
+      <span class="hist-wrap btn-group">
         <button class="btn small" id="bUndo" type="button" disabled title="Undo last change (Cmd/Ctrl+Z)">Undo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="bRedo" type="button" disabled title="Redo (Cmd/Ctrl+Shift+Z)">Redo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="bHist" type="button" aria-expanded="false" aria-controls="mHist" disabled title="Every step so far, to go back to one">History</button>
         <div class="hist up" id="mHist" role="dialog" aria-label="History" hidden>
           <div class="hist-top"><h3>History</h3><span class="hist-sub" id="mHistSub">Pick a step to go back to it</span></div>
@@ -489,8 +491,11 @@
           <div class="fa" id="mHistFoot"><div class="fa-in" inert><div class="hist-foot"><span id="mHistSum"></span><div><button class="btn small" id="mHistNo" type="button">Cancel</button><button class="btn small primary" id="mHistGo" type="button">Go back</button></div></div></div></div>
         </div>
       </span>
-      <button class="btn small" id="bSpace" type="button" disabled title="Place all turns at equal intervals">Space turns evenly</button>
-      <button class="btn small" id="bToEnd" type="button" disabled title="Move every turn after the playhead to the end">Turns to end</button>
+      <span class="btn-group tl-turns">
+        <button class="btn small" id="bSpace" type="button" disabled title="Place all turns at equal intervals">Space turns evenly</button>
+        <span class="vsep" aria-hidden="true"></span>
+        <button class="btn small" id="bToEnd" type="button" disabled title="Move every turn after the playhead to the end">Turns to end</button>
+      </span>
       <span class="vsep" aria-hidden="true"></span>
       <div class="zoom">
         <button class="btn small" id="bFit" type="button">Fit</button>
@@ -626,11 +631,13 @@
   <div class="dlg wide editor ae">
     <div class="ed-head">
       <h2 id="audioTitle">Audio Editor</h2>
-      <div class="ed-tools">
+      <div class="ed-tools btn-group">
         <button class="btn small" id="aeUndo" type="button" disabled>Undo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="aeRedo" type="button" disabled>Redo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="aeHistBtn" type="button" aria-expanded="false" aria-controls="aeHist" disabled>History</button>
-        <span class="ed-sep" aria-hidden="true"></span>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="aeReset" type="button" disabled>Reset</button>
       </div>
       <div class="hist" id="aeHist" role="dialog" aria-label="History" hidden>
@@ -905,11 +912,13 @@
   <div class="dlg wide editor pe">
     <div class="ed-head">
       <h2 id="pdfTitle">PDF Editor</h2>
-      <div class="ed-tools">
+      <div class="ed-tools btn-group">
         <button class="btn small" id="peUndo" type="button" disabled>Undo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="peRedo" type="button" disabled>Redo</button>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="peHistBtn" type="button" aria-expanded="false" aria-controls="peHist" disabled>History</button>
-        <span class="ed-sep" aria-hidden="true"></span>
+        <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="peReset" type="button" disabled>Reset</button>
       </div>
       <div class="hist" id="peHist" role="dialog" aria-label="History" hidden>
