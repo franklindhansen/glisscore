@@ -194,10 +194,10 @@ input.bad{border-color:var(--danger)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 
 /* ----- Segmented radio buttons ----- */
-.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden;background:var(--panel2)}
-.seg label{position:relative;z-index:1;display:block;text-align:center;padding:6px 4px;cursor:pointer;font-size:13px;color:var(--muted);border-right:1px solid var(--line)}
-.seg label:last-child{border-right:0}
+.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border:1px solid var(--line);border-radius:calc(var(--r-sm) + 2px);overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
+.seg label{position:relative;z-index:1;display:block;text-align:center;padding:6px 4px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;color:var(--muted)}
 .seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:focus-within{outline-offset:0}          /* the focus ring sits in the 2px inset, so the control's edge does not clip it */
 .seg input:checked+span{color:var(--ink)}
 .seg label:has(input:checked){color:var(--ink)}
 .field label.check{justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
@@ -539,7 +539,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 .keys kbd{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--panel2);font:600 11.5px/1.5 inherit;text-align:center;color:var(--ink)}
 
 /* the segmented control's glider */
-.seg-pill{position:absolute;top:0;bottom:0;left:0;width:0;opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
+.seg-pill{position:absolute;top:2px;bottom:2px;left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
 /* full screen button: the corners swell for a moment, then settle a touch larger */
 .fs-btn svg{transition:transform .4s var(--spring-hover)}
 .fs-btn:hover svg,.fs-btn:focus-visible svg{animation:fsCorners 1.1s var(--ease-out) forwards}
@@ -1573,6 +1573,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aePaneEq:not([hidden]){display:flex;flex-direction:column}
 #aePaneEq .eq-top{flex:none;margin-bottom:8px}
 #aePaneEq .eq-stage{flex:1 1 0;min-height:64px;height:auto}
+@media (max-width:560px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
 #aePaneEq .eq-band.ae-card{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match .mt-head{margin-bottom:8px}
@@ -1586,6 +1587,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:12px;align-items:center}
 .im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 /* the slider and its end labels share one track, so Normal sits under the middle of the slider */
+@media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
 .im-slrow{grid-template-columns:minmax(0,1fr) 46px}
 .im-slrow.bal{grid-template-columns:minmax(0,1fr) 92px}
 .sl-track{min-width:0}
@@ -2065,9 +2067,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* ---- the Audio Editor's controls bar and its buttons share one recipe (the Undo group is a .btn-group, see the end of this file): a soft glass edge, buttons the same height and corner,
    and a group corner that is the button corner plus the gap around it (7px + 4px = 11px), so the curves nest ---- */
-#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:28px;box-sizing:border-box;border-radius:var(--r-sm);background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:28px;box-sizing:border-box;background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#audioDlg .ae-bar .btn{border-radius:var(--r-sm)}          /* Wave|Spec keeps the segmented control's own corner */
 #audioDlg .ae-bar .btn.small{padding:0 9px;font-size:13px}
-#audioDlg .ae-bar .ae-view{font-size:13px}
+#audioDlg .ae-bar .ae-view{min-height:28px;font-size:13px}          /* as tall as the buttons beside it */
 #audioDlg .ae-bar .ae-view label{display:flex;align-items:center;justify-content:center;padding:0 11px;height:100%;box-sizing:border-box}
 #audioDlg .ae-bar .ae-view span{padding:0}
 #audioDlg .ae-bar .ae-fullbtn{width:28px;height:28px;border-radius:var(--r-sm)}
