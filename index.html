@@ -177,7 +177,7 @@
         <div class="field">
           <span class="lbl" id="transLbl">Style</span>
           <div class="seg" role="radiogroup" aria-labelledby="transLbl">
-            <label><input type="radio" name="transition" value="flip" checked><span>Flip</span></label>
+            <label><input type="radio" name="transition" value="flip" checked><span>Turn</span></label>
             <label><input type="radio" name="transition" value="slide"><span>Slide</span></label>
             <label><input type="radio" name="transition" value="cut"><span>Cut</span></label>
           </div>
@@ -594,7 +594,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and flips on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page swings off its left edge and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page swings off its left edge and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -4730,7 +4730,7 @@ function groupSummary(k) {
   if (k === 'transition') {
     if (s.transition === 'cut') return ['Cut'];
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
-    return [j('Flip', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Flip', 'Turn ' + sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Flip', 'Turn ' + sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Flip', 'Turn ' + sec(s.flipDur))];
+    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
   if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
@@ -4822,7 +4822,7 @@ function initSmooth() {
     SMOOTH_PROPS.forEach(p => { full[p] = p === 'height' ? el.getBoundingClientRect().height + 'px' : p === 'opacity' ? '1' : cs[p]; zero[p] = p === 'opacity' ? '0' : '0px'; });
     full.transform = 'none'; zero.transform = 'translateY(-6px)';                  // the content drifts a little as it opens or closes
     const mo = el.dataset.motion, tr = S.set.transition;
-    if (mo) {                                                                         // rows tied to the page transition: Cut does nothing, Slide slides, Flip flips
+    if (mo) {                                                                         // rows tied to the page transition: Cut does nothing, Slide slides, Turn turns
       if (tr === 'cut' || (!show && mo === 'tr')) { if (!show) el.hidden = true; return; }
       const kind = mo === 'tr' ? tr : mo;
       if (kind === 'slide') zero.transform = 'translateX(' + (S.set.slideDir === 'out' ? -30 : 30) + 'px)';
