@@ -2660,8 +2660,10 @@ function wavFloatBuffer(ab) {
 function fullScaleCount(buf) { let n = 0; for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) { const v = d[i] < 0 ? -d[i] : d[i]; if (v >= 0.99999 && v <= 1) n++; } } return n; }
 /* the loudest sample of a whole recording, in dB (above 0 means it goes over full scale) */
 function bufferPeakDb(buf) { let m = 0; for (let c = 0; c < buf.numberOfChannels; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) { const v = d[i] < 0 ? -d[i] : d[i]; if (v > m) m = v; } } return m > 1e-5 ? 20 * Math.log10(m) : -Infinity; }
+/* Safari sends a context whose rate differs from the speakers' through a slow converter that delays every start and stop by a third of a second or more (the context's own timestamps do not show it). So there the context keeps the speakers' rate and the player converts the recording as it plays */
+const SAFARI = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
 function ctxForRate(rate) {
-  audioPlayback(); const AC = window.AudioContext || window.webkitAudioContext; if (!rate || rate < 8000 || rate > 192000) return ensureCtx();
+  audioPlayback(); const AC = window.AudioContext || window.webkitAudioContext; if (!rate || rate < 8000 || rate > 192000 || SAFARI) return ensureCtx();
   if (actx && actx.sampleRate === rate) return actx;
   try { const next = new AC({ sampleRate: rate }); if (next.sampleRate === rate) { const old = actx; actx = next; if (old) { try { old.close(); } catch (e) {} } return actx; } try { next.close(); } catch (e) {} } catch (e) {}
   return ensureCtx();
@@ -3089,8 +3091,12 @@ const DISK = {
   peaks(level, from, n) { return this.call('peaks', { token: this.meta.token, level, from, n }); },
   /* plays the stored recording from a frame, through the player every sound goes through (soundPlay). fx: the sound as the tools leave it, worked out as it plays */
   play(ac, from, dest, opt = {}) {
-    const m = this.meta; if (ac.sampleRate !== m.sr) return Promise.reject(new Error('This browser cannot play at ' + m.sr + 'Hz.'));
-    return soundPlay(ac, { sr: m.sr, ch: m.ch, frames: m.frames, get: (at, n) => opt.fx ? this.render(at, n, false, opt.slot) : this.read(at, n, true) }, from, dest, Object.assign({ quick: !!opt.fx }, opt));
+    const m = this.meta, get = (at, n) => opt.fx ? this.render(at, n, false, opt.slot) : this.read(at, n, true), o = Object.assign({ quick: !!opt.fx }, opt);
+    if (ac.sampleRate === m.sr) return soundPlay(ac, { sr: m.sr, ch: m.ch, frames: m.frames, get }, from, dest, o);
+    /* the context runs at another rate than the recording (Safari: the speakers' rate): the app's own converter turns it into the context's rate a second at a time, and the player counts in that rate */
+    const rs = KFX.resampled(get, { sr: m.sr, ch: m.ch, frames: m.frames }, ac.sampleRate, m.frames / m.sr), k = ac.sampleRate / m.sr;
+    if (o.end) o.end = Math.floor(o.end * k);
+    return soundPlay(ac, { sr: ac.sampleRate, ch: m.ch, frames: rs.info.frames, get: (at, n) => rs.read(at, Math.min(n, ac.sampleRate)) }, Math.floor(from * k), dest, o);
   },
   async remove() { this.meta = null; this.fxSig = ''; this.fxSigE = ''; this.fxSigP = ''; return this.call('remove'); }
 };
@@ -5384,9 +5390,12 @@ async function exportRealtime(o, fps, dur, ctl) {
   let stream = canvas.captureStream(0);
   const vtrack = stream.getVideoTracks()[0], manual = !!(vtrack && typeof vtrack.requestFrame === 'function');
   if (!manual) { stream.getTracks().forEach(t => t.stop()); stream = canvas.captureStream(fps); }
-  let src = null, gainNode = null; const vS = S.vStart;
+  let src = null, gainNode = null, ac = null, exportAc = null; const vS = S.vStart;
   if (S.audio) {
-    const ac = ensureCtx(); if (ac.state !== 'running') await ac.resume();
+    /* in Safari the playback context runs at the speakers' rate; the recording is made on a context of its own at the sound's rate, so the exported audio keeps it. Nothing is heard here, so its delay does not matter. If it will not start, the playback context is used */
+    ac = ensureCtx();
+    if (SAFARI && outBuf().sampleRate !== ac.sampleRate) { try { const own = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: outBuf().sampleRate }); await Promise.race([own.resume(), new Promise(r => setTimeout(r, 1500))]); if (own.state === 'running' && own.sampleRate === outBuf().sampleRate) { ac = own; exportAc = own; } else own.close(); } catch (e) {} }
+    if (ac.state !== 'running') await ac.resume();
     const dest = ac.createMediaStreamDestination(); try { await fxGet(S.set.fx); } catch (e) {}
     src = ac.createBufferSource(); src.buffer = outBuf();
     gainNode = ac.createGain(); src.connect(gainNode); gainNode.connect(dest);
@@ -5403,7 +5412,7 @@ async function exportRealtime(o, fps, dur, ctl) {
   rend.render(frameState(vS));
   rec.start(1000);
   const t0 = performance.now();
-  if (src) { if (vS >= 0) src.start(0, vS); else src.start(ensureCtx().currentTime - vS); }      // before the audio starts: wait for it
+  if (src) { if (vS >= 0) src.start(0, vS); else src.start(ac.currentTime - vS); }      // before the audio starts: wait for it
   let lastReq = -1e9;
   try {
     for (;;) {
@@ -5418,7 +5427,7 @@ async function exportRealtime(o, fps, dur, ctl) {
   } finally {
     try { if (src) src.stop(); } catch (e) {}
     if (rec.state !== 'inactive') rec.stop();
-    await stopped; stream.getTracks().forEach(t => t.stop()); rend.destroy();
+    await stopped; if (exportAc) { try { exportAc.close(); } catch (e) {} } stream.getTracks().forEach(t => t.stop()); rend.destroy();
   }
   if (ctl.cancelled) return null;
   const type = (mime || 'video/webm').split(';')[0];
