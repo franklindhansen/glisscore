@@ -2026,21 +2026,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .icon-btn.play.waiting{animation:play-wait 1.1s ease-in-out infinite}
 @keyframes play-wait{0%,100%{opacity:1}50%{opacity:.45}}
 @media (prefers-reduced-motion:reduce){.icon-btn.play.waiting{animation:none;opacity:.7}}
-/* the status bar's busy dot, pulsing while the noise removal runs */
-#aeChain .busy{display:inline-flex;align-items:center;gap:6px}
-#aeChain .busy i{width:6px;height:6px;border-radius:50%;background:var(--turn);animation:play-wait 1.1s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){#aeChain .busy i{animation:none}}
 
 /* the loudness readout gets its own line under the peak, so it is never cut off */
 .lv-meter .lv-read{flex-wrap:wrap;justify-content:flex-end;row-gap:2px}
 .lv-meter .lv-ld{flex-basis:100%;margin-left:0;text-align:right;white-space:nowrap;font-size:12px}
-/* processing: the Noise reduction light glows amber and pulses, its badge says Processing, and the status bar keeps its normal text */
-.led.busy::after{opacity:1;transform:none;background:radial-gradient(circle at 34% 28%,#fff4d6 0,#fcd34d 30%,var(--turn) 70%,#b45309 100%);box-shadow:0 0 0 .5px rgba(180,83,9,.5),0 0 8px 1px rgba(217,119,6,.6);animation:play-wait 1.1s ease-in-out infinite}
-/* the Processing line sits under the tool name, in the same row, so nothing is pushed or overlapped */
-.ae-tool .ae-busy{display:none;flex-basis:100%;font-size:11.5px;line-height:1.2;font-weight:500;color:var(--turn)}
-.ae-tool.busy{flex-wrap:wrap;align-content:center}
-.ae-tool.busy .ae-busy{display:block;animation:play-wait 1.1s ease-in-out infinite}
-@media (prefers-reduced-motion:reduce){.led.busy::after,.ae-tool.busy .ae-busy{animation:none}}
+/* working in the background: a thin blue ring fills around the tool's light (Noise reduction) or in its empty slot (Emulator) with the share done, only while another tool is open: the open tool's own window says it in its bar. Nothing is said in words. It fades in with the job and out when it ends; before the first tick a short arc turns */
+@property --ring{syntax:'<number>';inherits:true;initial-value:0}
+.ae-jack{position:relative}
+.ae-jack::before{content:'';position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--ring) * 360deg),color-mix(in srgb,var(--accent) 20%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent 7.5px,#000 8px);mask:radial-gradient(circle,transparent 7.5px,#000 8px);opacity:0;transform:scale(.82);pointer-events:none;transition:opacity .3s var(--ease-ui),transform .4s var(--ease-out),--ring .25s linear}          /* the share glides between ticks */
+.ae-jack.start::before{transition:opacity .3s var(--ease-ui),transform .4s var(--ease-out)}
+.ae-jack.busy::before{opacity:1;transform:none}
+.ae-jack.busy.wait::before{--ring:.25;animation:ring-turn 1s linear infinite}
+@keyframes ring-turn{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.ae-jack.busy.wait::before{animation:none}.ae-jack::before{transition:opacity .3s var(--ease-ui)}}
 /* the Removal card: the processing row sits right under Noise only, and its space is kept when idle so nothing shifts */
 #aeNrCtl .nr-listen{margin-top:0}
 /* before the first tick, a short sweep moves along the track: it says the job has started */

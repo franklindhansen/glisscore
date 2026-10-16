@@ -665,7 +665,7 @@
         <div class="ae-rail-body" id="aeRailBody"><div class="ae-rail-in" id="aeRailIn"><i class="ae-sel" id="aeRailSel" aria-hidden="true"></i><svg class="ae-wires" id="aeWires" aria-hidden="true"></svg>
           <div class="ae-end" id="aeJackIn"><i aria-hidden="true"></i><span>In</span></div>
           <div class="ae-rail-h" title="Runs from top to bottom. Drag a light onto another lit light to swap their order.">Processing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></div>
-          <div class="ae-procs"><div class="ae-proc" data-tool="noise"><button class="ae-jack lockd" type="button" data-tool="noise" aria-label="Noise reduction light" title="Always runs first, so it hears the noise as you learned it"><i class="led" id="aeNrLed"></i></button><button class="ae-tool" type="button" data-tool="noise" aria-pressed="false"><span class="ae-tn">Noise reduction</span><span class="ae-busy" aria-hidden="true">Processing…</span></button><output class="ae-badge" id="aeNrBadge"></output></div><div class="ae-proc" data-tool="spec"><button class="ae-jack lockd" type="button" data-tool="spec" aria-label="Spectra light" title="Runs right after Noise reduction"><i class="led" id="aeSpLed"></i></button><button class="ae-tool" type="button" data-tool="spec" aria-pressed="false"><span class="ae-tn">Spectra</span></button><output class="ae-badge" id="aeSpBadge"></output></div></div>
+          <div class="ae-procs"><div class="ae-proc" data-tool="noise"><button class="ae-jack lockd" type="button" data-tool="noise" aria-label="Noise reduction light" title="Always runs first, so it hears the noise as you learned it"><i class="led" id="aeNrLed"></i></button><button class="ae-tool" type="button" data-tool="noise" aria-pressed="false"><span class="ae-tn">Noise reduction</span></button><output class="ae-badge" id="aeNrBadge"></output></div><div class="ae-proc" data-tool="spec"><button class="ae-jack lockd" type="button" data-tool="spec" aria-label="Spectra light" title="Runs right after Noise reduction"><i class="led" id="aeSpLed"></i></button><button class="ae-tool" type="button" data-tool="spec" aria-pressed="false"><span class="ae-tn">Spectra</span></button><output class="ae-badge" id="aeSpBadge"></output></div></div>
           <div class="ae-procs" id="aeProcs">
             <div class="ae-proc" data-tool="eq"><button class="ae-jack" type="button" data-tool="eq" aria-label="EQ light. Drag its wire to another lit light to swap their order" title="Drag to another lit light to swap order"><i class="led" id="aeEqLed"></i></button><button class="ae-tool" type="button" data-tool="eq" aria-pressed="false"><span class="ae-tn">EQ</span></button><output class="ae-badge" id="aeEqBadge"></output></div>
             <div class="ae-proc" data-tool="imager"><button class="ae-jack" type="button" data-tool="imager" aria-label="Imager light. Drag its wire to another lit light to swap their order" title="Drag to another lit light to swap order"><i class="led" id="aeImLed"></i></button><button class="ae-tool" type="button" data-tool="imager" aria-pressed="false"><span class="ae-tn">Imager</span></button><output class="ae-badge" id="aeImBadge"></output></div>
@@ -676,7 +676,7 @@
             <div class="ae-proc" data-tool="level"><span class="ae-jack fixed"><i class="led" id="aeLvLed"></i></span><button class="ae-tool" type="button" data-tool="level" aria-pressed="false"><span class="ae-tn">Level</span></button><output class="ae-badge" id="aeLvBadge"></output></div>
           </div>
           <div class="ae-end" id="aeJackOut"><i aria-hidden="true"></i><span>Out</span></div>
-          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager and Level for you"><div class="ae-proc" data-tool="emu"><span class="ae-jack fixed" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator (beta)</span></button><output class="ae-badge" id="aeEmBadge"></output></div></div>
+          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager and Level for you"><div class="ae-proc" data-tool="emu"><span class="ae-jack fixed" data-tool="emu" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator (beta)</span></button><output class="ae-badge" id="aeEmBadge"></output></div></div>
         </div></div>
       </nav>
       <div class="ae-panes ae-win" id="aeWin">
@@ -7604,7 +7604,7 @@ function aeHead(name, dir) {
   rule._slide = [rule.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease })];
 }
 function aeTool(name) {
-  const prev = AE.tool; AE.tool = name; if (name === 'level' && AE.d) aeRefresh();          // opening Level starts its measures (they only run while it is open)
+  const prev = AE.tool; AE.tool = name; aeRingSync(); if (name === 'level' && AE.d) aeRefresh();          // opening Level starts its measures (they only run while it is open)
   $('#audioDlg').dataset.tool = name; hsSnap('ae-by', aeBy()); if (name !== 'noise') nrArm(false); if (name !== 'spec') spArm(false);
   const panes = { noise: 'aePaneNoise', spec: 'aePaneSpec', eq: 'aePaneEq', imager: 'aePaneImager', level: 'aePaneLevel', fades: 'aePaneFades', emu: 'aePaneEmu' };
   const order = railOrder('#aeRail .ae-tool'), dir = prev && prev !== name ? (order.indexOf(name) > order.indexOf(prev) ? 1 : -1) : 0;
@@ -7640,7 +7640,7 @@ function aeRailSync() {
   Object.keys(led).forEach(k => { $(led[k]).classList.toggle('on', lit[k]); const row = $('#aeRail .ae-proc[data-tool=' + k + ']'); row.classList.toggle('off', !lit[k]); row.classList.toggle('bp', aeBp(k)); });
   const sg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v);
   const bd = { noise: lit.noise ? fx.noise.reduction + 'dB' : '', spec: lit.spec ? String(fx.spec.edits.length) : '', eq: lit.eq ? (n => fx.eq.curve ? (n ? 'Curve + ' + n + (n === 1 ? ' band' : ' bands') : 'Curve') : n + (n === 1 ? ' band' : ' bands'))(fx.eq.bands.filter(b => b.on).length) : '', imager: lit.imager ? (fx.imager.width !== 100 ? sg(fx.imager.width - 100) : imBands(fx.imager) ? 'Bands' : fx.imager.bal ? 'Bal' : 'Bass') : (nch < 2 ? 'Mono' : ''), level: d.normalize ? (d.normBy === 'loud' ? LUFS_TXT(d.normLufs) : DB_TXT(d.normPeakDb)) : d.gainDb ? sg(d.gainDb) + 'dB' : '', fades: aeFadeBadge(d) };
-  $('#aeNrBadge').textContent = bd.noise; $('#aeNrLed').classList.toggle('busy', !!AE.nrShown); $('.ae-tool[data-tool="noise"]').classList.toggle('busy', !!AE.nrShown); $('#aeSpBadge').textContent = bd.spec; $('#aeEqBadge').textContent = bd.eq; $('#aeImBadge').textContent = bd.imager; $('#aeLvBadge').textContent = bd.level; $('#aeFdBadge').textContent = bd.fades;
+  $('#aeNrBadge').textContent = bd.noise; aeRingSync(); $('#aeSpBadge').textContent = bd.spec; $('#aeEqBadge').textContent = bd.eq; $('#aeImBadge').textContent = bd.imager; $('#aeLvBadge').textContent = bd.level; $('#aeFdBadge').textContent = bd.fades;
   $('#aeRailBadge').textContent = bd[AE.tool] || '';
   { const on = aeChainOrder(d).filter(k => lit[k]), trimmed = d.vStart > 0 || d.vEndSet != null, idle = 'No processing. ' + (trimmed ? 'Only the trim changes the sound.' : 'Audio plays unchanged.'), sig = on.map(k => k + (aeBp(k) ? '-' : '')).join() + '|' + idle, ch = $('#aeChain'); if (ch._sig !== sig) { ch._sig = sig; ch.innerHTML = on.length ? '<span>Runs</span>' + on.map(k => '<b' + (aeBp(k) ? ' class="bp" title="Bypassed"' : '') + '>' + AE_NAMES[k] + '</b>').join('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>') : '<span>' + idle + '</span>'; } }
   aeWiresDraw();
@@ -7750,6 +7750,14 @@ function aeBpUi() {
   Object.keys(AE.bp || {}).forEach(k => { if (!lit[k]) delete AE.bp[k]; else if (AE.bpS[k] === undefined) AE.bpS[k] = aeBpSig(k); else if (AE.bpS[k] !== aeBpSig(k)) { delete AE.bp[k]; AE.bpEdit = true; } });          // editing a bypassed tool switches it back on
   $('#audioDlg').dataset.by = aeBy();          // a tool that no longer does anything has nothing to bypass
   const act = (AE_BPSET[AE.tool] || []).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Hear the sound without ' + (AE_NAMES[AE.tool] || 'this tool') + ', to compare (B)'; return lit;
+}
+/* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn noise, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
+   and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn noise knows no share, so a short arc turns */
+function aeRingSync() {
+  if (!AE.d) return; const J = AE.ringJ || (AE.ringJ = { noise: $('.ae-jack[data-tool="noise"]'), emu: $('.ae-jack[data-tool="emu"]') }), em = AE.em;
+  const job = { noise: AE.nrShown ? { p: AE.nrTarget > 0.001 ? AE.nrCur || 0 : null } : AE.nrAutoBusy ? { p: (AE.nrAutoPc || 0) / 100 } : AE.humBusy ? { p: (AE.humPc || 0) / 100 } : AE.nrLearning ? { p: null } : null, emu: em && (em.busy || em.busyOwn) ? { p: clamp(em.prog || 0, 0, 1) } : null };
+  for (const k in J) { const j = job[k], on = !!j && AE.tool !== k, el = J[k]; if (on && !el.classList.contains('busy')) { el.classList.add('start'); requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove('start'))); }          // a new job starts its ring at once at its own share, not gliding down from where the last one ended
+  el.classList.toggle('busy', on); el.classList.toggle('wait', on && j.p == null); if (el.tagName === 'BUTTON') el.setAttribute('aria-busy', on); if (on && j.p != null) el.style.setProperty('--ring', j.p.toFixed(4)); }
 }
 function aeToolsRefresh() {
   if (!AE.d) return; const nch = fxChannels();
@@ -8152,7 +8160,7 @@ function aeEmUi() {
   go.classList.toggle('loading', busy); if (busy) { const pc = Math.round(clamp(em.prog || 0, 0, 1) * 100); go.style.setProperty('--p', pc + '%'); go.textContent = 'Processing ' + pc + '%'; } else { go.style.removeProperty('--p'); go.textContent = live ? 'Emulated' : 'Emulate'; }
   const w = [t.tone && 'the EQ', t.width && 'the Imager', t.loud && 'Level'].filter(Boolean); $('#aeEmSay').textContent = live && w.length ? 'Press again to put ' + (w.length > 1 ? 'them' : 'it') + ' back.' : '';
   $('#aeEmBadge').textContent = live ? amt.value + '%' : '';
-  emSum(); $('#aeEmEmptyMsg').hidden = has; $('#aeEmBar').hidden = !busy; if (busy) emBar(em, em.prog || 0); aeAnim();
+  emSum(); $('#aeEmEmptyMsg').hidden = has; $('#aeEmBar').hidden = !busy; if (busy) emBar(em, em.prog || 0); aeRingSync(); aeAnim();
 }
 /* the measuring bar: the share of the sound read so far */
 function emBar(em, v) { if (AE.em !== em) return; const was = Math.round((em.prog || 0) * 100); em.prog = v; const b = $('#aeEmBar'); if (b && b.firstElementChild) b.firstElementChild.style.transform = 'scaleX(' + Math.max(0.02, Math.min(1, v)) + ')'; if (Math.round(v * 100) !== was && (em.busy || em.busyOwn) && AE.d) aeEmUi(); }
@@ -8227,7 +8235,7 @@ function aeNrLearn() {
 async function aeNrAuto() {
   const d = AE.d; if (!d || !S.audio || AE.nrAutoBusy || AE.humBusy || AE.nrLearning) return; const nz = d.fx.noise;
   if (nz.auto && nz.profile) { const pv = AE.nrPrev; AE.nrPrev = null; aeFx(fx => { fx.noise.profile = pv ? pv.profile : null; fx.noise.dur = pv ? pv.dur : 0; fx.noise.auto = false; }); return; }
-  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.classList.remove('on'); btnHold(btn, [btn.textContent, 'Auto', 'Processing 100%']); btn.classList.add('loading'); aeNrHumUi(); show(0);
+  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.classList.remove('on'); btnHold(btn, [btn.textContent, 'Auto', 'Processing 100%']); btn.classList.add('loading'); aeNrHumUi(); show(0);
   try {
     const prof = await nrFloor(d, nz.hum, v => show(Math.round(v * 100))); if (prof === undefined) return;
     show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent)); if (AE.d !== d) return;          // a short recording is read in a blink; the bar stays long enough to be seen
@@ -8273,7 +8281,7 @@ async function aeNrHum() {
 const aeHumOn = nz => !!(nz && nz.hum), aeHumTxt = nz => 'Removed ' + Math.round(nz.hum.f) + 'Hz' + (nz.hum.n && nz.hum.n.length > 1 ? ' and its overtones' : '');
 /* the Mains hum row: a switch (on while the hum is out), what it is doing in words and a thin bar along the row while it works */
 function aeNrHumUi() {
-  if (!AE.d) return; const nz = AE.d.fx.noise, busy = !!AE.humBusy, row = $('#aeNrHumRow'), sw = $('#aeNrHum'), t = $('#aeNrHumVal');
+  if (!AE.d) return; aeRingSync(); const nz = AE.d.fx.noise, busy = !!AE.humBusy, row = $('#aeNrHumRow'), sw = $('#aeNrHum'), t = $('#aeNrHumVal');
   sw.checked = busy ? !!AE.humWas : aeHumOn(nz); sw.disabled = busy || !!AE.nrAutoBusy || !!AE.nrLearning; row.classList.toggle('busy', busy); row.classList.toggle('on', !busy && aeHumOn(nz)); row.classList.toggle('none', !busy && !aeHumOn(nz) && !!AE.d.humNote);
   const txt = busy ? (AE.humPhase || 'Looking for a hum') + '… ' + (AE.humPc || 0) + '%' : aeHumOn(nz) ? aeHumTxt(nz) : AE.d.humNote || ''; if (t.textContent !== txt) t.textContent = txt;
 }
@@ -8318,7 +8326,8 @@ function nrLive() {
 function aeNrProg(v) {
   const bar = $('#aeNrProgBar'), busy = v < 0.999; if (!bar) return;
   AE.nrTarget = clamp(v, 0, 1); bar.classList.toggle('wait', busy && AE.nrTarget <= 0.001);          // no tick yet: a sweep shows it is working
-  if (busy !== !!AE.nrShown) { AE.nrShown = busy; bar.classList.toggle('on', busy); aeToolsRefresh(); if (AE.d && !$('#audioDlg').hidden) aeNrPanel(); }          // the light, the badge and the row change once per job, not per tick
+  if (busy !== !!AE.nrShown) { AE.nrShown = busy; if (busy) AE.nrCur = 0;          // a new job fills from empty, not down from where the last one ended
+     bar.classList.toggle('on', busy); aeToolsRefresh(); if (AE.d && !$('#audioDlg').hidden) aeNrPanel(); }          // the light, the badge and the row change once per job, not per tick
   if (!AE.nrRaf) AE.nrRaf = requestAnimationFrame(aeNrTween);
   if (AE.wantPlay && !AE.nrBusy) aeResume(0);
 }
@@ -8327,7 +8336,7 @@ function aeNrTween() {
   const b = $('#aeNrProg'); if (!b) { AE.nrRaf = 0; return; }
   AE.nrCur = (AE.nrCur || 0) + ((AE.nrTarget || 0) - (AE.nrCur || 0)) * 0.35;
   if (Math.abs(AE.nrTarget - AE.nrCur) < 0.002) AE.nrCur = AE.nrTarget;
-  b.style.transform = 'scaleX(' + AE.nrCur.toFixed(4) + ')'; const pc = $('#aeNrPct'); if (pc) pc.textContent = AE.nrCur > 0.01 && AE.nrCur < 0.999 ? Math.round(AE.nrCur * 100) + '%' : '';
+  b.style.transform = 'scaleX(' + AE.nrCur.toFixed(4) + ')'; aeRingSync(); const pc = $('#aeNrPct'); if (pc) pc.textContent = AE.nrCur > 0.01 && AE.nrCur < 0.999 ? Math.round(AE.nrCur * 100) + '%' : '';
   AE.nrRaf = AE.nrCur !== AE.nrTarget || AE.nrTarget < 0.999 ? requestAnimationFrame(aeNrTween) : 0;
 }
 /* playback waits only while the noise removal has not produced anything yet; after that the last finished version plays (and is swapped in when a new one is done) */
