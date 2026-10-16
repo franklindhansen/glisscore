@@ -4068,6 +4068,20 @@ function drawTimeline() {
   c.setTransform(TL.dpr, 0, 0, TL.dpr, 0, 0);
   drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
   if (TL.box) { c.save(); c.globalAlpha = .12; c.fillStyle = C.accent; c.fillRect(TL.box.a, TL.trackY - 6, TL.box.z - TL.box.a, TL.trackH + 12); c.globalAlpha = .8; c.strokeStyle = C.accent; c.lineWidth = 1; c.strokeRect(TL.box.a + .5, TL.trackY - 5.5, TL.box.z - TL.box.a, TL.trackH + 11); c.restore(); }        // the selection box
+  const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 160);
+  if (TL.glow === 'ruler') {
+    c.save(); c.shadowColor = C.accent; c.shadowBlur = 14; c.fillStyle = C.accent; c.globalAlpha = 0.14 + 0.14 * pulse; c.fillRect(0, 0, TL.vw, TL.rulerH);
+    c.globalAlpha = 0.55 + 0.4 * pulse; c.strokeStyle = C.accent; c.lineWidth = 2; c.strokeRect(1, 1, TL.vw - 2, TL.rulerH - 2); c.restore();
+  }
+  // playhead (drawn before the hover tags, so a tag is never cut by the line)
+  const px = t2x(S.time);
+  if (TL.glow === 'playhead' && px >= -10 && px <= TL.vw + 10) {
+    c.save(); c.shadowColor = C.play; c.shadowBlur = 20; c.globalAlpha = 0.35 + 0.35 * pulse; c.fillStyle = C.play; c.fillRect(px - 6, 0, 12, TL.h); c.restore();
+  }
+  if (px >= -10 && px <= TL.vw + 10) {          // the playhead is the top layer: one unbroken line from its head in the ruler to the bottom
+    c.fillStyle = C.play; c.fillRect(Math.round(px) - 1, 0, 2, TL.h);
+    c.beginPath(); c.moveTo(px - 7, 0); c.lineTo(px + 7, 0); c.lineTo(px, 10); c.closePath(); c.fill();
+  }
   // tooltip
   let tipI = TL.drag && TL.drag.kind === 'turn' ? TL.drag.i : TL.hover;
   if (tipI >= 0 && S.turns[tipI] != null) {
@@ -4091,20 +4105,6 @@ function drawTimeline() {
     const bx = clamp(x - w / 2, 4, TL.vw - w - 4), by = TL.rulerH + 4;
     c.fillStyle = C.ink; roundRect(c, bx, by, w, 20, 6); c.fill();
     c.fillStyle = C.bg; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5);
-  }
-  const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 160);
-  if (TL.glow === 'ruler') {
-    c.save(); c.shadowColor = C.accent; c.shadowBlur = 14; c.fillStyle = C.accent; c.globalAlpha = 0.14 + 0.14 * pulse; c.fillRect(0, 0, TL.vw, TL.rulerH);
-    c.globalAlpha = 0.55 + 0.4 * pulse; c.strokeStyle = C.accent; c.lineWidth = 2; c.strokeRect(1, 1, TL.vw - 2, TL.rulerH - 2); c.restore();
-  }
-  // playhead
-  const px = t2x(S.time);
-  if (TL.glow === 'playhead' && px >= -10 && px <= TL.vw + 10) {
-    c.save(); c.shadowColor = C.play; c.shadowBlur = 20; c.globalAlpha = 0.35 + 0.35 * pulse; c.fillStyle = C.play; c.fillRect(px - 6, 0, 12, TL.h); c.restore();
-  }
-  if (px >= -10 && px <= TL.vw + 10) {          // the playhead is the top layer: one unbroken line from its head in the ruler to the bottom
-    c.fillStyle = C.play; c.fillRect(Math.round(px) - 1, 0, 2, TL.h);
-    c.beginPath(); c.moveTo(px - 7, 0); c.lineTo(px + 7, 0); c.lineTo(px, 10); c.closePath(); c.fill();
   }
   TL.overlayDirty = false;
 }
