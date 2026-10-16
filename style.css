@@ -1913,6 +1913,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-glass button:not(:disabled):hover{background:var(--accent-soft);color:var(--accent)}
 .pe-glass button:disabled{color:var(--muted);opacity:.5;cursor:default}
 .pe-crop-pg canvas{display:block;width:100%;height:100%}
+.pe-crop-pg canvas.pe-ghost{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%);transition:none;pointer-events:none;opacity:1}
 /* Re-kilter: the original lies over the leveled page as far as the line, which you drag */
 .pe-crop-pg{--wp:.5}
 #peOneOrig,.pe-wipe{display:none}

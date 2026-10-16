@@ -8929,10 +8929,21 @@ PE.cl = { bg: 1, sp: 1 };          // what the Clean button will apply: the pape
 const PE_ONE_PX = 2800;
 const peOneAsp = (sl, asp) => { const c = PE.mode !== 'crop' && sl.crop; return c ? asp * (c[2] - c[0]) / (c[3] - c[1]) : asp; };
 /* the page's box in the large view: as large as the window allows (it follows the window as it changes size) */
-function peOneFit(asp) {
+const PE_ONE_EASE = 'cubic-bezier(.3,.8,.2,1)', PE_ONE_MS = 320;          // the large view moves on one ease and length: it opens, and the page's box changes shape, the old picture leaves and the new one arrives
+function peOneFit(asp, glide) {
   const st = $('#peCropStage'), pg = $('#peCropPg'); if (asp) PE.oneAsp = asp; asp = PE.oneAsp; if (!asp || !st.clientWidth) return null;
-  const W = Math.max(60, st.clientWidth - 40), H = Math.max(60, st.clientHeight - 40), w = Math.min(W, Math.round(H * asp)), h = Math.round(w / asp);
-  pg.style.width = w + 'px'; pg.style.height = h + 'px'; peZoomClamp(); peZoomApply(false); return [w, h];
+  const W = Math.max(60, st.clientWidth - 40), H = Math.max(60, st.clientHeight - 40), w = Math.min(W, Math.round(H * asp)), h = Math.round(w / asp), w0 = pg.offsetWidth, h0 = pg.offsetHeight;
+  pg.style.width = w + 'px'; pg.style.height = h + 'px';
+  if (glide && w0 && (Math.abs(w0 - w) > 1 || Math.abs(h0 - h) > 1) && pg.animate && !reducedMotion()) pg.animate([{ width: w0 + 'px', height: h0 + 'px' }, { width: w + 'px', height: h + 'px' }], { duration: PE_ONE_MS, easing: PE_ONE_EASE });          // the box grows or shrinks to the next page's shape from the shape it had, rather than snapping to it
+  peZoomClamp(); peZoomApply(false); return [w, h];
+}
+/* the picture on show when another page is asked for leaves as it was (not stretched into the next page's shape) and fades out while the box changes shape; the canvas that will carry the next one starts empty */
+function peOneGhost() {
+  const pg = $('#peCropPg'), old = $('#peCropCv'); if (!old || !old.width) return;
+  const nu = document.createElement('canvas'); nu.id = 'peCropCv'; pg.insertBefore(nu, old);
+  if (!PE.shownKey || pg.classList.contains('loading') || !pg.animate || reducedMotion()) { old.remove(); return; }          // nothing worth showing leaving
+  old.id = ''; old.className = 'pe-ghost'; old.setAttribute('aria-hidden', 'true'); old.style.cssText = 'width:' + pg.offsetWidth + 'px;height:' + pg.offsetHeight + 'px';
+  old.animate([{ opacity: 1 }, { opacity: 0 }], { duration: PE_ONE_MS, easing: PE_ONE_EASE }).finished.then(() => old.remove(), () => old.remove());
 }
 /* a new picture that arrives while the page is already shown sweeps across it from the left, so the moment a button took effect is easy to see */
 function peSweepEnd() { const l = $('#peCropPg').querySelectorAll('.pe-reveal,.pe-edge'); l.forEach(e => e.remove()); }
@@ -8956,9 +8967,10 @@ function peWipeIn() {
 async function peOneShow() {
   const d = PE.d, id = PE.one, sl = d.slots[id], me = ++PE.cropShowRun, pg = $('#peCropPg');
   const known = PE.asp && PE.asp.get(sl.src), pageKey = [id, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, PE.mode].join('|'), fresh = PE.shownKey !== pageKey;
-  peOneFit(peOneAsp(sl, known || S.pdf.aspect)); if (fresh) { pg.classList.add('loading'); peSweepEnd(); PE.wipeRun = (PE.wipeRun || 0) + 1; } else pg.classList.add('busy');
+  if (fresh) { peOneGhost(); peSweepEnd(); }
+  peOneFit(peOneAsp(sl, known || S.pdf.aspect), fresh && !!PE.shownKey); if (fresh) { pg.classList.add('loading'); PE.wipeRun = (PE.wipeRun || 0) + 1; } else pg.classList.add('busy');
   const asp = await peAspectOf({ src: sl.src, rot: 0 }); if (me !== PE.cropShowRun || !PE.d) return;
-  const [w, h] = peOneFit(peOneAsp(sl, asp)) || [pg.offsetWidth, pg.offsetHeight], tilt = peTilted(sl), geo = slotGeo(sl, PE.mode === 'skew' ? null : PE.mode), k = Math.max(2, PE_ONE_PX / Math.max(w, h)), W2 = Math.round(w * k), H2 = Math.round(h * k);
+  const [w, h] = peOneFit(peOneAsp(sl, asp), true) || [pg.offsetWidth, pg.offsetHeight], tilt = peTilted(sl), geo = slotGeo(sl, PE.mode === 'skew' ? null : PE.mode), k = Math.max(2, PE_ONE_PX / Math.max(w, h)), W2 = Math.round(w * k), H2 = Math.round(h * k);
   const put = (c, from) => { c.width = from.width; c.height = from.height; c.getContext('2d').drawImage(from, 0, 0); };
   let cv, o = null;
   if (PE.mode === 'clean') {
@@ -8970,6 +8982,7 @@ async function peOneShow() {
     cv = await renderPdfPage(S.pdf.doc, sl.src, W2, H2, 0, null, geo); o = PE.mode === 'skew' && tilt ? await renderPdfPage(S.pdf.doc, sl.src, W2, H2, 0, null, slotGeo(sl, 'skew')) : null;
   }
   if (me !== PE.cropShowRun || !PE.d) return;
+  if (fresh && pg.getAnimations) { await Promise.all(pg.getAnimations().map(x => x.finished.catch(() => {}))); if (me !== PE.cropShowRun || !PE.d) return; }          // the box has reached the page's shape before its picture shows, so the picture is never squeezed into a shape on the way
   if (fresh) { put($('#peCropCv'), cv); if (o) put($('#peOneOrig'), o); } else peSweep(cv, o, me);
   PE.shownKey = pageKey; pg.classList.remove('loading', 'busy'); if (fresh) peWipeIn();
 }
@@ -9041,12 +9054,12 @@ function peOneOpen(id) {
   PE.oneAuto = false;
   if (!peOneMode() || PE.busy || !peTargets().includes(id)) return;
   PE.one = id; PE.oneFrom = id; peState(); $('#peOneBack').focus({ preventScroll: true });
-  const v = $('#peCropView'); if (v.animate && !reducedMotion()) v.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.3,.8,.2,1)' });
+  const v = $('#peCropView'); if (v.animate && !reducedMotion()) v.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: PE_ONE_MS, easing: PE_ONE_EASE });
 }
 function peOneClose() {
   if (PE.one == null) return; const id = PE.one; PE.one = null; PE.oneAuto = false; peState();
   const c = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'), w = $('#peWrap'); if (c) { c.scrollIntoView({ block: 'nearest' }); c.focus({ preventScroll: true }); }
-  if (w.animate && !reducedMotion()) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+  if (w.animate && !reducedMotion()) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: PE_ONE_MS, easing: PE_ONE_EASE });
 }
 function peOneStep(dir) {
   const ids = peTargets(), j = ids.indexOf(PE.one) + dir; if (PE.one == null || j < 0 || j >= ids.length) return;
