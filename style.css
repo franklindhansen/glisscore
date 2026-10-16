@@ -1466,8 +1466,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- Level: Normalize by Peak or Loudness ----- */
 #aeNormCard{gap:0}
 #aeNormCard .seg{width:100%;margin-bottom:0}
-#aeNormCard .fa.open>.fa-in{padding:12px 4px 2px;margin:0 -4px}
-#aeNormCard #aeNormTarget{margin-top:0;padding-top:0}
+#aeNormCard .fa.open>.fa-in{padding:0 4px 2px;margin:0 -4px}
+#aeNormCard .fa-in>:first-child{margin-top:12px}
+/* Peak and Loudness share one cell, so the one leaving stays where it is and wipes up while the one arriving fades in at the same place, rather than sliding down under a growing panel */
+.fa-stack{display:grid}
+.fa-stack>.fa{grid-area:1/1;align-self:start}
+#aeNormCard #aeNormTarget{margin-top:12px;padding-top:0}
 .lv-loud select{width:100%;min-width:0;height:36px}
 .lv-loud .lv-trow input{height:36px;box-sizing:border-box}
 #aeNormCard .lv-loud .lv-trow{height:36px;margin:0;padding:0;align-items:center}

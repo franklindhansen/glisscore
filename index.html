@@ -797,7 +797,7 @@
             <div class="ae-card" id="aeNormCard">
               <div class="lv-head"><h4>Normalize</h4><button class="info-i" type="button" aria-label="About normalizing" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.normalize">Moves the whole sound up or down. Peak aims its loudest moment at a level you pick. Loudness aims how loud it sounds overall. Nothing gets squashed.</span></div>
               <div class="seg" id="aeNormMode" role="radiogroup" aria-label="Normalize by"><label><input type="radio" name="aeNormMode" value="off" checked><span>Off</span></label><label><input type="radio" name="aeNormMode" value="loud"><span>Loudness</span></label><label><input type="radio" name="aeNormMode" value="peak"><span>Peak</span></label></div>
-              <div class="fa" id="aePeakFold"><div class="fa-in" inert>
+              <div class="fa-stack"><div class="fa" id="aePeakFold"><div class="fa-in" inert>
                 <label class="lv-target" id="aeNormTarget">Loudest peak <span class="num"><input type="number" id="aeNormDb" min="-12" max="0" step="0.1" inputmode="decimal"><em>dB</em></span></label>
                 <p class="lv-note" id="aePeakNote" aria-live="polite"></p>
               </div></div>
@@ -808,7 +808,7 @@
                   <div class="lv-limrow" id="aeLimRow"><label class="check-row" for="aeLimiter"><span>Limiter</span><span class="lv-tip-warn" id="aeLimTip" style="visibility:hidden">Turn on to stop clipping</span><input type="checkbox" class="switch" id="aeLimiter"></label></div>
                   
                 </div>
-              </div></div>
+              </div></div></div>
             </div>
             <div class="ae-card" id="aeGainCard"><h4>Gain</h4><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
             <div class="ae-card lv-meter" id="aeMeter"><div class="lv-mh"><h4>Meter</h4><div class="lv-read"><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." hidden>Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum"><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>Change</span><b id="aeSumChg">—</b></div></div><p class="lv-note warn" id="aeClipNote" hidden></p><p class="lv-note lv-foot">Measured after the whole chain, as it runs.</p></div>
