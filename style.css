@@ -1568,6 +1568,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sp-draw svg{width:15px;height:15px;flex:none}
 .sp-seg label{display:flex}
 .sp-seg label span{flex:1;height:100%}
+@media (max-width:560px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
 .sp-lcard{flex:1 1 0;min-height:0}
 .sp-list{padding:2px;align-content:start}
 #spAmtF.open>.fa-in{padding:2px}
@@ -1575,13 +1576,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aePaneEq:not([hidden]){display:flex;flex-direction:column}
 #aePaneEq .eq-top{flex:none;margin-bottom:8px}
 #aePaneEq .eq-stage{flex:1 1 0;min-height:64px;height:auto}
-@media (max-width:560px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
 #aePaneEq .eq-band.ae-card{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match .mt-head{margin-bottom:8px}
 #aePaneEq .mt-steps.two{gap:6px 20px}
 /* Imager: both columns end together */
 .im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:10px;align-items:stretch}
+@media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
 .im-ctl{display:flex;flex-direction:column;gap:10px;min-height:0}
 #aeWidthCard{flex:none;padding:10px 14px}
 #aeBalCard{flex:1 1 0;min-height:0;padding:10px 14px;align-content:space-between}
@@ -1589,7 +1590,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:12px;align-items:center}
 .im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 /* the slider and its end labels share one track, so Normal sits under the middle of the slider */
-@media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
 .im-slrow{grid-template-columns:minmax(0,1fr) 46px}
 .im-slrow.bal{grid-template-columns:minmax(0,1fr) 92px}
 .sl-track{min-width:0}
