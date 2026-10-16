@@ -321,18 +321,20 @@
             <div class="seg" id="fadeSide" role="radiogroup" aria-labelledby="fadeSideLbl"><label><input type="radio" name="fadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="fadeSide" value="in"><span>In</span></label><label><input type="radio" name="fadeSide" value="out"><span>Out</span></label></div>
             <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" aria-labelledby="fadeSideLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end auto" type="button" data-v="10">Auto</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
           </div>
-          <div class="field fade-shape"><span class="lbl">Shape</span><canvas id="fadeCv" aria-label="Fade shape"></canvas></div>
-          <div class="field">
-            <span class="lbl" id="fadeShapeLbl">Curve</span>
-            <div class="seg" id="fadeShape" role="radiogroup" aria-labelledby="fadeShapeLbl"><label><input type="radio" name="fadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="fadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: rises quickly and settles"><input type="radio" name="fadeShape" value="natural"><span>Natural</span></label></div>
-          </div>
-        </div>
-        <div class="field">
-          <span class="lbl" id="fadeStyleLbl">Fade to</span>
-          <div class="seg" role="radiogroup" aria-labelledby="fadeStyleLbl">
-            <label title="The whole picture fades"><input type="radio" name="fadeStyle" value="black" checked><span>Black</span></label>
-            <label title="Only the score and credits fade"><input type="radio" name="fadeStyle" value="score"><span>Background</span></label>
-          </div>
+          <div class="fa open" id="fadeMoreFold"><div class="fa-in">
+            <div class="field fade-shape"><span class="lbl">Shape</span><canvas id="fadeCv" aria-label="Fade shape"></canvas></div>
+            <div class="field">
+              <span class="lbl" id="fadeShapeLbl">Curve</span>
+              <div class="seg" id="fadeShape" role="radiogroup" aria-labelledby="fadeShapeLbl"><label><input type="radio" name="fadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="fadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: rises quickly and settles"><input type="radio" name="fadeShape" value="natural"><span>Natural</span></label></div>
+            </div>
+            <div class="field">
+              <span class="lbl" id="fadeStyleLbl">Fade to</span>
+              <div class="seg" role="radiogroup" aria-labelledby="fadeStyleLbl">
+                <label title="The whole picture fades"><input type="radio" name="fadeStyle" value="black" checked><span>Black</span></label>
+                <label title="Only the score and credits fade"><input type="radio" name="fadeStyle" value="score"><span>Background</span></label>
+              </div>
+            </div>
+          </div></div>
         </div>
       </div>
 
@@ -4522,7 +4524,7 @@ function syncFadeLens() {
   const on = FADE_SIDE === 'out' ? oo : FADE_SIDE === 'in' ? oi : oi || oo, len = FADE_SIDE === 'out' ? Lo : Li, au = FADE_SIDE === 'out' ? ao : ai;
   r.dataset.default = pa; r.parentNode.querySelector('.fade-ends').style.setProperty('--apos', pa / FADE_MAX); r.parentNode.querySelector('.sl-end.auto').dataset.v = pa;
   if (!r._glide) r.value = !on ? 0 : au ? pa : Math.round(len * 10); $('#fadeLenVal').textContent = !on ? 'Off' : (au ? 'Auto ' : '') + len.toFixed(1) + 's';
-  paintRanges(); drawFadeShape();
+  foldSet('#fadeMoreFold', oi || oo); paintRanges(); drawFadeShape();          // Shape, Curve and Fade to fold away while both fades are off
 }
 /* the Shape picture: the fade in rising and the fade out falling, in the chosen curve and the chosen lengths */
 /* the picture glides to whatever you set: lengths, which side is lit and the curve ease toward their targets, so a drag, a reset or a double-click all move it smoothly */

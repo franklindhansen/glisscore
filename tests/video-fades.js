@@ -104,11 +104,48 @@ const K = '__keyframes';
     await q.mouse.click(pos.x2, pos.y); await q.waitForTimeout(250);
     ok('scrubbing out of the fade shows the full picture', (await q.evaluate(() => window.__shown.slice(-1)[0])) === 1);
     await q.close(); }
+  // Shape, Curve and Fade to fold away when both fades are off, and ease open when either is on
+  { await p.evaluate(K => window[K].restoreDefaults(), K); await p.waitForTimeout(400);
+    const fold = () => p.evaluate(() => { const f = document.querySelector('#fadeMoreFold'); if (!f) return null; const kids = [...f.querySelectorAll('#fadeCv, input[name=fadeShape], input[name=fadeStyle]')]; return { open: f.classList.contains('open'), inert: f.firstElementChild.inert, all: kids.length, h: Math.round(f.getBoundingClientRect().height), focus: f.contains(document.activeElement) && document.activeElement !== f }; });
+    const ons = () => p.evaluate(K => { const s = window[K].S.set; return [s.fadesOn !== false && !!s.fadeIn, s.fadesOn !== false && !!s.fadeOut]; }, K);
+    const settle = () => p.waitForTimeout(700);
+    await pick('both'); await slide(N(1.2)); await settle(); let f = await fold();
+    ok('either side on: Shape, Curve and Fade to are open', f && f.open && !f.inert && f.all >= 6 && f.h > 40, JSON.stringify(f));
+    await slide(0); await settle(); f = await fold();
+    ok('both sides off: they are folded away, and closed to the keyboard', f && !f.open && f.inert && f.h === 0, JSON.stringify([f, await ons()]));
+    await slide(N(1.2)); await settle(); f = await fold(); ok('moving the slider off Off opens them again', f.open && !f.inert && f.h > 40, JSON.stringify(f));
+    await pick('in'); await slide(0); await settle(); f = await fold(); const o1 = await ons();
+    ok('only In off: they stay open, because Out still uses them', !o1[0] && o1[1] && f.open && !f.inert, JSON.stringify([f, o1]));
+    await pick('out'); await slide(0); await settle(); f = await fold();
+    ok('then Out off too: they fold', f && !f.open && f.inert, JSON.stringify([f, await ons()]));
+    await pick('in'); await slide(N(1.0)); await settle(); f = await fold(); const o2 = await ons();
+    ok('only Out off: they stay open', o2[0] && !o2[1] && f.open, JSON.stringify([f, o2]));
+    // undo and redo re-read the fades (the fade settings are not Undo steps, so a change that arrives without the slider shows whether the fold follows)
+    await p.evaluate(() => document.activeElement && document.activeElement.blur());
+    await pick('both'); await slide(N(1.2)); await settle(); await p.evaluate(K => { const k = window[K]; const v = k.S.vStart; k.S.turns = [v + 3, v + 6, v + 9]; k.Transport.seek(v + 4); }, K); await p.keyboard.press('t');
+    const nt = await p.evaluate(K => window[K].S.history.length, K); ok('a turn is moved, so there is a step to undo', nt >= 1, String(nt));
+    await p.evaluate(K => Object.assign(window[K].S.set, { fadeIn: false, fadeOut: false }), K);
+    await p.keyboard.press('Control+z'); await settle(); f = await fold(); let o3 = await ons();
+    ok('undo with both fades off folds them', !o3[0] && !o3[1] && !f.open && f.inert, JSON.stringify([f, o3]));
+    await p.evaluate(K => Object.assign(window[K].S.set, { fadeIn: true }), K);
+    await p.keyboard.press('Control+Shift+z'); await settle(); f = await fold(); o3 = await ons();
+    ok('redo with a fade on opens them', o3[0] && f.open && !f.inert, JSON.stringify([f, o3]));
+    // a loaded settings file
+    const load = o => p.evaluate(async ([K, o]) => { await window[K].importSettings(new File([JSON.stringify({ glisscore: 1, settings: o })], 'x.json')); }, [K, o]);
+    await load({ fadeIn: true, fadeOut: true, fadesOn: true }); await settle(); f = await fold(); ok('a settings file with a fade on opens them', f.open && !f.inert, JSON.stringify(f));
+    await load({ fadeIn: false, fadeOut: false }); await settle(); f = await fold(); o3 = await ons(); ok('a settings file with both fades off folds them', !o3[0] && !o3[1] && !f.open && f.inert, JSON.stringify([f, o3]));
+    await load({ fadeIn: false, fadeOut: true }); await settle(); f = await fold(); ok('a settings file with one fade off leaves them open', f.open, JSON.stringify(f));
+    // focus never lands on a folded control: a focused Curve button lets go when the fold closes, and Tab skips the folded controls
+    await load({ fadeIn: true, fadeOut: true }); await settle(); await p.focus('input[name=fadeShape][value=standard]');
+    await slide(0); await settle(); f = await fold(); ok('closing the fold takes focus out of it', !f.open && !f.focus, JSON.stringify(f));
+    await p.focus('#fadeLen'); await p.keyboard.press('Tab'); await p.keyboard.press('Tab');
+    ok('Tab from the slider does not stop inside the folded controls', await p.evaluate(() => !document.querySelector('#fadeMoreFold').contains(document.activeElement)));
+  }
   // layout: nothing sticks out of the settings column at any width
   await p.close();
   for (const w of [1300, 1000, 760, 390]) {
     const q = await open(w); await q.evaluate(() => { const g = document.querySelector('.group[data-sum=fades]'); g.scrollIntoView(); });
-    const r = await q.evaluate(() => { const g = document.querySelector('.group[data-sum=fades]'), gr = g.getBoundingClientRect(), bad = []; g.querySelectorAll('#fadeBody *, .fade-pair *').forEach(el => { const x = el.getBoundingClientRect(); if (x.width && (x.right > gr.right + (el.classList.contains('sl-end') ? 6 : 1) || x.left < gr.left - (el.classList.contains('sl-end') ? 6 : 1))) bad.push(el.id || el.tagName); }); const cv = document.querySelector('#fadeCv').getBoundingClientRect(); return { bad, cv: [Math.round(cv.width), Math.round(cv.height)], page: document.documentElement.scrollWidth <= innerWidth }; });
+    const r = await q.evaluate(() => { const g = document.querySelector('.group[data-sum=fades]'), gr = g.getBoundingClientRect(), bad = []; g.querySelectorAll('#fadeBody *, .fade-pair *').forEach(el => { if (el.classList.contains('fa-in')) return; const x = el.getBoundingClientRect(); if (x.width && (x.right > gr.right + (el.classList.contains('sl-end') ? 6 : 1) || x.left < gr.left - (el.classList.contains('sl-end') ? 6 : 1))) bad.push(el.id || el.tagName); }); const cv = document.querySelector('#fadeCv').getBoundingClientRect(); return { bad, cv: [Math.round(cv.width), Math.round(cv.height)], page: document.documentElement.scrollWidth <= innerWidth }; });
     ok('Fades fits the column at ' + w + 'px', !r.bad.length && r.cv[0] > 100 && r.cv[1] > 40 && r.page, JSON.stringify(r)); await q.close();
   }
   await b.close();

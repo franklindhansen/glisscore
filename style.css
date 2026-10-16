@@ -2188,7 +2188,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* video Fades: the shape picture fits the settings column */
 .fade-shape canvas{display:block;width:100%;height:84px}
 #fadeSide{margin-bottom:8px}
-#fadeBody>.field:last-child{margin-bottom:12px}
+#fadeMoreFold .field:nth-child(2){margin-bottom:12px}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
 #fadeLenField .fade-ends{position:relative;display:block;height:20px}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin:0}
