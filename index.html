@@ -616,6 +616,7 @@
     <p><em>glisscore</em> is free and open source under the AGPL-3.0. <a href="https://github.com/franklindhansen/glisscore" target="_blank" rel="noopener">View the source</a>.</p>
     <p>If this site fits your needs, <a href="https://franklindhansen.com/works" target="_blank" rel="noopener">my music</a> might too.</p>
     <p>Questions, bug reports, odes, love letters, commissions: <a href="https://franklindhansen.com/contact" target="_blank" rel="noopener">all welcome</a>.</p>
+    <p class="ver" id="aboutVersion" hidden></p>
     <div class="row"><p class="fine"><a href="https://github.com/franklindhansen/glisscore/blob/main/LICENSE" target="_blank" rel="noopener">License</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/TRADEMARKS.md" target="_blank" rel="noopener">Trademarks</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Third-party notices</a></p><button class="btn primary" id="aboutClose" type="button">Close</button></div>
   </div>
 </div>
@@ -9842,6 +9843,9 @@ function initMenu() {
   $('#menuHow').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#howDlg')); $('#howClose').focus(); });
   $('#howClose').addEventListener('click', () => sheetHide($('#howDlg')));
   $('#menuAbout').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#aboutDlg')); $('#aboutClose').focus(); });
+  /* the number comes from the VERSION file, the one place it is written, read once at the start so About never grows when it opens; if it cannot be read the line stays hidden */
+  function aboutVersion() { fetch('VERSION', { cache: 'no-cache' }).then(r => r.ok ? r.text() : '').then(t => { t = t.trim(); const el = $('#aboutVersion'); el.textContent = /^\d+\.\d+\.\d+$/.test(t) ? 'Version ' + t : ''; el.hidden = !el.textContent; }).catch(() => {}); }
+  aboutVersion();
   $('#aboutClose').addEventListener('click', () => sheetHide($('#aboutDlg')));
   $('#aboutDlg').addEventListener('click', e => { if (e.target === $('#aboutDlg')) sheetHide($('#aboutDlg')); });
   $('#howDlg').addEventListener('click', e => { if (e.target === $('#howDlg')) sheetHide($('#howDlg')); });
