@@ -1,5 +1,5 @@
-// Video: Turn style (Peel or Fade) for a single page's turn. The choice shows only in Single page with the Turn transition. New projects start on Peel; a Single page
-// video saved before Peel existed (in this browser, or in a settings file) keeps Fade. It comes back through settings export and import, is one History step, and
+// Video: Turn style (Peel or Wrap) for a single page's turn. The choice shows only in Single page with the Turn transition. New projects start on Peel; a Single page
+// video saved with Fade (in this browser, or in a settings file) loads as Peel. It comes back through settings export and import, is one History step, and
 // neither style pops at the start or the end of a turn.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-turn-style.js
 const { chromium } = require('playwright-core');
@@ -15,9 +15,9 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
     await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(800);
     return p;
   };
-  // saved before Peel existed: Single page with no turn style keeps Fade
-  let p = await open(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('glisscore.settings', JSON.stringify({ pageLayout: 'single' })); sessionStorage.setItem('seeded', '1'); } });
-  ok('a Single page video saved without a turn style keeps Fade', await p.evaluate(() => S.set.turnStyle === 'fade' && document.querySelector('input[name=turnStyle]:checked').value === 'fade'));
+  // saved with Fade, or before turn styles existed: loads as Peel
+  let p = await open(() => { if (!sessionStorage.getItem('seeded')) { localStorage.setItem('glisscore.settings', JSON.stringify({ pageLayout: 'single', turnStyle: 'fade' })); sessionStorage.setItem('seeded', '1'); } });
+  ok('a Single page video saved with Fade loads as Peel', await p.evaluate(() => S.set.turnStyle === 'peel' && document.querySelector('input[name=turnStyle]:checked').value === 'peel'));
   await p.context().close();
 
   p = await open();
@@ -31,7 +31,7 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   ok('the choice shows in Single page with Turn', await vis());
   if (process.env.SHOTS) { await p.screenshot({ path: process.env.SHOTS + '/turn-style-desktop.png' }); await p.setViewportSize({ width: 390, height: 844 }); await settle(); await p.evaluate(() => document.querySelector('#turnStyleField').scrollIntoView({ block: 'center' })); await p.screenshot({ path: process.env.SHOTS + '/turn-style-phone.png' }); await p.setViewportSize({ width: 1300, height: 900 }); await settle(); }
   const seg = await p.evaluate(() => [...document.querySelectorAll('input[name=turnStyle]')].map(r => r.value + '=' + r.nextElementSibling.textContent).join());
-  ok('it reads Peel and Fade', seg === 'peel=Peel,fade=Fade', seg);
+  ok('it reads Peel and Wrap', seg === 'peel=Peel,wrap=Wrap', seg);
   await pick('transition', 'slide'); await settle();
   ok('the choice is hidden with Slide', !(await vis()));
   await pick('transition', 'cut'); await settle();
@@ -44,20 +44,22 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
 
   // the choice is one History step, named Turn style, and undo brings the control back
   const before = await S(s => s.history.length);
-  await pick('turnStyle', 'fade'); await settle();
+  await pick('turnStyle', 'wrap'); await settle();
   const lab = await p.evaluate(() => ({ n: S.history.length, label: mainStepLabel(S.history[S.history.length - 1], snap()) }));
-  ok('picking Fade is one History step named Turn style', lab.n === before + 1 && lab.label === 'Turn style', JSON.stringify(lab));
-  ok('the summary names the style', (await p.evaluate(() => groupSummary('transition'))).slice(0, 2).every(t => /^Turn · Fade/.test(t)));
+  ok('picking Wrap is one History step named Turn style', lab.n === before + 1 && lab.label === 'Turn style', JSON.stringify(lab));
+  ok('the summary names the style', (await p.evaluate(() => groupSummary('transition'))).slice(0, 2).every(t => /^Turn · Wrap/.test(t)));
   await p.evaluate(() => undo()); await settle();
   ok('undo brings Peel and its control back', await p.evaluate(() => S.set.turnStyle === 'peel' && document.querySelector('input[name=turnStyle]:checked').value === 'peel'));
   await p.evaluate(() => redo && redo()); await settle();
 
-  // settings export and import keep it; a Single page file without it loads as Fade
-  const out = await p.evaluate(() => { S.set.turnStyle = 'fade'; return JSON.parse(buildExport('settings')).settings.turnStyle; });
-  ok('the settings file holds the turn style', out === 'fade', out);
+  // settings export and import keep it; Fade or no turn style in a file loads as Peel
+  const out = await p.evaluate(() => { S.set.turnStyle = 'wrap'; return JSON.parse(buildExport('settings')).settings.turnStyle; });
+  ok('the settings file holds the turn style', out === 'wrap', out);
   const imp = async (settings, start) => p.evaluate(async ([settings, start]) => { S.set.turnStyle = start; await importSettings(new File([JSON.stringify({ glisscore: 1, settings })], 's.json')); return S.set.turnStyle; }, [settings, start]);
-  ok('importing a file with Peel loads Peel', (await imp({ pageLayout: 'single', turnStyle: 'peel' }, 'fade')) === 'peel');
-  ok('importing a Single page file made before Peel existed loads Fade', (await imp({ pageLayout: 'single' }, 'peel')) === 'fade');
+  ok('importing a file with Peel loads Peel', (await imp({ pageLayout: 'single', turnStyle: 'peel' }, 'wrap')) === 'peel');
+  ok('importing a file with Wrap loads Wrap', (await imp({ pageLayout: 'single', turnStyle: 'wrap' }, 'peel')) === 'wrap');
+  ok('importing a file with Fade loads Peel', (await imp({ pageLayout: 'single', turnStyle: 'fade' }, 'wrap')) === 'peel');
+  ok('importing a Single page file without a turn style loads Peel', (await imp({ pageLayout: 'single' }, 'wrap')) === 'peel');
   ok('a bad turn style in a file is dropped', (await imp({ pageLayout: 'single', turnStyle: 'wobble' }, 'peel')) !== 'wobble');
   await pick('pageLayout', 'single'); await p.evaluate(() => { S.set.pageLayout = 'single'; S.set.transition = 'flip'; S.set.fadeStyle = 'black'; }); await settle();
 
@@ -73,7 +75,7 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
     return { g, left };
   }, [K, t]);
   const diff = (a, b) => a.g.reduce((s, v, i) => s + Math.abs(v - b.g[i]), 0) / a.g.length;
-  for (const style of ['peel', 'fade']) {
+  for (const style of ['peel', 'wrap']) {
     await S((s, v) => { s.set.turnStyle = v; }, style); await p.evaluate(() => { stageDirty = true; });
     const t = await p.evaluate(K => ({ s: window[K].S.turns[0] - refOffset(), D: flipDur() }), K), endT = t.s + t.D;
     const a = await look(endT - 0.02), z = await look(endT + 0.05), s0 = await look(t.s - 0.05), s1 = await look(t.s);
@@ -82,6 +84,14 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
     const mid = await look(t.s + 0.6 * t.D);
     if (style === 'peel') ok('peel: partway through, the sheet is carried out to the left of the next page', mid.left > 0, 'bright samples left of the page ' + mid.left);
   }
+  // Wrap: stepping through the whole turn, no frame jumps from the one before it (the edge-on moment included), and the sheet is gone at the end
+  await S((s, v) => { s.set.turnStyle = v; }, 'wrap'); await p.evaluate(() => { stageDirty = true; });
+  const w = await p.evaluate(K => ({ s: window[K].S.turns[0] - refOffset(), D: flipDur() }), K), steps = [];
+  for (let i = 0; i <= 80; i++) steps.push(await look(w.s + w.D * i / 80));
+  const jumps = steps.slice(1).map((v, i) => diff(steps[i], v)), worst = Math.max(...jumps);
+  ok('wrap: no frame jumps from the one before it', worst < 12, 'worst step ' + worst.toFixed(2) + ' at ' + jumps.indexOf(worst));
+  const settled = await look(w.s + w.D + 0.1);
+  ok('wrap: the last frame of the turn is the settled page', diff(steps[80], settled) < 2, 'diff ' + diff(steps[80], settled).toFixed(2));
   ok('no page errors', errs.length === 0, errs.join('|'));
   await b.close();
 })();
