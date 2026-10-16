@@ -92,6 +92,9 @@ const K = '__keyframes';
   ok('the credits text sits centered in the frame', cl.x1 > cl.x0 && near((cl.x0 + cl.x1) / 2, cl.W / 2, 8), JSON.stringify({ x0: cl.x0, x1: cl.x1, W: cl.W }));
   await S(s => { s.set.creditsOn = false; }); await p.evaluate(() => syncCredits()); await settle();
 
+  // the layout panel explains nothing the video shows: no hint under the choice, no (i) beside First page alone
+  ok('the layout panel has no hint line and First page alone has no (i)', await p.evaluate(() => !document.querySelector('#pageLayoutHint') && !document.querySelector('#firstAloneField .info-i, #firstAloneField .tip')));
+
   // switching back brings the fields and the two-page layout back
   await pick('spread'); await settle();
   const h2 = await hid();
