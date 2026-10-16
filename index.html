@@ -182,6 +182,13 @@
             <label><input type="radio" name="transition" value="cut"><span>Cut</span></label>
           </div>
         </div>
+        <div class="field" id="turnStyleField" data-motion="flip">
+          <span class="lbl" id="turnStyleLbl">Turn style</span>
+          <div class="seg" role="radiogroup" aria-labelledby="turnStyleLbl">
+            <label><input type="radio" name="turnStyle" value="peel" checked><span>Peel</span></label>
+            <label><input type="radio" name="turnStyle" value="fade"><span>Fade</span></label>
+          </div>
+        </div>
         <div class="field" id="slideField" data-motion="slide">
           <span class="lbl" id="slideLbl">Direction</span>
           <div class="seg" role="radiogroup" aria-labelledby="slideLbl">
@@ -594,7 +601,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page swings off its left edge and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page either peels away to the left or swings over and fades, as you choose with <span class="hb">Turn style</span>, and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -1621,7 +1628,7 @@ function prePeek(fx, listen) {
 }
 
 /* ---------------- state ---------------- */
-const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, pageLayout: 'spread', margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
+const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, pageLayout: 'spread', turnStyle: 'peel', margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
 const ASPECTS = { '16:9': 16 / 9, '4:3': 4 / 3, '1:1': 1, '4:5': 4 / 5, '9:16': 9 / 16 };
 const S = {
   set: Object.assign({}, DEFAULTS),
@@ -1643,7 +1650,7 @@ const S = {
 };
 try {
   const sv = JSON.parse(localStorage.getItem('glisscore.settings') || 'null');
-  if (sv) Object.assign(S.set, sv);
+  if (sv) { Object.assign(S.set, sv); if (sv.pageLayout === 'single' && !('turnStyle' in sv)) S.set.turnStyle = 'fade'; }          // a Single page video saved before Peel existed keeps the turn it had
 } catch (e) {}
 S.set.fx = fxNorm(S.set.fx);
 function saveSettings() { try { localStorage.setItem('glisscore.settings', JSON.stringify(S.set)); } catch (e) {} if (typeof updateGroupSummaries === 'function') updateGroupSummaries(); }
@@ -1753,7 +1760,7 @@ function syncPageLayout(glide) {
   const one = singleOn();
   document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === (one ? 'single' : 'spread'); });
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
-  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one;
+  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; applyTransitionUI();
 }
 /* changing it is one History step; the turns are spaced evenly again for the new number of pages, and it says so when they had been placed by hand */
 function setPageLayout(v) {
@@ -1867,8 +1874,9 @@ function normalizeTurns() {
   }
 }
 const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ lay: S.set.pageLayout, turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
-function applySnap(h) { const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
+const snap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
+function applySnap(h) { if (h.ts && h.ts !== S.set.turnStyle) { S.set.turnStyle = h.ts; document.querySelectorAll('input[name=turnStyle]').forEach(r => { r.checked = r.value === h.ts; }); saveSettings(); stageDirty = true; }
+  const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
   if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
   reconcileTurns(); if (layChanged && S.pdf) afterStructureChange(); }
@@ -1936,6 +1944,7 @@ function peStepLabel(a, b) {
 function mainStepLabel(a, b) {
   const parts = [];
   if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
+  if (a.ts && b.ts && a.ts !== b.ts) parts.push('Turn style');
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');
   if (a.aud && b.aud && JSON.stringify(a.aud) !== JSON.stringify(b.aud)) { let t = 'Audio'; try { const r = aeRecords(a.aud, b.aud); if (r.length) t = 'Audio: ' + r[0].label + (r.length > 1 ? ' + ' + (r.length - 1) + ' more' : ''); } catch (e) {} parts.push(t); }
@@ -3569,7 +3578,7 @@ class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
     this.setTexParams(); this.cardTex = t; this.cardKey = key; return t;
   }
-  buildCurl(lay, p) {
+  buildCurl(lay, p, shift = 0) {
     const N = this.N, M = this.M, pw = lay.pw, ph = lay.ph, cd = this.curlData, wd = this.world;
     const L = 0.12 + 1.3 * (S.set.bend / 100), skew = 0.10, ds = pw / N;
     const f = pw * 20, zs = 1 / (pw * 1.3);
@@ -3589,10 +3598,10 @@ class Renderer {
         const dotN = -sinA * lx + cosA * lz;
         const rf = clamp(dotN / lz, 0, 1), rb = clamp(-dotN / lz, 0, 1);
         const sc = f / (f - z);
-        cd[k++] = lay.cx + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = -z * zs;
+        cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = -z * zs;
         cd[k++] = s; cd[k++] = v;
         cd[k++] = 0.62 + 0.38 * rf; cd[k++] = 0.62 + 0.38 * rb; cd[k++] = cosA;
-        wd[w++] = x; wd[w++] = Y; wd[w++] = z;
+        wd[w++] = x - shift; wd[w++] = Y; wd[w++] = z;
       }
     }
   }
@@ -3744,19 +3753,23 @@ class Renderer {
         drawPage(sp[0], lay.x0, -1); drawPage(sp[1], lay.cx, 1);
       } else {
         const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip);
-        this.buildCurl(lay, p);
+        /* Peel (a single page): the sheet lifts and curls from its free edge, then is drawn off to the left, carrying its shadow, so the next page
+           is already in place beneath it and nothing has to melt away; it has left the frame by the time the turn ends */
+        const peel = singleOn() && S.set.turnStyle !== 'fade', pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
+        this.buildCurl(lay, p, shift);
         /* The turning page's free edge decides how much of each half is covered. A half that was empty only gets a
            shadow once the turned page has reached it, and a half that is emptying loses its shadow as the page lifts. */
         const edge = this.curlData[(Math.floor(this.M / 2) * (this.N + 1) + this.N) * 8];
         const L = sw(sp[0]) ? half(0, sw(sp[0])) : sw(nx[0]) ? { x0: clamp(edge, lay.x0, lay.cx), x1: lay.cx, w: sw(nx[0]) } : half(0, 0);
         const R = sw(nx[1]) ? half(1, sw(nx[1])) : sw(sp[1]) ? { x0: lay.cx, x1: clamp(edge, lay.cx, lay.cx + lay.pw), w: sw(sp[1]) } : half(1, 0);
         this.drawScoreShadow(lay, L, R);
+        if (peel) { const hx = lay.cx - shift, lo = Math.min(edge, hx), hi = Math.min(Math.max(edge, hx), lay.cx); if (hi > lo) this.drawScoreShadow(lay, { x0: lo, x1: hi, w: 0.8 }, half(1, 0)); }          // the sheet's own shadow where it hangs past the page beneath
         this.updateShadowMap(lay);
         this.useShadow = true;
         drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
         this.useShadow = false;
         /* a single page has no page to land on: the sheet swings over and melts into the background as it arrives, so nothing pops when the turn ends */
-        const kept = this.scoreFade, melt = singleOn() ? clamp((p - 0.5) / 0.45, 0, 1) : 0;
+        const kept = this.scoreFade, melt = singleOn() && !peel ? clamp((p - 0.5) / 0.45, 0, 1) : 0;
         if (melt > 0) this.scoreFade = kept * (1 - melt * melt * (3 - 2 * melt));
         this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null);
         this.scoreFade = kept;
@@ -4529,6 +4542,7 @@ function syncControls() {
   $('#turnSoftField').hidden = !(s.turnShadow > 0); updateScoreUI(false);
   document.querySelectorAll('input[name=transition]').forEach(r => r.checked = r.value === s.transition);
   document.querySelectorAll('input[name=slideDir]').forEach(r => r.checked = r.value === s.slideDir);
+  document.querySelectorAll('input[name=turnStyle]').forEach(r => r.checked = r.value === s.turnStyle);
   $('#shadowsOn').checked = shOn();
   $('#creditsOn').checked = s.creditsOn === true;
   document.querySelectorAll('input[name=credEnd]').forEach(r => r.checked = r.value === (s.creditsEarly ? 'early' : 'end'));
@@ -4672,6 +4686,7 @@ function applyTransitionUI() {
   const len = $('#flipDur'), v = +S.set[lenKey()];      // the one slider shows whichever length belongs to the chosen style
   len.min = t === 'slide' ? '0.1' : '0.3'; len.value = v; $('#flipDurOut').textContent = v.toFixed(1) + 's'; paintRange(len);
   $('#refField').hidden = t === 'cut';
+  $('#turnStyleField').hidden = !(t === 'flip' && singleOn());          // only a single page has a turn that can go two ways
   $('#bendField').hidden = t !== 'flip';
   $('#turnShadowBlock').hidden = t !== 'flip';
 }
@@ -4730,7 +4745,8 @@ function groupSummary(k) {
   if (k === 'transition') {
     if (s.transition === 'cut') return ['Cut'];
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
-    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
+    const ts = singleOn() ? (s.turnStyle === 'fade' ? 'Fade' : 'Peel') : null;
+    return [j('Turn', ts, 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', ts, sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
   if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
@@ -4931,6 +4947,7 @@ function bindSettings() {
     S.set.transition = e.target.value; applyTransitionUI(); updateHint(); normalizeTurns(); onTurnsChanged(); dirty();
   }));
   document.querySelectorAll('input[name=slideDir]').forEach(r => r.addEventListener('change', e => { S.set.slideDir = e.target.value; dirty(); }));
+  document.querySelectorAll('input[name=turnStyle]').forEach(r => r.addEventListener('change', e => { if (S.set.turnStyle === e.target.value) return; if (S.pdf) pushHistory(); S.set.turnStyle = e.target.value; updateGroupSummaries(); dirty(); }));
   $('#fadeLen').addEventListener('input', e => { const r = e.target; fadeSet(+r.value); if (!r._glide) r.value = fadeSnap(+r.value); applyFadeUI(); syncFadeLens(); dirty(); });
   $('#fadeLen').addEventListener('dblclick', () => aeGlideTo($('#fadeLen'), fadeAutoPos()));          // back to Auto, gliding
   document.querySelectorAll('#fadeLenField .sl-end').forEach(b => b.addEventListener('click', () => { const r = $('#fadeLen'); r.value = b.dataset.v; r.dispatchEvent(new Event('input', { bubbles: true })); }));
@@ -9664,7 +9681,7 @@ function peKey(e) {
    ==================================================================== */
 /* The file is plain text (compact JSON) holding only what is needed to read it back. */
 const IO_RANGES = { normLufs: [-36, -6], normPeakDb: [-12, 0], audioFadeLen: [0.1, 3], audioFadeOutLen: [0, 3], flipDur: [0.3, 3], slideDur: [0.1, 3], bend: [0, 100], margin: [0, 10], gutter: [0, 100], divider: [0, 100], turnShadow: [0, 150], turnSoft: [0, 100], scoreAmt: [0, 100], scoreSoft: [0, 100], fadeLen: [0.2, 3], fadeOutLen: [0.2, 3], gainDb: [-12, 12] };
-const IO_CHOICES = { pageLayout: ['spread', 'single'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
+const IO_CHOICES = { pageLayout: ['spread', 'single'], turnStyle: ['peel', 'fade'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
 const IO_HINTS = {
   all: 'Your settings, the work title, your credits text, and your page markings: page turns, where the video starts and ends, and any pages you left out.',
   settings: 'Only the settings in the side panel. Page markings are not included.',
@@ -9728,6 +9745,7 @@ async function importSettings(file) {
   const bad = 'That file could not be read. Choose a file that was exported from here.';
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
   const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(data.settings) : null;
+  if (clean && clean.pageLayout === 'single' && !('turnStyle' in clean)) clean.turnStyle = 'fade';          // a file made before Peel existed
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }
   Transport.pause();
