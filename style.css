@@ -1910,12 +1910,18 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-crop-pg.loading canvas{opacity:0}
 .pe-crop-pg .pe-wipe,.pe-crop-pg .pe-side{transition:opacity .3s var(--ease-ui)}
 .pe-crop-pg.loading .pe-wipe,.pe-crop-pg.loading .pe-side,.pe-crop-pg.loading .pe-crop-box{opacity:0}
-.pe-crop-pg.loading::after{content:'';position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,color-mix(in srgb,var(--accent) 9%,transparent) 50%,transparent 70%) 0 0/250% 100%;animation:peShimmer 2.6s linear infinite}
-@keyframes peShimmer{from{background-position:130% 0}to{background-position:-130% 0}}
-.pe .page-card .pe-thumb::after{content:'';position:absolute;inset:0;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:linear-gradient(100deg,transparent 25%,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent 75%) 0 0/250% 100%,color-mix(in srgb,var(--accent) 9%,var(--bg,#fff))}
-.pe .page-card.loading .pe-thumb::after{opacity:1;animation:peShimmer 2.6s linear infinite}
+.pe-crop-pg.loading::after{content:'';position:absolute;top:0;bottom:0;left:0;width:55%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 9%,transparent) 50%,transparent);will-change:transform;animation:peSweepPg 2.6s linear infinite}
+@keyframes peSweepPg{from{transform:translateX(-100%)}to{transform:translateX(182%)}}          /* the large view's sweep: one band crossing the page, on the compositor (transform only) */
+/* a card that waits for its picture: one wash, and one bright band that sweeps across the whole grid. Every card's band is the same band: --s0 and --s1 place it by where the card sits in the grid, and --sd puts every card on the same clock, so the cards light up in step. Only transform and opacity move */
+.pe-sheen{position:absolute;inset:0;border-radius:4px;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg,#fff))}
+.pe-sheen::before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--sb,160px);background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent);transform:translateX(var(--s0,-100%));will-change:transform}
+.pe .page-card.loading .pe-sheen,.pe .page-card.sheen-out .pe-sheen{opacity:1}
+.pe .page-card.loading .pe-sheen::before,.pe .page-card.sheen-out .pe-sheen::before{animation:peSweep 2.6s linear infinite;animation-delay:var(--sd,0s)}
+.pe .page-card.sheen-out:not(.loading) .pe-sheen{opacity:0}
+@keyframes peSweep{from{transform:translateX(var(--s0,-100%))}to{transform:translateX(var(--s1,100%))}}
+@media (prefers-reduced-motion:reduce){.pe-sheen::before{display:none}}
 @media (prefers-reduced-motion:reduce){.pe .page-card.loading .pe-thumb::after{animation:none}}
-@media (prefers-reduced-motion:reduce){.pe-crop-pg.loading::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.pe-crop-pg.loading::after{animation:none;opacity:0}}
 /* the back arrow and the zoom buttons float over the stage like the page's own corner button */
 .pe-glass{position:absolute;z-index:4;display:flex;gap:2px;padding:3px;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
 .pe-back{left:12px;top:12px}.pe-zoom{right:12px;bottom:12px}
@@ -1952,8 +1958,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.pe-hint{transition:opacity .2s linear}}
 .pe-win[data-mode="skew"] .pe-crop-box,.pe-win[data-mode="clean"] .pe-crop-box{display:none}
 /* the frame: the page outside it dims. In Auto it follows the margin slider; in Manually it grows corner brackets and edge bars you drag */
-.pe-crop-box{position:absolute;border:1.5px solid var(--accent);border-radius:2px;box-shadow:0 0 0 9999px rgba(10,14,30,.42);pointer-events:none;touch-action:none;transition:left .3s var(--ease-out),top .3s var(--ease-out),width .3s var(--ease-out),height .3s var(--ease-out)}
-.pe-crop-box.dragging{transition:none}
+.pe-crop-box{position:absolute;border:1.5px solid var(--accent);border-radius:2px;box-shadow:0 0 0 9999px rgba(10,14,30,.42);pointer-events:none;touch-action:none;transform-origin:0 0}
 .pe-win.hand .pe-crop-box{pointer-events:auto}
 .pe-crop-box>i{position:absolute}
 .pe-crop-box>i[data-h=move]{inset:0;cursor:move}
