@@ -778,6 +778,7 @@
             <button class="btn small" id="aeMatchBtn" type="button" aria-pressed="false">EQ Match</button>
           </div>
           <div class="eq-stage"><canvas id="aeEqCv" title="Double-click to add a band. Drag a point to move it. Scroll over a point to change its width." aria-label="EQ curve"></canvas></div>
+          <div class="eq-fold" id="aeBandFold"><div class="eq-fold-in">
           <div class="eq-band ae-card" id="aeEqBand">
             <div class="eq-cell eq-bn"><span class="eq-lbl">Band <b id="aeBandNo">1</b></span><div class="eq-ctl"><input type="checkbox" class="switch" id="aeBandOn" aria-label="Band on"><button class="btn small" id="aeBandHear" type="button" aria-pressed="false" title="Hear only the part of the sound this band works on">Listen</button><button class="btn small" id="aeBandDyn" type="button" aria-pressed="false" title="The band moves with how loud the sound is in its own region">Dynamic</button></div></div>
             <div class="eq-cell"><label class="eq-lbl" for="aeBandType">Type</label><div class="eq-ctl"><select id="aeBandType"></select></div></div>
@@ -790,7 +791,9 @@
               <div class="eq-cell"><div class="eq-lbl"><label for="aeBandRange">Range</label><output id="aeBandRangeVal">−6dB</output></div><div class="eq-ctl"><input type="range" class="bi" id="aeBandRange" min="-24" max="24" step="1" value="-6" data-default="-6"></div></div>
             </div></div></div>
           </div>
-          <div class="eq-match ae-card" id="aeMatch" hidden>
+          </div></div>
+          <div class="eq-fold shut" id="aeMatchFold" inert aria-hidden="true"><div class="eq-fold-in">
+          <div class="eq-match ae-card" id="aeMatch">
             <div class="mt-head"><h4>EQ Match</h4><button class="info-i" type="button" aria-label="About EQ Match" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.match">Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.</span><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button">Export EQ profile</button></span></div>
             <div class="mt-steps two">
               <div class="mt-step" id="aeRefStep"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title">Reference</div>
@@ -801,6 +804,7 @@
             </div>
             <input type="file" id="aeRefIn" accept="audio/*" hidden><input type="file" id="aeProfIn" accept=".txt,.csv,.tsv,text/plain" hidden>
           </div>
+          </div></div>
         </section>
         <section class="ae-pane" id="aePaneImager" hidden>
           <div class="im-cols">
@@ -7291,28 +7295,19 @@ function aeTap() {
 }
 function aeUntap() { if (!AE.an) return; try { const T = AE.out || AE.g; T && T.disconnect(AE.an.eqA); T && T.disconnect(AE.an.m); T && T.disconnect(AE.an.sp); AE.an.sp.disconnect(); } catch (e) {} AE.an = null; }
 
-/* starting points for the EQ. Each is a few gentle moves (mostly 1 to 3 dB) written for what a recording or mockup of that group tends to need: a clean low end, less boxiness, less edge, some air. They are places to start; listen and adjust. */
+/* starting points for the EQ: bands only. Each is a few gentle moves (3dB or less, wide Qs, a 30Hz high-pass or higher) for what a recording or mockup of that group tends to need. They are places to start; listen and adjust. */
 const EQ_PRESETS = [
+  ['Wind ensemble', [['highpass', 40, 0, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 3000, -1.5, 0.8], ['highshelf', 10000, 1.5, 0.71]]],
   ['Chamber winds', [['highpass', 45, 0, 0.71], ['peaking', 350, -2, 1], ['peaking', 1000, -1, 1.2], ['peaking', 5000, 1, 0.8], ['highshelf', 10000, 1, 0.71]]],
   ['Brass quintet', [['highpass', 40, 0, 0.71], ['peaking', 200, -1.5, 1], ['peaking', 800, -1.5, 1], ['peaking', 3500, -2, 1.2], ['highshelf', 8000, 1, 0.71]]],
-  ['Orchestral strings', [['highpass', 35, 0, 0.71], ['peaking', 250, -1.5, 0.8], ['peaking', 3000, -2, 1], ['highshelf', 10000, 2, 0.71]]],
+  ['Orchestra', [['highpass', 30, 0, 0.71], ['lowshelf', 90, 1, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 3000, -1.5, 0.9], ['highshelf', 10000, 1.5, 0.71]]],
+  ['Chamber strings', [['highpass', 35, 0, 0.71], ['peaking', 250, -1.5, 0.8], ['peaking', 3000, -2, 1], ['highshelf', 10000, 2, 0.71]]],
   ['String quartet', [['highpass', 55, 0, 0.71], ['peaking', 300, -1.5, 1], ['peaking', 2800, -1.5, 1.2], ['highshelf', 9000, 1.5, 0.71]]],
-  ['Full orchestra', [['highpass', 28, 0, 0.71], ['lowshelf', 90, 1, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 3000, -1.5, 0.9], ['highshelf', 10000, 1.5, 0.71]]],
   ['Choir', [['highpass', 70, 0, 0.71], ['peaking', 280, -2, 1], ['peaking', 4500, 1.5, 0.9], ['highshelf', 11000, 1, 0.71]]],
-  ['Piano', [['highpass', 28, 0, 0.71], ['peaking', 400, -2, 1], ['peaking', 2500, 1, 1], ['highshelf', 10000, 1, 0.71]]],
+  ['Piano', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 1], ['peaking', 2500, 1, 1], ['highshelf', 10000, 1, 0.71]]],
   ['Percussion', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 1.2], ['peaking', 5000, 1.5, 0.8]]],
-  ['Reduce harshness', [['peaking', 3000, -2.5, 0.7], ['peaking', 6000, -1, 1]]],
-  ['Cut low rumble', [['highpass', 30, 0, 0.71]]],
-  ['Add air', [['highshelf', 10000, 2.5, 0.71]]]
+  ['Reduce harshness', [['peaking', 3000, -2.5, 0.7], ['peaking', 6000, -1, 1]]]
 ];
-/* reference sounds built in: the average tonal curve of well-recorded performances (measured the way EQ Match measures any reference, one value at every fourth point of the EQ's frequency axis and the last point).
-   Choosing one runs EQ Match against it, so the curve follows what this recording needs to get there instead of being the same for every recording.
-   After the curve come two more rows of the same length: how far below and above it the middle four of the six recordings lie at each point (the spread, shown as a shaded zone). Rebuild them with tests/accuracy/reference-curve.js. */
-const EQ_PROFILES = [
-  ['Wind ensemble', [9, 9, 10.3, 10.3, 10.3, 10.3, 11.3, 11.3, 11.7, 11.7, 10.4, 11.2, 12.8, 13.7, 14.3, 14.2, 13.6, 13.4, 12.7, 12.7, 12.9, 13.4, 14.1, 14.4, 14.3, 14.5, 14.2, 13.5, 12.2, 11.5, 11, 9.7, 8.9, 7.3, 5.5, 5.3, 5.3, 4.1, 2.2, 0.5, -2.1, -4, -5.3, -6.7, -8.4, -10.6, -12.8, -15.1, -17.2, -19, -21.6, -23.8, -26.1, -28.1, -29.8, -31.7, -33.9, -35.6, -38.3, -41.9, -45.6], [-4,-4,-3.6,-3.6,-3.8,-3.8,-2.9,-2.9,-2.7,-2.7,-1.1,-1.5,-1.6,-1.4,-0.9,-1.3,-1,-0.3,-0.3,-0.9,-1.8,-1.5,-1.5,-1.6,-1.8,-1.2,-1.3,-0.9,-0.6,-0.8,-0.9,-1,-1.6,-1.7,-1,-1.2,-1.3,-1.8,-0.9,-1.6,-0.8,-0.9,-1.4,-1.2,-1.2,-0.5,-1.2,-0.8,-1,-1.9,-2.2,-2.1,-2.1,-2.9,-3.5,-4.4,-5.8,-7,-8,-8.5,-8.8], [3.6,3.6,4.1,4.1,4.6,4.6,3.7,3.7,1.4,1.4,1.7,1.7,1.5,1.1,0.7,1.2,1.2,0.7,0.5,1.3,1.9,2,1.7,1.7,2.1,2.2,1.3,0.5,0.7,1.3,1.4,1,1.1,0.7,0.6,1.1,1.3,2.4,2,1.8,1,1.2,1.9,1.6,1.7,1.2,2,2,2,3,3.2,3.9,4.4,4.8,4.5,3.8,4.6,4.9,3.8,3.8,3.2]]
-];
-const eqProfileCurve = p => { const v = p[1], out = new Float32Array(eqAxis.length); for (let i = 0; i < out.length; i++) { const k = Math.min(v.length - 2, i >> 2), a = k * 4, b = Math.min(eqAxis.length - 1, a + 4); out[i] = v[k] + (v[k + 1] - v[k]) * ((i - a) / (b - a)); } return curveCenter(out); };
-const eqProfileSpread = p => { const out = []; for (const v of [p[2], p[3]]) { const o = new Float32Array(eqAxis.length); if (!v) return null; for (let i = 0; i < o.length; i++) { const k = Math.min(v.length - 2, i >> 2), a = k * 4, b = Math.min(eqAxis.length - 1, a + 4); o[i] = v[k] + (v[k + 1] - v[k]) * ((i - a) / (b - a)); } out.push(o); } return { lo: out[0], hi: out[1] }; };
 const eqBandsOf = p => p[1].map(([type, f, g, q]) => ({ type, f, g, q, on: true }));
 const eqMatch = fx => { const sig = JSON.stringify(fx.eq.bands.map(b => [b.type, b.f, b.g, b.q])); const hit = EQ_PRESETS.find(p => JSON.stringify(p[1]) === sig); return hit ? hit[0] : ''; };
 /* the Width slider: right is wider (a lower Q). It runs from Q 10 (narrow) to Q 0.2 (wide), and the readout is the band's width in octaves */
@@ -7399,8 +7394,6 @@ function aeEqDraw() {
       const T = AE.tgt, y = (v) => eqY(clamp(v, -EQ_DB, EQ_DB), H);
       c.save(); c.globalAlpha = 0.14 * ta; c.fillStyle = C.turn; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); });
       for (let i = eqAxis.length - 1; i >= 0; i--) c.lineTo(eqFx(eqAxis[i], W), y(cur[i])); c.closePath(); c.fill(); c.restore();
-      if (AE.match && AE.match.zone && tgOn) { const Z = AE.match.zone; c.save(); c.globalAlpha = 0.2 * ta; c.fillStyle = C.turn; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W), yy = y(T[i] + Z.hi[i]); if (i) c.lineTo(x, yy); else c.moveTo(x, yy); });
-        for (let i = eqAxis.length - 1; i >= 0; i--) c.lineTo(eqFx(eqAxis[i], W), y(T[i] + Z.lo[i])); c.closePath(); c.fill(); c.restore(); AE.zoneShown = true; } else AE.zoneShown = false;          // the zone the six recordings span, behind the target
       c.save(); c.globalAlpha = ta; c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.6; c.strokeStyle = C.turn; c.shadowColor = C.turn; c.shadowBlur = 8; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); }); c.stroke(); c.restore();
       c.save(); c.globalAlpha = ta; c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = C.turn; c.fillText('━ Target', EQ_PAD + 8, 16); c.fillStyle = C.accent; c.fillText('━ Your EQ', EQ_PAD + 76, 16); if (AE.zoneShown) { c.globalAlpha = 0.45 * ta; c.fillStyle = C.turn; c.fillRect(EQ_PAD + 150, 11, 12, 10); c.globalAlpha = ta; c.fillStyle = C.muted; c.fillText('Spread of six recordings', EQ_PAD + 167, 16); } c.restore();
     }
@@ -7468,7 +7461,7 @@ async function aeDynAuto(i, quiet) {
 function aeEqBind() {
   const cv = $('#aeEqCv'), sel = $('#aeBandType');
   sel.innerHTML = Object.keys(EQ_TYPES).map(k => '<option value="' + k + '">' + EQ_TYPES[k] + '</option>').join('');
-  $('#aeEqPreset').innerHTML = '<option value="">Presets</option><optgroup label="Match a reference">' + EQ_PROFILES.map(p => '<option value="ref:' + p[0] + '">' + p[0] + '</option>').join('') + '</optgroup><optgroup label="Starting points">' + EQ_PRESETS.map(p => '<option>' + p[0] + '</option>').join('') + '</optgroup>';
+  $('#aeEqPreset').innerHTML = '<option value="">Presets</option>' + EQ_PRESETS.map(p => '<option>' + p[0] + '</option>').join('');
   const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   const hit = (x, y) => { const W = cv.clientWidth, H = cv.clientHeight, bs = AE.d.fx.eq.bands; let best = -1, bd = 14; bs.forEach((b, i) => { const d = Math.hypot(eqFx(b.f, W) - x, eqY(eqNoGain(b.type) ? 0 : b.g, H) - y); if (d <= bd) { bd = d; best = i; } }); return best; };
   const addAt = (x, y, g) => { const W = cv.clientWidth, H = cv.clientHeight; if (AE.d.fx.eq.bands.length >= EQ_MAX_BANDS) return; aeFx(fx => { fx.eq.on = true; fx.eq.bands.push({ type: 'peaking', f: Math.round(eqXf(x, W)), g: g == null ? Math.round(eqYg(y, H) * 2) / 2 : g, q: 1, on: true }); AE.band = fx.eq.bands.length - 1; }); };
@@ -7497,7 +7490,6 @@ function aeEqBind() {
   }, { passive: false });
   $('#aeEqAdd').addEventListener('click', () => { if (AE.d.fx.eq.bands.length >= EQ_MAX_BANDS) return; aeFx(fx => { fx.eq.on = true; const used = fx.eq.bands.map(b => b.f); let f = 1000; while (used.some(u => Math.abs(Math.log(u / f)) < 0.3) && f < 15000) f *= 1.6; fx.eq.bands.push({ type: 'peaking', f: Math.round(f), g: 0, q: 1, on: true }); AE.band = fx.eq.bands.length - 1; }); });
   $('#aeEqPreset').addEventListener('change', e => {
-    const ref = EQ_PROFILES.find(q => 'ref:' + q[0] === e.target.value); if (ref) { aeMatchBuiltin(ref); return; }
     const p = EQ_PRESETS.find(q => q[0] === e.target.value); if (!p) { aeEqPanel(); return; }
     aeFx(fx => { fx.eq.on = true; fx.eq.bands = eqBandsOf(p); delete fx.eq.curve; AE.band = 0; });
   });
@@ -8111,9 +8103,6 @@ async function aeMatchTarget() {
   const m = AE.match; if (!m || !m.ref) return null; const own = await aeOwnCurveA(); if (!own || AE.match !== m || !m.ref) return null;
   const D = new Float32Array(own.length); for (let i = 0; i < D.length; i++) D[i] = m.ref[i] - own[i];
   const sm = smoothCurve(D, 10), amt = (+$('#aeMatchAmt').value) / 100;
-  if (m.builtin) for (let i = 0; i < sm.length; i++) { const f = eqAxis[i]; sm[i] *= clamp(Math.log2(f / 28) / Math.log2(40 / 28), 0, 1) * clamp(Math.log2(18000 / f) / Math.log2(18000 / 14000), 0, 1); }          // a built-in reference leaves the rumble under 40Hz and the air over 14kHz alone: what is there differs from one recording (and one file type) to the next
-  m.zone = null;
-  if (m.builtin && m.spread) { const edge = i => { const f = eqAxis[i]; return clamp(Math.log2(f / 28) / Math.log2(40 / 28), 0, 1) * clamp(Math.log2(18000 / f) / Math.log2(18000 / 14000), 0, 1); }, lo = smoothCurve(m.spread.lo, 10), hi = smoothCurve(m.spread.hi, 10); m.zone = { lo: lo.map((v, i) => v * edge(i) * amt), hi: hi.map((v, i) => v * edge(i) * amt) }; }          // how far the six recordings lie either side of the reference, in the same shape as the target
   return sm.map(v => clamp(v * amt, -EQ_DB, EQ_DB));
 }
 async function aeMatchApply(slide) {
@@ -8121,7 +8110,6 @@ async function aeMatchApply(slide) {
   AE.match.target = t; const curve = Array.from(t, v => Math.round(v * 10) / 10), has = curve.some(v => Math.abs(v) >= 0.05);
   aeFx(fx => { if (has) { fx.eq.on = true; fx.eq.curve = curve; } else delete fx.eq.curve; AE.band = Math.max(0, Math.min(AE.band, fx.eq.bands.length - 1)); }, slide); if (!slide) edSay('ae', 'match');          // the match is a free curve of its own, made exactly (EQ Match), and the bands stay yours
 }
-/* a reference that comes with the app: EQ Match opens on it, ready to turn down with Amount */
 /* the free curve turned into bands you can move: the nearest handful of bells, set beside the bands you have */
 function aeMatchToBands() {
   const fx = AE.d.fx, c = fx.eq.curve; if (!c) return; const room = EQ_MAX_BANDS - fx.eq.bands.length;
@@ -8129,12 +8117,8 @@ function aeMatchToBands() {
   const made = eqFit(Float32Array.from(c), Math.min(8, room)), first = fx.eq.bands.length;
   aeFx(fx2 => { fx2.eq.bands.push(...made); delete fx2.eq.curve; fx2.eq.on = true; AE.band = first; }); if (AE.match) { AE.match.ref = null; AE.match.target = null; AE.match.refName = ''; } AE.matchOpen = false; aeMatchUi(); aeEqDraw();
 }
-function aeMatchBuiltin(p) {
-  const m = AE.match || (AE.match = {}); m.busy = false; m.builtin = true; m.refName = p[0]; m.ref = eqProfileCurve(p); m.spread = eqProfileSpread(p); m.target = null; m.zone = null; AE.matchOpen = true;
-  aeEqPanel(); aeEqDraw(); aeMatchApply(false);
-}
 async function aeMatchLoad(file, kind) {
-  const m = AE.match || (AE.match = {}); m.busy = true; m.builtin = false; m.spread = null; m.zone = null; m.refName = file.name; m.ref = null; m.target = null; aeMatchUi();
+  const m = AE.match || (AE.match = {}); m.busy = true; m.refName = file.name; m.ref = null; m.target = null; aeMatchUi();
   try {
     let curve = null;
     if (kind === 'profile') curve = curveFromText(await file.text());
@@ -8148,10 +8132,12 @@ async function aeMatchLoad(file, kind) {
     m.ref = curve; aeMatchUi(); aeMatchApply(false);
   } catch (e) { console.error(e); if (AE.match === m) { m.busy = false; m.refName = ''; aeMatchUi(); } toast(tx(kind === 'profile' ? 'ae.badprofile' : 'ae.readfail'), 5200); }
 }
+/* the band controls and EQ Match take turns: one folds shut (its height glides to nothing, grid 0fr) as the other opens, so the curve above grows and shrinks with them */
+function eqFold(sel, open) { const el = $(sel); el.classList.toggle('shut', !open); el.inert = !open; el.setAttribute('aria-hidden', String(!open)); }
 /* the two steps of EQ Match: pick a reference, then choose how far to go */
 function aeMatchUi() {
   const open = !!AE.matchOpen, m = AE.match, has = !!(m && m.ref), busy = !!(m && (m.busy || m.busyOwn));
-  $('#aeMatch').hidden = !open; $('#aeEqBand').hidden = open; $('#aeMatchBtn').setAttribute('aria-pressed', open);
+  eqFold('#aeMatchFold', open); eqFold('#aeBandFold', !open); $('#aeMatchBtn').setAttribute('aria-pressed', open);
   $('#aeRefEmpty').hidden = has || busy; $('#aeRefChip').hidden = !(has || busy); $('#aeRefChip').classList.toggle('busy', busy);
   $('#aeRefName').textContent = busy ? (m.busy ? 'Processing ' + m.refName : 'Processing your audio') + '…' : has ? m.refName : '';
   $('#aeAmtStep').classList.toggle('dim', !has); $('#aeMatchAmt').disabled = !has;

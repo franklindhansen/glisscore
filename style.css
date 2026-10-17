@@ -1005,7 +1005,11 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
 .eq-band.ae-card{margin-top:14px}
-.eq-match[hidden]{display:none}
+.eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out)}
+.eq-fold.shut{grid-template-rows:0fr}
+.eq-fold-in{min-height:0;overflow:hidden}
+.eq-fold.shut .eq-fold-in{visibility:hidden;transition:visibility 0s .4s}
+@media (prefers-reduced-motion:reduce){.eq-fold,.eq-fold.shut .eq-fold-in{transition:none}}
 .eq-match .field.dim{opacity:.45}
 @media (max-width:760px){
   .ae-rail{display:block;padding:0}
@@ -1589,6 +1593,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aePaneEq:not([hidden]){display:flex;flex-direction:column}
 #aePaneEq .eq-top{flex:none;margin-bottom:8px}
 #aePaneEq .eq-stage{flex:1 1 0;min-height:64px;height:auto}
+#aePaneEq .eq-fold{flex:none}
 #aePaneEq .eq-band.ae-card{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match .mt-head{margin-bottom:8px}
