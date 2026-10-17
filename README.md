@@ -1,16 +1,16 @@
 # *glisscore™*
 
-Turn a score PDF and an audio file into a page-turning video. Clean up the PDF and the recording first, right in the same app.
+Create score videos from a PDF and a recording.
 
 **Official site:** [glisscore.com](https://glisscore.com) · **Official repository:** [github.com/franklindhansen/glisscore](https://github.com/franklindhansen/glisscore)
 
-Everything runs in your browser.
+Everything runs in your browser. Your files never leave your device.
 
-## What's in it
+## Features
 
 - **Video editor.** Set when each page turns, add credits, fade in and out, and export the video.
-- **PDF Editor.** Arrange, rotate, crop, clean, re-kilter and re-size pages, with undo and history.
-- **Audio Editor.** Noise reduction, Spectra (a spectrogram), EQ, Imager, level and limiter, and the Emulator, which sets a sound to match a reference recording.
+- **PDF Editor.** Arrange, rotate, crop, clean, re-kilter and re-size pages.
+- **Audio Editor.** Noise reduction, spectrogram, EQ, imager, level and limiter.
 
 ## Run it yourself
 
@@ -28,7 +28,7 @@ Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen
 
 ## Support
 
-If *glisscore* is useful to you, you can support its development at [glisscore.com/support](https://glisscore.com/support).
+*glisscore* is free and open source. If it's useful to you, you can help cover hosting and upkeep at [glisscore.com/support](https://glisscore.com/support).
 
 ## License
 
