@@ -2380,7 +2380,7 @@ function slotBase(sl, aspect) {
   if (hit) return hit;
   if (!VTpending.has(key) && S.pdf) {
     VTpending.add(key); const doc = S.pdf.doc, w = Math.max(20, Math.round(240 * aspect));
-    renderPdfPage(doc, sl.src, w, 240, 0, null, slotGeo(sl)).then(cv => { VT.set(key, cv); if (VT.size > 400) VT.delete(VT.keys().next().value); VTpending.delete(key); TL.staticDirty = true; stageDirty = true; if (typeof peRepaint === 'function' && PE.d && !$('#pdfDlg').hidden) peRepaint(); }, () => VTpending.delete(key));
+    renderPdfPage(doc, sl.src, w, 240, 0, null, slotGeo(sl)).then(cv => { VT.set(key, cv); if (VT.size > 120) VT.delete(VT.keys().next().value); VTpending.delete(key); TL.staticDirty = true; stageDirty = true; if (typeof peRepaint === 'function' && PE.d && !$('#pdfDlg').hidden) peRepaint(); }, () => VTpending.delete(key));
   }
   return S.thumbs[sl.src] || null;
 }
@@ -2403,6 +2403,7 @@ async function peScan(idx, width = 760, geo = null) {
   const hit = geo ? null : PEA.cache.get(idx); if (hit) return hit;
   const page = await S.pdf.doc.getPage(idx + 1), v = page.getViewport({ scale: 1, rotation: page.rotate || 0 }), w = width, h = Math.max(8, Math.round(width * v.height / v.width));
   const cv = await renderPdfPage(S.pdf.doc, idx, w, h, 0, null, geo), px = cv.getContext('2d').getImageData(0, 0, w, h).data, g = new Uint8Array(w * h);
+  cv.width = cv.height = 0;          // the picture is not kept, only what was measured; freeing it now stops Safari holding hundreds of them until it next collects
   for (let i = 0, k = 0; i < g.length; i++, k += 4) g[i] = (px[k] * 77 + px[k + 1] * 150 + px[k + 2] * 29) >> 8;
   const hist = new Uint32Array(256); for (let i = 0; i < g.length; i++) hist[g[i]]++;
   let acc = 0, bg = 255; for (let t = 255; t >= 0; t--) { acc += hist[t]; if (acc > g.length * 0.08) { bg = t; break; } }          // the paper: bright, so the 92nd percentile
@@ -2519,10 +2520,10 @@ async function loadPdf(file) {
   setBusy('Reading…', 'pdf', file.name.replace(/\.pdf$/i, ''));
   try {
     const lib = await getPdfjs();
-    const data = new Uint8Array(await file.arrayBuffer());
+    const bytes = async () => new Uint8Array(await file.arrayBuffer());          // read again for each try, so the file is never held in two copies here (the engine keeps its own)
     let doc = null, pass, wrong = false, needed = false, restricted = false, enc = false;
     for (;;) {          // a locked score asks for its password (the password stays in this tab and is never saved)
-      try { doc = await lib.getDocument({ data: data.slice(), password: pass }).promise; break; }
+      try { doc = await lib.getDocument({ data: await bytes(), password: pass }).promise; break; }
       catch (e) { if (!(e && e.name === 'PasswordException')) throw e; needed = true; pass = await askPdfPassword(file.name, wrong); if (pass == null) { if (token === loadToken) setBusy(''); return; } wrong = true; setBusy('Reading…', 'pdf', file.name.replace(/\.pdf$/i, '')); }
     }
     if (token !== loadToken) return;
@@ -2532,7 +2533,7 @@ async function loadPdf(file) {
         restricted = true; let bad = false;
         for (;;) {
           const owner = await askPdfPassword(file.name, bad, true); if (token !== loadToken) return; if (owner == null) break;
-          try { const d2 = await lib.getDocument({ data: data.slice(), password: owner }).promise; doc = d2; restricted = false; break; }
+          try { const d2 = await lib.getDocument({ data: await bytes(), password: owner }).promise; doc = d2; restricted = false; break; }
           catch (e) { if (!(e && e.name === 'PasswordException')) throw e; bad = true; }
         }
         setBusy('Reading…', 'pdf', file.name.replace(/\.pdf$/i, ''));
@@ -8913,7 +8914,7 @@ const peOneMode = () => PE.mode === 'crop' || PE.mode === 'skew' || PE.mode === 
 PE.one = null; PE.oneSig = ''; PE.orig = true; PE.cropShowRun = 0; PE.cropScans = new Map(); PE.full = new Map();
 async function peCropScan(sl) {                                  // a small memory of the scans, so moving the margin slider stays quick
   const key = sl.src + '|' + (sl.skew || 0) + '|' + (sl.vskew || 0) + '|' + (sl.warp || 0) + '|' + (S.pdf.gen || 0);
-  let sc = PE.cropScans.get(key); if (!sc) { sc = await peScanOf(sl); PE.cropScans.set(key, sc); if (PE.cropScans.size > 120) PE.cropScans.delete(PE.cropScans.keys().next().value); }
+  let sc = PE.cropScans.get(key); if (!sc) { sc = await peScanOf(sl); PE.cropScans.set(key, sc); if (PE.cropScans.size > 30) PE.cropScans.delete(PE.cropScans.keys().next().value); }
   return sc;
 }
 const peUnion = bs => bs.length ? [Math.min(...bs.map(b => b[0])), Math.min(...bs.map(b => b[1])), Math.max(...bs.map(b => b[2])), Math.max(...bs.map(b => b[3]))] : null;
@@ -8980,7 +8981,7 @@ function peFullThumb(sl) {
   const key = [sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, S.pdf.gen || 0].join('|'), hit = PE.full.get(key); if (hit) return hit.width ? hit : null;
   const doc = S.pdf.doc, geo = slotGeo(sl, 'crop');
   PE.full.set(key, peLimit(async () => { if (!PE.d || S.pdf.doc !== doc) throw 0; const a = await peAspectOf({ src: sl.src, rot: 0 }); return renderPdfPage(doc, sl.src, Math.max(20, Math.round(240 * a)), 240, 0, null, geo); }).then(cv => {
-    PE.full.set(key, cv); if (PE.full.size > 400) PE.full.delete(PE.full.keys().next().value);
+    PE.full.set(key, cv); if (PE.full.size > 120) PE.full.delete(PE.full.keys().next().value);
     const d = PE.d; if (d && PE.mode === 'crop') document.querySelectorAll('#peGrid .page-card').forEach(c => { const s2 = d.slots[+c.dataset.id]; if (s2 && s2.src === sl.src) { const id = +c.dataset.id; peDrawCard(c, s2, !s2.x && !PE.skip.has(id) ? peCropBox(id) : null); } });
   }, () => PE.full.delete(key)));
   return null;
@@ -9339,6 +9340,8 @@ const PE_CH = 280;
 const peCardSize = sl => { const w = Math.round(PE_CH * peAspect()); return (sl.rot || 0) % 180 ? [PE_CH, w] : [w, PE_CH]; };          // a page turned a quarter takes its own wide shape
 function peDrawCard(card, sl, frame) {
   const cv = card.querySelector('canvas'), rot = sl.rot || 0, side = rot % 180 !== 0, sz = peCardSize(sl);
+  cv.style.aspectRatio = sz[0] + ' / ' + sz[1];          // the card keeps its shape while its picture is freed
+  if (card._far) { if (cv.width !== 1 || cv.height !== 1) { cv.width = 1; cv.height = 1; } return; }          // far off screen: a long score keeps pictures only for the cards near the view
   if (cv.width !== sz[0] || cv.height !== sz[1]) { cv.width = sz[0]; cv.height = sz[1]; }
   const x = cv.getContext('2d'), w = cv.width, h = cv.height;
   if (PE.mode === 'crop' && !sl.x && !(sl.crop && !sl.half)) {          // in Crop: an uncropped page shows whole, with the frame it will get and the rest dimmed; a cropped page shows its result
@@ -9366,14 +9369,22 @@ function peCard(id, sl) {
     + '<span class="pe-tools"><button type="button" data-act="open" aria-label="Open page" title="Open page">' + peSvg.open + '</button><button type="button" data-act="rot" aria-label="Rotate page" title="Rotate (R)">' + peSvg.rot + '</button><button type="button" data-act="dup" aria-label="Repeat page" title="Repeat (D)">' + peSvg.dup + '</button>'
     + (sl.c ? '<button type="button" data-act="del" aria-label="Remove this repeat" title="Remove repeat">' + peSvg.del + '</button>' : '') + '</span></span>'
     + '<span class="pe-foot"><span class="pe-pos"></span><span class="num">p. ' + (sl.src + 1) + (sl.c ? ' · repeat' : '') + '</span></span>';
+  el._far = PE.nearN >= 24; PE.nearN++;          // the first screenful is drawn at once; the rest wait until the view comes near (peFarWatch)
   peDrawCard(el, sl); if (!S.thumbs[sl.src]) peLoadOn(el); return el;          // no picture yet: the card shimmers until its thumbnail arrives
 }
 /* the cards are built from the draft; when `anim` is set, cards that moved glide to their new places and new ones rise in (FLIP) */
+/* a card draws its picture only while it is within a screen or so of the view; scrolling away frees the picture (the canvas shrinks to a pixel, the shape stays), so a 200-page score never holds 200 full pictures */
+function peFarWatch() {
+  if (PE.io) PE.io.disconnect();
+  if (!window.IntersectionObserver) { document.querySelectorAll('#peGrid .page-card').forEach(c => { c._far = false; }); peRepaint(); return; }
+  PE.io = new IntersectionObserver(es => es.forEach(e => { const c = e.target, far = !e.isIntersecting; if (c._far === far) return; c._far = far; const sl = PE.d && PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); }), { root: $('#peWrap'), rootMargin: '700px 0px' });
+  document.querySelectorAll('#peGrid .page-card').forEach(c => PE.io.observe(c));
+}
 function peRender(anim) {
   const grid = $('#peGrid'), d = PE.d, old = new Map();
   if (anim) Array.from(grid.children).forEach(c => old.set(+c.dataset.id, c.getBoundingClientRect()));
-  const frag = document.createDocumentFragment(); d.order.forEach(id => frag.appendChild(peCard(id, d.slots[id])));
-  grid.textContent = ''; grid.appendChild(frag);
+  PE.nearN = 0; const frag = document.createDocumentFragment(); d.order.forEach(id => frag.appendChild(peCard(id, d.slots[id])));
+  grid.textContent = ''; grid.appendChild(frag); peFarWatch();
   PE.roll = !!anim; peState(); peSheenSync();
   if (anim && !reducedMotion()) {
     Array.from(grid.children).forEach(c => {
