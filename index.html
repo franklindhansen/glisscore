@@ -7295,18 +7295,19 @@ function aeTap() {
 }
 function aeUntap() { if (!AE.an) return; try { const T = AE.out || AE.g; T && T.disconnect(AE.an.eqA); T && T.disconnect(AE.an.m); T && T.disconnect(AE.an.sp); AE.an.sp.disconnect(); } catch (e) {} AE.an = null; }
 
-/* starting points for the EQ: bands only. Each is a few gentle moves (3dB or less, wide Qs, a 30Hz high-pass or higher) for what a recording or mockup of that group tends to need. They are places to start; listen and adjust. */
+/* starting points for the EQ: bands only, written from common practice for mixing recordings and mockups of each group. A high-pass at 30Hz or the group's lowest note, nothing past 3dB (most 2dB or less), and wide bells (Q 1 or lower, so a move sounds like tone and not like a notch). Typical problems: mud around 250 to 400Hz, edge around 2 to 4kHz, a dull top. Checked against six wind ensemble recordings (they differ from one another by 5 to 13dB at every point from 125Hz to 5kHz, so moves this size are well within real variety). They are places to start; listen and adjust.
+   High-passes above 30Hz: the lowest note of the group (bassoon Bb1 58Hz, tuba F1 44Hz, cello C2 65Hz, bass voice E2 82Hz) with a little room. Reduce harshness is a repair, not a whole sound, so it has none. */
 const EQ_PRESETS = [
-  ['Wind ensemble', [['highpass', 40, 0, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 3000, -1.5, 0.8], ['highshelf', 10000, 1.5, 0.71]]],
-  ['Chamber winds', [['highpass', 45, 0, 0.71], ['peaking', 350, -2, 1], ['peaking', 1000, -1, 1.2], ['peaking', 5000, 1, 0.8], ['highshelf', 10000, 1, 0.71]]],
-  ['Brass quintet', [['highpass', 40, 0, 0.71], ['peaking', 200, -1.5, 1], ['peaking', 800, -1.5, 1], ['peaking', 3500, -2, 1.2], ['highshelf', 8000, 1, 0.71]]],
-  ['Orchestra', [['highpass', 30, 0, 0.71], ['lowshelf', 90, 1, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 3000, -1.5, 0.9], ['highshelf', 10000, 1.5, 0.71]]],
-  ['Chamber strings', [['highpass', 35, 0, 0.71], ['peaking', 250, -1.5, 0.8], ['peaking', 3000, -2, 1], ['highshelf', 10000, 2, 0.71]]],
-  ['String quartet', [['highpass', 55, 0, 0.71], ['peaking', 300, -1.5, 1], ['peaking', 2800, -1.5, 1.2], ['highshelf', 9000, 1.5, 0.71]]],
-  ['Choir', [['highpass', 70, 0, 0.71], ['peaking', 280, -2, 1], ['peaking', 4500, 1.5, 0.9], ['highshelf', 11000, 1, 0.71]]],
-  ['Piano', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 1], ['peaking', 2500, 1, 1], ['highshelf', 10000, 1, 0.71]]],
-  ['Percussion', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 1.2], ['peaking', 5000, 1.5, 0.8]]],
-  ['Reduce harshness', [['peaking', 3000, -2.5, 0.7], ['peaking', 6000, -1, 1]]]
+  ['Wind ensemble', [['highpass', 30, 0, 0.71], ['peaking', 300, -1.5, 0.7], ['peaking', 3000, -1, 0.7], ['highshelf', 10000, 1.5, 0.71]]],
+  ['Chamber winds', [['highpass', 45, 0, 0.71], ['peaking', 350, -1.5, 0.8], ['peaking', 2800, -1, 0.8], ['highshelf', 10000, 1.5, 0.71]]],
+  ['Brass quintet', [['highpass', 35, 0, 0.71], ['peaking', 250, -1.5, 0.8], ['peaking', 800, -1, 0.8], ['peaking', 3500, -2, 0.8], ['highshelf', 8000, 1, 0.71]]],
+  ['Orchestra', [['highpass', 30, 0, 0.71], ['lowshelf', 100, 1, 0.71], ['peaking', 300, -1.5, 0.7], ['peaking', 3000, -1.5, 0.7], ['highshelf', 10000, 1.5, 0.71]]],
+  ['Chamber strings', [['highpass', 30, 0, 0.71], ['peaking', 250, -1.5, 0.7], ['peaking', 3000, -1.5, 0.8], ['highshelf', 10000, 2, 0.71]]],
+  ['String quartet', [['highpass', 50, 0, 0.71], ['peaking', 300, -1.5, 0.8], ['peaking', 2800, -1.5, 0.9], ['highshelf', 9000, 1.5, 0.71]]],
+  ['Choir', [['highpass', 70, 0, 0.71], ['peaking', 280, -2, 0.8], ['peaking', 4000, 1.5, 0.8], ['highshelf', 11000, 1, 0.71]]],
+  ['Piano', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 0.8], ['peaking', 2500, 1, 0.8], ['highshelf', 10000, 1, 0.71]]],
+  ['Percussion', [['highpass', 30, 0, 0.71], ['peaking', 400, -2, 0.9], ['peaking', 5000, 1.5, 0.7]]],
+  ['Reduce harshness', [['peaking', 3000, -2.5, 0.7], ['peaking', 6000, -1, 0.8]]]
 ];
 const eqBandsOf = p => p[1].map(([type, f, g, q]) => ({ type, f, g, q, on: true }));
 const eqMatch = fx => { const sig = JSON.stringify(fx.eq.bands.map(b => [b.type, b.f, b.g, b.q])); const hit = EQ_PRESETS.find(p => JSON.stringify(p[1]) === sig); return hit ? hit[0] : ''; };
