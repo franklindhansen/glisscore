@@ -9894,6 +9894,22 @@ function initMenu() {
   $('#keysClose').addEventListener('click', () => sheetHide($('#keysDlg')));
   $('#menuHow').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#howDlg')); $('#howClose').focus(); });
   $('#howClose').addEventListener('click', () => sheetHide($('#howDlg')));
+  // the dropdowns glide open and shut: the box grows from its own height, so a click mid-glide turns around from where it is
+  $('#howDlg').addEventListener('click', e => {
+    const sum = e.target.closest('.how-d > summary'); if (!sum) return;
+    const d = sum.parentNode, body = d.querySelector('.how-in'); if (!body.animate || reducedMotion()) return;
+    e.preventDefault();
+    const now = body.getBoundingClientRect().height, cs = getComputedStyle(body), opening = !d.open || d.dataset.closing === '1';
+    if (body._glide) body._glide.cancel();
+    if (opening) { d.open = true; d.dataset.closing = ''; }
+    else d.dataset.closing = '1';
+    const full = body.scrollHeight + (parseFloat(cs.borderTopWidth) || 0), from = opening && now > 0 && body._glide ? now : opening ? 0 : now, to = opening ? full : 0;
+    const k = h => ({ height: h + 'px', paddingTop: h ? cs.paddingTop : '0px', paddingBottom: h ? cs.paddingBottom : '0px', opacity: h ? 1 : 0 });
+    body.style.overflow = 'hidden';
+    const a = body._glide = body.animate([k(from), k(to)], { duration: 450, easing: 'cubic-bezier(.22,1,.36,1)' });
+    a.onfinish = () => { body._glide = null; body.style.overflow = ''; if (!opening) { d.open = false; d.dataset.closing = ''; } };
+    a.oncancel = () => { body.style.overflow = ''; };
+  });
   $('#menuAbout').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#aboutDlg')); $('#aboutClose').focus(); });
   /* the number comes from the VERSION.txt file, the one place it is written, read once at the start so About never grows when it opens; if it cannot be read the line stays hidden */
   function aboutVersion() { fetch('VERSION.txt', { cache: 'no-cache' }).then(r => r.ok ? r.text() : '').then(t => { t = t.trim(); const el = $('#aboutVersion'); el.textContent = /^\d+\.\d+\.\d+$/.test(t) ? 'Version ' + t : ''; el.hidden = !el.textContent; }).catch(() => {}); }

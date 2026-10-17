@@ -2188,12 +2188,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .how-d>summary::-webkit-details-marker{display:none}
 .how-d>summary::before{content:'';flex:none;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(-45deg);transition:transform .3s var(--ease-ui)}
 .how-d[open]>summary::before{transform:rotate(45deg)}
+.how-d[data-closing="1"]>summary::before{transform:rotate(-45deg)}
 .how-d>summary:hover{background:var(--accent-soft)}
 .how-d>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .how-in{padding:2px 14px 14px;border-top:1px solid var(--line)}
-.how-d[open] .how-in{animation:howIn .35s var(--ease-out)}
-@keyframes howIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}.how-d[open] .how-in{animation:none}}
+@media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
 /* the note that says a page turn is holding a trim handle: sits on the waveform, below the ruler, and fades away */

@@ -16,5 +16,13 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok(w + 'x' + h + ': opening every dropdown leaves the window the same height and place, and closing puts it back', r.n > 0 && r.before.h === r.open.h && r.before.top === r.open.top && r.closed.h === r.before.h, JSON.stringify(r));
     ok(w + 'x' + h + ': Close stays in view and the window fits the screen', r.closeIn && r.before.h <= r.vh - 32 + 0.5, JSON.stringify(r));
   }
+  const g = await p.evaluate(async () => {
+    const o = document.querySelector('#howDlg'); o.hidden = false; o.style.animation = 'none'; o.querySelector('.dlg').style.animation = 'none'; await new Promise(r => setTimeout(r, 300));
+    const d = o.querySelector('.how-d'), b = d.querySelector('.how-in'), wait = ms => new Promise(r => setTimeout(r, ms)), h = () => b.getBoundingClientRect().height;
+    d.querySelector('summary').click(); await wait(120); const mid = h(); await wait(700); const full = h();
+    d.querySelector('summary').click(); await wait(120); const midShut = h(); await wait(700); const shut = d.open;
+    o.hidden = true; return { mid, full, midShut, shut };
+  });
+  ok('a dropdown glides open and shut (partway at 120ms, whole after)', g.mid > 0 && g.mid < g.full && g.midShut > 0 && g.midShut < g.full && g.shut === false, JSON.stringify(g));
   ok('no errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();
