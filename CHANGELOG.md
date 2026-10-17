@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+Wrap now turns the page once around its left edge, like a notebook folded in half: it swings out, lingers fully open, then folds back behind the next page. A faint fold line keeps it attached, and its shadows follow what is happening.
+
 ## 0.3.1
 
 The PDF Editor's loading cards now share one sweep across the grid, and the large view's page box and the crop frame glide more smoothly.
