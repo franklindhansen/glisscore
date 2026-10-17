@@ -3362,8 +3362,8 @@ function tapTurn() {
 const GLSL = {
   quadVS: `attribute vec2 a_pos; attribute vec2 a_uv; uniform vec2 u_res; varying vec2 v_uv;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,0.0,1.0); v_uv=a_uv; }`,
-  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; varying vec2 v_uv;
-    float crease(float d){ return pow(1.0-smoothstep(0.0,0.09,d),1.5); }
+  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_cw; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; varying vec2 v_uv;
+    float crease(float d){ return pow(1.0-smoothstep(0.0,u_cw,d),1.5); }
     float divider(float d){ float px=d*u_pw; float lw=max(1.0,u_pw/900.0); float line=1.0-smoothstep(lw*0.6,lw*1.6,px); float halo=1.0-smoothstep(0.0,lw*7.0,px); return line*0.5+halo*halo*0.22; }
     void main(){ vec3 col=texture2D(u_tex,v_uv).rgb;
       if(u_inv>0.5){ float l=dot(col,vec3(0.299,0.587,0.114)); col=mix(u_bg,u_ink,clamp(1.0-l,0.0,1.0)); }       // invert: white paper drops out, the notes take the ink color
@@ -3378,9 +3378,9 @@ const GLSL = {
   curlVS: `attribute vec2 a_pos; attribute float a_depth; attribute vec2 a_uv; attribute vec3 a_shade; uniform vec2 u_res;
     varying vec2 v_uv; varying vec3 v_shade;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,a_depth,1.0); v_uv=a_uv; v_shade=a_shade; }`,
-  curlFS: `precision highp float; uniform sampler2D u_front; uniform sampler2D u_back; uniform float u_gutter; uniform float u_div; uniform float u_pw; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink;
+  curlFS: `precision highp float; uniform sampler2D u_front; uniform sampler2D u_back; uniform float u_gutter; uniform float u_cw; uniform float u_div; uniform float u_pw; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink;
     varying vec2 v_uv; varying vec3 v_shade;
-    float crease(float d){ return pow(1.0-smoothstep(0.0,0.09,d),1.5); }
+    float crease(float d){ return pow(1.0-smoothstep(0.0,u_cw,d),1.5); }
     float divider(float d){ float px=d*u_pw; float lw=max(1.0,u_pw/900.0); float line=1.0-smoothstep(lw*0.6,lw*1.6,px); float halo=1.0-smoothstep(0.0,lw*7.0,px); return line*0.5+halo*halo*0.22; }
     void main(){
       vec3 col; float shade;
@@ -3394,10 +3394,10 @@ const GLSL = {
       col=mix(u_bg,col,u_fade);
       gl_FragColor=vec4(col,1.0); }`,
   boxVS: `attribute vec2 a_pos; void main(){ gl_Position=vec4(a_pos,0.0,1.0); }`,
-  boxFS: `precision highp float; uniform vec2 u_res; uniform vec4 u_rect; uniform vec4 u_xs; uniform vec2 u_w; uniform vec2 u_off; uniform float u_sigma; uniform float u_alpha;
+  boxFS: `precision highp float; uniform vec2 u_res; uniform vec4 u_rect; uniform vec4 u_xs; uniform vec2 u_w; uniform vec2 u_off; uniform float u_sigma; uniform float u_alpha; uniform float u_sh; uniform float u_ym;
     float cdf(float t){ float x=t/(0.85*u_sigma); return 0.5+0.5*x/sqrt(1.0+x*x); }
     void main(){ vec2 p=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y)-u_off;
-      float fx=u_w.x*(cdf(p.x-u_xs.x)-cdf(p.x-u_xs.y))+u_w.y*(cdf(p.x-u_xs.z)-cdf(p.x-u_xs.w)); float fy=cdf(p.y-u_rect.y)-cdf(p.y-u_rect.w);
+      float fx=u_w.x*(cdf(p.x-u_xs.x-u_sh*(p.y-u_ym))-cdf(p.x-u_xs.y))+u_w.y*(cdf(p.x-u_xs.z)-cdf(p.x-u_xs.w)); float fy=cdf(p.y-u_rect.y)-cdf(p.y-u_rect.w);
       float a=u_alpha*fx*fy; float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
       a=a>0.0005?clamp(a+(n-0.5)/255.0,0.0,1.0):0.0;
       gl_FragColor=vec4(0.0,0.0,0.0,a); }`
@@ -3577,10 +3577,10 @@ class Renderer {
     list.forEach(i => { if (i >= 0 && !this.tex.has(i) && !this.pending.has(i)) this.request(i); });
   }
   attribs(n) { const gl = this.gl; for (let i = 0; i < 4; i++) { if (i < n) gl.enableVertexAttribArray(i); else gl.disableVertexAttribArray(i); } }
-  drawQuad(tex, x, y, w, h, side, flat) {
+  drawQuad(tex, x, y, w, h, side, flat) {          // gutOver, when set, replaces the centre fold's strength (Wrap draws its own crease along its hinge)
     const gl = this.gl, P = this.pQuad;
     const v = new Float32Array([x, y, 0, 0, x + w, y, 1, 0, x, y + h, 0, 1, x + w, y, 1, 0, x + w, y + h, 1, 1, x, y + h, 0, 1]);
-    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_side, side); gl.uniform1f(P.u.u_gutter, flat ? 0 : gutterAmt());
+    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_side, side); gl.uniform1f(P.u.u_gutter, flat ? 0 : this.gutOver != null ? this.gutOver : gutterAmt()); gl.uniform1f(P.u.u_cw, this.gutOver != null ? 0.035 : 0.09);
     gl.uniform1f(P.u.u_useShadow, this.useShadow ? 1 : 0); gl.uniform1f(P.u.u_div, flat ? 0 : dividerAmt()); gl.uniform1f(P.u.u_pw, this.lay.pw); gl.uniform1f(P.u.u_rows, this.M + 1);
     gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
     gl.uniform1f(P.u.u_inv, !flat && S.set.invert ? 1 : 0); gl.uniform3f(P.u.u_ink, this.inkRgb[0], this.inkRgb[1], this.inkRgb[2]);
@@ -3615,12 +3615,14 @@ class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
     this.setTexParams(); this.cardTex = t; this.cardKey = key; return t;
   }
-  buildCurl(lay, p, shift = 0, sinkT = null) {
+  dwell(q) { const xx = 2 * q - 1; return 0.5 + 0.5 * (0.2 * xx + 0.8 * xx * xx * xx); }          // a full turn's angle (as a fraction of the turn) against progress: it lingers at the half way
+  buildCurl(lay, p, shift = 0, turns = 1) {
     const N = this.N, M = this.M, pw = lay.pw, ph = lay.ph, cd = this.curlData, wd = this.world;
     const L = 0.12 + 1.3 * (S.set.bend / 100), skew = 0.10, ds = pw / N;
     const f = pw * 20, zs = 1 / (pw * 1.3);
     const lx = -0.45, ly = -0.35, lz = 0.82;
-    let k = 0, w = 0, zmax = 0;
+    const ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+    let k = 0, w = 0;
     for (let j = 0; j <= M; j++) {
       const v = j / M, Y = (v - 0.5) * ph;
       let x = 0, z = 0, aPrev = 0;
@@ -3628,20 +3630,28 @@ class Renderer {
         const s = i / N;
         const ue = clamp(s + skew * (v - 0.5), 0, 1);
         const q = clamp(p * (1 + L) - L * (1 - ue), 0, 1);
-        const a = Math.PI * q;
+        let a = Math.PI * turns * q;
+        if (turns > 1) a = Math.PI * turns * this.dwell(q);          // a full turn dwells at the half way (the sheet fully out on the left) so the swing reads before it folds back
         if (i > 0) { const am = (aPrev + a) / 2; x += ds * Math.cos(am); z += ds * Math.sin(am); }
         aPrev = a;
         const sinA = Math.sin(a), cosA = Math.cos(a);
         const dotN = -sinA * lx + cosA * lz;
         const rf = clamp(dotN / lz, 0, 1), rb = clamp(-dotN / lz, 0, 1);
         const sc = f / (f - z);
-        cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = -z * zs;
+        cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = turns > 1 ? -(z + pw * 0.004 * Math.cos(a / turns)) * zs : -z * zs;          // a full turn starts just in front of the page and ends just behind it, so depth never ties
         cd[k++] = s; cd[k++] = v;
-        cd[k++] = 0.62 + 0.38 * rf; cd[k++] = 0.62 + 0.38 * rb; cd[k++] = cosA;
-        wd[w++] = x - shift; wd[w++] = Y; wd[w++] = z; if (z > zmax) zmax = z;
+        /* Behind the page (a full turn, past the half way) the page above shades the sheet: darkest right at the page's left edge, softening away from it as the gap behind grows (a wider
+           penumbra), plus a little general dimming the further back it sits. It starts from nothing as the sheet crosses the page's plane, so it never switches on. */
+        let occ = 1;
+        if (turns > 1 && shOn() && z < 0) {
+          const behind = -z, contact = ss(0, 0.02 * pw, behind), pen = pw * 0.05 + 1.0 * behind, side = 1 - ss(0, pen, -x);
+          occ = 1 - clamp(S.set.turnShadow / 100, 0, 1.5) * contact * (0.6 * side + 0.25 * ss(0, 0.4 * pw, behind));
+          occ = Math.max(occ, 0.25);
+        }
+        cd[k++] = (0.62 + 0.38 * rf) * occ; cd[k++] = (0.62 + 0.38 * rb) * occ; cd[k++] = cosA;
+        wd[w++] = x - shift; wd[w++] = Y; wd[w++] = z;
       }
     }
-    if (sinkT !== null) { const sink = pw * -0.004 + sinkT * (zmax + pw * 0.014); for (let n = 0, m = (N + 1) * (M + 1); n < m; n++) cd[n * 8 + 2] = -(wd[n * 3 + 2] - sink) * zs; }          // sinking takes the whole sheet behind the page's plane, rows near the fold first
   }
   /* Soft shadow of the lifted page, computed from its side profile, blurred and stored in a fine map that the
      flat pages underneath sample. It is exactly zero while the page lies flat, so nothing pops on or off. */
@@ -3697,11 +3707,11 @@ class Renderer {
     if (!(S.set.scoreAmt > 0) || !shOn() || S.set.invert) return;       // an inverted score has no paper to cast a shadow
     const wa = A.x1 > A.x0 ? A.w : 0, wb = B.x1 > B.x0 ? B.w : 0; if (!(wa > 0) && !(wb > 0)) return;
     const gl = this.gl, P = this.pBox, soft = clamp(S.set.scoreSoft / 100, 0, 1), amt = clamp(S.set.scoreAmt / 100, 0, 1);
-    const sigma = Math.max(1, (0.006 + 0.034 * soft) * lay.ph), k = 0.5 + soft;
+    const sigma = Math.max(1, (0.006 + 0.034 * soft) * lay.ph * (A.blur || 1)), k = (0.5 + soft) * (A.offk || 1);          // a lifted sheet's shadow is wider, softer and further off
     gl.useProgram(P);
     gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform4f(P.u.u_rect, 0, lay.y0, 0, lay.y0 + lay.ph);
     gl.uniform4f(P.u.u_xs, A.x0 + dx, A.x1 + dx, B.x0 + dx, B.x1 + dx); gl.uniform2f(P.u.u_w, wa, wb);
-    gl.uniform2f(P.u.u_off, 0.004 * lay.ph * k, 0.011 * lay.ph * k); gl.uniform1f(P.u.u_sigma, sigma); gl.uniform1f(P.u.u_alpha, 0.7 * amt * this.scoreFade);
+    gl.uniform2f(P.u.u_off, 0.004 * lay.ph * k, 0.011 * lay.ph * k); gl.uniform1f(P.u.u_sigma, sigma); gl.uniform1f(P.u.u_alpha, 0.7 * amt * this.scoreFade); gl.uniform1f(P.u.u_sh, A.sh || 0); gl.uniform1f(P.u.u_ym, lay.cy);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bbo); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.DYNAMIC_DRAW);
     this.attribs(1); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -3710,7 +3720,7 @@ class Renderer {
   }
   drawCurl(lay, front, back, keepDepth) {
     const gl = this.gl, P = this.pCurl;
-    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_gutter, gutterAmt());
+    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_gutter, this.gutOver != null ? this.gutOver : gutterAmt()); gl.uniform1f(P.u.u_cw, this.gutOver != null ? 0.035 : 0.09);
     gl.uniform1f(P.u.u_div, dividerAmt()); gl.uniform1f(P.u.u_pw, lay.pw);
     gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
     gl.uniform1f(P.u.u_inv, S.set.invert ? 1 : 0); gl.uniform3f(P.u.u_ink, this.inkRgb[0], this.inkRgb[1], this.inkRgb[2]);
@@ -3733,7 +3743,7 @@ class Renderer {
     gl.useProgram(P);
     gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform4f(P.u.u_rect, -1e5, -1e5, 1e5, 1e5);
     gl.uniform4f(P.u.u_xs, -1e5, 1e5, 0, 0); gl.uniform2f(P.u.u_w, 1, 0);
-    gl.uniform2f(P.u.u_off, 0, 0); gl.uniform1f(P.u.u_sigma, 1); gl.uniform1f(P.u.u_alpha, Math.min(1, a));
+    gl.uniform2f(P.u.u_off, 0, 0); gl.uniform1f(P.u.u_sigma, 1); gl.uniform1f(P.u.u_alpha, Math.min(1, a)); gl.uniform1f(P.u.u_sh, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bbo); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.DYNAMIC_DRAW);
     this.attribs(1); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -3791,37 +3801,44 @@ class Renderer {
         drawPage(sp[0], lay.x0, -1); drawPage(sp[1], lay.cx, 1);
       } else {
         const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip), wrap = singleOn() && S.set.turnStyle === 'wrap';
-        if (wrap) {
-          /* Wrap (a single page): a notebook page, folded over its left edge. It lifts, turns over and sinks behind the pad, sliding right until it lies exactly behind
-             the next page, which is already in place; the page darkens a little under the lifted sheet. Depth decides what is in front, so nothing flashes at the edge-on moment. */
-          const ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); }, sinkT = ss(0.35, 0.65, p), dropT = ss(0.5, 1, p);
-          this.buildCurl(lay, p, -dropT * lay.pw, sinkT);
-          this.updateShadowMap(lay, 1 - sinkT);
-          gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT);
-          this.useShadow = true;
-          drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
-          this.useShadow = false;
-          if (dropT < 1) this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null, true);
-          this.drawScoreShadow(lay, half(0, sw(nx[0])), sw(nx[1]) ? half(1, sw(nx[1])) : half(1, sw(sp[1]) * (1 - sinkT)));
-          gl.disable(gl.DEPTH_TEST);
-        } else {
-        /* Peel (a single page): the sheet lifts and curls from its free edge, then is drawn off to the left, carrying its shadow, so the next page
-           is already in place beneath it and nothing has to melt away; it has left the frame by the time the turn ends */
-        const peel = singleOn(), pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
-        this.buildCurl(lay, p, shift);
+        /* Peel (a single page), or Wrap, which is the same turn with the hinge held at the left edge all the way round: the sheet lifts and curls from its free edge. Peel then draws it off to the left, carrying its shadow, and it has left the
+           frame as the turn ends. Wrap carries it on round the left edge, over and then behind the page, like a notebook folded in half; depth keeps it behind the next page, which is in place throughout */
+        const peel = singleOn() && !wrap, pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
+        this.buildCurl(lay, p, shift, wrap ? 2 : 1);
         /* The turning page's free edge decides how much of each half is covered. A half that was empty only gets a
            shadow once the turned page has reached it, and a half that is emptying loses its shadow as the page lifts. */
         const edge = this.curlData[(Math.floor(this.M / 2) * (this.N + 1) + this.N) * 8];
         const L = sw(sp[0]) ? half(0, sw(sp[0])) : sw(nx[0]) ? { x0: clamp(edge, lay.x0, lay.cx), x1: lay.cx, w: sw(nx[0]) } : half(0, 0);
         const R = sw(nx[1]) ? half(1, sw(nx[1])) : sw(sp[1]) ? { x0: lay.cx, x1: clamp(edge, lay.cx, lay.cx + lay.pw), w: sw(sp[1]) } : half(1, 0);
-        this.drawScoreShadow(lay, L, R);
+        let Ls = L;
+        if (wrap) {
+          const pw = lay.pw, ph = lay.ph, row = Math.floor(this.M / 2) * (this.N + 1), ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+          /* the hinge: a sheet lying nearly flat would otherwise melt into the page, so a faint, narrow crease shows along the fold (not a spine), strongest when the sheet is fully out and gone once it is
+             behind (the curl's own shading carries the fold while it is standing up) */
+          const t0 = 2 * this.dwell(clamp(p * (1 + (0.12 + 1.3 * (S.set.bend / 100))) - (0.12 + 1.3 * (S.set.bend / 100)), 0, 1));
+          this.gutOver = shOn() ? 0.9 * ss(0.6, 0.97, t0) * (1 - ss(1.0, 1.25, t0)) : 0;
+          if (sw(sp[1])) {
+            /* the sheet outside the page casts the page's own drop shadow on the background, leaning with the sheet's slanted edge. A lifted sheet's shadow is the same footprint but
+               fainter, wider and further off (the higher it is, the more), so it eases into the resting shadow as the sheet comes down instead of appearing at the last moment */
+            const edgeX = r => { let m = lay.cx; for (let i = 0; i <= this.N; i++) m = Math.min(m, this.curlData[(r * (this.N + 1) + i) * 8]); return m; };
+            let lo = lay.cx, zw = 0, ww = 0;
+            for (let i = 0; i <= this.N; i++) { const X = this.curlData[(row + i) * 8]; if (X < lay.cx) { lo = Math.min(lo, X); ww += lay.cx - X; zw += (lay.cx - X) * Math.max(0, this.world[(row + i) * 3 + 2]); } }
+            if (lay.cx - lo > 1) {
+              const lift = ss(0, 0.6 * pw, ww ? zw / ww : 0);
+              Ls = { x0: lo, x1: lay.cx, w: sw(sp[1]) * (1 - 0.45 * lift), blur: 1 + 2.5 * lift, offk: 1 + 3 * lift, sh: (edgeX(this.M) - edgeX(0)) / ph };
+            }
+          }
+        }
+        if (Ls !== L) { this.drawScoreShadow(lay, half(0, 0), R); this.drawScoreShadow(lay, Ls, half(1, 0)); }          // the page's own shadow and the sheet's are drawn apart: the sheet's softness and offset are its own
+        else this.drawScoreShadow(lay, Ls, R);
         if (peel) { const hx = lay.cx - shift, lo = Math.min(edge, hx), hi = Math.min(Math.max(edge, hx), lay.cx); if (hi > lo) this.drawScoreShadow(lay, { x0: lo, x1: hi, w: 0.8 }, half(1, 0)); }          // the sheet's own shadow where it hangs past the page beneath
         this.updateShadowMap(lay);
+        if (wrap) { gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT); }
         this.useShadow = true;
         drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
         this.useShadow = false;
-        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null);
-        }
+        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null, wrap);
+        if (wrap) { gl.disable(gl.DEPTH_TEST); this.gutOver = null; }
       }
     }
     if (!scoreOnly) this.drawFade(1 - fade);

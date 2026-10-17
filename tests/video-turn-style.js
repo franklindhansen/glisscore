@@ -90,6 +90,25 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   for (let i = 0; i <= 80; i++) steps.push(await look(w.s + w.D * i / 80));
   const jumps = steps.slice(1).map((v, i) => diff(steps[i], v)), worst = Math.max(...jumps);
   ok('wrap: no frame jumps from the one before it', worst < 12, 'worst step ' + worst.toFixed(2) + ' at ' + jumps.indexOf(worst));
+  const bg0 = await S(s => s.set.bg), a0 = await S(s => s.set.scoreAmt), f0 = await S(s => s.set.scoreSoft); if (process.env.SHOTBG) await S((s, v) => { Object.assign(s.set, v); }, { bg: process.env.SHOTBG, scoreAmt: 70, scoreSoft: 50 });          // judge the turn against a light background too
+  if (process.env.SHOTS) for (let i = 0; i <= 20; i++) {          // a frame every twentieth of the Wrap turn, to judge by eye
+    const url = await p.evaluate(async ([K, t]) => { const r = window[K].previewR, st = window[K].frameState(t); st.fade = 1; for (let n = 0; n < 40; n++) { r.render(st); if (!r.pending.size) break; await new Promise(res => setTimeout(res, 50)); } r.render(st); return r.canvas.toDataURL('image/png'); }, [K, w.s + w.D * i / 20]);
+    require('fs').writeFileSync(process.env.SHOTS + '/wrap-' + String(i).padStart(2, '0') + '.png', Buffer.from(url.split(',')[1], 'base64'));
+  }
+  await S((s, v) => { Object.assign(s.set, v); }, { bg: bg0, scoreAmt: a0, scoreSoft: f0 });
+  // the page never moves, so its own shadow on the background must not change while the sheet turns (sampled just below the page's bottom edge, away from the sheet)
+  const under = await p.evaluate(async ([K, t0, D]) => {
+    const kf = window[K], r = kf.previewR, S = kf.S, keep = [S.set.bg, S.set.scoreAmt, S.set.scoreSoft];
+    S.set.bg = '#e6e6e6'; S.set.scoreAmt = 70; S.set.scoreSoft = 50;
+    const out = [], o = document.createElement('canvas'), x = o.getContext('2d');
+    for (let i = 0; i <= 40; i++) {
+      const st = kf.frameState(t0 + D * i / 40); st.fade = 1; for (let n = 0; n < 40; n++) { r.render(st); if (!r.pending.size) break; await new Promise(res => setTimeout(res, 50)); } r.render(st);
+      const c = r.canvas, lay = r.lay; o.width = c.width; o.height = c.height; x.drawImage(c, 0, 0);
+      const px = Math.round(lay.cx + 0.75 * lay.pw), py = Math.round(lay.y0 + lay.ph + 0.012 * lay.ph), d = x.getImageData(px, py, 1, 1).data; out.push(d[0]);
+    }
+    [S.set.bg, S.set.scoreAmt, S.set.scoreSoft] = keep; return out;
+  }, [K, w.s, w.D]);
+  ok('wrap: the page\'s own shadow stays put while the sheet turns', Math.max(...under) - Math.min(...under) <= 2, 'range ' + Math.min(...under) + '..' + Math.max(...under));
   const settled = await look(w.s + w.D + 0.1);
   ok('wrap: the last frame of the turn is the settled page', diff(steps[80], settled) < 2, 'diff ' + diff(steps[80], settled).toFixed(2));
   ok('no page errors', errs.length === 0, errs.join('|'));
