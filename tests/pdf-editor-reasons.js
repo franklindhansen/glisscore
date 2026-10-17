@@ -1,4 +1,4 @@
-// PDF Editor: each greyed main button in Clean, Crop and Split says why on its tool's status line, and the line goes when the button is enabled.
+// PDF Editor: each greyed main button in Clean, Crop and Split says why on its tool's status line, and the line goes when the button is enabled. A greyed Revert has a tooltip instead.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-reasons.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -14,7 +14,7 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   // Clean
   await tool('clean');
   let s = await st('#peCleanStatus');
-  ok('Clean: Revert greyed out says nothing to revert', await dis('#peCleanClear') && !await dis('#peCleanGo') && /nothing to revert/i.test(s.t) && !s.err, JSON.stringify(s));
+  ok('Clean: Revert greyed out has a tooltip and no status line', await dis('#peCleanClear') && !await dis('#peCleanGo') && s.t === '' && !s.err && /nothing to revert/i.test(await p.evaluate(() => $('#peCleanClear').title)), JSON.stringify(s));
   await skipAll(true); s = await st('#peCleanStatus');
   ok('Clean: no page ticked says so', await dis('#peCleanGo') && /tick a page/i.test(s.t), JSON.stringify(s));
   await skipAll(false); s = await st('#peCleanStatus');
@@ -29,7 +29,7 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   ok('Crop: no page ticked says so', await dis('#peCropAuto') && /tick a page/i.test(s.t), JSON.stringify(s));
   await skipAll(false); await p.evaluate(() => { PE.d.order.forEach(id => PE.raw.set(peRawKey(PE.d.slots[id]), [0.2, 0.2, 0.8, 0.5])); peActs(); }); s = await st('#peCropStatus');
   ok('Crop: ticking a page takes the Crop reason away', !await dis('#peCropAuto') && !/tick a page/i.test(s.t), JSON.stringify(s));
-  ok('Crop: Revert greyed out says nothing to revert', await dis('#peCropClear') && /nothing to revert/i.test(s.t), JSON.stringify(s));
+  ok('Crop: Revert greyed out has a tooltip and no status line', await dis('#peCropClear') && s.t === '' && /nothing to revert/i.test(await p.evaluate(() => $('#peCropClear').title)), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = peRound(peCropBox(id).box); }); peActs(); }); s = await st('#peCropStatus');
   ok('Crop: every ticked page already cropped says so', await dis('#peCropAuto') && /already cropped/i.test(s.t), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = null; }); peActs(); });

@@ -1,4 +1,4 @@
-// Video editor: "Turns to end" packs every page turn after the playhead against the end of the video at the least gap, keeping their order; with credits the credits turn stays and the packed turns finish one gap before it; the moved turns become dashed; Tap a Turn then places them in order; the button is greyed with a reason when no turn lies after the playhead; one undo restores them; the toast counts them.
+// Video editor: "Turns to end" packs every page turn after the playhead against the end of the video at the least gap, keeping their order; with credits the credits turn stays and the packed turns finish one gap before it; the moved turns become dashed; Add page turn then places them in order; the button is greyed with a reason when no turn lies after the playhead; one undo restores them; the toast counts them.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-turns-to-end.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -32,10 +32,10 @@ const K = '__keyframes';
   ok('one History step', r.n === 1, String(r.n));
   ok('the toast says how many moved', r.toast.includes((n - 3) + ' turns moved to the end'), r.toast);
 
-  // Tap a Turn places the next one in order without pushing the rest
+  // Add page turn places the next one in order without pushing the rest
   await p.evaluate(([K, t]) => { const k = window[K]; k.S.time = t; k.Transport.now = () => t; k.tapTurn(); }, [K, base[2] + 2.5]);
   r = await read();
-  ok('Tap a Turn places the next moved turn and leaves the others', r.ph[3] === false && r.ph.slice(4).every(Boolean), JSON.stringify(r.ph));
+  ok('Add page turn places the next moved turn and leaves the others', r.ph[3] === false && r.ph.slice(4).every(Boolean), JSON.stringify(r.ph));
 
   // undo
   await setup(base, ph, base[2] + 1); await press();

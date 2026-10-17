@@ -145,15 +145,15 @@
           <p class="empty-intro"><span class="drop">Or drop a file anywhere on this window.</span> <span>Everything runs <em>locally</em> in your browser.</span></p>
         </div></div>
       </div>
-      <!-- ----- TRANSPORT CONTROLS: play, time, tap a turn, full-screen buttons ----- -->
+      <!-- ----- TRANSPORT CONTROLS: play, time, add page turn, full-screen buttons ----- -->
       <div class="transport" id="transport">
         <!-- ----- BUTTON: Back to start ----- -->
         <button class="icon-btn" id="bStart" type="button" title="Back to start (Enter)" aria-label="Back to start"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.971 4.285A2 2 0 0 1 21 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z"/><path d="M3 20V4"/></svg></button>
         <!-- ----- BUTTON: Play / pause ----- -->
         <button class="icon-btn play" id="bPlay" type="button" title="Play / pause (Space)" aria-label="Play"><svg viewBox="0 0 24 24" id="playIcon" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
         <div class="time" aria-live="off"><b id="tNow">0:00.0</b> <span>/ <span id="tTot">0:00.0</span></span></div>
-        <!-- ----- BUTTON: Tap a turn ----- -->
-        <button class="btn tapbtn" id="bTap" type="button" title="While the music plays, press T at each moment a page should turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V2.8a.8.8 0 0 1 1.17-.71l11.38 5.69a.8.8 0 0 1 0 1.44L6 15.5"/></svg>Tap a turn <kbd>T</kbd></button>
+        <!-- ----- BUTTON: Add page turn ----- -->
+        <button class="btn tapbtn" id="bTap" type="button" title="While the music plays, press T at each moment a page should turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V2.8a.8.8 0 0 1 1.17-.71l11.38 5.69a.8.8 0 0 1 0 1.44L6 15.5"/></svg>Add page turn <kbd>T</kbd></button>
         <span class="spacer"></span>
         <span class="info" id="spreadInfo"></span>
         <!-- ----- BUTTONS (full screen only): Hide editor, Show editor, Exit full screen ----- -->
@@ -594,7 +594,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page either peels away to the left or swings over and fades, as you choose with <span class="hb">Turn style</span>, and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Add page turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page either peels away to the left or swings over and fades, as you choose with <span class="hb">Turn style</span>, and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -1834,7 +1834,7 @@ function toEndIdx() {
   for (let i = 0; i < n - (hasC ? 1 : 0); i++) if (S.turns[i] > S.time) out.push(i);
   return out;
 }
-/* packs the turns after the playhead against the end (or against the credits turn) at the least gap, in order; they become placeholders (dashed) to place with Tap a Turn */
+/* packs the turns after the playhead against the end (or against the credits turn) at the least gap, in order; they become placeholders (dashed) to place with Add page turn */
 function turnsToEnd() {
   const idx = toEndIdx(); if (!idx.length) return;
   const D = turnGap(), n = S.turns.length, hasC = n > 0 && S.spreads.length > 0 && !!S.spreads[S.spreads.length - 1].credits;
@@ -8820,7 +8820,8 @@ function peActs() {
   if (PE.mode === 'clean') {
     const t = peTargets(), cl = PE.cl, none = !t.length, bare = !cl.bg && !cl.sp, same = t.every(id => (d.slots[id].bg || 0) === cl.bg && (d.slots[id].sp || 0) === cl.sp), nothing = !t.some(id => peCleaned(d.slots[id]));
     set('#peCleanGo', none || bare || same); set('#peCleanClear', nothing);
-    peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : same ? 'pe.why.cleaned' : nothing ? 'pe.why.revert' : '');
+    peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : same ? 'pe.why.cleaned' : '');
+    $('#peCleanClear').title = nothing ? tx('pe.why.revert') : '';          // Revert is greyed for a plain state, not something to fix, so its reason is a tooltip and not a status line
   }
   else if (PE.mode === 'skew') {
     const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id])), line = $('#peSkewStatus'), why = tx('pe.skew.none');
@@ -8830,7 +8831,7 @@ function peActs() {
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') set('#peRzGo', !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())));
   else if (PE.mode === 'wm') { const on = !!d.wm.on; $('#peWmAdd').hidden = on; $('#peWmRemove').hidden = !on; set('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id))); set('#peWmRemove'); }
-  else if (PE.mode === 'crop') { const ids = peCropIds(), u = new Map(), qs = ids.map(id => peCropBox(id, u)), done = ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = !ids.length, nothing = !ids.some(id => d.slots[id].crop && !d.slots[id].half); set('#peCropAuto', none || done || PE.cropShown); set('#peCropClear', nothing); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', none ? 'pe.why.page' : done ? 'pe.why.cropped' : nothing ? 'pe.why.revert' : ''); }
+  else if (PE.mode === 'crop') { const ids = peCropIds(), u = new Map(), qs = ids.map(id => peCropBox(id, u)), done = ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = !ids.length, nothing = !ids.some(id => d.slots[id].crop && !d.slots[id].half); set('#peCropAuto', none || done || PE.cropShown); set('#peCropClear', nothing); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', none ? 'pe.why.page' : done ? 'pe.why.cropped' : ''); $('#peCropClear').title = nothing ? tx('pe.why.revert') : ''; }
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
