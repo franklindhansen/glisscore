@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+The PDF Editor's loading cards now share one sweep across the grid, and the large view's page box and the crop frame glide more smoothly.
+
 ## 0.3.0
 
 Wrap is a new turn style for Single page: the page folds over its left edge and lands behind the next one. It replaces Fade; videos saved with Fade load as Peel.
