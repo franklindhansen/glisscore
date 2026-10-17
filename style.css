@@ -1307,6 +1307,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull .ae-wave canvas{border-radius:0}
 /* while the window grows or shrinks, one animation moves it and nothing else glides on its own */
 #audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
+#audioDlg.fsmove{overflow:hidden}          /* no scroll bars flash up while the window moves past the edges */
 #audioDlg.afull .ed-lead{display:none}
 #audioDlg.afull .ed-head{grid-row:1;z-index:2}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}

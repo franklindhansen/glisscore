@@ -8568,39 +8568,51 @@ function aeFsApply(on) {
   $('#aeFull').innerHTML = on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
 }
-/* full screen is one gesture: the window itself grows to the whole screen (or shrinks back to its place) and the picture goes with it, each between its two real rectangles on one ease and length, while the glass bars fade with them; the picture is redrawn at every size, so no frame shows it at its final size ahead of the window */
-const AE_FS_EASE = 'cubic-bezier(.3,.8,.2,1)', AE_FS_MS = 520, AE_FS_SWAP = 0.72;
+/* full screen is one gesture: the window travels to the other layout's rectangle on one ease and length, moved by transform alone (no layout at each size); the picture goes with it between its two real rectangles (unseen: it fades with the rest). The old parts fade out at once, the other layout takes over near the end (at the same place and size) and its parts fade in as the motion lands, like a video player's controls. The picture is one of the parts: it is never seen stretched or at a size it does not have */
+const AE_FS_EASE = 'cubic-bezier(.3,.8,.2,1)', AE_FS_MS = 520, AE_FS_SWAP = 0.3, AE_FS_OUT = 130, AE_FS_IN = 260;
 function aeFsGeo(box, wave) {          // the window's rectangle and the picture's gaps to the window's inner edges
   const r = box.getBoundingClientRect(), w = wave.getBoundingClientRect(), cs = getComputedStyle(box), px = v => parseFloat(v) || 0;
-  return { l: r.left, t: r.top, w: r.width, h: r.height, rad: cs.borderTopLeftRadius, wl: w.left - r.left - px(cs.borderLeftWidth), wt: w.top - r.top - px(cs.borderTopWidth), wr: r.right - w.right - px(cs.borderRightWidth), wb: r.bottom - w.bottom - px(cs.borderBottomWidth) };
+  return { l: r.left, t: r.top, w: r.width, h: r.height, rad: px(cs.borderTopLeftRadius), wl: w.left - r.left - px(cs.borderLeftWidth), wt: w.top - r.top - px(cs.borderTopWidth), wr: r.right - w.right - px(cs.borderRightWidth), wb: r.bottom - w.bottom - px(cs.borderBottomWidth) };
 }
 function aeFsStop(hold) {          // hold: keep transitions off until the layout that is about to change has been drawn once
-  (AE.fsAnims || []).forEach(a => a.cancel()); AE.fsAnims = null; clearTimeout(AE.fsTimer); const dlg = $('#audioDlg');
+  (AE.fsAnims || []).forEach(a => a.cancel()); AE.fsAnims = null; const dlg = $('#audioDlg');
   if (hold) requestAnimationFrame(() => requestAnimationFrame(() => dlg.classList.remove('fsmove'))); else dlg.classList.remove('fsmove');
+}
+function aeFsEase(p) {          // AE_FS_EASE as a function of time
+  const [x1, y1, x2, y2] = AE_FS_EASE.match(/[\d.]+/g).map(Number), at = (a, b, s) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+  let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; at(x1, x2, m) < p ? lo = m : hi = m; } return at(y1, y2, (lo + hi) / 2);
+}
+function aeFsTarget(dlg, box, wave, on) {          // where the window and picture belong in the other layout, measured without drawing it
+  const was = dlg.className, wt = wave.style.top, wb = wave.style.bottom, dock = $('#aeDock'), gone = dock.classList.contains('gone'); dock.classList.toggle('gone', !on);          // the Tools button is part of the full screen bar
+  if (on) { dlg.classList.add('afull'); dlg.classList.toggle('dock-off', window.innerWidth <= 760); aeFsLayout(true); aeFsLayout(true); } else { dlg.classList.remove('afull', 'dock-off'); wave.style.top = wave.style.bottom = ''; }
+  const g = aeFsGeo(box, wave); dlg.className = was; wave.style.top = wt; wave.style.bottom = wb; dock.classList.toggle('gone', gone); return g;
 }
 function aeFs(on, instant) {
   const dlg = $('#audioDlg'), box = dlg.querySelector('.dlg'), wave = dlg.querySelector('.ae-wave'); on = !!on; if (!!AE.full === on || AE.fsBusy) return;
   const calm = instant || reducedMotion() || !box.animate || dlg.hidden;
   if (calm) { dlg.classList.add('fsmove'); aeFsApply(on); aeFsStop(true); return; }          // the layout changes at once, with nothing gliding into it
-  const D = AE_FS_MS, ease = AE_FS_EASE, part = q => box.querySelector(q), bars = () => ['.ed-head', '.ae-bar', '.ae-main'].map(part).filter(el => el && !(el.matches('.ae-main') && dlg.classList.contains('dock-off')));
-  const glide = (a, b) => [box.animate([{ left: a.l + 'px', top: a.t + 'px', width: a.w + 'px', height: a.h + 'px', borderRadius: a.rad }, { left: b.l + 'px', top: b.t + 'px', width: b.w + 'px', height: b.h + 'px', borderRadius: b.rad }], { duration: D, easing: ease }),
-    wave.animate([{ left: a.wl + 'px', top: a.wt + 'px', right: a.wr + 'px', bottom: a.wb + 'px' }, { left: b.wl + 'px', top: b.wt + 'px', right: b.wr + 'px', bottom: b.wb + 'px' }], { duration: D, easing: ease })];
-  const settle = () => { AE.fsBusy = false; aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); };
-  AE.fsBusy = true; dlg.classList.add('fsmove');          // nothing else transitions while the window moves
-  if (on) {
-    const g0 = aeFsGeo(box, wave); aeFsApply(true); const g1 = aeFsGeo(box, wave);
-    AE.fsAnims = glide(g0, g1).concat(bars().map(el => el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: D, easing: ease })));
-    aeSize(); aeDraw();          // the picture is drawn at the size it starts from before the first frame
-    AE.fsTimer = setTimeout(() => { aeFsStop(); settle(); }, D + 30);
-  } else {
-    const g0 = aeFsGeo(box, wave), was = dlg.className, wt = wave.style.top, wb = wave.style.bottom;
-    dlg.classList.remove('afull', 'dock-off'); wave.style.top = wave.style.bottom = ''; const g1 = aeFsGeo(box, wave); dlg.className = was; wave.style.top = wt; wave.style.bottom = wb;          // where the window and picture belong when it is not full screen
-    const gone = bars(); AE.fsAnims = glide(g0, g1).concat(gone.map(el => el.animate([{ opacity: 1 }, { opacity: 0, offset: 0.5 }, { opacity: 0 }], { duration: D, easing: ease })));
-    AE.fsTimer = setTimeout(() => {          // by now the window is within a pixel of its place: the usual layout takes over and its parts fade back in
-      aeFsStop(true); aeFsApply(false); settle();
-      ['.ed-head', '.ae-bar', '.ae-main'].map(part).forEach(el => el && el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: D * (1 - AE_FS_SWAP) + 120, easing: ease }));
-    }, D * AE_FS_SWAP);
-  }
+  const D = AE_FS_MS, fade = (full, from, to, o) => [...box.children].map(el => el.animate(full && el.matches('.row') ? [{ opacity: 0 }, { opacity: 0 }] : [{ opacity: from }, { opacity: to }], o));          // everything in the window fades, the picture too; in full screen the buttons row lies hidden behind the picture, so it stays hidden while the picture fades
+  dlg.classList.add('fsmove');          // nothing else transitions while the window moves, or while the other layout is measured
+  const g0 = aeFsGeo(box, wave), g1 = aeFsTarget(dlg, box, wave, on), rect = g => ({ l: g.l + g.wl, t: g.t + g.wt, w: g.w - g.wl - g.wr, h: g.h - g.wt - g.wb }), w0 = rect(g0), w1 = rect(g1), mix = (a, b, p) => a + (b - a) * p;
+  const path = (gx, wx, from, to) => {          // the window and the picture each travel between their two rectangles on the shared ease; the picture sits inside the window, so its own transform is the one that, after the window's, lands it on its rectangle. Written against the layout that is in place (gx, wx)
+    const boxKF = [], waveKF = [], n = 14;
+    for (let i = 0; i <= n; i++) {
+      const s = mix(from, to, i / n), p = aeFsEase(s), R = { l: mix(g0.l, g1.l, p), t: mix(g0.t, g1.t, p), w: mix(g0.w, g1.w, p), h: mix(g0.h, g1.h, p) }, W = { l: mix(w0.l, w1.l, p), t: mix(w0.t, w1.t, p), w: mix(w0.w, w1.w, p), h: mix(w0.h, w1.h, p) };
+      const sx = R.w / gx.w, sy = R.h / gx.h, kx = W.w / wx.w / sx, ky = W.h / wx.h / sy;
+      const rv = mix(g0.rad, g1.rad, p);          // the corner radius as seen, undone for the scaling so it rounds smoothly
+      boxKF.push({ offset: i / n, transform: 'translate(' + (R.l - gx.l) + 'px,' + (R.t - gx.t) + 'px) scale(' + sx + ',' + sy + ')', borderRadius: rv / sx + 'px / ' + rv / sy + 'px' });
+      waveKF.push({ offset: i / n, transform: 'translate(' + ((W.l - R.l) / sx - (wx.l - gx.l)) + 'px,' + ((W.t - R.t) / sy - (wx.t - gx.t)) + 'px) scale(' + kx + ',' + ky + ')' });
+    }
+    return [box.animate(boxKF, { duration: D * (to - from), easing: 'linear', fill: 'forwards' }), wave.animate(waveKF, { duration: D * (to - from), easing: 'linear', fill: 'forwards' })];
+  };
+  AE.fsBusy = true; box.style.transformOrigin = wave.style.transformOrigin = '0 0';
+  const first = path(g0, w0, 0, AE_FS_SWAP);
+  AE.fsAnims = first.concat(fade(!on, 1, 0, { duration: AE_FS_OUT, easing: 'ease-out', fill: 'forwards' }));
+  first[0].onfinish = () => {          // the window is partway: the other layout takes over in the same frame, at the same place and size, and the motion goes on to the end with its parts fading in
+    AE.fsAnims.forEach(a => a.cancel()); aeFsApply(on);
+    const rest = path(g1, w1, AE_FS_SWAP, 1); AE.fsAnims = rest; AE.fsXform = true; fade(on, 0, 1, { duration: AE_FS_IN, easing: 'ease-out' });          // the window lands while its parts are still coming in
+    rest[0].onfinish = () => { AE.fsXform = false; aeFsStop(true); box.style.transformOrigin = wave.style.transformOrigin = ''; AE.fsBusy = false; aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); };
+  };
 }
 /* in full screen the picture reaches just under the floating head and just behind the floating bottom, so nothing important hides behind them but the glass still has something to blur */
 /* the Wave | Spec switch starts where the tool window's heading starts, so the two line up down the page */
@@ -8610,9 +8622,10 @@ function aeAlignView() {
   if (window.innerWidth <= 760 || !w.offsetWidth || $('#audioDlg').classList.contains('dock-off')) return;          // Wave | Spec starts exactly where the tool window below it starts
   const dl = $('#audioDlg .dlg'), k = dl && dl.offsetWidth ? dl.getBoundingClientRect().width / dl.offsetWidth : 1, dx = (w.getBoundingClientRect().left - sg.getBoundingClientRect().left) / (k || 1); if (dx > 0 && dx < 400) sg.style.marginLeft = Math.round(dx) + 'px';          // measured without the opening zoom
 }
-function aeFsLayout() {
-  aeAlignView();
-  const dlg = $('#audioDlg'), w = dlg.querySelector('.ae-wave'); if (!AE.full) { w.style.top = w.style.bottom = ''; return; }
+function aeFsLayout(force) {          // force: measure for full screen before it is on
+  if (AE.fsXform) return;          // the window is moving by transform, so its rectangles are not where it lays out: the last layout is drawn once it has landed
+  if (!force) aeAlignView();
+  const dlg = $('#audioDlg'), w = dlg.querySelector('.ae-wave'); if (!AE.full && !force) { w.style.top = w.style.bottom = ''; return; }
   const hd = dlg.querySelector('.ed-head'), bar = dlg.querySelector('.ae-bar'), mn = dlg.querySelector('.ae-main'), off = dlg.classList.contains('dock-off'), root = dlg.querySelector('.dlg').getBoundingClientRect();
   const top = hd.getBoundingClientRect().bottom - root.top, bot = root.bottom - (off ? bar.getBoundingClientRect().top : Math.min(bar.getBoundingClientRect().top, mn.getBoundingClientRect().top));
   w.style.top = '0px'; w.style.bottom = Math.max(0, bot - 18 + (off ? 0 : 0)) + 'px';
