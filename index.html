@@ -182,13 +182,6 @@
             <label><input type="radio" name="transition" value="cut"><span>Cut</span></label>
           </div>
         </div>
-        <div class="field" id="turnStyleField" data-motion="flip">
-          <span class="lbl" id="turnStyleLbl">Turn style</span>
-          <div class="seg" role="radiogroup" aria-labelledby="turnStyleLbl">
-            <label><input type="radio" name="turnStyle" value="peel" checked><span>Peel</span></label>
-            <label><input type="radio" name="turnStyle" value="wrap"><span>Wrap</span></label>
-          </div>
-        </div>
         <div class="field" id="slideField" data-motion="slide">
           <span class="lbl" id="slideLbl">Direction</span>
           <div class="seg" role="radiogroup" aria-labelledby="slideLbl">
@@ -601,7 +594,7 @@
           <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone, the width of each of three frequency bands, and its loudness, then sets your EQ curve, the Imager’s widths and Level’s target to move toward it, as one undo step. <span class="hb">Amount</span> says how far.</p>
           <h4>Undo and History</h4><p>Each editor keeps its own steps. <span class="hb">History</span> lists them by name, and you can go back to any one. In the main view, it also lists what the PDF Editor and the Audio Editor changed.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page either peels away to the left or wraps over its left edge and lands behind the next page, as you choose with <span class="hb">Turn style</span>, and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn with WebGL, the graphics your browser uses for 3D. The page bends, casts a shadow and turns on your graphics hardware, timed entirely by the turns you set. Drag a turn into its neighbor and it pushes the neighbor along, keeping the least gap, until the video’s start or end stops it. Hold Shift and click turns to select several, or drag a box across the track to select the ones inside it. Dragging a selected turn moves them all together, and clicking empty track clears the selection. <span class="hb">Turns to end</span> packs every turn after the playhead against the end of the video at the least gap (before the credits turn, if there are credits) and marks them as still to place, as one undo step. <span class="hb">Tap a Turn</span> then places them in order. In <span class="hb">Single page</span> layout every page is its own turn, centered in the frame at the largest size that fits; a turned page either peels away to the left or swings over and fades, as you choose with <span class="hb">Turn style</span>, and the credits get a centered card of their own. Changing the layout spaces the turns evenly again, as one undo step.</p></section>
       <section><h3>Your video</h3><p>Every frame is rendered and encoded by your browser. With a sound, the audio is stored losslessly (24-bit) and the video is packed into a MOV file. Real-time recording is the exception: it compresses the audio, and its file is MP4 or WebM. If your browser can’t encode fast enough, it records the preview in real time instead.</p></section>
       <section><h3>Saved settings</h3><p>Your settings are remembered in this browser only. Import and Export save them to a small text file that you keep.</p></section>
     </div>
@@ -1629,7 +1622,7 @@ function prePeek(fx, listen) {
 }
 
 /* ---------------- state ---------------- */
-const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, pageLayout: 'spread', turnStyle: 'peel', margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
+const DEFAULTS = { audioKey: '', fx: FX_DEFAULT, flipDur: 1, slideDur: 0.5, ref: 'end', bend: 55, firstAlone: true, pageLayout: 'spread', margin: 3, gutter: 35, bg: '#000000', aspect: '16:9', res: 2160, transition: 'flip', slideDir: 'in', creditsOn: false, creditsWithLast: true, creditsEarly: false, creditsFont: '', creditsFontEach: false, credTitleB: false, credTitleI: false, credTitleFont: '', credL2B: false, credL2I: false, credL2Font: '', credL3B: false, credL3I: false, credL3Font: '', shadowsOn: true, fadesOn: true, fadeIn: true, fadeOut: true, fadeLen: 1, fadeOutLen: 1, fadeSplit: false, fadeStyle: 'black', fadeShape: 'smooth', fps: 30, method: 'auto', codec: 'avc', divider: 30, turnShadow: 100, turnSoft: 50, scoreAmt: 0, scoreSoft: 50, invert: false, ink: '#fcfcfc', fadeAuto: true, fadeAutoOut: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeShape: 'smooth', audioFormat: 'wav24', audioFadeLen: 0.5, audioFadeOutLen: null, videoQuality: 'standard', audioKbps: 256, audioRate: 0, tagsOn: false, tagTitle: '', tagArtist: '', tagAlbumArtist: '', tagAlbum: '', tagYear: '', tagTrack: '', tagDisc: '', tagComposer: '', tagWork: '', tagMovement: '', tagMovementNo: '', tagGenre: '', tagComment: '', tagShowWork: false, tagCompilation: false, matchGain: false, aeView: 'wave' };
 const ASPECTS = { '16:9': 16 / 9, '4:3': 4 / 3, '1:1': 1, '4:5': 4 / 5, '9:16': 9 / 16 };
 const S = {
   set: Object.assign({}, DEFAULTS),
@@ -1651,7 +1644,7 @@ const S = {
 };
 try {
   const sv = JSON.parse(localStorage.getItem('glisscore.settings') || 'null');
-  if (sv) { Object.assign(S.set, sv); if (S.set.turnStyle !== 'wrap') S.set.turnStyle = 'peel'; }          // a video saved with Fade (or before Peel existed) loads as Peel
+  if (sv) { Object.assign(S.set, sv); delete S.set.turnStyle; }          // a video saved when Turn style existed has no use for it
 } catch (e) {}
 S.set.fx = fxNorm(S.set.fx);
 /* (declared here so that saveSettings can reach it from the first moment) */
@@ -1876,8 +1869,8 @@ function normalizeTurns() {
     if (S.turns[i] < lo) S.turns[i] = lo;
   }
 }
-/* History for the settings: every setting that alters the video's result is part of a step. The audio ones (and the EQ and Imager) belong to the Audio Editor's steps, the page layout and turn style have their own fields, and where you are in the app is never a step. */
-const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'turnStyle', 'fx'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsWithLast'];
+/* History for the settings: every setting that alters the video's result is part of a step. The audio ones (and the EQ and Imager) belong to the Audio Editor's steps, the page layout has its own field, and where you are in the app is never a step. */
+const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'fx'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsWithLast'];
 const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!HS_OWN.includes(k) && !AE_SET.includes(k)) o[k] = S.set[k]; }); return o; };
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
@@ -1889,14 +1882,14 @@ const HS_GROUPS = [
 const setStepNames = (a, b) => { const out = []; Object.keys(b).forEach(k => { if (a[k] === b[k] || (a[k] == null && b[k] == null)) return; const g = HS_GROUPS.find(x => x[1].includes(k)), nm = g ? g[0] : 'Setting'; if (!out.includes(nm)) out.push(nm); }); out.sort((x, y) => HS_GROUPS.findIndex(g => g[0] === x) - HS_GROUPS.findIndex(g => g[0] === y)); return out; };
 /* A change to a setting is a step taken just before it: HB.base is how things stood when you pressed, typed or tapped. A slider drag, a burst of typing or a glide
    is one gesture (open until you let go, or 0.7s of quiet), and the changes within it join the step already taken. */
-const lightSnap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd });
+const lightSnap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd });
 function hsClose() { clearTimeout(HB.timer); HB.open = false; if (!HB.quiet) HB.base = lightSnap(); }
 function hsOpen() { HB.open = true; clearTimeout(HB.timer); HB.timer = setTimeout(hsClose, 700); }
 function hsNote() {
   if (HB.quiet) return;
   if (HB.open) { hsOpen(); return; }
   const b = HB.base; if (!b) return;
-  if (JSON.stringify(b.set) === JSON.stringify(outSet()) && b.lay === S.set.pageLayout && b.ts === S.set.turnStyle) return;
+  if (JSON.stringify(b.set) === JSON.stringify(outSet()) && b.lay === S.set.pageLayout) return;
   pushSnap(Object.assign(snap(), b));
 }
 const HS_TEXT = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]), textarea';
@@ -1905,9 +1898,9 @@ document.addEventListener('keydown', e => { if (e.repeat) return; if (e.target.m
 document.addEventListener('pointerup', () => { if (HB.open) setTimeout(hsClose, 0); });
 document.addEventListener('change', () => { if (HB.open) setTimeout(hsClose, 0); });
 const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ lay: S.set.pageLayout, ts: S.set.turnStyle, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
+const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
 function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
-function applySnapIn(h) { if (h.ts && h.ts !== S.set.turnStyle) { S.set.turnStyle = h.ts; document.querySelectorAll('input[name=turnStyle]').forEach(r => { r.checked = r.value === h.ts; }); saveSettings(); stageDirty = true; }
+function applySnapIn(h) {
   let struct = false;
   if (h.set) { const ch = Object.keys(h.set).filter(k => h.set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = h.set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
   const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
@@ -1979,7 +1972,6 @@ function peStepLabel(a, b) {
 function mainStepLabel(a, b) {
   const parts = [];
   if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
-  if (a.ts && b.ts && a.ts !== b.ts) parts.push('Turn style');
   if (a.set && b.set) parts.push(...setStepNames(a.set, b.set));
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');
@@ -3362,16 +3354,15 @@ function tapTurn() {
 const GLSL = {
   quadVS: `attribute vec2 a_pos; attribute vec2 a_uv; uniform vec2 u_res; varying vec2 v_uv;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,0.0,1.0); v_uv=a_uv; }`,
-  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_cw; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; uniform sampler2D u_pshadow; uniform float u_ps; uniform vec2 u_res; varying vec2 v_uv;
-    float crease(float d){ return pow(1.0-smoothstep(0.0,u_cw,d),1.5); }
+  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; varying vec2 v_uv;
+    float crease(float d){ return pow(1.0-smoothstep(0.0,0.09,d),1.5); }
     float divider(float d){ float px=d*u_pw; float lw=max(1.0,u_pw/900.0); float line=1.0-smoothstep(lw*0.6,lw*1.6,px); float halo=1.0-smoothstep(0.0,lw*7.0,px); return line*0.5+halo*halo*0.22; }
     void main(){ vec3 col=texture2D(u_tex,v_uv).rgb;
       if(u_inv>0.5){ float l=dot(col,vec3(0.299,0.587,0.114)); col=mix(u_bg,u_ink,clamp(1.0-l,0.0,1.0)); }       // invert: white paper drops out, the notes take the ink color
       float d=u_side>0.0?v_uv.x:1.0-v_uv.x;
       float s=u_side>0.0?v_uv.x:v_uv.x-1.0;
       float sh=texture2D(u_shadow,vec2((s+1.1)/2.2,(v_uv.y*(u_rows-1.0)+0.5)/u_rows)).r*0.5*u_useShadow;
-      vec4 q=texture2D(u_pshadow,gl_FragCoord.xy/u_res); float ps=u_ps*min(1.0,max(q.a,q.r+q.g+q.b));          // Wrap: the sheet's shadow on the page, from the shadow picture
-      float m=(1.0-0.30*crease(d)*u_gutter)*(1.0-u_div*divider(d))*(1.0-sh)*(1.0-ps);
+      float m=(1.0-0.30*crease(d)*u_gutter)*(1.0-u_div*divider(d))*(1.0-sh);
       float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
       col=col*m; if(m<0.999) col+=(n-0.5)/255.0;
       col=mix(u_bg,col,u_fade);
@@ -3379,9 +3370,9 @@ const GLSL = {
   curlVS: `attribute vec2 a_pos; attribute float a_depth; attribute vec2 a_uv; attribute vec3 a_shade; uniform vec2 u_res;
     varying vec2 v_uv; varying vec3 v_shade;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,a_depth,1.0); v_uv=a_uv; v_shade=a_shade; }`,
-  curlFS: `precision highp float; uniform sampler2D u_front; uniform sampler2D u_back; uniform float u_gutter; uniform float u_cw; uniform float u_div; uniform float u_pw; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink;
+  curlFS: `precision highp float; uniform sampler2D u_front; uniform sampler2D u_back; uniform float u_gutter; uniform float u_div; uniform float u_pw; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink;
     varying vec2 v_uv; varying vec3 v_shade;
-    float crease(float d){ return pow(1.0-smoothstep(0.0,u_cw,d),1.5); }
+    float crease(float d){ return pow(1.0-smoothstep(0.0,0.09,d),1.5); }
     float divider(float d){ float px=d*u_pw; float lw=max(1.0,u_pw/900.0); float line=1.0-smoothstep(lw*0.6,lw*1.6,px); float halo=1.0-smoothstep(0.0,lw*7.0,px); return line*0.5+halo*halo*0.22; }
     void main(){
       vec3 col; float shade;
@@ -3395,39 +3386,11 @@ const GLSL = {
       col=mix(u_bg,col,u_fade);
       gl_FragColor=vec4(col,1.0); }`,
   boxVS: `attribute vec2 a_pos; void main(){ gl_Position=vec4(a_pos,0.0,1.0); }`,
-  boxFS: `precision highp float; uniform vec2 u_res; uniform vec4 u_rect; uniform vec4 u_xs; uniform vec2 u_w; uniform vec2 u_off; uniform float u_sigma; uniform float u_alpha; uniform float u_sh; uniform float u_ym;
+  boxFS: `precision highp float; uniform vec2 u_res; uniform vec4 u_rect; uniform vec4 u_xs; uniform vec2 u_w; uniform vec2 u_off; uniform float u_sigma; uniform float u_alpha;
     float cdf(float t){ float x=t/(0.85*u_sigma); return 0.5+0.5*x/sqrt(1.0+x*x); }
     void main(){ vec2 p=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y)-u_off;
-      float fx=u_w.x*(cdf(p.x-u_xs.x-u_sh*(p.y-u_ym))-cdf(p.x-u_xs.y))+u_w.y*(cdf(p.x-u_xs.z)-cdf(p.x-u_xs.w)); float fy=cdf(p.y-u_rect.y)-cdf(p.y-u_rect.w);
+      float fx=u_w.x*(cdf(p.x-u_xs.x)-cdf(p.x-u_xs.y))+u_w.y*(cdf(p.x-u_xs.z)-cdf(p.x-u_xs.w)); float fy=cdf(p.y-u_rect.y)-cdf(p.y-u_rect.w);
       float a=u_alpha*fx*fy; float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
-      a=a>0.0005?clamp(a+(n-0.5)/255.0,0.0,1.0):0.0;
-      gl_FragColor=vec4(0.0,0.0,0.0,a); }`,
-  /* Wrap's physical shadow. Casters are drawn from above into a shadow picture, already moved along the light by their height: the sheet's mesh into three channels (its height split
-     between the channels at height 0, half and full, so its blur can grow with height), the flat pages into the fourth. Each channel is then blurred by its own amount. */
-  castVS: `attribute vec4 a_d; uniform vec2 u_res; varying vec2 v_hw;
-    void main(){ vec2 c=a_d.xy/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,0.0,1.0); v_hw=a_d.zw; }`,
-  castFS: `precision highp float; uniform float u_page; uniform vec4 u_rc; uniform vec2 u_sc; uniform float u_hh; varying vec2 v_hw;
-    void main(){ float h=clamp(v_hw.x,0.0,1.0)*2.0, w=v_hw.y;
-      if(u_page>0.5){          // a flat page: how much of this picture's pixel the page covers, so its edge is exact whatever the picture's size
-        vec2 lo=vec2(gl_FragCoord.x-0.5,u_hh-gl_FragCoord.y-0.5)*u_sc, hi=lo+u_sc;
-        vec2 ov=max(vec2(0.0),min(hi,u_rc.zw)-max(lo,u_rc.xy))/u_sc; gl_FragColor=vec4(0.0,0.0,0.0,w*ov.x*ov.y); return; }
-      else gl_FragColor=vec4(w*max(0.0,1.0-abs(h)),w*max(0.0,1.0-abs(h-1.0)),w*max(0.0,1.0-abs(h-2.0)),0.0); }`,
-  blurVS: `attribute vec2 a_pos; varying vec2 v_uv; void main(){ v_uv=a_pos*0.5+0.5; gl_Position=vec4(a_pos,0.0,1.0); }`,
-  blurFS: `precision highp float; uniform sampler2D u_src; uniform vec2 u_step; uniform vec4 u_sig; uniform float u_mode; uniform float u_final; uniform float u_alpha; varying vec2 v_uv;
-    /* each channel's kernel is the Score shadow's own (a soft sigmoid's slope, with its long tail), so a flat page matches it. It is taken in two passes along each axis: a dense box as wide as the gap
-       between the taps of the second pass, so a hard edge becomes a smooth ramp instead of a staircase with a step at every tap */
-    void main(){ vec4 sg=max(u_sig,vec4(0.3)), st=max(vec4(1.0),sg*6.0/8.0), acc=vec4(0.0), ws=vec4(0.0);
-      if(u_mode<0.5){ vec4 n=floor(min(st,vec4(24.0))+0.5);
-        for(int i=0;i<24;i++){ float f=float(i); vec4 m=step(f+0.5,n), t=f-(n-1.0)*0.5;
-          vec4 s=vec4(texture2D(u_src,v_uv+u_step*t.x).r,texture2D(u_src,v_uv+u_step*t.y).g,texture2D(u_src,v_uv+u_step*t.z).b,texture2D(u_src,v_uv+u_step*t.w).a);
-          acc+=m*s; ws+=m; }
-        gl_FragColor=acc/ws; return; }
-      for(int i=-8;i<=8;i++){ vec4 t=st*float(i), u=t/(1.25*sg), w=pow(1.0+u*u,vec4(-1.5));
-        vec4 s=vec4(texture2D(u_src,v_uv+u_step*t.x).r,texture2D(u_src,v_uv+u_step*t.y).g,texture2D(u_src,v_uv+u_step*t.z).b,texture2D(u_src,v_uv+u_step*t.w).a);
-        acc+=w*s; ws+=w; }
-      vec4 r=acc/ws;
-      if(u_final<0.5){ gl_FragColor=r; return; }
-      float a=u_alpha*min(1.0,max(r.a,r.r+r.g+r.b)); float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
       a=a>0.0005?clamp(a+(n-0.5)/255.0,0.0,1.0):0.0;
       gl_FragColor=vec4(0.0,0.0,0.0,a); }`
 };
@@ -3525,9 +3488,6 @@ class Renderer {
     this.pQuad = makeProgram(gl, GLSL.quadVS, GLSL.quadFS, ['a_pos', 'a_uv']);
     this.pCurl = makeProgram(gl, GLSL.curlVS, GLSL.curlFS, ['a_pos', 'a_depth', 'a_uv', 'a_shade']);
     this.pBox = makeProgram(gl, GLSL.boxVS, GLSL.boxFS, ['a_pos']);
-    this.pCast = makeProgram(gl, GLSL.castVS, GLSL.castFS, ['a_d']); this.pBlur = makeProgram(gl, GLSL.blurVS, GLSL.blurFS, ['a_pos']);
-    /* ?wrapshadow=classic brings back the old Wrap shadow (preview, playback and export) so the two can be compared by eye */
-    this.wrapShadow = /[?&]wrapshadow=classic\b/.test(location.search) ? 'classic' : 'physical'; this.psAmt = 0; this.shT = null; this.minmax = gl.getExtension('EXT_blend_minmax');
     this.N = 128; this.M = 24;
     const N = this.N, M = this.M, idx = [];
     for (let j = 0; j < M; j++) for (let i = 0; i < N; i++) {
@@ -3538,7 +3498,6 @@ class Renderer {
     this.vbo = gl.createBuffer(); this.qbo = gl.createBuffer(); this.bbo = gl.createBuffer();
     this.curlData = new Float32Array((N + 1) * (M + 1) * 8);
     this.world = new Float32Array((N + 1) * (M + 1) * 3);
-    this.cbo = gl.createBuffer(); this.castData = new Float32Array((N + 1) * (M + 1) * 4);
     this.SW = 1024; this.shadowBytes = new Uint8Array(this.SW * (M + 1)); this.shadowProf = new Float32Array(this.SW * (M + 1)); this.shadowRow = new Float32Array(this.SW); this.shadowTmp = new Float32Array(this.SW);
     this.shadowTex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.shadowTex);
     gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
@@ -3556,7 +3515,7 @@ class Renderer {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
-  resize(W, H) { this.releaseShadow(); this.canvas.width = W; this.canvas.height = H; this.W = W; this.H = H; }
+  resize(W, H) { this.canvas.width = W; this.canvas.height = H; this.W = W; this.H = H; }
   layout() {
     const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H, one = singleOn();
     let pw = Math.floor(Math.min(W * (1 - 2 * m) / (one ? 1 : 2), H * (1 - 2 * m) * pa));
@@ -3610,15 +3569,14 @@ class Renderer {
     list.forEach(i => { if (i >= 0 && !this.tex.has(i) && !this.pending.has(i)) this.request(i); });
   }
   attribs(n) { const gl = this.gl; for (let i = 0; i < 4; i++) { if (i < n) gl.enableVertexAttribArray(i); else gl.disableVertexAttribArray(i); } }
-  drawQuad(tex, x, y, w, h, side, flat) {          // gutOver, when set, replaces the centre fold's strength (Wrap draws its own crease along its hinge)
+  drawQuad(tex, x, y, w, h, side, flat) {
     const gl = this.gl, P = this.pQuad;
     const v = new Float32Array([x, y, 0, 0, x + w, y, 1, 0, x, y + h, 0, 1, x + w, y, 1, 0, x + w, y + h, 1, 1, x, y + h, 0, 1]);
-    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_side, side); gl.uniform1f(P.u.u_gutter, flat ? 0 : this.gutOver != null ? this.gutOver : gutterAmt()); gl.uniform1f(P.u.u_cw, this.gutOver != null ? 0.035 : 0.09);
+    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_side, side); gl.uniform1f(P.u.u_gutter, flat ? 0 : gutterAmt());
     gl.uniform1f(P.u.u_useShadow, this.useShadow ? 1 : 0); gl.uniform1f(P.u.u_div, flat ? 0 : dividerAmt()); gl.uniform1f(P.u.u_pw, this.lay.pw); gl.uniform1f(P.u.u_rows, this.M + 1);
     gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
     gl.uniform1f(P.u.u_inv, !flat && S.set.invert ? 1 : 0); gl.uniform3f(P.u.u_ink, this.inkRgb[0], this.inkRgb[1], this.inkRgb[2]);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.shadowTex); gl.uniform1i(P.u.u_shadow, 1);
-    gl.uniform1f(P.u.u_ps, this.psAmt); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.psAmt > 0 && this.shT ? this.shT.a.t : this.white); gl.uniform1i(P.u.u_pshadow, 2);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(P.u.u_tex, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.qbo); gl.bufferData(gl.ARRAY_BUFFER, v, gl.DYNAMIC_DRAW);
     this.attribs(2);
@@ -3649,13 +3607,11 @@ class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
     this.setTexParams(); this.cardTex = t; this.cardKey = key; return t;
   }
-  dwell(q) { const xx = 2 * q - 1; return 0.5 + 0.5 * (0.2 * xx + 0.8 * xx * xx * xx); }          // a full turn's angle (as a fraction of the turn) against progress: it lingers at the half way
-  buildCurl(lay, p, shift = 0, turns = 1) {
+  buildCurl(lay, p, shift = 0) {
     const N = this.N, M = this.M, pw = lay.pw, ph = lay.ph, cd = this.curlData, wd = this.world;
     const L = 0.12 + 1.3 * (S.set.bend / 100), skew = 0.10, ds = pw / N;
     const f = pw * 20, zs = 1 / (pw * 1.3);
     const lx = -0.45, ly = -0.35, lz = 0.82;
-    const ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
     let k = 0, w = 0;
     for (let j = 0; j <= M; j++) {
       const v = j / M, Y = (v - 0.5) * ph;
@@ -3664,45 +3620,27 @@ class Renderer {
         const s = i / N;
         const ue = clamp(s + skew * (v - 0.5), 0, 1);
         const q = clamp(p * (1 + L) - L * (1 - ue), 0, 1);
-        let a = Math.PI * turns * q;
-        if (turns > 1) a = Math.PI * turns * this.dwell(q);          // a full turn dwells at the half way (the sheet fully out on the left) so the swing reads before it folds back
+        const a = Math.PI * q;
         if (i > 0) { const am = (aPrev + a) / 2; x += ds * Math.cos(am); z += ds * Math.sin(am); }
         aPrev = a;
         const sinA = Math.sin(a), cosA = Math.cos(a);
         const dotN = -sinA * lx + cosA * lz;
         const rf = clamp(dotN / lz, 0, 1), rb = clamp(-dotN / lz, 0, 1);
         const sc = f / (f - z);
-        cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = turns > 1 ? -(z + pw * 0.004 * Math.cos(a / turns)) * zs : -z * zs;          // a full turn starts just in front of the page and ends just behind it, so depth never ties
+        cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = -z * zs;
         cd[k++] = s; cd[k++] = v;
-        /* Behind the page (a full turn, past the half way) the page above shades the sheet: darkest right at the page's left edge, softening away from it as the gap behind grows (a wider
-           penumbra), plus a little general dimming the further back it sits. It starts from nothing as the sheet crosses the page's plane, so it never switches on. */
-        let occ = 1;
-        if (turns > 1 && shOn() && z < 0.012 * pw && this.wrapShadow !== 'classic') {
-          /* the same rule as every other shadow: the page above casts onto the sheet behind it, moved along the light and softened by the gap between them, so it is darkest at the page's edge
-             and softens away from it (the gap stands in for the distance to the wall behind the pad) */
-          const d = Math.max(0, -z), sg = 1.25 * (this.turnSig(pw) + 0.10 * d), cdf = t => { const u = t / sg; return 0.5 + 0.5 * u / Math.sqrt(1 + u * u); };
-          /* the shade eases in as the sheet drops through the page's plane (switching it on at z=0 drew a faint slanted line across the sheet where it crossed). Over the page itself (x>0) it is still the plain
-             test, since a sheet there is either on top, unshaded, or hidden behind the page */
-          const bx = ss(-0.02 * pw, 0, x), on = (1 - bx) * (1 - ss(-0.004 * pw, 0.012 * pw, z)) + bx * (z < 0 ? 1 : 0);
-          const sx = 0.30 * d, sy = 0, fx = cdf(x - sx) - cdf(x - sx - pw), fy = cdf(Y - sy + ph / 2) - cdf(Y - sy - ph / 2);
-          occ = Math.max(0.25, 1 - clamp(S.set.turnShadow / 100, 0, 1.5) * 0.5 * fx * fy * on);          // the same light as castShadow
-        } else if (turns > 1 && shOn() && z < 0) {
-          const behind = -z, contact = ss(0, 0.02 * pw, behind), pen = pw * 0.05 + 1.0 * behind, side = 1 - ss(0, pen, -x);
-          occ = 1 - clamp(S.set.turnShadow / 100, 0, 1.5) * contact * (0.6 * side + 0.25 * ss(0, 0.4 * pw, behind));
-          occ = Math.max(occ, 0.25);
-        }
-        cd[k++] = (0.62 + 0.38 * rf) * occ; cd[k++] = (0.62 + 0.38 * rb) * occ; cd[k++] = cosA;
+        cd[k++] = 0.62 + 0.38 * rf; cd[k++] = 0.62 + 0.38 * rb; cd[k++] = cosA;
         wd[w++] = x - shift; wd[w++] = Y; wd[w++] = z;
       }
     }
   }
   /* Soft shadow of the lifted page, computed from its side profile, blurred and stored in a fine map that the
      flat pages underneath sample. It is exactly zero while the page lies flat, so nothing pops on or off. */
-  updateShadowMap(lay, att = 1) {
+  updateShadowMap(lay) {
     const gl = this.gl, N = this.N, M = this.M, SW = this.SW, wd = this.world, pw = lay.pw, R = 1.1, rows = M + 1;
     const row = this.shadowRow, tmp = this.shadowTmp, prof = this.shadowProf, out = this.shadowBytes;
     const ss = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-    const strength = shOn() ? clamp(S.set.turnShadow / 100, 0, 1.5) * att : 0;
+    const strength = shOn() ? clamp(S.set.turnShadow / 100, 0, 1.5) : 0;
     const sigS = (0.012 + 0.062 * clamp(S.set.turnSoft / 100, 0, 1)) * SW / (2 * R);     // blur size in map samples
     const rad = Math.max(1, Math.round((Math.sqrt(4 * sigS * sigS + 1) - 1) / 2));      // three box blurs ≈ a gaussian
     const fill = (lo, hi, a) => {
@@ -3750,92 +3688,20 @@ class Renderer {
     if (!(S.set.scoreAmt > 0) || !shOn() || S.set.invert) return;       // an inverted score has no paper to cast a shadow
     const wa = A.x1 > A.x0 ? A.w : 0, wb = B.x1 > B.x0 ? B.w : 0; if (!(wa > 0) && !(wb > 0)) return;
     const gl = this.gl, P = this.pBox, soft = clamp(S.set.scoreSoft / 100, 0, 1), amt = clamp(S.set.scoreAmt / 100, 0, 1);
-    const sigma = Math.max(1, (0.006 + 0.034 * soft) * lay.ph * (A.blur || 1)), k = (0.5 + soft) * (A.offk || 1);          // a lifted sheet's shadow is wider, softer and further off
+    const sigma = Math.max(1, (0.006 + 0.034 * soft) * lay.ph), k = 0.5 + soft;
     gl.useProgram(P);
     gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform4f(P.u.u_rect, 0, lay.y0, 0, lay.y0 + lay.ph);
     gl.uniform4f(P.u.u_xs, A.x0 + dx, A.x1 + dx, B.x0 + dx, B.x1 + dx); gl.uniform2f(P.u.u_w, wa, wb);
-    gl.uniform2f(P.u.u_off, 0.004 * lay.ph * k, 0.011 * lay.ph * k); gl.uniform1f(P.u.u_sigma, sigma); gl.uniform1f(P.u.u_alpha, 0.7 * amt * this.scoreFade); gl.uniform1f(P.u.u_sh, A.sh || 0); gl.uniform1f(P.u.u_ym, lay.cy);
+    gl.uniform2f(P.u.u_off, 0.004 * lay.ph * k, 0.011 * lay.ph * k); gl.uniform1f(P.u.u_sigma, sigma); gl.uniform1f(P.u.u_alpha, 0.7 * amt * this.scoreFade);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bbo); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.DYNAMIC_DRAW);
     this.attribs(1); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.disable(gl.BLEND);
   }
-  /* Wrap's physical shadow: one rule for every piece of paper. A point at height h lands on the background moved along the light in proportion to h and softened in proportion to h; at h=0 it is
-     the Score shadow's drop. The casters are drawn from above into a half-size picture (the sheet's mesh into three channels by its height, the flat pages into a fourth), each channel is blurred by its
-     own amount, and the result darkens what is behind: onto the screen as the background's shadow, or kept as a picture the pages sample for the sheet's shadow on them. */
-  shadowTargets() {
-    const gl = this.gl, W = Math.ceil(this.W / 2), H = Math.ceil(this.H / 2);
-    if (this.shT && (this.shT.W !== W || this.shT.H !== H)) this.releaseShadow();
-    if (this.shT) return this.shT;
-    const mk = () => {
-      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, W, H, 0, gl.RGBA, gl.UNSIGNED_BYTE, null); this.setTexParams();
-      const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
-      return { t, f };
-    };
-    this.shT = { W, H, a: mk(), b: mk() }; gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    return this.shT;
-  }
-  releaseShadow() {
-    const gl = this.gl, T = this.shT; if (!T) return;
-    [T.a, T.b].forEach(x => { gl.deleteTexture(x.t); gl.deleteFramebuffer(x.f); }); this.shT = null; this.psAmt = 0;
-  }
-  /* o: rects (flat pages: x0, x1, w), sheet (a weight for a vertex at height z, or null), off (the drop at height 0), sig0 (the blur at height 0, in pixels), final (the alpha to draw the result onto the screen with; 0 keeps it as a picture) */
-  castShadow(lay, o) {
-    const gl = this.gl, T = this.shadowTargets(), SC = 0.5, hb = 0.6 * lay.pw, LX = 0.30, LY = 0, SLOPE = o.slope || 0.10;          // the light leans along x only: a lifted sheet leaves the page's own bottom-edge shadow alone (the check on that is in video-turn-style)
-    const bind = (x, W, H) => { gl.bindFramebuffer(gl.FRAMEBUFFER, x ? x.f : null); gl.viewport(0, 0, W, H); };
-    bind(T.a, T.W, T.H); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(this.pCast); gl.uniform2f(this.pCast.u.u_res, this.W, this.H);
-    gl.enable(gl.BLEND); if (this.minmax) { gl.blendEquation(this.minmax.MAX_EXT); gl.blendFunc(gl.ONE, gl.ONE); } else gl.blendFunc(gl.ONE, gl.ONE);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.cbo); this.attribs(1); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 16, 0);
-    if (o.sheet) {
-      const N = this.N, M = this.M, wd = this.world, cd = this.castData; let k = 0;
-      for (let v = 0, n = (N + 1) * (M + 1); v < n; v++) {
-        const z = wd[v * 3 + 2], h = Math.max(0, z);
-        cd[k++] = lay.cx + wd[v * 3] + o.off[0] + LX * h; cd[k++] = lay.cy + wd[v * 3 + 1] + o.off[1] + LY * h; cd[k++] = Math.min(h, hb) / hb; cd[k++] = o.sheet(z);
-      }
-      gl.uniform1f(this.pCast.u.u_page, 0); gl.bufferData(gl.ARRAY_BUFFER, cd, gl.DYNAMIC_DRAW);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo); gl.drawElements(gl.TRIANGLES, this.idxCount, gl.UNSIGNED_SHORT, 0);
-    }
-    const rs = o.rects.filter(r => r.x1 > r.x0 && r.w > 0);
-    if (rs.length) {
-      const y0 = lay.y0 + o.off[1], y1 = y0 + lay.ph, e = 3, scx = this.W / T.W, scy = this.H / T.H;
-      gl.uniform1f(this.pCast.u.u_page, 1); gl.uniform2f(this.pCast.u.u_sc, scx, scy); gl.uniform1f(this.pCast.u.u_hh, T.H);
-      rs.forEach(r => {
-        const a = r.x0 + o.off[0], b = r.x1 + o.off[0], A = a - e, B = b + e, C = y0 - e, D = y1 + e;
-        gl.uniform4f(this.pCast.u.u_rc, a, y0, b, y1);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([A, C, 0, r.w, B, C, 0, r.w, A, D, 0, r.w, B, C, 0, r.w, B, D, 0, r.w, A, D, 0, r.w]), gl.DYNAMIC_DRAW); gl.drawArrays(gl.TRIANGLES, 0, 6);
-      });
-    }
-    if (this.minmax) gl.blendEquation(gl.FUNC_ADD);
-    gl.disable(gl.BLEND);
-    /* two blur passes; each channel's blur grows with the height it stands for (0, half, full) */
-    const P = this.pBlur, sg = [0, 0.5, 1].map(f => SC * (o.sig0 + SLOPE * hb * f));
-    gl.useProgram(P); gl.uniform4f(P.u.u_sig, sg[0], sg[1], sg[2], SC * o.sig0); gl.uniform1i(P.u.u_src, 0);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.bbo); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.DYNAMIC_DRAW);
-    this.attribs(1); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
-    gl.activeTexture(gl.TEXTURE0);
-    const pass = (src, dst, dx, dy, mode, fin) => {
-      bind(dst, dst ? T.W : this.W, dst ? T.H : this.H); gl.bindTexture(gl.TEXTURE_2D, src.t);
-      gl.uniform2f(P.u.u_step, dx / T.W, dy / T.H); gl.uniform1f(P.u.u_mode, mode); gl.uniform1f(P.u.u_final, fin ? 1 : 0); gl.uniform1f(P.u.u_alpha, o.final);
-      if (fin) gl.enable(gl.BLEND), gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); gl.disable(gl.BLEND);
-    };
-    pass(T.a, T.b, 1, 0, 0); pass(T.b, T.a, 1, 0, 1); pass(T.a, T.b, 0, 1, 0);
-    if (o.final > 0) pass(T.b, null, 0, 1, 1, true); else { pass(T.b, T.a, 0, 1, 1); bind(null, this.W, this.H); }
-    gl.bindTexture(gl.TEXTURE_2D, null);
-  }
-  /* the page's softness for the Turn shadow, in pixels, and the receiver-side rule shared with the sheet behind the page */
-  turnSig(pw) { return (0.012 + 0.062 * clamp(S.set.turnSoft / 100, 0, 1)) * pw; }
-  /* the shadow on the background under the score: the pages and the sheet, with the Score shadow's drop and softness */
-  bgShadow(lay, rects, sheet) {
-    if (!(S.set.scoreAmt > 0 && shOn() && !S.set.invert)) return;
-    const soft = clamp(S.set.scoreSoft / 100, 0, 1), k = 0.5 + soft, ph = lay.ph;
-    this.castShadow(lay, { rects, sheet, off: [0.004 * ph * k, 0.011 * ph * k], sig0: 0.68 * Math.max(1, (0.006 + 0.034 * soft) * ph), final: 0.7 * clamp(S.set.scoreAmt / 100, 0, 1) * this.scoreFade });
-  }
-  drawCurl(lay, front, back, keepDepth) {
+  drawCurl(lay, front, back) {
     const gl = this.gl, P = this.pCurl;
-    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_gutter, this.gutOver != null ? this.gutOver : gutterAmt()); gl.uniform1f(P.u.u_cw, this.gutOver != null ? 0.035 : 0.09);
+    gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_gutter, gutterAmt());
     gl.uniform1f(P.u.u_div, dividerAmt()); gl.uniform1f(P.u.u_pw, lay.pw);
     gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
     gl.uniform1f(P.u.u_inv, S.set.invert ? 1 : 0); gl.uniform3f(P.u.u_ink, this.inkRgb[0], this.inkRgb[1], this.inkRgb[2]);
@@ -3847,7 +3713,7 @@ class Renderer {
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 32, 8);
     gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(3, 3, gl.FLOAT, false, 32, 20);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ibo);
-    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); if (!keepDepth) { gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT); }          // Wrap keeps the next page's depth, so the sheet can go behind it
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT);
     gl.drawElements(gl.TRIANGLES, this.idxCount, gl.UNSIGNED_SHORT, 0);
     gl.disable(gl.DEPTH_TEST);
   }
@@ -3858,7 +3724,7 @@ class Renderer {
     gl.useProgram(P);
     gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform4f(P.u.u_rect, -1e5, -1e5, 1e5, 1e5);
     gl.uniform4f(P.u.u_xs, -1e5, 1e5, 0, 0); gl.uniform2f(P.u.u_w, 1, 0);
-    gl.uniform2f(P.u.u_off, 0, 0); gl.uniform1f(P.u.u_sigma, 1); gl.uniform1f(P.u.u_alpha, Math.min(1, a)); gl.uniform1f(P.u.u_sh, 0);
+    gl.uniform2f(P.u.u_off, 0, 0); gl.uniform1f(P.u.u_sigma, 1); gl.uniform1f(P.u.u_alpha, Math.min(1, a));
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bbo); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.DYNAMIC_DRAW);
     this.attribs(1); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -3915,60 +3781,28 @@ class Renderer {
         this.useShadow = false;
         drawPage(sp[0], lay.x0, -1); drawPage(sp[1], lay.cx, 1);
       } else {
-        const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip), wrap = singleOn() && S.set.turnStyle === 'wrap';
-        /* Peel (a single page), or Wrap, which is the same turn with the hinge held at the left edge all the way round: the sheet lifts and curls from its free edge. Peel then draws it off to the left, carrying its shadow, and it has left the
-           frame as the turn ends. Wrap carries it on round the left edge, over and then behind the page, like a notebook folded in half; depth keeps it behind the next page, which is in place throughout */
-        const peel = singleOn() && !wrap, pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
-        this.buildCurl(lay, p, shift, wrap ? 2 : 1);
+        const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip);
+        /* Peel (a single page): the sheet lifts and curls from its free edge, then is drawn off to the left, carrying its shadow, so the next page
+           is already in place beneath it and nothing has to melt away; it has left the frame by the time the turn ends */
+        const peel = singleOn(), pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
+        this.buildCurl(lay, p, shift);
         /* The turning page's free edge decides how much of each half is covered. A half that was empty only gets a
            shadow once the turned page has reached it, and a half that is emptying loses its shadow as the page lifts. */
         const edge = this.curlData[(Math.floor(this.M / 2) * (this.N + 1) + this.N) * 8];
         const L = sw(sp[0]) ? half(0, sw(sp[0])) : sw(nx[0]) ? { x0: clamp(edge, lay.x0, lay.cx), x1: lay.cx, w: sw(nx[0]) } : half(0, 0);
         const R = sw(nx[1]) ? half(1, sw(nx[1])) : sw(sp[1]) ? { x0: lay.cx, x1: clamp(edge, lay.cx, lay.cx + lay.pw), w: sw(sp[1]) } : half(1, 0);
-        let Ls = L;
-        const phys = wrap && this.wrapShadow !== 'classic';          // the one physical rule (castShadow); the old four-part shadow stays until the two have been compared
-        if (wrap) {
-          const pw = lay.pw, ph = lay.ph, row = Math.floor(this.M / 2) * (this.N + 1), ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
-          /* the hinge: a sheet lying nearly flat would otherwise melt into the page, so a faint, narrow crease shows along the fold (not a spine), strongest when the sheet is fully out and gone once it is
-             behind (the curl's own shading carries the fold while it is standing up) */
-          const t0 = 2 * this.dwell(clamp(p * (1 + (0.12 + 1.3 * (S.set.bend / 100))) - (0.12 + 1.3 * (S.set.bend / 100)), 0, 1));
-          this.gutOver = shOn() ? 0.9 * ss(0.6, 0.97, t0) * (1 - ss(1.0, 1.25, t0)) : 0;
-          if (!phys && sw(sp[1])) {
-            /* the sheet outside the page casts the page's own drop shadow on the background, leaning with the sheet's slanted edge. A lifted sheet's shadow is the same footprint but
-               fainter, wider and further off (the higher it is, the more), so it eases into the resting shadow as the sheet comes down instead of appearing at the last moment */
-            const edgeX = r => { let m = lay.cx; for (let i = 0; i <= this.N; i++) m = Math.min(m, this.curlData[(r * (this.N + 1) + i) * 8]); return m; };
-            let lo = lay.cx, zw = 0, ww = 0;
-            for (let i = 0; i <= this.N; i++) { const X = this.curlData[(row + i) * 8]; if (X < lay.cx) { lo = Math.min(lo, X); ww += lay.cx - X; zw += (lay.cx - X) * Math.max(0, this.world[(row + i) * 3 + 2]); } }
-            if (lay.cx - lo > 1) {
-              const lift = ss(0, 0.6 * pw, ww ? zw / ww : 0);
-              Ls = { x0: lo, x1: lay.cx, w: sw(sp[1]) * (1 - 0.45 * lift), blur: 1 + 2.5 * lift, offk: 1 + 3 * lift, sh: (edgeX(this.M) - edgeX(0)) / ph };
-            }
-          }
-        }
-        this.psAmt = 0;
-        if (phys) {
-          const pw = lay.pw, ph = lay.ph, sheetW = sw(sp[1]), ssm = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
-          this.bgShadow(lay, sheetW > 0 ? [R] : [L, R], sheetW > 0 ? () => sheetW : null);          // the background: the pages and the sheet
-          const strength = shOn() ? clamp(S.set.turnShadow / 100, 0, 1.5) : 0;
-          if (strength > 0 && sheetW > 0) {          // the pages: only the part of the sheet above their plane shades them, and the closer it is the darker
-            this.castShadow(lay, { rects: [], sheet: z => ssm(0.01 * pw, 0.08 * pw, z) * (1 - 0.5 * clamp(z / (0.8 * pw), 0, 1)) * sheetW, off: [0, 0], sig0: this.turnSig(pw), slope: 0.06, final: 0 });
-            this.psAmt = 0.32 * strength;
-          }
-        } else if (Ls !== L) { this.drawScoreShadow(lay, half(0, 0), R); this.drawScoreShadow(lay, Ls, half(1, 0)); }          // the page's own shadow and the sheet's are drawn apart: the sheet's softness and offset are its own
-        else if (!phys) this.drawScoreShadow(lay, Ls, R);
+        this.drawScoreShadow(lay, L, R);
         if (peel) { const hx = lay.cx - shift, lo = Math.min(edge, hx), hi = Math.min(Math.max(edge, hx), lay.cx); if (hi > lo) this.drawScoreShadow(lay, { x0: lo, x1: hi, w: 0.8 }, half(1, 0)); }          // the sheet's own shadow where it hangs past the page beneath
-        if (phys) { this.useShadow = false; gl.viewport(0, 0, this.W, this.H); } else this.updateShadowMap(lay);
-        if (wrap) { gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LESS); gl.depthMask(true); gl.clearDepth(1); gl.clear(gl.DEPTH_BUFFER_BIT); }
-        this.useShadow = !phys;
+        this.updateShadowMap(lay);
+        this.useShadow = true;
         drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
-        this.useShadow = false; this.psAmt = 0;
-        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null, wrap);
-        if (wrap) { gl.disable(gl.DEPTH_TEST); this.gutOver = null; }
+        this.useShadow = false;
+        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null);
       }
     }
     if (!scoreOnly) this.drawFade(1 - fade);
   }
-  destroy() { try { this.releaseShadow(); if (this.cardTex) this.gl.deleteTexture(this.cardTex); this.clearTextures(); const e = this.gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (e) {} }
+  destroy() { try { if (this.cardTex) this.gl.deleteTexture(this.cardTex); this.clearTextures(); const e = this.gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (e) {} }
 }
 
 /* ====================================================================
@@ -4733,7 +4567,6 @@ function syncControls() {
   $('#turnSoftField').hidden = !(s.turnShadow > 0); updateScoreUI(false);
   document.querySelectorAll('input[name=transition]').forEach(r => r.checked = r.value === s.transition);
   document.querySelectorAll('input[name=slideDir]').forEach(r => r.checked = r.value === s.slideDir);
-  document.querySelectorAll('input[name=turnStyle]').forEach(r => r.checked = r.value === s.turnStyle);
   $('#shadowsOn').checked = shOn();
   $('#creditsOn').checked = s.creditsOn === true;
   document.querySelectorAll('input[name=credEnd]').forEach(r => r.checked = r.value === (s.creditsEarly ? 'early' : 'end'));
@@ -4877,7 +4710,6 @@ function applyTransitionUI() {
   const len = $('#flipDur'), v = +S.set[lenKey()];      // the one slider shows whichever length belongs to the chosen style
   len.min = t === 'slide' ? '0.1' : '0.3'; len.value = v; $('#flipDurOut').textContent = v.toFixed(1) + 's'; paintRange(len);
   $('#refField').hidden = t === 'cut';
-  $('#turnStyleField').hidden = !(t === 'flip' && singleOn());          // only a single page has a turn that can go two ways
   $('#bendField').hidden = t !== 'flip';
   $('#turnShadowBlock').hidden = t !== 'flip';
 }
@@ -4936,8 +4768,7 @@ function groupSummary(k) {
   if (k === 'transition') {
     if (s.transition === 'cut') return ['Cut'];
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
-    const ts = singleOn() ? (s.turnStyle === 'wrap' ? 'Wrap' : 'Peel') : null;
-    return [j('Turn', ts, 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', ts, sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
+    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
   if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
@@ -5138,7 +4969,6 @@ function bindSettings() {
     S.set.transition = e.target.value; applyTransitionUI(); updateHint(); normalizeTurns(); onTurnsChanged(); dirty();
   }));
   document.querySelectorAll('input[name=slideDir]').forEach(r => r.addEventListener('change', e => { S.set.slideDir = e.target.value; dirty(); }));
-  document.querySelectorAll('input[name=turnStyle]').forEach(r => r.addEventListener('change', e => { if (S.set.turnStyle === e.target.value) return; if (S.pdf) pushHistory(); S.set.turnStyle = e.target.value; updateGroupSummaries(); dirty(); }));
   $('#fadeLen').addEventListener('input', e => { const r = e.target; fadeSet(+r.value); if (!r._glide) r.value = fadeSnap(+r.value); applyFadeUI(); syncFadeLens(); dirty(); });
   $('#fadeLen').addEventListener('dblclick', () => aeGlideTo($('#fadeLen'), fadeAutoPos()));          // back to Auto, gliding
   document.querySelectorAll('#fadeLenField .sl-end').forEach(b => b.addEventListener('click', () => { const r = $('#fadeLen'); r.value = b.dataset.v; r.dispatchEvent(new Event('input', { bubbles: true })); }));
@@ -9904,7 +9734,7 @@ function peKey(e) {
    ==================================================================== */
 /* The file is plain text (compact JSON) holding only what is needed to read it back. */
 const IO_RANGES = { normLufs: [-36, -6], normPeakDb: [-12, 0], audioFadeLen: [0.1, 3], audioFadeOutLen: [0, 3], flipDur: [0.3, 3], slideDur: [0.1, 3], bend: [0, 100], margin: [0, 10], gutter: [0, 100], divider: [0, 100], turnShadow: [0, 150], turnSoft: [0, 100], scoreAmt: [0, 100], scoreSoft: [0, 100], fadeLen: [0.2, 3], fadeOutLen: [0.2, 3], gainDb: [-12, 12] };
-const IO_CHOICES = { pageLayout: ['spread', 'single'], turnStyle: ['peel', 'wrap'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
+const IO_CHOICES = { pageLayout: ['spread', 'single'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
 const IO_HINTS = {
   all: 'Your settings, the work title, your credits text, and your page markings: page turns, where the video starts and ends, and any pages you left out.',
   settings: 'Only the settings in the side panel. Page markings are not included.',
@@ -9968,7 +9798,6 @@ async function importSettings(file) {
   const bad = 'That file could not be read. Choose a file that was exported from here.';
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
   const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(data.settings) : null;
-  if (clean && !('turnStyle' in clean)) clean.turnStyle = 'peel';          // a file made with Fade, or before turn styles existed
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }
   Transport.pause();
