@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+Wrap is gone, and with it the Turn style choice. A Single page turn is always Peel now: the page lifts and curls from its free edge and is carried off to the left. Videos and settings files saved with a turn style load without it.
+
 ## 0.4.0
 
 Wrap now turns the page once around its left edge, like a notebook folded in half: it swings out, lingers fully open, then folds back behind the next page. A faint fold line keeps it attached, and its shadows follow what is happening.
