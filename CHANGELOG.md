@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+The number under a card now slides the way its card moves, sideways or up and down a row.
+
 ## 0.6.0
 
 Motion is quicker and more consistent. The video player's full screen now glides in and out instead of jumping, and the Audio Editor's full screen is tighter, with no empty moment in the middle. Switching tools in the Audio Editor and PDF Editor is a quick fade with a small lift instead of a window-high slide, and a switch made mid-motion carries on from where it is. Buttons answer a press right away, hovers swell less, the toast, menu and pop-ups are shorter, and hover effects no longer stick on touch screens.
