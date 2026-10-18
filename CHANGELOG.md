@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2
+
+A dropped page gives a small press, and the pages it passed slide into place with it. A big move starts its numbers sooner, and the numbers follow their cards up and down a row as well as sideways.
+
 ## 0.6.1
 
 The number under a card now slides the way its card moves, sideways or up and down a row.
