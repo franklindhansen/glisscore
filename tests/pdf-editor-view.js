@@ -76,6 +76,18 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.waitForTimeout(400);
   const n3 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), text: document.querySelector('#peCropSub').textContent, box: peCropBox(PE.d.order[0]).box.map(v => +v.toFixed(3)) }));
   ok('Music that fills the page: the note takes the subtitle line and says the margin has no room', !n3.hidden && /no room to add margin/i.test(n3.text) , JSON.stringify(n3));
+  await p.evaluate(() => closePdfEditor(false));
+  const D = await makePdf('kf-view-d.pdf', 80, 530, 60);
+  await p.setInputFiles('#pdfIn', D); await p.waitForFunction(() => S.pdf && S.pdf.name === 'kf-view-d'); await p.waitForTimeout(800);
+  await p.evaluate(() => { openPdfEditor(); peTool('pages'); }); await p.waitForFunction(() => document.querySelectorAll('#peGrid .page-card').length === 60); await p.waitForTimeout(900);
+  // swapping the first card with the one a row below it moves them up and down in the same column: down sends the number right, up sends it left
+  const vert = await p.evaluate(() => {
+    const o = PE.d.order.slice(), kids = Array.from(document.querySelector('#peGrid').children), cols = kids.filter(c => c.offsetTop === kids[0].offsetTop).length;
+    [PE.d.order[0], PE.d.order[cols]] = [o[cols], o[0]]; peRender(true);
+    const first = id => { const a = document.getAnimations().find(a => a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('pe-strip') && +a.effect.target.closest('.page-card').dataset.id === id); const m = a && /\((-?[\d.]+)/.exec(a.effect.getKeyframes()[0].transform); return m ? +m[1] : NaN; };
+    return { cols, down: first(o[0]), up: first(o[cols]) };
+  });
+  ok('A card that moves down a row sends its number right, and one that moves up a row sends it left', vert.cols >= 2 && vert.down === -50 && vert.up === 0, JSON.stringify(vert));
   ok('No script errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();
