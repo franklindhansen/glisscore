@@ -9605,17 +9605,32 @@ function peDragEnd(cancel) {
     const ids = order.map(c => +c.dataset.id);
     PE.undo.push(dr.before); PE.redo = []; PE.d.order = ids;
     $('#peLive').textContent = 'Moved to place ' + (dr.to + 1) + ' of ' + ids.length; edSay('pe', 'move');
+    const was = calm ? null : peBoxes();          // where every card was, so the ones it passed can slide over to their new places
+    const oldIdx = new Map(Array.from(grid.children).map((c, i) => [c, i]));
     order.forEach(c => grid.appendChild(c));
+    PE.dir = new Map();          // the held page included: its number slides the way it travelled
+    if (was) { let ni = 0; order.forEach(c => { const b = was.get(c); if (b) { const now = c.getBoundingClientRect(); PE.dir.set(+c.dataset.id, peNumDir(now.left - b.left, now.top - b.top, oldIdx.get(c), ni)); } ni++; }); }
+    if (was) was.forEach((b, c) => {
+      if (c === dr.card) return;
+      const a = c.getBoundingClientRect(), x = b.left - a.left, y = b.top - a.top;
+      if (x || y) c.animate([{ transform: 'translate3d(' + x + 'px,' + y + 'px,0)' }, { transform: 'translate3d(0,0,0)' }], { duration: PE_TURN_MS, easing: 'cubic-bezier(.22,1,.36,1)' });          // the same clock and curve as the held page's landing
+    });
   }
+  if (changed && PE.d) { PE.roll = true; peState(); }          // the numbers flip as the page lands, not after it
   const nx = dr.card.offsetLeft, ny = dr.card.offsetTop;                    // where the held page's place now is (one layout read)
   const settle = () => {
     dr.card.classList.remove('pe-hole'); g.remove();
-    if (changed && PE.d) { PE.roll = true; peState(); }
     dr.card.focus({ preventScroll: true });
   };
   if (calm) { settle(); return; }
-  const dx = nx - dr.rects[dr.from].x, dy = ny - dr.rects[dr.from].y - (wrap.scrollTop - dr.s0);
-  const a = g.animate([{ transform: g.style.transform, scale: '.8' }, { transform: 'translate3d(' + dx + 'px,' + dy + 'px,0)', scale: '1' }], { duration: 200, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+  const dx = nx - dr.rects[dr.from].x, dy = ny - dr.rects[dr.from].y - (wrap.scrollTop - dr.s0), at = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
+  // lands with the others, then gives a small press (scale .985) before it rests: the drop is felt, not just stopped
+  const a = g.animate([
+    { transform: g.style.transform, scale: '.8', easing: 'cubic-bezier(.22,1,.36,1)' },
+    { transform: at, scale: '1', offset: .66, easing: 'ease-out' },
+    { transform: at, scale: '.985', offset: .82, easing: 'ease-out' },
+    { transform: at, scale: '1' }
+  ], { duration: 300, fill: 'forwards' });
   a.onfinish = a.oncancel = settle;
 }
 /* ---- Export PDF: the draft as a new PDF file (pages in your order, rotated, repeated, left out, watermarked) ---- */
