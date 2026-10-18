@@ -9475,7 +9475,9 @@ function peState() {
   const probes = texts.map(t => { const s = document.createElement('span'); s.className = 'pe-pos pe-measure'; s.textContent = t; grid.append(s); return s; });
   const newW = new Map(texts.map((t, i) => [t, probes[i].offsetWidth]));     // one more layout, after every probe is in
   probes.forEach(s => s.remove());
-  rolls.forEach(([p, nm, was, np, same, dir], k) => peRoll(p, nm, was, np, same, k * 80, dir || -1, Math.max(oldW.get(p), newW.get(String(np)) + padW)));          // one number at a time, in reading order (left to right, top to bottom), 80ms apart, so the eye can follow each one
+  const moving = rolls.filter(r => r[3] !== r[2].pos), at = new Map(moving.map((r, i) => [r[0], i]));          // only the numbers that really change take a turn
+  const gap = Math.min(80, 600 / Math.max(1, moving.length - 1));          // 80ms apart for a few numbers; for many, the last one starts by 600ms
+  rolls.forEach(([p, nm, was, np, same, dir]) => peRoll(p, nm, was, np, same, (at.get(p) || 0) * gap, dir || -1, Math.max(oldW.get(p), newW.get(String(np)) + padW)));          // one number at a time, in reading order (left to right, top to bottom), so the eye can follow each one
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }

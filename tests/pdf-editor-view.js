@@ -83,6 +83,14 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.evaluate(() => { openPdfEditor(); peTool('pages'); }); await p.waitForFunction(() => document.querySelectorAll('#peGrid .page-card').length === 60); await p.waitForTimeout(900);
   const big = await p.evaluate(() => { PE.d.order = PE.d.order.slice().reverse(); const t0 = performance.now(); peRender(true); const ms = performance.now() - t0; return { ms: Math.round(ms), slid: document.querySelectorAll('#peGrid .pe-strip').length }; });
   ok('A move of 60 pages starts its number slides within 100ms', big.ms < 100 && big.slid >= 50, JSON.stringify(big));
+  // the number stagger: 80ms apart for a few numbers, and the last one starts by 600ms however many change
+  // the delays of the number slides that one render starts (animations made before the render are left out)
+  const renderDelays = order => p.evaluate(async o => { const seen = new Set(document.getAnimations()); PE.d.order = o; peRender(true); await sleep(0); return document.getAnimations().filter(a => !seen.has(a) && a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('pe-strip')).map(a => a.effect.getTiming().delay).sort((a, b) => a - b); }, order);
+  const dBig = await renderDelays(await p.evaluate(() => PE.d.order.slice().reverse()));
+  ok('A move of 60 pages: its last number starts by 600ms, and the first at once', dBig.length >= 50 && dBig[dBig.length - 1] <= 600 && dBig[0] === 0, JSON.stringify({ n: dBig.length, max: dBig[dBig.length - 1], min: dBig[0] }));
+  await p.waitForTimeout(1200);
+  const dFew = await renderDelays([1, 2, 3, 4, 5, 0].concat((await p.evaluate(() => PE.d.order.slice(6)))));
+  ok('A move of 6 numbers keeps the 80ms gap: 0, 80, 160, 240, 320, 400', dFew.length === 6 && dFew.every((v, i) => Math.abs(v - i * 80) < 1), JSON.stringify(dFew));
   // swapping the first card with the one a row below it moves them up and down in the same column: down sends the number right, up sends it left
   const vert = await p.evaluate(() => {
     const o = PE.d.order.slice(), kids = Array.from(document.querySelector('#peGrid').children), cols = kids.filter(c => c.offsetTop === kids[0].offsetTop).length;
