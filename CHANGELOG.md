@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.3
+
+The numbers of a big move start within 600ms, however many change, and only the numbers that really change take a turn.
+
 ## 0.6.2
 
 A dropped page gives a small press, and the pages it passed slide into place with it. A big move starts its numbers sooner, and the numbers follow their cards up and down a row as well as sideways.
