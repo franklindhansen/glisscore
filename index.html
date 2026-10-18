@@ -238,10 +238,12 @@
             <option value="#FFFFFF">White</option>
             <option value="custom">Custom…</option>
           </select>
-          <div class="colorrow sub" id="bgCustom" hidden>
+          <div class="fa" id="bgCustomFold"><div class="fa-in" inert>
+          <div class="colorrow sub" id="bgCustom">
             <input type="color" id="bgColor" value="#000000" aria-label="Pick a background color">
             <input type="text" id="bgHex" value="#000000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Background hex code">
           </div>
+          </div></div>
         </div>
         <div class="field">
           <div class="check-row">
@@ -260,10 +262,12 @@
             <option value="#CFD3DB">Soft Gray</option>
             <option value="custom">Custom…</option>
           </select>
-          <div class="colorrow sub" id="inkCustom" hidden>
+          <div class="fa" id="inkCustomFold"><div class="fa-in" inert>
+          <div class="colorrow sub" id="inkCustom">
             <input type="color" id="inkColor" value="#fcfcfc" aria-label="Pick an ink color">
             <input type="text" id="inkHex" value="#fcfcfc" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Ink hex code">
           </div>
+          </div></div>
         </div>
       </div>
 
@@ -1089,11 +1093,11 @@
     <h2 id="expTitle">Exporting your video…</h2>
     <p id="expMsg">Processing…</p>
     <p class="hint" id="expMethod"></p>
-    <p class="hint err" id="expStall" hidden></p>
+    <div class="fa" id="expStallFold"><div class="fa-in" inert><p class="hint err" id="expStall"></p></div></div>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="expBarWrap"><i id="expBar"></i></div>
     <p class="hint" id="expNote">Keep this tab open and in front until the export finishes.</p>
     <video id="expPreview" class="exp-preview" controls playsinline hidden></video>
-    <p class="hint" id="expLinkWrap" hidden>Save button not doing anything? <a id="expLink" href="#">Use this download link</a>, or open this page in its own browser tab.</p>
+    <div class="fa" id="expLinkFold"><div class="fa-in" inert><p class="hint" id="expLinkWrap">Save button not doing anything? <a id="expLink" href="#">Use this download link</a>, or open this page in its own browser tab.</p></div></div>
     <div class="row">
       <button class="btn" id="expLogBtn" type="button" hidden>Show debug log</button>
       <button class="btn" id="expRetry" type="button" hidden>Try real-time recording</button>
@@ -4576,11 +4580,11 @@ function syncControls() {
   syncFirstAlone(); syncPageLayout(false);
   $('#margin').value = s.margin; $('#marginOut').textContent = s.margin + '%';
   const pre = Array.from($('#bgPreset').options).find(o => o.value.toLowerCase() === String(s.bg).toLowerCase());
-  $('#bgPreset').value = pre ? pre.value : 'custom'; $('#bgCustom').hidden = !!pre;
+  $('#bgPreset').value = pre ? pre.value : 'custom'; foldSet('#bgCustomFold', !pre);
   $('#bgColor').value = s.bg; $('#bgHex').value = s.bg; updateHint();
   $('#invert').checked = !!s.invert; $('#inkField').hidden = !s.invert;
   const ipre = Array.from($('#inkPreset').options).find(o => o.value.toLowerCase() === String(s.ink).toLowerCase());
-  $('#inkPreset').value = ipre ? ipre.value : 'custom'; $('#inkCustom').hidden = !!ipre; $('#inkColor').value = s.ink; $('#inkHex').value = s.ink;
+  $('#inkPreset').value = ipre ? ipre.value : 'custom'; foldSet('#inkCustomFold', !ipre); $('#inkColor').value = s.ink; $('#inkHex').value = s.ink;
   $('#aspect').value = s.aspect; $('#res').value = String(s.res); $('#fps').value = String(s.fps); $('#method').value = s.method || 'auto'; $('#codec').value = s.codec || 'avc'; if (!QUALITY_NAME[s.videoQuality]) S.set.videoQuality = s.videoQuality = 'standard';
   { const r = document.querySelector('input[name=vidQ][value=' + (s.videoQuality || 'standard') + ']'); if (r) { r.checked = true; const sg = $('#vidQ'); if (sg._place) sg._place(false); } } vqNote(); 
   SHADOW_KEYS.forEach(k => { $('#' + k).value = s[k]; setOut(k); });
@@ -4742,31 +4746,40 @@ function initCombo(box) {
   box.append(btn, list);
   input.setAttribute('role', 'combobox'); input.setAttribute('aria-autocomplete', 'list'); input.setAttribute('aria-expanded', 'false'); input.setAttribute('aria-controls', list.id);
   let act = -1, quiet = false;
-  const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); act = -1; };
+  const shown = () => !list.hidden && !list._a;
+  const settle = () => { if (list._a) { list._a.cancel(); list._a = null; } list.style.pointerEvents = ''; };
+  const close = instant => {
+    input.setAttribute('aria-expanded', 'false'); act = -1;
+    if (list.hidden || list._a) return;
+    if (instant === true || reducedMotion() || !list.animate) { list.hidden = true; return; }
+    list.style.pointerEvents = 'none';
+    const a = list._a = list.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, easing: 'cubic-bezier(.22,1,.36,1)' });
+    a.onfinish = () => { if (list._a === a) { list._a = null; list.hidden = true; list.style.pointerEvents = ''; } };
+  };
   const mark = n => { const li = Array.from(list.children); li.forEach(x => x.classList.remove('act')); act = n; if (li[n]) { li[n].classList.add('act'); li[n].scrollIntoView({ block: 'nearest' }); } };
   const open = filter => {
     const q = (filter || '').trim().toLowerCase(), cur = input.value.trim().toLowerCase();
-    list.textContent = '';
+    settle(); list.textContent = '';
     CRED_FONTS.filter(f => !q || f.toLowerCase().includes(q)).forEach(f => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = f; if (f.toLowerCase() === cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); });
-    if (!list.children.length) { close(); return; }
+    if (!list.children.length) { close(true); return; }
     list.hidden = false; input.setAttribute('aria-expanded', 'true'); act = -1;
     const sel = list.querySelector('[aria-selected]'); if (sel && !q) sel.scrollIntoView({ block: 'nearest' });
   };
   const pick = f => { input.value = f; quiet = true; input.dispatchEvent(new Event('input', { bubbles: true })); quiet = false; close(); };
   input.addEventListener('focus', () => open(''));
-  input.addEventListener('click', () => { if (list.hidden) open(''); });
+  input.addEventListener('click', () => { if (!shown()) open(''); });
   input.addEventListener('input', () => { if (!quiet) open(input.value); });
   input.addEventListener('blur', close);
   input.addEventListener('keydown', e => {
     const n = list.children.length;
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (list.hidden) open(''); mark((act + (e.key === 'ArrowDown' ? 1 : -1) + list.children.length) % Math.max(1, list.children.length)); }
-    else if (e.key === 'Enter' && !list.hidden && act >= 0 && n) { e.preventDefault(); pick(list.children[act].textContent); }
-    else if (e.key === 'Escape' && !list.hidden) { e.preventDefault(); close(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!shown()) open(''); mark((act + (e.key === 'ArrowDown' ? 1 : -1) + list.children.length) % Math.max(1, list.children.length)); }
+    else if (e.key === 'Enter' && shown() && act >= 0 && n) { e.preventDefault(); pick(list.children[act].textContent); }
+    else if (e.key === 'Escape' && shown()) { e.preventDefault(); close(); }
   });
   list.addEventListener('mousedown', e => e.preventDefault());                    // keep the cursor in the box while picking
   list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(li.textContent); });
   btn.addEventListener('mousedown', e => e.preventDefault());
-  btn.addEventListener('click', () => { if (!list.hidden) { close(); return; } input.focus(); open(''); });
+  btn.addEventListener('click', () => { if (shown()) { close(); return; } input.focus(); open(''); });
 }
 /* Group headings fold their contents away. A folded group keeps a one-line summary of what is set, so nothing hides unnoticed. */
 function groupSummary(k) {
@@ -4940,8 +4953,8 @@ function bindSettings() {
   $('#margin').addEventListener('input', e => { S.set.margin = +e.target.value; $('#marginOut').textContent = S.set.margin + '%'; dirty(); });
   const setBg = v => { S.set.bg = v; $('#bgColor').value = v; dirty(); };
   $('#bgPreset').addEventListener('change', e => {
-    if (e.target.value === 'custom') { $('#bgCustom').hidden = false; $('#bgHex').value = S.set.bg; $('#bgHex').focus(); }
-    else { $('#bgCustom').hidden = true; $('#bgHex').value = e.target.value; setBg(e.target.value.toLowerCase()); }
+    if (e.target.value === 'custom') { foldSet('#bgCustomFold', true); $('#bgHex').value = S.set.bg; $('#bgHex').focus({ preventScroll: true }); }
+    else { foldSet('#bgCustomFold', false); $('#bgHex').value = e.target.value; setBg(e.target.value.toLowerCase()); }
   });
   $('#bgColor').addEventListener('input', e => { $('#bgHex').value = e.target.value; setBg(e.target.value); });
   $('#bgHex').addEventListener('input', e => {
@@ -4963,8 +4976,8 @@ function bindSettings() {
   });
   const setInk = v => { S.set.ink = v; $('#inkColor').value = v; dirty(); };
   $('#inkPreset').addEventListener('change', e => {
-    if (e.target.value === 'custom') { $('#inkCustom').hidden = false; $('#inkHex').value = S.set.ink; $('#inkHex').focus(); }
-    else { $('#inkCustom').hidden = true; $('#inkHex').value = e.target.value; setInk(e.target.value.toLowerCase()); }
+    if (e.target.value === 'custom') { foldSet('#inkCustomFold', true); $('#inkHex').value = S.set.ink; $('#inkHex').focus({ preventScroll: true }); }
+    else { foldSet('#inkCustomFold', false); $('#inkHex').value = e.target.value; setInk(e.target.value.toLowerCase()); }
   });
   $('#inkColor').addEventListener('input', e => { $('#inkHex').value = e.target.value; setInk(e.target.value); });
   $('#inkHex').addEventListener('input', e => {
@@ -5195,9 +5208,10 @@ Mp4Writer.MT = 90000;          // the movie's time unit (ticks a second): fine e
 const EXP = { ctl: null, blob: null, name: '', ext: 'mp4', url: '', running: false, stage: '', stageT: 0, wd: 0, stallAfter: 8 };
 const expOpen = () => !$('#expDlg').hidden;
 const editorOpen = () => !$('#audioDlg').hidden || !$('#pdfDlg').hidden;
+const expStallOn = () => $('#expStallFold').classList.contains('open');
 function setExpOpen(on) {
   $('#expDlg').hidden = !on;
-  if (!on) { const v = $('#expPreview'); v.pause(); v.removeAttribute('src'); v.hidden = true; $('#expLinkWrap').hidden = true; if (EXP.url) { URL.revokeObjectURL(EXP.url); EXP.url = ''; } }
+  if (!on) { const v = $('#expPreview'); v.pause(); v.removeAttribute('src'); v.hidden = true; foldSet('#expLinkFold', false); if (EXP.url) { URL.revokeObjectURL(EXP.url); EXP.url = ''; } }
 }
 let _expLast = 0, _expNote = '';
 function expUI(state, msg, pct, note) {
@@ -5211,8 +5225,8 @@ function expUI(state, msg, pct, note) {
   $('#expCancel').hidden = state !== 'working';
   $('#expClose').hidden = state === 'working';
   $('#expSave').hidden = state !== 'done';
-  const stalled = state === 'working' && !$('#expStall').hidden;
-  if (state !== 'working') $('#expStall').hidden = true;
+  const stalled = state === 'working' && expStallOn();
+  if (state !== 'working') foldSet('#expStallFold', false);
   $('#expRetry').hidden = !(state === 'error' || stalled);
   $('#expLogBtn').hidden = !(state === 'error' || stalled);      // the debug log is only offered when something went wrong
   if (state === 'working') { if (note !== undefined) { $('#expNote').hidden = !note; if (note) $('#expNote').textContent = note; } }
@@ -5552,7 +5566,7 @@ async function startExport(opts = {}) {
   if (creditsActive()) await Promise.all(creditsFontsInUse().map(f => resolveGoogleFont(f)));       // the credits fonts must be ready before frames are drawn
   const o = outputSize(), fps = S.set.fps, dur = Math.max(1, duration()), family = S.set.codec === 'hevc' ? 'hevc' : 'avc';
   const ctl = { cancelled: false }; EXP.ctl = ctl; EXP.blob = null; EXP.running = true; EXP.stage = 'starting'; EXP.stageT = performance.now();
-  setExpOpen(true); $('#expStall').hidden = true; $('#expMethod').textContent = '';
+  setExpOpen(true); foldSet('#expStallFold', false); $('#expMethod').textContent = '';
   expUI('working', 'Processing', 0, 'Keep this tab open and in front until the export finishes.');
   dbg('===== EXPORT START ====='); envInfo().forEach(dbg);
   dbg('Settings: ' + JSON.stringify(S.set) + ' · ' + fmt(dur) + ' long · ' + S.spreads.length + ' spreads');
@@ -5561,10 +5575,11 @@ async function startExport(opts = {}) {
     if (EXP.ctl !== ctl || !EXP.running) return;
     const idle = (performance.now() - EXP.stageT) / 1000;
     if (idle > EXP.stallAfter) {
-      $('#expStall').hidden = false; $('#expStall').textContent = 'No progress for ' + Math.round(idle) + ' s. Last step: ' + EXP.stage + '.';
+      $('#expStall').textContent = 'No progress for ' + Math.round(idle) + ' s. Last step: ' + EXP.stage + '.';
+      foldSet('#expStallFold', true);
       $('#expRetry').hidden = false; $('#expLogBtn').hidden = false;
       if (!ctl.stallLogged) { ctl.stallLogged = true; dbg('STALL: no progress for ' + Math.round(idle) + ' s. Last step: ' + EXP.stage); }
-    } else if (!$('#expStall').hidden) { $('#expStall').hidden = true; ctl.stallLogged = false; }
+    } else if (expStallOn()) { foldSet('#expStallFold', false); ctl.stallLogged = false; }
   }, 1000);
   const finish = () => { if (EXP.ctl === ctl) { EXP.running = false; clearInterval(EXP.wd); } };
   try {
@@ -5618,7 +5633,7 @@ async function startExport(opts = {}) {
       EXP.url = URL.createObjectURL(r.blob);
       if (r.ext !== 'mov') { const v = $('#expPreview'); v.muted = true; v.src = EXP.url; v.hidden = false; }
       const lk = $('#expLink'); lk.href = EXP.url; lk.download = EXP.name;
-      $('#expLinkWrap').hidden = false;
+      foldSet('#expLinkFold', true);
     } catch (e) { console.warn(e); }
     finish(); dbg('EXPORT DONE: ' + EXP.name + ', ' + mb + ' MB');
     expUI('done', o.W + '×' + o.H + ' · ' + fps + ' fps · ' + fmt(dur, 0) + ' · ' + mb + ' MB' + (r.ext === 'mov' ? ' · Lossless audio' : ''), 1, r.ext === 'webm' ? 'Your browser saved this as WebM. YouTube accepts it; for Final Cut or other editors, use Chrome or Safari to get an MP4.' : '');
@@ -9795,8 +9810,8 @@ function buildExport(kind) {
 }
 function ioKind() { const r = document.querySelector('input[name=ioKind]:checked'); return r ? r.value : 'all'; }
 function ioMessage(text, bad) { const m = $('#ioMsg'); swapText(m, text || ''); m.classList.toggle('err', !!bad); }
-function openIO() { ioMessage(''); $('#ioKindHint').textContent = IO_HINTS[ioKind()]; $('#ioDlg').hidden = false; $('#ioExport').focus(); }
-function closeIO() { $('#ioDlg').hidden = true; }
+function openIO() { ioMessage(''); $('#ioKindHint').textContent = IO_HINTS[ioKind()]; sheetShow($('#ioDlg')); $('#ioExport').focus(); }
+function closeIO() { sheetHide($('#ioDlg')); }
 async function exportSettings() {
   const kind = ioKind(), text = buildExport(kind) + '\n';
   const label = kind === 'settings' ? 'settings' : kind === 'markings' ? 'page markings' : 'settings and page markings';
@@ -9860,8 +9875,8 @@ function initImportExport() {
 function askWarn(title, msg, yesLabel, noLabel = 'Go back') {
   return new Promise(res => {
     $('#warnTitle').textContent = title; $('#warnMsg').textContent = msg; $('#warnYes').textContent = yesLabel; $('#warnNo').textContent = noLabel;
-    $('#warnDlg').hidden = false; $('#warnNo').focus();
-    const done = v => { $('#warnDlg').hidden = true; $('#warnYes').onclick = $('#warnNo').onclick = null; res(v); };
+    sheetShow($('#warnDlg')); $('#warnNo').focus();
+    const done = v => { sheetHide($('#warnDlg')); $('#warnYes').onclick = $('#warnNo').onclick = null; res(v); };
     $('#warnYes').onclick = () => done(true); $('#warnNo').onclick = () => done(false);
   });
 }
@@ -9900,8 +9915,17 @@ function dlgClose(el) { sheetHide(el); if (DEEP_DIALOGS[location.pathname.replac
 function initMenu() {
   const btn = $('#btnSettings'), menu = $('#settingsMenu'), reset = $('#menuReset'); let timer = 0;
   const disarm = () => { clearTimeout(timer); reset.classList.remove('confirm'); reset.textContent = 'Restore default settings'; };
-  const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); disarm(); };
-  btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); disarm(); if (open) $('#menuAbout').focus(); });
+  const fading = () => !!menu._a;
+  const settle = () => { if (menu._a) { menu._a.cancel(); menu._a = null; } menu.style.pointerEvents = ''; };
+  const close = () => {
+    btn.setAttribute('aria-expanded', 'false'); disarm();
+    if (menu.hidden || fading()) return;
+    if (reducedMotion() || !menu.animate) { menu.hidden = true; return; }
+    menu.style.pointerEvents = 'none';          // the fade is 120ms and carries no movement; a click in that time reaches what is behind it
+    const a = menu._a = menu.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(.22,1,.36,1)' });
+    a.onfinish = () => { if (menu._a === a) { menu._a = null; menu.hidden = true; menu.style.pointerEvents = ''; } };
+  };
+  btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.hidden || fading(); if (!open) { close(); return; } settle(); menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); disarm(); $('#menuAbout').focus(); });
   document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { close(); btn.focus(); } });
   $('#menuIO').addEventListener('click', () => { close(); openIO(); });

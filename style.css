@@ -426,6 +426,8 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .exp-overlay.z-io{z-index:73}
 .exp-overlay.z-warn{z-index:75}
 .exp-preview{width:100%;border-radius:var(--r-ctl);background:#000;max-height:240px}
+.exp-preview:not([hidden]){animation:fade .3s var(--ease-ui)}
+@media (prefers-reduced-motion:reduce){.exp-preview:not([hidden]){animation:none}}
 
 /* ==================== 12b. FIRST-RUN STATES & FOLDING GROUPS ==================== */
 /* before a score is loaded the settings stay visible but dimmed and unusable */
