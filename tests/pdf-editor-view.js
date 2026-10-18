@@ -76,10 +76,13 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.waitForTimeout(400);
   const n3 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), text: document.querySelector('#peCropSub').textContent, box: peCropBox(PE.d.order[0]).box.map(v => +v.toFixed(3)) }));
   ok('Music that fills the page: the note takes the subtitle line and says the margin has no room', !n3.hidden && /no room to add margin/i.test(n3.text) , JSON.stringify(n3));
+  // a big move: 60 pages, every order reversed, timed from the start of the render (the numbers and cards start together)
   await p.evaluate(() => closePdfEditor(false));
   const D = await makePdf('kf-view-d.pdf', 80, 530, 60);
   await p.setInputFiles('#pdfIn', D); await p.waitForFunction(() => S.pdf && S.pdf.name === 'kf-view-d'); await p.waitForTimeout(800);
   await p.evaluate(() => { openPdfEditor(); peTool('pages'); }); await p.waitForFunction(() => document.querySelectorAll('#peGrid .page-card').length === 60); await p.waitForTimeout(900);
+  const big = await p.evaluate(() => { PE.d.order = PE.d.order.slice().reverse(); const t0 = performance.now(); peRender(true); const ms = performance.now() - t0; return { ms: Math.round(ms), slid: document.querySelectorAll('#peGrid .pe-strip').length }; });
+  ok('A move of 60 pages starts its number slides within 100ms', big.ms < 100 && big.slid >= 50, JSON.stringify(big));
   // swapping the first card with the one a row below it moves them up and down in the same column: down sends the number right, up sends it left
   const vert = await p.evaluate(() => {
     const o = PE.d.order.slice(), kids = Array.from(document.querySelector('#peGrid').children), cols = kids.filter(c => c.offsetTop === kids[0].offsetTop).length;

@@ -1890,6 +1890,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-pos i{font-style:normal}
 /* sliding number: the two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends while the digits move */
 .pe-pos.slide{display:block;position:relative;width:var(--slide-w);padding:0;overflow:hidden;color:var(--ink)}
+.pe-measure{position:absolute;left:0;top:0;visibility:hidden;pointer-events:none}          /* sized by the pill's own rules, never seen; used only to measure a digit */
 .pe-pos .pe-strip{position:absolute;left:0;top:0;display:flex;width:200%;height:100%;will-change:transform}
 .pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}
 .pe-pos .pe-cell + .pe-cell{box-shadow:inset 1px 0 0 color-mix(in srgb,var(--ink) 22%,transparent)}          /* a hairline where the two digits meet, like the edge of a tile; it crosses the pill only while the digits move */

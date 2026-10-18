@@ -9433,9 +9433,7 @@ function peNumSlideEnd(p, text) {
   if (p._slide) p._slide.cancel(); p._slide = null;
   p.classList.remove('slide'); p.style.removeProperty('--slide-w'); p.textContent = text;
 }
-function peNumSlide(p, from, to, delay, dir) {
-  const w0 = p.offsetWidth, probe = document.createElement('span'); probe.textContent = String(to); p.append(probe);
-  const cs = getComputedStyle(p), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), w = Math.max(w0, probe.offsetWidth + pad); probe.remove();
+function peNumSlide(p, from, to, delay, dir, w) {
   const cell = t => { const s = document.createElement('span'); s.className = 'pe-cell'; s.textContent = t; return s; };
   const strip = document.createElement('span'); strip.className = 'pe-strip';
   strip.append(...(dir > 0 ? [cell(to), cell(from)] : [cell(from), cell(to)]));          // a card moving right sends its number right, so the new digit comes in from the left
@@ -9445,10 +9443,10 @@ function peNumSlide(p, from, to, delay, dir) {
   const S = strip.animate(keys.map((transform, i) => ({ transform, offset: [0, .84, 1][i], easing: i ? 'ease-out' : ease })), { duration: 340, delay, fill: 'both' });
   p._slide = S; S.onfinish = () => peNumSlideEnd(p, String(to));
 }
-function peRoll(p, nm, was, pos, same, delay = 0, dir = -1) {
+function peRoll(p, nm, was, pos, same, delay = 0, dir = -1, w = 0) {
   if (pos !== was.pos) {
     if (p._slide) peNumSlideEnd(p, String(was.pos));          // a slide still running lands first, so a quick second move starts from the number on the card
-    if (pos && was.pos) peNumSlide(p, was.pos, pos, delay, dir);
+    if (pos && was.pos) peNumSlide(p, was.pos, pos, delay, dir, w);
     else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay, easing: EASE_OUT, fill: 'backwards' });
   }
   if (same !== was.same) nm.animate(same ? [{ opacity: 1, maxWidth: '80px' }, { opacity: 0, maxWidth: '0px' }] : [{ opacity: 0, maxWidth: '0px' }, { opacity: 1, maxWidth: '80px' }], { duration: 560, easing: 'cubic-bezier(.45,.05,.2,1)' });
@@ -9471,7 +9469,14 @@ function peState() {
     if (roll && was) rolls.push([p, nm, was, np, same, PE.dir.get(+c.dataset.id)]);
     c.setAttribute('aria-label', 'Page ' + (sl.src + 1) + (sl.c ? ' (repeat)' : '') + (sl.x ? ', left out' : ', position ' + pos) + (tm && !na ? (yes ? ', selected' : ', not selected') : ''));
   });
-  rolls.forEach(([p, nm, was, np, same, dir], k) => peRoll(p, nm, was, np, same, k * 80, dir || -1)); PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one          // one number at a time, in reading order (left to right, top to bottom), 80ms apart, so the eye can follow each one
+  const padW = 12;   // the pill's padding is 6px on each side (style.css, .pe-pos); keep in step with it
+  const oldW = new Map(rolls.map(r => [r[0], r[0].offsetWidth]));          // one layout: every pill's current width
+  const texts = [...new Set(rolls.map(r => String(r[3])))];
+  const probes = texts.map(t => { const s = document.createElement('span'); s.className = 'pe-pos pe-measure'; s.textContent = t; grid.append(s); return s; });
+  const newW = new Map(texts.map((t, i) => [t, probes[i].offsetWidth]));     // one more layout, after every probe is in
+  probes.forEach(s => s.remove());
+  rolls.forEach(([p, nm, was, np, same, dir], k) => peRoll(p, nm, was, np, same, k * 80, dir || -1, Math.max(oldW.get(p), newW.get(String(np)) + padW)));          // one number at a time, in reading order (left to right, top to bottom), 80ms apart, so the eye can follow each one
+  PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
   else swapText(cnt, m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true);
