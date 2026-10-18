@@ -232,7 +232,7 @@ input.bad{border-color:var(--danger)}
 .adv{margin:0 0 14px}
 .adv summary{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:13px;color:var(--muted);cursor:pointer;list-style:none}
 .adv summary::-webkit-details-marker{display:none}
-.adv summary::before{content:'';width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+.adv summary::before{content:'';width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .15s var(--ease-ui)}
 .adv[open] summary::before{transform:rotate(45deg)}
 .adv summary:hover{color:var(--ink)}
 .adv[open] summary{margin-bottom:10px}
@@ -264,7 +264,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .term:hover,.term:focus-visible{background:var(--accent-soft);outline:none}
 
 /* ----- Glow highlight, color picker, hints ----- */
-#turnField{padding:6px 8px;margin:-6px -8px 6px;border-radius:var(--r-ctl);transition:box-shadow .15s,background .15s}
+#turnField{padding:6px 8px;margin:-6px -8px 6px;border-radius:var(--r-ctl);transition:box-shadow .15s var(--ease-color),background .15s var(--ease-color)}
 #turnField.glow-ring{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent),0 0 18px 4px var(--accent)}
 .colorrow[hidden]{display:none}
 .colorrow input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
@@ -367,6 +367,8 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .app.fs .work{display:block;height:100%}
 .app.fs .stage-col{display:block;padding:0;height:100%}
 .app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:#000}
+/* the header and settings, copied where they were so they can fade as full screen begins (see fsGhosts) */
+.fs-ghost,.fs-ghost *{animation:none!important;transition:none!important}
 .app.fs{--fs-gap:12px;--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}
 .app.fs .transport{position:absolute;z-index:20}
 .app.fs .fs-only{display:inline-flex!important}
@@ -454,18 +456,18 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 /* buttons: color and border ease, hover swells, press squeezes */
 .btn,.icon-btn,.fmt-btn{transition:transform .3s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),box-shadow .3s var(--ease-ui),color .2s var(--ease-color),opacity .2s var(--ease-color),filter .2s var(--ease-color)}
 @media (hover:hover){
-  .btn:not(:disabled):hover{transform:scale(1.04);box-shadow:0 2px 8px rgba(17,17,17,.1);background-color:color-mix(in srgb,var(--ink) 5%,var(--panel2))}
+  .btn:not(:disabled):hover{transform:scale(1.02);box-shadow:0 2px 8px rgba(17,17,17,.1);background-color:color-mix(in srgb,var(--ink) 5%,var(--panel2))}
   .btn.primary:not(:disabled):hover{background-color:var(--accent)}
-  .icon-btn:not(:disabled):hover{transform:scale(1.08);box-shadow:0 2px 8px rgba(17,17,17,.1)}
-  .panel .btn.primary:not(:disabled):hover{transform:scale(1.02)}
-  .fmt-btn:hover{transform:scale(1.06)}
+  .icon-btn:not(:disabled):hover{transform:scale(1.05);box-shadow:0 2px 8px rgba(17,17,17,.1)}
+  .panel .btn.primary:not(:disabled):hover{transform:scale(1.01)}
+  .fmt-btn:hover{transform:scale(1.04)}
 }
-.btn:not(:disabled):active,.icon-btn:not(:disabled):active,.fmt-btn:active{transform:scale(.97);transition-duration:.4s;transition-timing-function:var(--spring-press);box-shadow:none}
+.btn:not(:disabled):active,.icon-btn:not(:disabled):active,.fmt-btn:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out);box-shadow:none}
 .seg label{transition:background-color .2s var(--ease-color),color .2s var(--ease-color)}
 select,input[type=text],textarea.autogrow,select:hover,input[type=text]:hover,textarea.autogrow:hover{border-color:var(--muted)}
 .chip,.page-card{transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color),transform .3s var(--spring-hover)}
-@media (hover:hover){.page-card:hover{transform:scale(1.03)}}
-.page-card:active{transform:scale(.97);transition-duration:.4s;transition-timing-function:var(--spring-press)}
+@media (hover:hover){.page-card:hover{transform:scale(1.02)}}
+.page-card:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 .menu-item{transition:background-color .2s var(--ease-color)}
 input[type=range]::-webkit-slider-thumb{transition:transform .3s var(--spring-hover)}
 input[type=range]::-moz-range-thumb{transition:transform .3s var(--spring-hover)}
@@ -479,7 +481,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 .chip:has(.chip-main:hover){background-color:color-mix(in srgb,var(--accent) 7%,var(--panel2))}
 /* pop-ups fade and drift in */
 .exp-overlay:not([hidden]){animation:fade .25s var(--ease-ui)}
-.exp-overlay:not([hidden]) .dlg{animation:rise .5s var(--ease-out);--rise:12px}
+.exp-overlay:not([hidden]) .dlg{animation:rise .3s var(--ease-out);--rise:12px}
 .menu:not([hidden]){--rise:-6px}
 .combo-list:not([hidden]){animation:rise .2s var(--ease-ui);--rise:-4px}
 .group-sum{animation:fade .3s var(--ease-ui)}
@@ -626,10 +628,10 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 #btnSettings svg{transition:transform .7s var(--ease-out)}
 @media (hover:hover){#btnSettings:hover svg{transform:rotate(30deg)}}
 #btnSettings[aria-expanded="true"] svg{transform:rotate(90deg)}
-.menu:not([hidden]){animation:menu-in .32s var(--ease-out);transform-origin:top right}
+.menu:not([hidden]){animation:menu-in .2s var(--ease-out);transform-origin:top right}
 @keyframes menu-in{from{opacity:0;transform:translateY(-6px) scale(.96)}}
-.toast{transform:translate(-50%,10px);transition:opacity .25s var(--ease-ui),transform .5s var(--ease-out)}
-.toast.show{transform:translate(-50%,0)}
+.toast{transform:translate(-50%,10px);transition:opacity .18s var(--ease-ui),transform .18s var(--ease-out)}
+.toast.show{transform:translate(-50%,0);transition:opacity .25s var(--ease-ui),transform .3s var(--ease-out)}
 @media (prefers-reduced-motion:reduce){#btnSettings svg,.toast{transition:none}.menu:not([hidden]){animation:none}}
 
 /* ----- Premium, tactile finishing touches ----- */
@@ -688,7 +690,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .rz-opt b{font-size:13px;font-weight:600}
 .rz-opt small{font-size:11px;color:var(--muted);min-height:1.2em}
 @media (hover:hover){.rz-opt:hover{border-color:var(--muted);transform:translateY(-1px)}}
-.rz-opt:active{transform:scale(.97);transition-duration:.4s;transition-timing-function:var(--spring-press)}
+.rz-opt:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 .rz-opt{position:relative}
 .rz-opt[aria-pressed="true"]{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,var(--panel2));box-shadow:0 0 0 1px var(--ink) inset}
 .rz-tick{position:absolute;top:7px;right:7px;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--ink);color:var(--bg);opacity:0;transform:scale(.5);transition:opacity .2s var(--ease-color),transform .45s var(--spring-press)}
@@ -821,9 +823,10 @@ html.leaving body{opacity:0;transition-duration:.18s}
 
 /* ==================== EMPTY STATE: two ways in ==================== */
 .empty{overflow:hidden;gap:14px;isolation:isolate}
-.empty::before,.empty::after{content:'';position:absolute;z-index:-1;width:46%;aspect-ratio:1;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
-.empty::before{left:-8%;top:-22%;background:var(--accent-soft);animation:orb-a 16s ease-in-out infinite alternate}
-.empty::after{right:-10%;bottom:0;background:color-mix(in srgb,var(--accent) 22%,transparent);animation:orb-b 20s ease-in-out infinite alternate}
+/* the glow is a soft gradient, not a blurred disc: a 70px blur on a large layer is costly to paint, and this looks the same */
+.empty::before,.empty::after{content:'';position:absolute;z-index:-1;width:78%;aspect-ratio:1;border-radius:50%;opacity:.5;pointer-events:none}
+.empty::before{left:-8%;top:-22%;margin:-16% 0 0 -16%;background:radial-gradient(closest-side,var(--accent-soft),transparent);animation:orb-a 16s ease-in-out infinite alternate}
+.empty::after{right:-10%;bottom:0;margin:0 -16% -16% 0;background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 22%,transparent),transparent);animation:orb-b 20s ease-in-out infinite alternate}
 @keyframes orb-a{to{transform:translate(18%,12%) scale(1.15)}}
 @keyframes orb-b{to{transform:translate(-16%,-10%) scale(1.2)}}
 .empty-fit>*{animation:empty-in .8s var(--ease-out) both}
@@ -842,12 +845,12 @@ html.leaving body{opacity:0;transition-duration:.18s}
   box-shadow:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 10px 30px -14px rgba(20,30,70,.28);
   animation:empty-in .8s var(--ease-out) both;transition:transform .45s var(--spring-hover),box-shadow .35s var(--ease-ui),border-color .25s var(--ease-color)}
 .start-card:nth-child(1){animation-delay:.28s}.start-card:nth-child(2){animation-delay:.4s}
-.start-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 18px 38px -16px color-mix(in srgb,var(--accent) 55%,transparent)}
+@media (hover:hover) and (pointer:fine){.start-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 18px 38px -16px color-mix(in srgb,var(--accent) 55%,transparent)}}
 .start-card:active{transform:translateY(-1px) scale(.99)}
 body.dragging .start-card:first-child{border-color:var(--accent);transform:translateY(-4px) scale(1.02)}
 .sc-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--r-lg);background:var(--accent-soft);color:var(--accent);margin-bottom:4px;transition:transform .5s var(--spring-hover)}
 .sc-ic svg{width:25px;height:25px}
-.start-card:hover .sc-ic{transform:scale(1.1) rotate(-4deg)}
+@media (hover:hover) and (pointer:fine){.start-card:hover .sc-ic{transform:scale(1.1) rotate(-4deg)}}
 .start-card h3{margin:0;max-width:100%;font:600 16px/1.2 'Instrument Sans',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .start-card p{margin:0 0 8px;font-size:13px;line-height:1.45;color:var(--muted);text-wrap:balance}
 .start-card .row{margin-top:auto}
@@ -1080,7 +1083,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-chip{display:flex;align-items:center;gap:8px;max-width:100%;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:13px}
 .mt-chip b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .mt-chip button{display:grid;place-items:center;flex:none;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .35s var(--spring-hover)}
-.mt-chip button:hover{background:var(--accent-soft);color:var(--accent);transform:scale(1.1)}
+@media (hover:hover) and (pointer:fine){.mt-chip button:hover{background:var(--accent-soft);color:var(--accent);transform:scale(1.1)}}
 .mt-chip button svg{width:12px;height:12px}
 .mt-spin{display:none;flex:none;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:mtspin .8s linear infinite}
 .mt-chip.busy .mt-spin{display:block}
@@ -1099,7 +1102,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 
 /* ----- Lights on the left, one selection pill that glides ----- */
 .ae-rail-in{position:relative}
-.ae-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .5s var(--spring-press),width .5s var(--spring-press),height .5s var(--spring-press),opacity .25s var(--ease-ui)}
+.ae-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .4s var(--spring-press),width .4s var(--spring-press),height .4s var(--spring-press),opacity .25s var(--ease-ui)}
 .ae-proc{position:relative;z-index:1}
 .ae-tool,.ae-tool:hover{background:none}
 .ae-tool:hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}
@@ -1307,7 +1310,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ==================== AUDIO EDITOR: full screen (the picture fills the screen, everything else floats as glass) ==================== */
 #audioDlg.afull{padding:0;place-items:stretch}
 #audioDlg.afull>.dlg.editor.ae{position:fixed;inset:0;width:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:14px;gap:10px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;align-content:stretch}
-#audioDlg.afull .ae-wave{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;z-index:0;transition:top .5s var(--ease-out),bottom .5s var(--ease-out)}
+#audioDlg.afull .ae-wave{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;z-index:0;transition:top .35s var(--ease-out),bottom .35s var(--ease-out)}
 #audioDlg.afull .ae-wave canvas{border-radius:0}
 /* while the window grows or shrinks, one animation moves it and nothing else glides on its own */
 #audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
@@ -1317,7 +1320,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
 #audioDlg.afull .ae-main{grid-row:4;z-index:2;overflow:auto;overscroll-behavior:contain}
 #audioDlg.afull .ed-head,#audioDlg.afull .ae-bar,#audioDlg.afull .ae-main{padding:10px 16px}
-#audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform .55s var(--ease-out),opacity .3s var(--ease-ui),visibility 0s .55s}
+#audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),visibility 0s .35s}
 #audioDlg.afull.dock-off .ae-bar{grid-row:4}
 @media (max-width:760px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:8px}}
 .ae-fullbtn{width:32px;height:32px}.ae-fullbtn svg{width:16px;height:16px}
@@ -1334,7 +1337,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sp-item.in{animation:sp-in .35s var(--ease-out) both}
 @keyframes sp-in{from{opacity:0}to{opacity:1}}
 .sp-draw{align-self:flex-start}
-.sp-item:hover{transform:translateX(2px)}
+@media (hover:hover) and (pointer:fine){.sp-item:hover{transform:translateX(2px)}}
 .sp-item.on{border-color:var(--accent);background:var(--accent-soft)}
 .sp-dot{flex:none;width:9px;height:9px;border-radius:50%}
 .sp-dot.heal{background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.7)}
@@ -1376,7 +1379,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeDock.gone{display:none}
 @media (max-width:760px){.ae-bar{gap:10px}#aeSilence{margin-left:auto}}
 /* the tools dock is as tall as its tool needs (the Spectra stays small, so the picture stays big), and eases between heights */
-#audioDlg.afull .ae-main{transition:transform .55s var(--ease-out),opacity .35s var(--ease-ui),max-height .5s var(--ease-out)}
+#audioDlg.afull .ae-main{transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),max-height .35s var(--ease-out)}
 #audioDlg.afull[data-tool=eq] .ae-main,#audioDlg.afull[data-tool=imager] .ae-main,#audioDlg.afull[data-tool=noise] .ae-main{max-height:min(440px,50dvh)}
 #audioDlg.afull .ae-rail-h{margin-top:2px}
 #audioDlg.afull .ae-main{max-height:min(440px,50dvh)}
@@ -1755,7 +1758,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (hover:hover){.pe-tab:not(.on):hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}}
 .pe-tab.on,.pe-tab.on svg{color:var(--accent)}
 .pe-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.pe-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .5s var(--spring-press),width .5s var(--spring-press),height .5s var(--spring-press),opacity .25s var(--ease-ui)}
+.pe-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .4s var(--spring-press),width .4s var(--spring-press),height .4s var(--spring-press),opacity .25s var(--ease-ui)}
 
 /* the window */
 .pe-win{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);overflow:hidden}
@@ -1861,7 +1864,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .pe .page-card:not(.na):not(.pe-hole):hover .pe-thumb{transform:translateY(-2px)}
   .pe .page-card:not(.na):not(.pe-hole):hover canvas{box-shadow:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16)}
 }
-.pe .page-card:not(.na):not(.pe-hole):active{transform:scale(.97);transition-duration:.4s;transition-timing-function:var(--spring-press)}
+.pe .page-card:not(.na):not(.pe-hole):active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 .pe .page-card.off canvas{opacity:.38;filter:grayscale(1)}
 .pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,255,255,.88);color:rgba(16,20,40,.7);box-shadow:0 1px 4px rgba(0,0,0,.28);pointer-events:none}
 .pe .page-card .pe-hid svg{width:17px;height:17px}

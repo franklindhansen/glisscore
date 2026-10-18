@@ -1110,6 +1110,7 @@
 <script src="audio-fx.js"></script>
 <script>
 'use strict';
+const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = 260, AE_LIFT = 10;          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length of an Audio Editor tool switch
 const $ = (s, r = document) => r.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -1928,7 +1929,7 @@ function updateHistoryButtons() { if (!HB.open && !HB.quiet) HB.base = lightSnap
 /* History: a list of the steps taken, newest on top; pick one to go back (or forward) to it. The PDF Editor and the main view use this, the way the Audio Editor does.
    c: btn, pop, list, foot, sum, sub, no, go (ids), first (name of step 0), states() oldest to newest with the current one inside, cur() the index of the current one, label(a, b) the name of the step from a to b, apply(t) goes to step t, can() true when there is any history */
 function histPanel(c) {
-  const el = k => document.getElementById(c[k]), H = { sel: -1, rec: {} }, EASE = 'cubic-bezier(.3,.8,.2,1)';
+  const el = k => document.getElementById(c[k]), H = { sel: -1, rec: {} }, EASE = EASE_GLIDE;
   const name = (st, i) => i === 0 ? c.first : (H.rec[i] || (H.rec[i] = c.label(st[i - 1], st[i]) || 'Change'));
   const isOpen = () => el('btn').getAttribute('aria-expanded') === 'true';
   function draw() {
@@ -3827,6 +3828,7 @@ class Renderer {
    ==================================================================== */
 let previewR = null, stageDirty = true;
 const stageCanvas = $('#stage');
+let fsGliding = false;          // full screen is gliding the picture by transform (see fsGlide)
 function outputSize() {
   const ar = ASPECTS[S.set.aspect] || 16 / 9, short = +S.set.res;
   let W, H;
@@ -3836,9 +3838,10 @@ function outputSize() {
 /* Changing the video's shape: the new frame simply fades in, quickly */
 function morphStage(apply) {
   apply();
-  if (S.pdf && !reducedMotion() && stageCanvas.animate) stageCanvas.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+  if (S.pdf && !reducedMotion() && stageCanvas.animate) stageCanvas.animate([{ opacity: 0.2 }, { opacity: 1 }], { duration: 220, easing: EASE_OUT });
 }
 function layoutStage() {
+  if (fsGliding) return;          // the frame is moving by transform, so its rectangle is not where it lays out: the picture is fitted once, as the glide begins and as it ends
   const wrap = $('#stageWrap'), r = wrap.getBoundingClientRect();
   if (r.width < 10 || r.height < 10) return;
   const ar = ASPECTS[S.set.aspect] || 16 / 9;
@@ -4442,7 +4445,7 @@ function titleFlipMark() {
   queueMicrotask(() => {
     const was = tfOld; tfOld = null; const now = t.getBoundingClientRect().width;
     if (Math.abs(was - now) < 1 || !t.animate || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-    t.animate([{ flex: '0 0 ' + was + 'px' }, { flex: '0 0 ' + now + 'px' }], { duration: 560, easing: 'cubic-bezier(.22,1,.36,1)' });
+    t.animate([{ flex: '0 0 ' + was + 'px' }, { flex: '0 0 ' + now + 'px' }], { duration: 560, easing: EASE_OUT });
   });
 }
 /* the file's name without its ending (the chip shows the start of it and the ending as the format) and the format in capitals */
@@ -4484,9 +4487,9 @@ function setChips() {
   setChips.holding = { pdf: !S.pdf && !!seenNow.pdf, audio: !S.audio && !!seenNow.audio };
   if (el.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) el.querySelectorAll('.chip.settle').forEach(c => {          // the loading chip grows (or shrinks) into the finished one instead of jumping to its width
     const w0 = oldW[c.dataset.k], w1 = c.getBoundingClientRect().width; if (!w0 || Math.abs(w0 - w1) < 1) return;
-    c.style.overflow = 'hidden'; c.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)' }).onfinish = () => { c.style.overflow = ''; };
+    c.style.overflow = 'hidden'; c.animate([{ width: w0 + 'px' }, { width: w1 + 'px' }], { duration: 620, easing: EASE_OUT }).onfinish = () => { c.style.overflow = ''; };
   });
-  if (el.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) el.querySelectorAll('.chip.enter').forEach((c, i) => c.animate([{ opacity: 0, transform: 'translateX(-14px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 640, delay: 90 + i * 70, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }));
+  if (el.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) el.querySelectorAll('.chip.enter').forEach((c, i) => c.animate([{ opacity: 0, transform: 'translateX(-14px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 640, delay: 90 + i * 70, easing: EASE_OUT, fill: 'backwards' }));
 }
 /* a trailing … becomes three dots that bounce one after another (set only when the words change, so the bounce is not restarted by every update) */
 const dotsHTML = t => /…$/.test(t) ? '<span>' + esc(t.slice(0, -1)) + '<span class="dots"><i>.</i><i>.</i><i>.</i></span></span>' : esc(t);          // one piece, so a button's flex gap does not open a space before the dots
@@ -4500,7 +4503,7 @@ function setBusyFrac(f) { busyFrac = f; syncAudioCard(); const bar = document.qu
 /* one line of the status: the circle fills and the check draws itself when something loads, and the words swap with a small rise */
 function setStatus(sel, done, yes, no) {
   const el = $(sel), t = el.querySelector('.st-t'), txt = done ? yes : no;
-  if (t.textContent !== txt) { const had = t.textContent !== ''; t.textContent = txt; if (had && t.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) t.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' }); }
+  if (t.textContent !== txt) { const had = t.textContent !== ''; t.textContent = txt; if (had && t.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) t.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE_OUT }); }
   el.classList.toggle('done', done);
 }
 function updateFileButtons() {
@@ -4842,7 +4845,7 @@ function swapText(el, txt, flat) {
   if (performance.now() < 1500 || calm || !el.animate || el.offsetParent === null) { el.textContent = txt; return; }
   const h0 = el.getBoundingClientRect().height; el.textContent = txt; const h1 = el.getBoundingClientRect().height;
   el.getAnimations().forEach(a => a.cancel());
-  el.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' });
+  el.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE_OUT });
   if (!flat && Math.abs(h1 - h0) > 0.5) {
     el.style.overflow = 'clip';
     const a = el.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: 380, easing: 'cubic-bezier(.32,.72,0,1)' });
@@ -7670,18 +7673,19 @@ function aeToolLive() { if (AE.tool === 'eq') aeEqDraw(); else if (AE.tool === '
 /* the tool windows slide like one tall page: the new one comes in from the side of the list you are moving toward, with the old one leaving the other way */
 /* the order of tools as they sit on screen: every slide's direction is read from here */
 const railOrder = sel => Array.from(document.querySelectorAll(sel)).map(b => b.dataset.tool);
+const paneNow = el => { const cs = getComputedStyle(el); return { o: +cs.opacity, y: cs.transform === 'none' ? 0 : new DOMMatrixReadOnly(cs.transform).m42 }; };          // where a pane is right now, so a switch made mid-motion carries on from there instead of starting over
 function aeSlidePane(panes, prev, name) {
-  const body = $('#aeBody') || $('.ae-pbody'), tools = railOrder('#aeRail .ae-tool');
+  const body = $('#aeBody') || $('.ae-pbody'), tools = railOrder('#aeRail .ae-tool'), was = new Map();
   const h0 = body.offsetHeight;
-  Object.keys(panes).forEach(k => { const el = $('#' + panes[k]); (el._slide || []).forEach(a => a.cancel()); el._slide = null; el.classList.remove('sliding'); if (k !== name) el.hidden = true; });
+  Object.keys(panes).forEach(k => { const el = $('#' + panes[k]); if (el._slide) was.set(el, paneNow(el)); (el._slide || []).forEach(a => a.cancel()); el._slide = null; el.classList.remove('sliding'); if (k !== name) el.hidden = true; });
   body.classList.remove('sliding'); const cur = $('#' + panes[name]), old = prev && prev !== name ? $('#' + panes[prev]) : null; cur.hidden = false;
   if (!old || reducedMotion()) return;
-  const dir = tools.indexOf(name) > tools.indexOf(prev) ? 1 : -1, h = body.clientHeight + 24, ease = 'cubic-bezier(.3,.8,.2,1)', ms = 560;
+  const dir = tools.indexOf(name) > tools.indexOf(prev) ? 1 : -1, lift = AE_LIFT, f = was.get(old) || { o: 1, y: 0 }, g = was.get(cur) || { o: 0, y: dir * lift };
   old.hidden = false; old.classList.add('sliding'); body.classList.add('sliding');
-  const a1 = old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(' + (-dir * h) + 'px)', opacity: 0 }], { duration: ms, easing: ease, fill: 'forwards' });
-  const a2 = cur.animate([{ transform: 'translateY(' + (dir * h) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease });
+  const a1 = old.animate([{ transform: 'translateY(' + f.y + 'px)', opacity: f.o }, { transform: 'translateY(' + (-dir * lift) + 'px)', opacity: 0 }], { duration: AE_TOOL_MS * 0.55, easing: EASE_OUT, fill: 'forwards' });          // the old tool leaves quickly: a quick fade and a small lift the way you are moving
+  const a2 = cur.animate([{ transform: 'translateY(' + g.y + 'px)', opacity: g.o }, { transform: 'none', opacity: 1 }], { duration: AE_TOOL_MS * 0.85, delay: AE_TOOL_MS * 0.15, easing: EASE_OUT, fill: 'backwards' });          // the new one arrives a moment later, so the two overlap and the window is never empty
   old._slide = [a1]; cur._slide = [a2];
-  const h1 = body.offsetHeight; if (Math.abs(h1 - h0) > 1) { const a3 = body.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: ms, easing: ease }); a2.finished.then(() => a3.cancel(), () => a3.cancel()); }          // a window that is taller or shorter for the next tool (phones) grows or shrinks along with the slide
+  const h1 = body.offsetHeight; if (Math.abs(h1 - h0) > 1) { const a3 = body.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: AE_TOOL_MS, easing: EASE_GLIDE }); a2.finished.then(() => a3.cancel(), () => a3.cancel()); }          // a window that is taller or shorter for the next tool (phones) grows or shrinks along with it
   a2.onfinish = () => { old._slide = null; cur._slide = null; a1.cancel(); old.classList.remove('sliding'); old.hidden = AE.tool !== prev; body.classList.remove('sliding'); };
 }
 /* the tool list: which tool is open, which are on, and in what order they run */
@@ -7696,16 +7700,13 @@ const AE_NAMES = { noise: 'Noise reduction', spec: 'Spectra', eq: 'EQ', imager: 
 const AE_SUBS = { noise: 'Banish hiss, hum or room tone.', spec: 'Heals or turns down a blip, a hum or a squeak you can see.', eq: 'Shapes the tone, band by band.', imager: 'Stereo width and balance.', level: 'Gain, and how loud the finished audio is.', fades: 'Eases the start in and the end out.', emu: 'Borrows the sound of another recording.' };
 /* the head, the tool window and the line between them travel together: the old ones leave, the new ones come in from the same side */
 function aeHead(name, dir) {
-  const top = $('#aeTop'), head = $('#aeHead'), rule = $('#aeRule'), win = $('#aeWin'), set = () => { $('#aePaneTitle').textContent = AE_NAMES[name]; $('#aePaneSub').textContent = AE_SUBS[name]; };
-  win.querySelectorAll('.ae-ghost,.ae-rule.ghost').forEach(n => n.remove()); (head._slide || []).forEach(a => a.cancel()); (rule._slide || []).forEach(a => a.cancel());
+  const top = $('#aeTop'), head = $('#aeHead'), win = $('#aeWin'), set = () => { $('#aePaneTitle').textContent = AE_NAMES[name]; $('#aePaneSub').textContent = AE_SUBS[name]; };
+  win.querySelectorAll('.ae-ghost').forEach(n => n.remove()); const was = head._slide ? paneNow(head) : null; (head._slide || []).forEach(a => a.cancel());
   if (!dir || reducedMotion() || !top.offsetHeight || $('#audioDlg').hidden) { set(); return; }
-  const ghost = head.cloneNode(true), ease = 'cubic-bezier(.3,.8,.2,1)', ms = 560, D = $('#aeBody').offsetHeight + 24;
+  const ghost = head.cloneNode(true), lift = AE_LIFT, f = was || { o: 1, y: 0 };
   ghost.removeAttribute('id'); ghost.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); ghost.classList.add('ae-ghost'); ghost.inert = true; ghost.setAttribute('aria-hidden', 'true'); top.appendChild(ghost); set();
-  const g = ghost.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(' + (-dir * D) + 'px)', opacity: 0 }], { duration: ms, easing: ease, fill: 'forwards' }); g.onfinish = g.oncancel = () => ghost.remove();
-  head._slide = [head.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease })];
-  const rg = rule.cloneNode(); rg.removeAttribute('id'); rg.classList.add('ghost'); rg.style.top = rule.offsetTop + 'px'; win.appendChild(rg);
-  const a = rg.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(' + (-dir * D) + 'px)', opacity: 0 }], { duration: ms, easing: ease }); a.onfinish = a.oncancel = () => rg.remove();
-  rule._slide = [rule.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease })];
+  const g = ghost.animate([{ transform: 'translateY(' + f.y + 'px)', opacity: f.o }, { transform: 'translateY(' + (-dir * lift) + 'px)', opacity: 0 }], { duration: AE_TOOL_MS * 0.55, easing: EASE_OUT, fill: 'forwards' }); g.onfinish = g.oncancel = () => ghost.remove();
+  head._slide = [head.animate([{ transform: 'translateY(' + (dir * lift) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: AE_TOOL_MS * 0.85, delay: AE_TOOL_MS * 0.15, easing: EASE_OUT, fill: 'backwards' })];          // the title and its line arrive as the old ones leave; the divider line stays where it is
 }
 function aeTool(name) {
   const prev = AE.tool; AE.tool = name; aeRingSync(); if (name === 'level' && AE.d) aeRefresh();          // opening Level starts its measures (they only run while it is open)
@@ -7885,7 +7886,7 @@ function foldSet(sel, on) { const f = $(sel); if (!f) return; f.classList.toggle
 const aeFmtType = f => /^m4a/.test(f) ? 'm4a' : /^flac/.test(f) ? 'flac' : 'wav';
 const AE_FMT_NOTE = { flac: 'Exact copy, about half the size of WAV', wav: 'Exact copy, plays everywhere', m4a: 'Smaller file, tiny loss of detail' };
 /* the export window has two pages that glide past each other (same ease and length as the editor's picture slide); the window grows or shrinks to the page it is showing */
-const AE_PG_EASE = 'cubic-bezier(.3,.8,.2,1)', AE_PG_MS = 520;
+const AE_PG_EASE = EASE_GLIDE, AE_PG_MS = 380;
 function aePage(meta, instant) {
   const w = $('#aePgWrap'), m = $('#aePgMain'), t = $('#aePgMeta'), to = meta ? t : m, from = meta ? m : t, was = w.classList.contains('meta');
   (w._anims || []).forEach(a => a.cancel()); w._anims = null; w.classList.remove('moving');
@@ -8404,7 +8405,7 @@ function aeNrLayout(post) {
   const els = [$('#aeNrSample'), $('#aeNrCtl')], r0 = els.map(e => e.getBoundingClientRect()), shown = !$('#aePaneNoise').hidden && !$('#audioDlg').hidden;
   grid.classList.toggle('pre', !post);
   if (first || !shown || reducedMotion() || !r0[0].width) return;
-  const ease = 'cubic-bezier(.3,.8,.2,1)';
+  const ease = EASE_GLIDE;
   els.forEach((e, i) => { const r1 = e.getBoundingClientRect(); e.animate([{ transform: 'translate(' + (r0[i].left - r1.left) + 'px,' + (r0[i].top - r1.top) + 'px)', width: r0[i].width + 'px', height: r0[i].height + 'px', overflow: 'hidden' }, { transform: 'none', width: r1.width + 'px', height: r1.height + 'px', overflow: 'hidden' }], { duration: 640, easing: ease }); });
   els[0].querySelector('.mt-steps').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 420, delay: 160, easing: 'ease-out', fill: 'backwards' });
 }
@@ -8541,7 +8542,7 @@ function aeFsApply(on) {
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
 }
 /* full screen is one gesture: the window travels to the other layout's rectangle on one ease and length, moved by transform alone (no layout at each size); the picture goes with it between its two real rectangles (unseen: it fades with the rest). The old parts fade out at once, the other layout takes over near the end (at the same place and size) and its parts fade in as the motion lands, like a video player's controls. The picture is one of the parts: it is never seen stretched or at a size it does not have */
-const AE_FS_EASE = 'cubic-bezier(.3,.8,.2,1)', AE_FS_MS = 520, AE_FS_SWAP = 0.3, AE_FS_OUT = 130, AE_FS_IN = 260;
+const AE_FS_EASE = EASE_GLIDE, AE_FS_MS = 400, AE_FS_SWAP = 0.28, AE_FS_OUT = 100, AE_FS_IN = 220;
 function aeFsGeo(box, wave) {          // the window's rectangle and the picture's gaps to the window's inner edges
   const r = box.getBoundingClientRect(), w = wave.getBoundingClientRect(), cs = getComputedStyle(box), px = v => parseFloat(v) || 0;
   return { l: r.left, t: r.top, w: r.width, h: r.height, rad: px(cs.borderTopLeftRadius), wl: w.left - r.left - px(cs.borderLeftWidth), wt: w.top - r.top - px(cs.borderTopWidth), wr: r.right - w.right - px(cs.borderRightWidth), wb: r.bottom - w.bottom - px(cs.borderBottomWidth) };
@@ -8605,8 +8606,8 @@ function aeFsLayout(force) {          // force: measure for full screen before i
 function aeDockToggle(on) {
   const dlg = $('#audioDlg'), bar = dlg.querySelector('.ae-bar'), y0 = bar.getBoundingClientRect().top; on = on == null ? dlg.classList.contains('dock-off') : !!on;
   dlg.classList.toggle('dock-off', !on); $('#aeDock').setAttribute('aria-pressed', on);
-  const dy = y0 - bar.getBoundingClientRect().top; if (dy && !reducedMotion() && bar.animate) bar.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)' });
-  requestAnimationFrame(aeFsLayout); setTimeout(() => { if (AE.d) { aeFsLayout(); aeRailSel(false); aeWiresFollow(); } }, 560);
+  const dy = y0 - bar.getBoundingClientRect().top; if (dy && !reducedMotion() && bar.animate) bar.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 320, easing: EASE_OUT });
+  requestAnimationFrame(aeFsLayout); setTimeout(() => { if (AE.d) { aeFsLayout(); aeRailSel(false); aeWiresFollow(); } }, 400);
 }
 function aeKey(e) {
   if (e.key === 'Escape' && AE.full && !AE.nsArm) { e.preventDefault(); aeFs(false); return; }
@@ -8710,7 +8711,7 @@ function peSetSize(size, each) {
 }
 function peRustle(grid) {                          // a quick wave runs down the pages so you can see the change land
   if (reducedMotion() || !grid.animate) return;
-  Array.from(grid.children).forEach((c, i) => c.animate([{ opacity: 0.35, transform: 'translateY(-14px) scale(.9)' }, { opacity: 1, transform: 'translateY(3px) scale(1.02)', offset: .62 }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 38, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' }));
+  Array.from(grid.children).forEach((c, i) => c.animate([{ opacity: 0.35, transform: 'translateY(-14px) scale(.9)' }, { opacity: 1, transform: 'translateY(3px) scale(1.02)', offset: .62 }, { opacity: 1, transform: 'none' }], { duration: 600, delay: i * 38, easing: EASE_OUT, fill: 'backwards' }));
 }
 /* the tool list: one tool at a time, each with its own window head (title, what it does, its buttons) and options above the pages */
 const PE_TICK = new Set(['wm', 'split', 'clean', 'skew', 'crop']);          // in these the round tick means "this page gets the tool"
@@ -8749,7 +8750,7 @@ function peChrome() {
   if (m === 'split') peSplitNote();
   peActs();
 }
-const PE_EASE = 'cubic-bezier(.3,.8,.2,1)', PE_MS = 250, peDist = () => $('#peBand').offsetHeight + 16;
+const PE_EASE = EASE_GLIDE, PE_MS = 250, PE_LIFT = 10, peDist = () => PE_LIFT;          // a tool switch is a crossfade with a small lift in the direction you are moving, not a slide the height of the window
 function peSlide(prev, name) {
   const body = $('#peBand'), views = Array.from(body.querySelectorAll('.pe-tv')), cur = views.find(v => v.dataset.tool === name), old = views.find(v => v.dataset.tool === prev);
   const h0 = body.offsetHeight;
@@ -8757,7 +8758,7 @@ function peSlide(prev, name) {
   (body._slide || []).forEach(a => a.cancel()); body._slide = null; body.classList.remove('sliding');
   peTopFit(name);
   if (!old || old === cur || !PE.chromed || reducedMotion()) return;
-  const dir = peOrder().indexOf(name) > peOrder().indexOf(prev) ? 1 : -1, h1 = body.offsetHeight, dist = Math.max(h0, h1) + 16;
+  const dir = peOrder().indexOf(name) > peOrder().indexOf(prev) ? 1 : -1, h1 = body.offsetHeight, dist = PE_LIFT;
   old.hidden = false; old.classList.add('sliding'); body.classList.add('sliding');
   const a1 = old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });
   const a2 = cur.animate([{ transform: 'translateY(' + (dir * dist) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, easing: PE_EASE });
@@ -8786,8 +8787,8 @@ function peBodySlide(snap, dir) {
   if (!snap) return;
   const cur = $('#peWin').classList.contains('one') ? $('#peCropView') : $('#peWrap'), D = peDist();
   body.appendChild(snap.el); snap.el.scrollTop = snap.top; body.classList.add('sliding');
-  const a1 = snap.el.animate([{ transform: 'none', opacity: 1 }, { opacity: 0, offset: .38 }, { transform: 'translateY(' + (-dir * D) + 'px)', opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });          // the old pages are gone early, so they never linger under the head
-  const a2 = cur.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { opacity: 0, offset: .18 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, easing: PE_EASE });
+  const a1 = snap.el.animate([{ transform: 'none', opacity: 1 }, { opacity: 0, offset: .5 }, { transform: 'translateY(' + (-dir * D) + 'px)', opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });          // the old pages are gone early, so they never linger under the head
+  const a2 = cur.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { opacity: 0, offset: .1 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, easing: PE_EASE });
   body._slide = [a1, a2];
   a2.onfinish = a2.oncancel = () => { snap.el.remove(); if (!body._slide || body._slide[1] === a2) body.classList.remove('sliding'); };          // a cancelled slide reports late, after the next one has begun: it must not take that one's clip away
 }
@@ -9017,7 +9018,7 @@ function peCropPaint(b) {
   const el = $('#peCropBox'); peBoxNow = b; if (!b) { el.hidden = true; return; }
   const was = !el.hidden && !el.classList.contains('dragging') && !reducedMotion() && el.animate ? el.getBoundingClientRect() : null;
   el.hidden = false; el.style.left = b[0] * 100 + '%'; el.style.top = b[1] * 100 + '%'; el.style.width = (b[2] - b[0]) * 100 + '%'; el.style.height = (b[3] - b[1]) * 100 + '%';
-  if (was && was.width > 1) { const now = el.getBoundingClientRect(); if (now.width > 1 && (Math.abs(was.left - now.left) > .5 || Math.abs(was.top - now.top) > .5 || Math.abs(was.width - now.width) > .5 || Math.abs(was.height - now.height) > .5)) el.animate([{ transform: 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px) scale(' + was.width / now.width + ',' + was.height / now.height + ')' }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.22,1,.36,1)' }); }          // the frame glides to its new place by transform: its layout is already there
+  if (was && was.width > 1) { const now = el.getBoundingClientRect(); if (now.width > 1 && (Math.abs(was.left - now.left) > .5 || Math.abs(was.top - now.top) > .5 || Math.abs(was.width - now.width) > .5 || Math.abs(was.height - now.height) > .5)) el.animate([{ transform: 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px) scale(' + was.width / now.width + ',' + was.height / now.height + ')' }, { transform: 'none' }], { duration: 300, easing: EASE_OUT }); }          // the frame glides to its new place by transform: its layout is already there
 }
 function peOneFrame() {
   if (PE.one == null || PE.mode !== 'crop') { peCropPaint(null); return; }
@@ -9034,7 +9035,7 @@ PE.cl = { bg: 1, sp: 1 };          // what the Clean button will apply: the pape
 const PE_ONE_PX = 2800;
 const peOneAsp = (sl, asp) => { const c = PE.mode !== 'crop' && sl.crop; return c ? asp * (c[2] - c[0]) / (c[3] - c[1]) : asp; };
 /* the page's box in the large view: as large as the window allows (it follows the window as it changes size) */
-const PE_ONE_EASE = 'cubic-bezier(.3,.8,.2,1)', PE_ONE_MS = 320;          // the large view moves on one ease and length: it opens, and the page's box changes shape, the old picture leaves and the new one arrives
+const PE_ONE_EASE = EASE_GLIDE, PE_ONE_MS = 320;          // the large view moves on one ease and length: it opens, and the page's box changes shape, the old picture leaves and the new one arrives
 function peOneFit(asp, glide) {
   const st = $('#peCropStage'), pg = $('#peCropPg'); if (asp) PE.oneAsp = asp; asp = PE.oneAsp; if (!asp || !st.clientWidth) return null;
   const W = Math.max(60, st.clientWidth - 40), H = Math.max(60, st.clientHeight - 40), w = Math.min(W, Math.round(H * asp)), h = Math.round(w / asp);
@@ -9060,7 +9061,7 @@ function peSweepEnd() { const l = $('#peCropPg').querySelectorAll('.pe-reveal,.p
 function peSweep(cv, orig, run) {
   const pg = $('#peCropPg'), main = $('#peCropCv'); peSweepEnd(); if (orig) { const o = $('#peOneOrig'); o.width = orig.width; o.height = orig.height; o.getContext('2d').drawImage(orig, 0, 0); }
   if (!pg.animate || reducedMotion()) { cv.id = 'peCropCv'; main.replaceWith(cv); return; }
-  const layer = document.createElement('div'), edge = document.createElement('i'), ease = 'cubic-bezier(.3,.8,.2,1)', t = 520; layer.className = 'pe-reveal'; edge.className = 'pe-edge'; layer.appendChild(cv);
+  const layer = document.createElement('div'), edge = document.createElement('i'), ease = EASE_GLIDE, t = 520; layer.className = 'pe-reveal'; edge.className = 'pe-edge'; layer.appendChild(cv);
   const ref = $('#peOneOrig'); pg.insertBefore(layer, ref); pg.insertBefore(edge, ref);
   layer.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }], { duration: t, easing: ease, fill: 'forwards' });
   edge.animate([{ transform: 'translateX(-100%)', opacity: 1 }, { opacity: 1, offset: .8 }, { transform: 'none', opacity: 0 }], { duration: t, easing: ease, fill: 'forwards' }).finished.then(() => {
@@ -9388,7 +9389,7 @@ function peRender(anim) {
   if (anim && !reducedMotion()) {
     Array.from(grid.children).forEach(c => {
       const was = old.get(+c.dataset.id), now = c.getBoundingClientRect();
-      if (!was) c.animate([{ opacity: 0, transform: 'scale(.82)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' });
+      if (!was) c.animate([{ opacity: 0, transform: 'scale(.82)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE_OUT });
       else if (Math.abs(was.left - now.left) > 1 || Math.abs(was.top - now.top) > 1) c.animate([{ transform: 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.32,.72,0,1)' });
     });
   }
@@ -9407,7 +9408,7 @@ function peRoll(p, nm, was, pos, same) {
       p.append(cur, g);
       cur.animate([{ transform: 'translateX(' + (up ? 85 : -85) + '%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease });
       g.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(' + (up ? -85 : 85) + '%)', opacity: 0 }], { duration: ms, easing: ease }).onfinish = () => g.remove();
-    } else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.22,1,.36,1)' });
+    } else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: EASE_OUT });
   }
   if (same !== was.same) nm.animate(same ? [{ opacity: 1, maxWidth: '80px' }, { opacity: 0, maxWidth: '0px' }] : [{ opacity: 0, maxWidth: '0px' }, { opacity: 1, maxWidth: '80px' }], { duration: 560, easing: 'cubic-bezier(.45,.05,.2,1)' });
 }
@@ -9442,7 +9443,7 @@ function peState() {
   $('#peUndo').disabled = !PE.undo.length; $('#peRedo').disabled = !PE.redo.length; $('#peReset').disabled = peIsIdentity(); PE_HIST.refresh();
   if (m === 'crop') peCropRefresh();
 }
-const pePop = card => { const tk = card && card.querySelector('.tick'); if (tk && tk.animate && !reducedMotion()) tk.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.18)', offset: .55 }, { transform: 'none' }], { duration: 440, easing: 'cubic-bezier(.22,1,.36,1)' }); };
+const pePop = card => { const tk = card && card.querySelector('.tick'); if (tk && tk.animate && !reducedMotion()) tk.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.18)', offset: .55 }, { transform: 'none' }], { duration: 440, easing: EASE_OUT }); };
 /* a turned page swings into its new shape while the cards around it, its picture and the number under it glide to their new places (FLIP) */
 const peBoxes = () => new Map(Array.from($('#peGrid').children).map(c => [c, [c, c.querySelector('.pe-thumb'), c.querySelector('.pe-foot')].map(e => e.getBoundingClientRect())]));
 function peGlide(was, cv, ow) {
@@ -9923,7 +9924,7 @@ function initMenu() {
     const full = body.scrollHeight + (parseFloat(cs.borderTopWidth) || 0), from = opening && now > 0 && body._glide ? now : opening ? 0 : now, to = opening ? full : 0;
     const k = h => ({ height: h + 'px', paddingTop: h ? cs.paddingTop : '0px', paddingBottom: h ? cs.paddingBottom : '0px', opacity: h ? 1 : 0 });
     body.style.overflow = 'hidden';
-    const a = body._glide = body.animate([k(from), k(to)], { duration: 450, easing: 'cubic-bezier(.22,1,.36,1)' });
+    const a = body._glide = body.animate([k(from), k(to)], { duration: 450, easing: EASE_OUT });
     a.onfinish = () => { body._glide = null; body.style.overflow = ''; if (!opening) { d.open = false; d.dataset.closing = ''; } };
     a.oncancel = () => { body.style.overflow = ''; };
   });
@@ -9956,10 +9957,47 @@ function wakeFs() {
   clearTimeout(FS.timer);
   FS.timer = setTimeout(() => { if (FS.hover || TL.drag || expOpen()) { wakeFs(); return; } app.classList.remove('fs-active'); }, 2500);
 }
+/* full screen is one glide: the picture and its frame travel between the two layouts' rectangles by transform alone (the new layout is in place from the first frame, so nothing is laid out as it moves), the old header and settings leave as a fading ghost, and the controls rise in as the picture lands. Same ease as the Audio Editor's full screen (aeFsEase) */
+const FS_MS = 380;
+function fsGhosts() {          // the header and the settings, copied where they were, so they can fade out after the layout has already changed
+  return ['.top', '.panel'].map(sel => {
+    const el = document.querySelector(sel), r = el && el.getBoundingClientRect(); if (!r || r.width < 2 || r.height < 2) return null;
+    const g = el.cloneNode(true); g.removeAttribute('id'); g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); g.classList.add('fs-ghost'); g.inert = true; g.setAttribute('aria-hidden', 'true');
+    g.style.cssText = 'position:fixed;margin:0;z-index:95;pointer-events:none;overflow:hidden;left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px'; document.body.appendChild(g); return g;
+  }).filter(Boolean);
+}
+function fsGlideStop() { (FS.anims || []).forEach(a => a.cancel()); FS.anims = null; document.querySelectorAll('.fs-ghost').forEach(g => g.remove()); fsGliding = false; }
+function fsGlide(on, from) {          // from: where the picture and its frame were, the page's chrome as ghosts, and the colors they had
+  const app = document.querySelector('.app'), wrap = $('#stageWrap'), cv = stageCanvas, mix = (a, b, p) => a + (b - a) * p;
+  layoutStage(); try { drawStage(); } catch (e) {} stageDirty = false;          // the picture is made for the layout it is moving into, so it only has to travel
+  const c1 = cv.getBoundingClientRect(), w1 = wrap.getBoundingClientRect(), c0 = from.c, w0 = from.w;
+  if (c1.width < 2 || w1.width < 2 || c0.width < 2 || w0.width < 2) { from.ghosts.forEach(g => g.remove()); return; }
+  const wcs = getComputedStyle(wrap), r1 = parseFloat(wcs.borderTopLeftRadius) || 0, bg1 = wcs.backgroundColor, n = 12, wk = [], ck = [];
+  for (let i = 0; i <= n; i++) {          // the frame and the picture each go from their old rectangle to their new one; the picture sits inside the frame, so its own transform is the one that, after the frame's, lands it
+    const p = aeFsEase(i / n), W = { l: mix(w0.left, w1.left, p), t: mix(w0.top, w1.top, p), w: mix(w0.width, w1.width, p), h: mix(w0.height, w1.height, p) }, C = { l: mix(c0.left, c1.left, p), t: mix(c0.top, c1.top, p), w: mix(c0.width, c1.width, p), h: mix(c0.height, c1.height, p) };
+    const sx = W.w / w1.width, sy = W.h / w1.height, rad = mix(from.rad, r1, p);
+    wk.push({ offset: i / n, transform: 'translate(' + (W.l - w1.left) + 'px,' + (W.t - w1.top) + 'px) scale(' + sx + ',' + sy + ')', borderRadius: rad / sx + 'px / ' + rad / sy + 'px' });
+    ck.push({ offset: i / n, transform: 'translate(' + ((C.l - W.l) / sx - (c1.left - w1.left)) + 'px,' + ((C.t - W.t) / sy - (c1.top - w1.top)) + 'px) scale(' + C.w / c1.width / sx + ',' + C.h / c1.height / sy + ')' });
+  }
+  wk[0].backgroundColor = from.bg; wk[n].backgroundColor = bg1;
+  const o = { duration: FS_MS, easing: 'linear' }, bgTo = getComputedStyle(document.body).backgroundColor, rise = el => el && el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 140, easing: EASE_OUT, fill: 'backwards' });
+  fsGliding = true; wrap.style.transformOrigin = cv.style.transformOrigin = '0 0';
+  const anims = [wrap.animate(wk, o), cv.animate(ck, o), app.animate([{ backgroundColor: on ? bgTo : '#000' }, { backgroundColor: on ? '#000' : bgTo }], { duration: on ? FS_MS : 200, easing: 'ease-out' })];
+  if (on) { anims.push(rise(app.querySelector('.transport')), rise(app.querySelector('.timeline'))); }          // the controls come up from the bottom as the picture lands
+  else ['.top', '.panel', '.transport', '.timeline'].forEach(s => { const el = app.querySelector(s) || document.querySelector(s); if (el) anims.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 40, easing: EASE_OUT, fill: 'backwards' })); });
+  from.ghosts.forEach(g => anims.push(g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-out', fill: 'forwards' })));
+  const live = FS.anims = anims.filter(Boolean);
+  const end = () => { if (FS.anims !== live) return; fsGlideStop(); wrap.style.transformOrigin = cv.style.transformOrigin = ''; layoutStage(); layoutTimeline(); stageDirty = true; TL.staticDirty = true; };
+  anims[0].onfinish = end;
+}
 function setFull(on) {
+  const app0 = document.querySelector('.app'), glide = !!S.pdf && FS.on !== on && !reducedMotion() && !!stageCanvas.animate, wrap0 = $('#stageWrap');
+  fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = '';
+  const from = glide ? { c: stageCanvas.getBoundingClientRect(), w: wrap0.getBoundingClientRect(), rad: parseFloat(getComputedStyle(wrap0).borderTopLeftRadius) || 0, bg: getComputedStyle(wrap0).backgroundColor, ghosts: on ? fsGhosts() : [] } : null;
   FS.on = on; TL.glass = on; const app = document.querySelector('.app');
   app.classList.toggle('fs', on); document.documentElement.classList.toggle('fs-lock', on); if (!on) app.classList.remove('fs-min');
   if (on) wakeFs(); else { clearTimeout(FS.timer); app.classList.remove('fs-active'); FS.hover = false; }
+  if (from) { fsGlide(on, from); layoutTimeline(); TL.staticDirty = true; } else
   requestAnimationFrame(() => { layoutStage(); layoutTimeline(); stageDirty = true; TL.staticDirty = true; });
   if (!on) requestAnimationFrame(() => {        // browsers can keep showing stale (grayed) controls after full screen: force one clean repaint
     const pn = document.querySelector('.panel'); if (!pn) return;
