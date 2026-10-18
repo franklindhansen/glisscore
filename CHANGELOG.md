@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+Motion is quicker and more consistent. The video player's full screen now glides in and out instead of jumping, and the Audio Editor's full screen is tighter, with no empty moment in the middle. Switching tools in the Audio Editor and PDF Editor is a quick fade with a small lift instead of a window-high slide, and a switch made mid-motion carries on from where it is. Buttons answer a press right away, hovers swell less, the toast, menu and pop-ups are shorter, and hover effects no longer stick on touch screens.
+
 ## 0.5.1
 
 Long scanned PDFs use far less memory, so a 220-page scan no longer pushes the browser to reload the tab as easily. Page cards far from the view free their pictures and draw again as you scroll, the browser keeps fewer remembered page pictures, and the file is held once. The page-turn button now reads Add page turn, as in the shortcuts, and a greyed Revert no longer puts "Nothing to revert." on the tool's status line; it is a tooltip.
