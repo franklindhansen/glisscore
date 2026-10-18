@@ -1888,6 +1888,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-foot .num{max-width:80px}
 .pe-foot .num.same{max-width:0;opacity:0;margin-left:-6px}
 .pe-pos i{font-style:normal}
+/* sliding number: the two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends while the digits move */
+.pe-pos.slide{display:block;position:relative;width:var(--slide-w);padding:0;overflow:hidden;color:var(--ink)}
+.pe-pos .pe-strip{position:absolute;left:0;top:0;display:flex;width:200%;height:100%;will-change:transform}
+.pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}
+.pe-pos .pe-cell + .pe-cell{box-shadow:inset 1px 0 0 color-mix(in srgb,var(--ink) 22%,transparent)}          /* a hairline where the two digits meet, like the edge of a tile; it crosses the pill only while the digits move */
 /* rotate and repeat float on the page while you point at it, in a small frosted bar */
 .pe-tools{position:absolute;left:50%;bottom:8px;display:flex;gap:2px;padding:3px;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .pe .pe-grid.arrange .page-card:hover .pe-tools,.pe .pe-grid.arrange .page-card:focus-within .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}

@@ -9403,6 +9403,8 @@ function peRender(anim) {
   if (anim) Array.from(grid.children).forEach(c => old.set(+c.dataset.id, c.getBoundingClientRect()));
   PE.nearN = 0; const frag = document.createDocumentFragment(); d.order.forEach(id => frag.appendChild(peCard(id, d.slots[id])));
   grid.textContent = ''; grid.appendChild(frag); peFarWatch();
+  PE.dir = new Map();          // which way each card moved, so its number slides the same way
+  if (anim) Array.from(grid.children).forEach(c => { const was = old.get(+c.dataset.id); if (was) { const dx = c.getBoundingClientRect().left - was.left; if (Math.abs(dx) > 1) PE.dir.set(+c.dataset.id, dx > 0 ? 1 : -1); } });
   PE.roll = !!anim; peState(); peSheenSync();
   if (anim && !reducedMotion()) {
     Array.from(grid.children).forEach(c => {
@@ -9416,23 +9418,38 @@ function peRender(anim) {
 }
 /* everything that is only a state (ticks, numbers, counts, buttons) is set on the cards already there, so ticking a page never rebuilds the grid */
 /* the number under a card rolls to its new place (old one out, new one in) in step with the card's glide; the "p. 3" tag eases in or out when it starts or stops matching */
-PE.posWas = new Map(); PE.roll = false;
-function peRoll(p, nm, was, pos, same) {
+PE.posWas = new Map(); PE.roll = false; PE.dir = new Map();
+/* a sliding number: the old digit slides out and the new one slides in behind it, the way its card is moving (a card that moves right sends its number right).
+   The two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends. About 340ms on the card's curve,
+   with a small detent at the end, so the digit clicks into place rather than stopping dead. */
+function peNumSlideEnd(p, text) {
+  if (p._slide) p._slide.cancel(); p._slide = null;
+  p.classList.remove('slide'); p.style.removeProperty('--slide-w'); p.textContent = text;
+}
+function peNumSlide(p, from, to, delay, dir) {
+  const w0 = p.offsetWidth, probe = document.createElement('span'); probe.textContent = String(to); p.append(probe);
+  const cs = getComputedStyle(p), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), w = Math.max(w0, probe.offsetWidth + pad); probe.remove();
+  const cell = t => { const s = document.createElement('span'); s.className = 'pe-cell'; s.textContent = t; return s; };
+  const strip = document.createElement('span'); strip.className = 'pe-strip';
+  strip.append(...(dir > 0 ? [cell(to), cell(from)] : [cell(from), cell(to)]));          // a card moving right sends its number right, so the new digit comes in from the left
+  p.textContent = ''; p.style.setProperty('--slide-w', w + 'px'); p.classList.add('slide'); p.append(strip);
+  const ease = 'cubic-bezier(.32,.72,0,1)';          // the card's own curve, so the digit travels with the card
+  const keys = dir > 0 ? ['translateX(-50%)', 'translateX(1px)', 'translateX(0)'] : ['translateX(0)', 'translateX(calc(-50% - 1px))', 'translateX(-50%)'];
+  const S = strip.animate(keys.map((transform, i) => ({ transform, offset: [0, .84, 1][i], easing: i ? 'ease-out' : ease })), { duration: 340, delay, fill: 'both' });
+  p._slide = S; S.onfinish = () => peNumSlideEnd(p, String(to));
+}
+function peRoll(p, nm, was, pos, same, delay = 0, dir = -1) {
   if (pos !== was.pos) {
-    const up = pos > was.pos, ease = 'cubic-bezier(.45,.05,.2,1)', ms = 680;
-    if (pos && was.pos) {
-      p.style.position = 'relative'; p.style.overflow = 'hidden'; p.textContent = '';
-      const cur = document.createElement('i'), g = document.createElement('i'); cur.textContent = pos; g.textContent = was.pos; g.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center';
-      p.append(cur, g);
-      cur.animate([{ transform: 'translateX(' + (up ? 85 : -85) + '%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: ms, easing: ease });
-      g.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateX(' + (up ? -85 : 85) + '%)', opacity: 0 }], { duration: ms, easing: ease }).onfinish = () => g.remove();
-    } else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: EASE_OUT });
+    if (p._slide) peNumSlideEnd(p, String(was.pos));          // a slide still running lands first, so a quick second move starts from the number on the card
+    if (pos && was.pos) peNumSlide(p, was.pos, pos, delay, dir);
+    else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay, easing: EASE_OUT, fill: 'backwards' });
   }
   if (same !== was.same) nm.animate(same ? [{ opacity: 1, maxWidth: '80px' }, { opacity: 0, maxWidth: '0px' }] : [{ opacity: 0, maxWidth: '0px' }, { opacity: 1, maxWidth: '80px' }], { duration: 560, easing: 'cubic-bezier(.45,.05,.2,1)' });
 }
 function peState() {
   const roll = PE.roll && !reducedMotion(); PE.roll = false;
   const d = PE.d, grid = $('#peGrid'), m = PE.mode, tm = peTickMode(), w = d.wm; let pos = 0, pool = 0, on = 0;
+  const rolls = [];          // the numbers that change, in reading order (left to right, top to bottom), so the flips run that way too
   grid.classList.toggle('ticks', m === 'pages' || tm); grid.classList.toggle('arrange', m === 'pages'); grid.classList.toggle('opens', peOneMode());
   if (m !== 'crop') grid.querySelectorAll('.shared').forEach(c => c.classList.remove('shared')); else PE.accent = getComputedStyle(grid).getPropertyValue('--accent').trim();
   Array.from(grid.children).forEach(c => {
@@ -9442,10 +9459,12 @@ function peState() {
     c.classList.toggle('off', !yes); c.classList.toggle('na', na); c.classList.toggle('hid', !!sl.x); c.classList.toggle('lvl', m === 'clean' ? peCleaned(sl) : !!(sl.skew || sl.vskew || sl.warp)); { const lv = c.querySelector('.pe-lvl'); lv.textContent = m === 'crop' ? 'Shared' : m === 'clean' ? 'Cleaned' : 'Leveled'; if (m === 'crop') lv.title = 'No music on this page, so it takes the same frame as the other pages'; else lv.removeAttribute('title'); } c.setAttribute('aria-pressed', String(yes));
     if (na) c.setAttribute('aria-disabled', 'true'); else c.removeAttribute('aria-disabled');
     const p = c.querySelector('.pe-pos'), nm = c.querySelector('.num'), same = !sl.c && !sl.x && sl.src + 1 === pos, was = PE.posWas.get(+c.dataset.id), np = sl.x ? 0 : pos;
-    p.textContent = np || ''; nm.classList.toggle('same', same); PE.posWas.set(+c.dataset.id, { pos: np, same });
-    if (roll && was) peRoll(p, nm, was, np, same);
+    if (!p._slide && !(roll && was && np !== was.pos)) p.textContent = np || '';          // a number that is about to slide keeps its old digit until its turn
+    nm.classList.toggle('same', same); PE.posWas.set(+c.dataset.id, { pos: np, same });
+    if (roll && was) rolls.push([p, nm, was, np, same, PE.dir.get(+c.dataset.id)]);
     c.setAttribute('aria-label', 'Page ' + (sl.src + 1) + (sl.c ? ' (repeat)' : '') + (sl.x ? ', left out' : ', position ' + pos) + (tm && !na ? (yes ? ', selected' : ', not selected') : ''));
   });
+  rolls.forEach(([p, nm, was, np, same, dir], k) => peRoll(p, nm, was, np, same, k * 80, dir || -1)); PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one          // one number at a time, in reading order (left to right, top to bottom), 80ms apart, so the eye can follow each one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
   else swapText(cnt, m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true);

@@ -1,6 +1,6 @@
 // PDF Editor, the large view and its neighbors: a double-click opens it from Re-kilter, Crop and Clean without changing a page's tick; the page box has the page's own shape at once;
 // the back arrow sits at the top left; the page zooms (buttons, double-click, Ctrl+wheel), moves when larger than the window and fits again; another PDF starts with nothing remembered from the last one;
-// Crop says so when the margin has no room; the number under a card rolls sideways.
+// Crop says so when the margin has no room; the number under a card slides sideways with its card.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-view.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -50,11 +50,13 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   ok('Another page opens at the fit size', z6.z === 1, JSON.stringify(z6));
   await p.click('#peOneBack'); await p.waitForTimeout(400);
   ok('The back arrow returns to the pages', await p.evaluate(() => PE.one == null && !document.querySelector('#peWin').classList.contains('one')));
-  // the number rolls sideways
+  // the number slides sideways, the way its card moves
   await p.evaluate(() => { peTool('pages'); }); await p.waitForTimeout(800);
-  await p.evaluate(() => { const d = PE.d; d.order = [d.order[1], d.order[0], d.order[2]]; const g = document.querySelector('#peGrid'); d.order.forEach(id => g.appendChild(g.querySelector('.page-card[data-id="' + id + '"]'))); PE.roll = true; peState(); });
-  const anim = await p.evaluate(() => document.getAnimations().filter(a => a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest('.pe-pos')).map(a => ({ ms: a.effect.getTiming().duration, x: JSON.stringify(a.effect.getKeyframes()[0].transform) })));
-  ok('The number under a card rolls sideways and unhurried', anim.length >= 2 && anim.every(a => a.ms >= 600) && anim.some(a => /translateX/.test(a.x)), JSON.stringify(anim));
+  const before = await p.evaluate(() => { const o = PE.d.order.slice(); PE.d.order = [o[1], o[0], o[2]]; peRender(true); return o; });
+  const slides = await p.evaluate(() => document.getAnimations().filter(a => a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('pe-strip')).map(a => ({ id: +a.effect.target.closest('.page-card').dataset.id, ms: a.effect.getTiming().duration, first: a.effect.getKeyframes()[0].transform })));
+  ok('The number under a card slides sideways with it, in about 340ms', slides.length >= 2 && slides.every(s => s.ms <= 360), JSON.stringify(slides));
+  const startOf = id => { const m = /\((-?[\d.]+)/.exec((slides.find(s => s.id === id) || {}).first || ''); return m ? +m[1] : NaN; };          // the strip's first position: -50% (its number comes in from the left) or 0px
+  ok('A number slides the way its card moved: a card that moves right sends its number right', startOf(before[0]) < 0 && startOf(before[1]) === 0, JSON.stringify({ before, slides }));
   // Crop: no room for margin
   await p.evaluate(() => { PE.d.order = [0, 1, 2]; peTool('crop'); }); await p.waitForTimeout(900);
   await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); });
