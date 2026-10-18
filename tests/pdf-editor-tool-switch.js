@@ -49,6 +49,40 @@ async function makePdf(name, n) {
     ok('Cards keep one size while switching to ' + tool, w.length === 1, JSON.stringify(w));
   }
 
+  // the grid keeps its scroll place and its scrollbar through a switch: the thumb does not jump to the top, and the grid's own overflow is never hidden
+  await p.evaluate(() => { document.getElementById('peWrap').scrollTop = 600; });
+  await p.waitForTimeout(100);
+  const before = await p.evaluate(() => document.getElementById('peWrap').scrollTop);
+  await p.click('#peRail .pe-tab[data-tool="clean"]');
+  let hidden = false; for (let i = 0; i < 20; i++) { await p.waitForTimeout(25); if (await p.evaluate(() => getComputedStyle(document.getElementById('peWrap')).overflowY !== 'auto')) hidden = true; }
+  await p.waitForTimeout(600);
+  const after = await p.evaluate(() => document.getElementById('peWrap').scrollTop);
+  ok('A tool switch keeps the grid scroll place', before > 0 && Math.abs(after - before) <= 2, 'before ' + before + ', after ' + after);
+  ok('The grid scroll bar is never hidden during a switch', !hidden);
+
+  // the old head leaves before the new one arrives: the new one is hidden for 40ms, the old one is gone by 140ms (paused, so the timing is exact)
+  await p.click('#peRail .pe-tab[data-tool="pages"]');
+  const ov = await p.evaluate(() => {
+    const view = t => document.querySelector('#peBand .pe-tv[data-tool="' + t + '"]');
+    const at = (t, ms) => { const el = view(t), a = el.getAnimations()[0]; if (!a) return null; a.pause(); a.currentTime = ms; return +getComputedStyle(el).opacity; };
+    return { newAt10: at('pages', 10), newAt60: at('pages', 60), oldAt100: at('clean', 100), oldAt150: at('clean', 150) };
+  });
+  ok('The new head is hidden at the start of a switch (no flash)', ov.newAt10 === 0, JSON.stringify(ov));
+  ok('The old head is nearly gone by 100ms', ov.oldAt100 !== null && ov.oldAt100 < 0.3, JSON.stringify(ov));
+  ok('The old head is gone by 150ms', ov.oldAt150 === 0, JSON.stringify(ov));
+  ok('The new head has barely started by 60ms', ov.newAt60 !== null && ov.newAt60 < 0.5, JSON.stringify(ov));
+  await p.waitForTimeout(600);
+
+  // a pressed tool tab dips to 0.97, and the selected highlight stays where it is
+  const hl = await p.evaluate(() => document.getElementById('peRailSel').getBoundingClientRect().top);
+  const box = await p.locator('#peRail .pe-tab[data-tool="resize"]').boundingBox();
+  await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down(); await p.waitForTimeout(250);
+  const sc = await p.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector('#peRail .pe-tab[data-tool="resize"]')).transform).a);
+  const hlDown = await p.evaluate(() => document.getElementById('peRailSel').getBoundingClientRect().top);
+  await p.mouse.up(); await p.waitForTimeout(600);
+  ok('A pressed tool tab dips to scale 0.97', Math.abs(sc - 0.97) < 0.01, 'scale ' + sc.toFixed(3));
+  ok('The selected tool highlight does not move with the press', Math.abs(hlDown - hl) < 1, 'before ' + hl + ', pressed ' + hlDown);
+
   ok('No page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

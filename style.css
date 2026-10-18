@@ -1755,11 +1755,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-rail-in{position:relative;display:flex;flex-direction:column;gap:2px}
 .pe-rail-h{margin:12px 0 4px 10px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .pe-sel+.pe-rail-h{margin-top:4px}
-.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color)}
+.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tab svg{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);transition:color .2s var(--ease-color)}
 @media (hover:hover){.pe-tab:not(.on):hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}}
 .pe-tab.on,.pe-tab.on svg{color:var(--accent)}
 .pe-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pe-tab:not(:disabled):active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.pe-tab:not(:disabled):active{transform:none}}
 .pe-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .4s var(--spring-press),width .4s var(--spring-press),height .4s var(--spring-press),opacity .25s var(--ease-ui)}
 
 /* the window */
@@ -1774,8 +1776,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-tv.sliding{position:absolute;left:0;right:0;top:0;pointer-events:none}
 .pe-tv.measure{position:absolute;left:0;right:0;top:0;visibility:hidden}
 .pe-snap{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden!important;background:var(--panel2)}
+.pe-grid-wrap.pe-snap{overflow:auto!important;background:none}
 .pe-body.sliding{overflow:clip}
-.pe-body.sliding>.pe-grid-wrap{overflow:hidden}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
 .pe-pt h3{margin:0;font-size:16px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1859,14 +1861,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe .pe-grid.arrange .page-card{cursor:grab}
 .pe .pe-grid.arrange .page-card:active{cursor:grabbing}
 .pe .page-card:focus-visible{outline:2px solid var(--accent);outline-offset:0}
-.pe-thumb{position:relative;display:block;margin:auto 0;transition:transform .35s var(--spring-hover)}          /* a wide (turned) page sits in the middle of the room above the number, so a row of mixed shapes shares one centerline and one number line */
-.pe .page-card canvas{display:block;width:100%;height:auto;border:0;border-radius:4px;background:#fff;pointer-events:none;box-shadow:0 0 0 .5px rgba(16,20,40,.16),0 2px 8px rgba(16,20,40,.10);transition:opacity .3s var(--ease-color),filter .3s var(--ease-color),box-shadow .35s var(--ease-ui)}
+.pe-thumb{position:relative;display:flex;flex:1 1 auto;flex-direction:column;justify-content:center;min-height:0}          /* the thumb is the card's fixed room above the number: a turned page is centered inside it, so the room, the tools and the tick never move when the page turns */
+.pe .page-card canvas{display:block;width:100%;height:auto;margin:auto 0;border:0;border-radius:4px;background:#fff;pointer-events:none;box-shadow:0 0 0 .5px rgba(16,20,40,.16),0 2px 8px rgba(16,20,40,.10);transition:opacity .3s var(--ease-color),transform .35s var(--spring-hover)}
 @media (hover:hover){
   .pe .page-card:not(.na):not(.pe-hole):hover{background:color-mix(in srgb,var(--ink) 4%,transparent);transform:none}
-  .pe .page-card:not(.na):not(.pe-hole):hover .pe-thumb{transform:translateY(-2px)}
+  .pe .page-card:not(.na):not(.pe-hole):hover canvas{transform:translateY(-2px)}          /* the page lifts; the bar and the tick under it stay still */
   .pe .page-card:not(.na):not(.pe-hole):hover canvas{box-shadow:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16)}
 }
-.pe .page-card:not(.na):not(.pe-hole):active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
+.pe .page-card:not(.na):not(.pe-hole):active:not(:has(.pe-tools:active)){transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}          /* pressing a card's own bar (Rotate, Repeat) does not shrink the card: the page must not move beneath the turn */
 .pe .page-card.off canvas{opacity:.38;filter:grayscale(1)}
 .pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,255,255,.88);color:rgba(16,20,40,.7);box-shadow:0 1px 4px rgba(0,0,0,.28);pointer-events:none}
 .pe .page-card .pe-hid svg{width:17px;height:17px}

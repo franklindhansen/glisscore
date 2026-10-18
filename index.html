@@ -8747,10 +8747,11 @@ async function peSpreadScan() {
 }
 function peTool(name) {
   if (name === PE.mode || PE.drag) return;
-  const snap = peBodySnap(), dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1, redraw = PE.mode === 'crop' || name === 'crop' || PE.one != null;          // only Crop draws the cards differently, so every other switch keeps them as they are
+  const redraw = PE.mode === 'crop' || name === 'crop' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
+  const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
   peClearStatus();
   PE.mode = name; PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
-  const g = $('#peWrap'); if (redraw) peRender(false); else peState(); if (g) g.scrollTop = 0;
+  if (redraw) peRender(false); else peState();
   peBodySlide(snap, dir);
   if (name === 'split') peSpreadScan();
 }
@@ -8765,18 +8766,21 @@ function peChrome() {
   if (m === 'split') peSplitNote();
   peActs();
 }
-const PE_EASE = EASE_GLIDE, PE_MS = 250, PE_LIFT = 10, peDist = () => PE_LIFT;          // a tool switch is a crossfade with a small lift in the direction you are moving, not a slide the height of the window
+const PE_EASE = 'linear(0, 0.0197, 0.0689, 0.1357, 0.2118, 0.2913, 0.3703, 0.4462, 0.5172, 0.5827, 0.6420, 0.6953, 0.7427, 0.7846, 0.8213, 0.8533, 0.8810, 0.9050, 0.9257, 0.9435, 0.9587, 0.9716, 0.9827, 0.9920, 1)', PE_MS = 250, PE_LIFT = 10, peDist = () => PE_LIFT;          // a tool switch is a crossfade with a small lift in the direction you are moving, not a slide the height of the window
+const PE_DELAY = 40, PE_OUT = .56;          // the new view starts 40ms in; the old one is gone by 140ms (56% of 250ms)
+// a view that is already moving starts its next move from where it is on screen, so a fast reversal never jumps
+const peLive = el => el._slide ? { o: getComputedStyle(el).opacity, t: getComputedStyle(el).transform } : null;
 function peSlide(prev, name) {
   const body = $('#peBand'), views = Array.from(body.querySelectorAll('.pe-tv')), cur = views.find(v => v.dataset.tool === name), old = views.find(v => v.dataset.tool === prev);
-  const h0 = body.offsetHeight;
+  const h0 = body.offsetHeight, lo = peLive(old), lc = peLive(cur);
   views.forEach(v => { (v._slide || []).forEach(a => a.cancel()); v._slide = null; v.classList.remove('sliding'); v.hidden = v !== cur; v.inert = v !== cur; });
   (body._slide || []).forEach(a => a.cancel()); body._slide = null; body.classList.remove('sliding');
   peTopFit(name);
   if (!old || old === cur || !PE.chromed || reducedMotion()) return;
   const dir = peOrder().indexOf(name) > peOrder().indexOf(prev) ? 1 : -1, h1 = body.offsetHeight, dist = PE_LIFT;
   old.hidden = false; old.classList.add('sliding'); body.classList.add('sliding');
-  const a1 = old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });
-  const a2 = cur.animate([{ transform: 'translateY(' + (dir * dist) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, easing: PE_EASE });
+  const a1 = old.animate([{ transform: lo ? lo.t : 'none', opacity: lo ? lo.o : 1, offset: 0 }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0, offset: PE_OUT }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0, offset: 1 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });
+  const a2 = cur.animate([{ transform: lc ? lc.t : 'translateY(' + (dir * dist) + 'px)', opacity: lc ? lc.o : 0 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, delay: PE_DELAY, easing: PE_EASE, fill: 'backwards' });
   const a3 = Math.abs(h1 - h0) > 1 ? body.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: PE_MS, easing: PE_EASE }) : null;
   { const rule = $('#peRule'), win = $('#peWin'); win.querySelectorAll('.pe-rule.pe-snap').forEach(n => n.remove()); if (rule) {          // the divider travels with the head and the pages: the old line leaves with the old head, a new one comes in with the new
     const ghost = rule.cloneNode(); ghost.removeAttribute('id'); ghost.classList.add('pe-snap'); ghost.style.top = rule.offsetTop + 'px'; win.appendChild(ghost);
@@ -8798,14 +8802,13 @@ function peBodySnap() {
   return { el, top: src.scrollTop };
 }
 function peBodySlide(snap, dir) {
-  const body = $('#peWin .pe-body'); body.querySelectorAll('.pe-snap').forEach(n => n.remove()); (body._slide || []).forEach(a => a.cancel()); body._slide = null;
+  const body = $('#peWin .pe-body');
+  body.querySelectorAll('.pe-snap').forEach(n => n.remove()); (body._slide || []).forEach(a => a.cancel()); body._slide = null;
   if (!snap) return;
-  const cur = $('#peWin').classList.contains('one') ? $('#peCropView') : $('#peWrap'), D = peDist();
   body.appendChild(snap.el); snap.el.scrollTop = snap.top; body.classList.add('sliding');
-  const a1 = snap.el.animate([{ transform: 'none', opacity: 1 }, { opacity: 0, offset: .5 }, { transform: 'translateY(' + (-dir * D) + 'px)', opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });          // the old pages are gone early, so they never linger under the head
-  const a2 = cur.animate([{ transform: 'translateY(' + (dir * D) + 'px)', opacity: 0 }, { opacity: 0, offset: .1 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, easing: PE_EASE });
-  body._slide = [a1, a2];
-  a2.onfinish = a2.oncancel = () => { snap.el.remove(); if (!body._slide || body._slide[1] === a2) body.classList.remove('sliding'); };          // a cancelled slide reports late, after the next one has begun: it must not take that one's clip away
+  const a1 = snap.el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });          // the new pages are already fully visible beneath, so the dissolve never dips and the two images never separate
+  body._slide = [a1];
+  a1.onfinish = a1.oncancel = () => { snap.el.remove(); if (!body._slide || body._slide[0] === a1) body.classList.remove('sliding'); };          // a cancelled dissolve reports late, after the next one has begun: it must not take that one's clip away
 }
 /* the tools that fix and arrange share one short head; Re-size and Watermark, which hold more, share one taller head. Moving between the two glides the head's height and the pages follow */
 const PE_TALL = new Set(['resize', 'wm']);
@@ -9460,20 +9463,29 @@ function peState() {
 }
 const pePop = card => { const tk = card && card.querySelector('.tick'); if (tk && tk.animate && !reducedMotion()) tk.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.18)', offset: .55 }, { transform: 'none' }], { duration: 440, easing: EASE_OUT }); };
 /* a turned page swings into its new shape while the cards around it, its picture and the number under it glide to their new places (FLIP) */
-const peBoxes = () => new Map(Array.from($('#peGrid').children).map(c => [c, [c, c.querySelector('.pe-thumb'), c.querySelector('.pe-foot')].map(e => e.getBoundingClientRect())]));
+const peBoxes = () => new Map(Array.from($('#peGrid').children).map(c => [c, c.getBoundingClientRect()]));
+/* the turn's ease, the same curve as the other page moves, sampled so the turn can be written as keyframes */
+const peBez = (x1, y1, x2, y2) => t => { const f = (a, b, s) => 3 * (1 - s) * (1 - s) * s * a + 3 * (1 - s) * s * s * b + s * s * s; let lo = 0, hi = 1, s = t; for (let i = 0; i < 24; i++) { if (f(x1, x2, s) < t) lo = s; else hi = s; s = (lo + hi) / 2; } return f(y1, y2, s); };
+const PE_TURN_EASE = peBez(.22, 1, .36, 1), PE_TURN_MS = 250, PE_TURN_N = 16;          // the ease-out of the tool moves: it lands firmly, so the page snaps rather than settles
+/* a turned page swings upright inside its own room in 250ms: the room (the thumb) and the bar stay put, the cards that moved glide (FLIP) on the same clock, and the picture shrinks only as far as its corners need to stay in the room */
 function peGlide(was, cv, ow) {
   if (reducedMotion()) return;
-  const o = { duration: 520, easing: 'cubic-bezier(.32,.72,0,1)' }, mid = r => [r.left + r.width / 2, r.top + r.height / 2];
+  const o = { duration: PE_TURN_MS, easing: 'cubic-bezier(.22,1,.36,1)' };
   was.forEach((b, c) => {
     if (!c.isConnected) return;
-    const n = [c, c.querySelector('.pe-thumb'), c.querySelector('.pe-foot')].map(e => e.getBoundingClientRect()), dx = b[0].left - n[0].left, dy = b[0].top - n[0].top;
+    const n = c.getBoundingClientRect(), dx = b.left - n.left, dy = b.top - n.top;
     if (Math.abs(dx) > .5 || Math.abs(dy) > .5) c.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], o);
-    [1, 2].forEach(i => {
-      const m = mid(b[i]), k = mid(n[i]), x = m[0] - k[0] - dx, y = m[1] - k[1] - dy;
-      if (Math.abs(x) > .5 || Math.abs(y) > .5) [c.querySelector('.pe-thumb'), c.querySelector('.pe-foot')][i - 1].animate([{ transform: 'translate(' + x + 'px,' + y + 'px)' }, { transform: 'none' }], o);
-    });
   });
-  const nh = cv.getBoundingClientRect().height; if (cv.animate && nh) cv.animate([{ transform: 'rotate(-90deg) scale(' + (ow / nh) + ')' }, { transform: 'none' }], o);          // the new picture starts turned back and sized as the old one
+  if (!cv.animate) return;
+  const w = cv.offsetWidth, h = cv.offsetHeight, room = cv.parentElement, W = room.clientWidth, H = room.clientHeight;          // layout sizes: a transform never changes them
+  if (!w || !h || !H) return;
+  const s0 = ow / h, frames = [];          // the new picture starts turned back and sized as the old one (its width is ow, its height the old height)
+  for (let i = 0; i <= PE_TURN_N; i++) {
+    const e = PE_TURN_EASE(i / PE_TURN_N), th = -90 * (1 - e), r = th * Math.PI / 180, c = Math.abs(Math.cos(r)), sn = Math.abs(Math.sin(r));
+    const bw = w * c + h * sn, bh = w * sn + h * c, k = Math.min(s0 + (1 - s0) * e, W / bw, H / bh);
+    frames.push({ transform: 'rotate(' + th + 'deg) scale(' + k + ')', offset: i / PE_TURN_N });
+  }
+  cv.animate(frames, { duration: PE_TURN_MS, easing: 'linear' });
 }
 function peAct(act, id) {
   const d = PE.d, sl = d.slots[id], card = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); if (!sl) return;
