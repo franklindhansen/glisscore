@@ -712,9 +712,9 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .pe .row .btn svg,.editor .row .btn svg{width:16px;height:16px;flex:none}
 
 /* ----- How it works, and a steady scrollbar ----- */
-.dlg.how{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;grid-template-rows:auto auto minmax(0,1fr) auto}
+.dlg.how{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:hidden;grid-template-rows:auto auto minmax(0,1fr) auto}
 .how-lead{font-size:14px;color:var(--ink)}
-.how-body{display:grid;gap:14px;overflow:auto;padding-right:6px;min-height:0}
+.how-body{display:grid;gap:14px;align-content:start;overflow:auto;scrollbar-gutter:stable;padding-right:6px;min-height:0}
 .how-body h3{margin:0 0 3px;font-size:13.5px;font-weight:600}
 .how-body p{font-size:13.5px;line-height:1.5}
 
@@ -2215,7 +2215,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .how-d[data-closing="1"]>summary::before{transform:rotate(-45deg)}
 .how-d>summary:hover{background:var(--accent-soft)}
 .how-d>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.how-in{padding:2px 14px 14px;border-top:1px solid var(--line)}
+.how-in{box-sizing:border-box;padding:2px 14px 14px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 

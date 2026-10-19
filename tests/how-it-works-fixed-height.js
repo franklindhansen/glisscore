@@ -24,5 +24,27 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     o.hidden = true; return { mid, full, midShut, shut };
   });
   ok('a dropdown glides open and shut (partway at 120ms, whole after)', g.mid > 0 && g.mid < g.full && g.midShut > 0 && g.midShut < g.full && g.shut === false, JSON.stringify(g));
+  // a real click on a dropdown: the title, the frame and the text above it stay where they are, and the spacing does not change
+  const c = await p.evaluate(async () => {
+    const o = document.querySelector('#howDlg'); o.hidden = false; await new Promise(r => setTimeout(r, 300));
+    const d = o.querySelector('.dlg'), first = d.querySelector('.how-body h3'), sum = d.querySelector('.how-d summary');
+    const snap = () => ({ title: d.querySelector('#howTitle').getBoundingClientRect().top, h3: first.getBoundingClientRect().top, frame: d.scrollTop });
+    const before = snap(), gap = d.querySelectorAll('.how-body h3')[1].getBoundingClientRect().top - d.querySelectorAll('.how-body h3')[0].getBoundingClientRect().top;
+    sum.focus(); sum.click(); await new Promise(r => setTimeout(r, 700));
+    const after = snap(), gapAfter = d.querySelectorAll('.how-body h3')[1].getBoundingClientRect().top - d.querySelectorAll('.how-body h3')[0].getBoundingClientRect().top;
+    sum.click(); await new Promise(r => setTimeout(r, 700)); o.hidden = true;
+    return { same: before.title === after.title && before.h3 === after.h3 && after.frame === 0, gap, gapAfter };
+  });
+  ok('a real click on a dropdown moves nothing above it and leaves the frame unscrolled', c.same && c.gap === c.gapAfter, JSON.stringify(c));
+  // the glide never runs past the height it lands on (it used to overshoot by the padding, then snap back)
+  const ov = await p.evaluate(async () => {
+    const o = document.querySelector('#howDlg'); o.hidden = false; await new Promise(r => setTimeout(r, 300));
+    const d = o.querySelector('.how-d'), body = d.querySelector('.how-in'), sum = d.querySelector('summary'); let max = 0, on = true;
+    const f = () => { max = Math.max(max, body.getBoundingClientRect().height); if (on) requestAnimationFrame(f); }; requestAnimationFrame(f);
+    sum.click(); await new Promise(r => setTimeout(r, 700)); on = false; const fin = body.getBoundingClientRect().height;
+    sum.click(); await new Promise(r => setTimeout(r, 700)); o.hidden = true;
+    return { max: Math.round(max * 10) / 10, fin: Math.round(fin * 10) / 10 };
+  });
+  ok('the dropdown glides open without going past its final height', ov.max <= ov.fin + 0.5 && ov.fin > 0, JSON.stringify(ov));
   ok('no errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

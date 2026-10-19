@@ -8,7 +8,7 @@ const base = 'http://localhost:' + (process.env.PORT || 8123);
 const root = __dirname + '/../';
 (async () => {
   const red = fs.readFileSync(root + '_redirects', 'utf8'), dep = fs.readFileSync(root + 'deploy.sh', 'utf8'), html = fs.readFileSync(root + 'index.html', 'utf8');
-  for (const path of ['/about', '/how-it-works', '/support']) ok('_redirects rewrites ' + path + ' to index.html', new RegExp('^' + path + '\\s+/index\\.html\\s+200\\s*$', 'm').test(red));
+  for (const path of ['/about', '/how-it-works', '/support']) ok('_redirects rewrites ' + path + ' to /', new RegExp('^' + path + '\\s+/\\s+200\\s*$', 'm').test(red));
   ok('deploy.sh lists _redirects and checks it live', /FILES=\([^)]*_redirects/.test(dep.replace(/\n\s+/g, ' ')));
   const b = await chromium.launch(), errs = [];
   const open = async (w, path) => {
