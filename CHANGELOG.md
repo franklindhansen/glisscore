@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+Save thumbnail never saves a file over YouTube's 2 MB limit. Site copy gets Oxford commas.
+
 ## 1.0.1
 
 Site pages (/about, /how-it-works, /support) open correctly. How it works has clearer wording, and its dropdowns no longer shift the window.
