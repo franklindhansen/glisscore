@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+Site pages (/about, /how-it-works, /support) open correctly. How it works has clearer wording, and its dropdowns no longer shift the window.
+
 ## 1.0.0
 
 The first full release: the PDF Editor, the Audio Editor and the Video Editor, with the Support dialog, the About dialog and the site pages.
