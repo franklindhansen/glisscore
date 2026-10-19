@@ -12,4 +12,4 @@ This app includes the following open-source components. Each is used under its o
 
 The Apple Lossless (ALAC) decoder in `audio-store-worker.js` is our own JavaScript, but it follows the bitstream that Apple documented by releasing its reference decoder under the Apache License 2.0 (https://github.com/macosforge/alac). Apple's Apache 2.0 license is compatible with MIT; the decoder was checked sample for sample against ffmpeg.
 
-Everything else (audio processing, loudness measuring, the FLAC and MP4/MOV writers, the limiter, the resampler) is written for this project from public format descriptions and standards.
+Everything else (audio processing, loudness measuring, the FLAC and MP4/MOV writers, the limiter, and the resampler) is written for this project from public format descriptions and standards.

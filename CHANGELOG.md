@@ -22,7 +22,7 @@ The number under a card now slides the way its card moves, sideways or up and do
 
 ## 0.6.0
 
-Motion is quicker and more consistent. The video player's full screen now glides in and out instead of jumping, and the Audio Editor's full screen is tighter, with no empty moment in the middle. Switching tools in the Audio Editor and PDF Editor is a quick fade with a small lift instead of a window-high slide, and a switch made mid-motion carries on from where it is. Buttons answer a press right away, hovers swell less, the toast, menu and pop-ups are shorter, and hover effects no longer stick on touch screens.
+Motion is quicker and more consistent. The video player's full screen now glides in and out instead of jumping, and the Audio Editor's full screen is tighter, with no empty moment in the middle. Switching tools in the Audio Editor and PDF Editor is a quick fade with a small lift instead of a window-high slide, and a switch made mid-motion carries on from where it is. Buttons answer a press right away, hovers swell less, the toast, menu, and pop-ups are shorter, and hover effects no longer stick on touch screens.
 
 ## 0.5.1
 
@@ -50,4 +50,4 @@ History in the video editor now records every output setting as a named step, in
 
 ## 0.1.0
 
-First numbered release: the Audio Editor, PDF Editor and video editor, with a Single page layout and Turn, Slide and Peel page turns.
+First numbered release: the Audio Editor, PDF Editor, and video editor, with a Single page layout and Turn, Slide, and Peel page turns.
