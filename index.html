@@ -5730,7 +5730,7 @@ async function saveThumbnail() {
     rend.destroy();
     let q = 0.93, blob = null;
     for (let i = 0; i < 8; i++) { blob = await new Promise(r => flat.toBlob(r, 'image/jpeg', q)); if (!blob || blob.size <= 1.9 * 1024 * 1024) break; q -= 0.08; }
-    if (!blob) throw new Error('could not make the image');
+    if (!blob || blob.size > 1.9 * 1024 * 1024) throw new Error('could not make the image under 2 MB');
     const name = ((S.credits.title.trim() || S.pdf.name || 'Score').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Score') + ' - Thumbnail.jpg';
     await saveFile(blob, name); toast(tx('vid.thumb', { mb: (blob.size / 1048576).toFixed(1) }));
   } catch (e) { console.error(e); toast(tx('vid.thumbfail'), 5000); }
