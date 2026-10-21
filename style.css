@@ -1222,6 +1222,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-learn .btn,.nr-learn .mt-chip{height:30px;box-sizing:border-box;margin:0}
 .nr-learn .mt-chip{padding:0 4px 0 12px;white-space:nowrap}
 .mt-pick{min-height:30px}
+#aeMatch .mt-chip{height:30px;box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
 .mt-pick span.bad{color:var(--bad)}
 
 /* tool windows slide */
@@ -1318,6 +1319,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
 #audioDlg.fsmove{overflow:hidden}          /* no scroll bars flash up while the window moves past the edges */
 #audioDlg.afull .ed-lead{display:none}
+#audioDlg.afull>.dlg.editor.ae>.row{visibility:hidden}          /* Export audio, Cancel, and Done have no place in full screen: left to the grid they stretch into its tall middle row, behind the picture */
 #audioDlg.afull .ed-head{grid-row:1;z-index:2}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
 #audioDlg.afull .ae-main{grid-row:4;z-index:2;overflow:auto;overscroll-behavior:contain}

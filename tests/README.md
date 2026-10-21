@@ -11,9 +11,9 @@ Run, with the app served on port 8123 (for example `python3 -m http.server 8123`
 
     S=tests/fixtures NODE_PATH=~/keyframes-tests/node_modules node tests/audio-editor-core.js
     S=tests/fixtures NODE_PATH=~/keyframes-tests/node_modules node tests/audio-editor-controls.js
-    S=tests/fixtures NODE_PATH=~/keyframes-tests/node_modules node tests/audio-editor-layout.js 700 900 w700
+    S=tests/fixtures NODE_PATH=~/keyframes-tests/node_modules node tests/audio-editor-layout.js
 
-Every check prints PASS or FAIL. The layout script also writes screenshots: look at them, because the numbers do not catch everything.
+Every check prints PASS or FAIL. The layout script checks four window sizes at once; add `SHOTS=1` to also save a screenshot of each tool window, and look at them now and then, because the numbers do not catch everything.
 
 ## PDF Editor checks
 
