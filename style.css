@@ -378,7 +378,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 
 /* ----- Full-screen layout and overlay controls ----- */
 .app.fs{position:fixed;inset:0;z-index:90;display:block;height:100vh;height:100dvh;background:#000}
-.app.fs .top,.app.fs .panel,.app.fs .stage-strip{display:none!important}
+.app.fs .top,.app.fs .panel{display:none!important}
 .app.fs .work{display:block;height:100%}
 .app.fs .stage-col{display:block;padding:0;height:100%}
 .app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:#000}
@@ -396,6 +396,11 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .app.fs .transport,.app.fs .timeline{opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),bottom .55s var(--ease-out),visibility 0s}
 .app.fs.fs-min .timeline{transform:translateY(calc(100% + var(--fs-edge) + 8px));visibility:hidden;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),visibility 0s .55s}
 .app.fs.fs-active .transport,.app.fs.fs-active .timeline{opacity:1;pointer-events:auto}
+/* the zoom and full screen strip hovers just above the timeline bar, and follows it when the bar grows, shrinks, or is hidden (--fs-tlh is the bar's height, set by script) */
+.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--fs-edge) + var(--fs-tlh,0px) + 8px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),bottom .55s var(--ease-out)}
+.app.fs.fs-active .stage-strip{opacity:1;pointer-events:auto}
+.app.fs.fs-min .stage-strip{bottom:var(--fs-edge)}
+@media (prefers-reduced-motion:reduce){.app.fs .stage-strip{transition:none}}
 .app.fs:not(.fs-active),.app.fs:not(.fs-active) *{cursor:none!important}
 .app.fs .transport .btn,.app.fs .transport .icon-btn{background:rgba(18,20,28,.82);border-color:rgba(255,255,255,.28);color:#fff}
 .app.fs .transport .icon-btn.play{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
@@ -645,8 +650,8 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 #btnSettings svg{transition:transform .7s var(--ease-out)}
 @media (hover:hover){#btnSettings:hover svg{transform:rotate(30deg)}}
 #btnSettings[aria-expanded="true"] svg{transform:rotate(90deg)}
-.menu:not([hidden]){animation:menu-in .2s var(--ease-out);transform-origin:top right}
-@keyframes menu-in{from{opacity:0;transform:translateY(-6px) scale(.96)}}
+.menu:not([hidden]){animation:menu-in .2s var(--ease-out);transform-origin:calc(100% - 18px) -26px}          /* grows from the button's center (script sets the exact point when it opens) */
+@keyframes menu-in{from{opacity:0;transform:scale(.85)}}
 .toast{transform:translate(-50%,10px);transition:opacity .18s var(--ease-ui),transform .18s var(--ease-out)}
 .toast.show{transform:translate(-50%,0);transition:opacity .25s var(--ease-ui),transform .3s var(--ease-out)}
 @media (prefers-reduced-motion:reduce){#btnSettings svg,.toast{transition:none}.menu:not([hidden]){animation:none}}
@@ -2067,7 +2072,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 }
 
 .pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
-.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
+.pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
 
 /* Noise reduction: the Processing label sits on the right of the Removal heading and a thin bar runs along the card's bottom edge, so the row takes no room and nothing is cut off */
 #aeNrCtl .nr-prog{position:absolute;inset:0;display:block;height:auto;margin:0;background:none;border-radius:0;overflow:visible;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-ui)}
@@ -2271,3 +2276,23 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
 #audioDlg.afull .ed-head .btn-group>.btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
 #audioDlg.afull .ed-head .btn-group>.btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
+
+/* Dim: boxes drawn on a page. The frame and handles are Crop's own; the area inside is faded like the finished page, and a round X at its center deletes it */
+.pe-dim-layer{position:absolute;inset:0;z-index:2;touch-action:none;cursor:crosshair}
+.pe-dim-layer[hidden]{display:none}
+.pe-win:not([data-mode="dim"]) .pe-dim-layer{display:none}
+.pe-win[data-mode="dim"] #peCropBox{display:none}
+.pe-dimbox{pointer-events:auto;box-shadow:none;background:rgba(255,255,255,.62);--hs:16px}
+.pe-dimbox .h.nw,.pe-dimbox .h.ne,.pe-dimbox .h.se,.pe-dimbox .h.sw{width:var(--hs);height:var(--hs)}
+.pe-dimbox .h.n,.pe-dimbox .h.s{width:var(--hl,28px);margin-left:calc(var(--hl,28px)/-2)}
+.pe-dimbox .h.e,.pe-dimbox .h.w{height:var(--hl,28px);margin-top:calc(var(--hl,28px)/-2)}
+.pe-dimbox.sel .h{opacity:1;transform:none}
+.pe-crop-pg .pe-dimbox{border-width:calc(1.5px/var(--z,1))}
+.pe-dimx{position:absolute;left:50%;top:50%;width:var(--dz,22px);height:var(--dz,22px);margin:calc(var(--dz,22px)/-2) 0 0 calc(var(--dz,22px)/-2);padding:0;border:0;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.28);scale:calc(1/var(--z,1));transition:transform .25s var(--spring-press)}
+.pe-dimx svg{width:62%;height:62%}
+@media (hover:hover){.pe-dimx:hover{transform:scale(1.1)}}
+.pe-dimx:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.pe-win[data-mode="dim"] .pe-tools{z-index:3}          /* the Open button stays above the drawing layer */
+
+/* the start and end glide: no scroll bar flickers in while the axis is wider than the window */
+.tl-scroll.gliding{overflow-x:hidden}

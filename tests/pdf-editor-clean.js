@@ -32,7 +32,7 @@ async function makePdf() {
   // the tool
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const order = await p.evaluate(() => peOrder());
-  ok('Clean is in the tool list ahead of Re-kilter', order.join() === 'pages,clean,skew,crop,split,resize,wm', order.join());
+  ok('Clean is in the tool list ahead of Re-kilter', order.join() === 'pages,clean,skew,crop,dim,split,resize,wm', order.join());
   await p.evaluate(() => peTool('clean')); await p.waitForTimeout(900);
   const a = await p.evaluate(() => ({ mode: PE.mode, ticks: document.querySelector('#peGrid').classList.contains('ticks'), go: !document.querySelector('#peCleanGo').disabled, clear: !document.querySelector('#peCleanClear').disabled, bg: PE.cl.bg, sp: PE.cl.sp, labels: [...document.querySelectorAll('#peViewClean .seg label')].map(l => l.textContent).join('|') }));
   ok('Clean opens with White and Light chosen, Clean ready and Revert greyed out', a.mode === 'clean' && a.ticks && a.go && !a.clear && a.bg === 1 && a.sp === 1 && a.labels === 'White|Page color|Light|Strong', JSON.stringify(a));

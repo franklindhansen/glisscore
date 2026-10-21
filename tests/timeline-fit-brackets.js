@@ -38,8 +38,19 @@ const K = '__keyframes', ROOM = 36;
   await p.mouse.move(box.l + r.xe, y); await p.mouse.down(); await p.mouse.move(box.l + r.xe - 40, y, { steps: 5 });
   const mid = await read();
   ok('During the drag the zoom does not jump', near(mid.pps, r.pps, 1e-6) && near(mid.xe, r.xe - 40, 4), JSON.stringify({ r, mid }));
-  await p.mouse.up(); await p.waitForTimeout(300); const after = await read();
+  await p.mouse.up(); await p.waitForTimeout(1100); const after = await read();   // the view glides to the new fit (about 0.5s)
   ok('On release the timeline refits to the new end', after.fit && near(after.xs, ROOM) && near(after.xe, after.vw - ROOM) && after.pps > r.pps, JSON.stringify(after));
+  // one motion: after a release, and after a double-click, the bracket stays where it was let go and travels with the view to its new place, in small steps and without a jump
+  const trace = async (act, ms = 900) => { await p.evaluate(K => { const k = window[K]; window.__tr = []; window.__t60 = []; const t0 = performance.now(); (function f() { window.__t60.push(k.t2x(60)); window.__tr.push(k.t2x(k.TL.trimD ? k.TL.trimD.e : k.S.vEndSet == null ? k.S.audio.duration : k.S.vEndSet)); if (performance.now() - t0 < 1000) requestAnimationFrame(f); })(); }, K); await act(); await p.waitForTimeout(ms); return p.evaluate(() => ({ x: window.__tr.slice(), mid: window.__t60.slice() })); };
+  const smooth = (xs, from) => { const d = xs.slice(1).map((v, i) => Math.abs(v - xs[i])), first = Math.abs(xs.find(v => Math.abs(v - from) < 1e9) - from); return Math.max(...d) < 90 && d.filter(v => v > 0.5).length >= 8; };
+  await set(0, 105); r = await fit(); const y2 = box.t + box.y;
+  const rel = (await trace(async () => { await p.mouse.move(box.l + r.xe, y2); await p.mouse.down(); await p.mouse.move(box.l + r.xe - 160, y2, { steps: 6 }); await p.mouse.up(); })).x;
+  const fin = await read();
+  ok('Letting go of a bracket glides the bracket and the view as one motion, with no jump', smooth(rel) && near(rel[rel.length - 1], fin.vw - ROOM, 2), JSON.stringify({ n: rel.length, max: Math.max(...rel.slice(1).map((v, i) => Math.abs(v - rel[i]))), last: rel[rel.length - 1], vw: fin.vw }));
+  r = await read();
+  const dblT = await trace(async () => { await p.mouse.dblclick(box.l + r.xe, y2); }), dbl = dblT.x; dbl.mid = dblT.mid;
+  const fin2 = await read();
+  ok('Double-clicking a bracket home glides the view smoothly while the bracket stays put', smooth(dbl.mid) && near(dbl[dbl.length - 1], dbl[0], 2) && fin2.fit && near(fin2.xa, fin2.vw - ROOM, 2), JSON.stringify({ n: dbl.length, max: Math.max(...dbl.slice(1).map((v, i) => Math.abs(v - dbl[i]))), xa: fin2.xa, vw: fin2.vw }));
   ok('No page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

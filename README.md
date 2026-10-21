@@ -9,7 +9,7 @@ Everything runs in your browser. Your files never leave your device.
 ## Features
 
 - **Video editor.** Set when each page turns, add credits, fade in and out, and export the video.
-- **PDF Editor.** Arrange, rotate, crop, clean, re-kilter, and re-size pages.
+- **PDF Editor.** Arrange, rotate, crop, clean, re-kilter, dim repeated music, and re-size pages.
 - **Audio Editor.** Noise reduction, spectrogram, EQ, imager, level, and limiter.
 
 ## Run it yourself

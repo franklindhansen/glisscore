@@ -101,7 +101,7 @@
     </div>
     <!-- ----- BUTTON + MENU: Settings (About, How it works, Import / Export, Keyboard shortcuts, Restore defaults) ----- -->
     <div class="menu-wrap">
-      <button class="icon-btn stroke" id="btnSettings" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="settingsMenu" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <button class="icon-btn stroke" id="btnSettings" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="settingsMenu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg></button>
       <div class="menu" id="settingsMenu" role="menu" hidden>
         <button class="menu-item" id="menuAbout" role="menuitem" type="button">About</button>
         <button class="menu-item" id="menuHow" role="menuitem" type="button">How it works</button>
@@ -123,7 +123,7 @@
       <!-- ----- Work Preview Stage (canvas + full-screen button) ----- -->
       <div class="stage-wrap" id="stageWrap">
         <canvas id="stage" aria-label="Score preview"></canvas>
-        <div class="stage-strip" id="stageStrip" role="group" aria-label="Zoom and full screen" hidden><button type="button" id="szOut" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="szFit" class="txt" aria-label="Fit the picture" title="Fit the picture (0)">Fit</button><button type="button" id="szIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><span class="stage-div" aria-hidden="true"></span>
+        <div class="stage-strip" id="stageStrip" role="group" aria-label="Zoom and full screen" hidden><button type="button" id="szOut" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="szIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><button type="button" id="szFit" class="txt" aria-label="Fit the picture" title="Fit the picture (0)">Fit</button><span class="stage-div" aria-hidden="true"></span>
   <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
         <!-- ----- Introduction Text: Logo, tagline, initial instructions, Open PDF + audio buttons ----- -->
         <div class="empty" id="empty"><div class="empty-fit" id="emptyFit">
@@ -583,11 +583,12 @@
       <section><h3>Your files stay with you</h3><p>Your files are read into this tab’s memory. Nothing goes to a server, and closing the tab clears them. The only thing fetched from outside the site is a Google Font, and only when you pick one for the credits.</p></section>
       <section><h3>Your score</h3><p>PDF.js, from Mozilla, draws each page. Your changes are a list of steps on top of the original PDF, which is never touched. Export PDF builds a new file from that list.</p>
         <details class="how-d"><summary>How the PDF Editor works</summary><div class="how-in">
-          <p>Click the file name under the title to open it. Tick the pages you want, then press a tool’s button. Each tool only works on the ticked pages.</p>
+          <p>Click the file name under the title to open it. Tick the pages you want, then press a tool’s button. Each tool only works on the ticked pages, except Dim.</p>
           <h4>Arrange</h4><p>Drag pages to reorder them. Click a page to leave it out.</p>
           <h4>Clean</h4><p>Whitens the paper and removes specks. <span class="hb">Revert</span> puts the pages back.</p>
           <h4>Re-kilter</h4><p>Straightens crooked scans.</p>
           <h4>Crop</h4><p>Finds the music and draws a frame around it. <span class="hb">Auto</span> sets the frames. <span class="hb">Manual</span> lets you drag them yourself.</p>
+          <h4>Dim</h4><p>Draw a box over a section to visually soften it, like a repeat, so the eye goes to what is new. Drag a box’s edges to adjust it, and press its X to remove it. <span class="hb">Revert</span> removes every box. Dim needs no ticks: draw on any page.</p>
           <h4>Split spreads</h4><p>Cuts a two-page scan into two pages.</p>
           <h4>Re-size</h4><p>Fits every page to a paper size.</p>
           <h4>Watermark</h4><p>Prints your text across the ticked pages.</p>
@@ -976,6 +977,7 @@
         <button class="pe-tab" type="button" data-tool="clean" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg><span>Clean</span></button>
         <button class="pe-tab" type="button" data-tool="skew" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 9V7a2 2 0 0 0-2-2h-6"/><path d="m15 2-3 3 3 3"/><path d="M20 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/></svg><span>Re-kilter</span></button>
         <button class="pe-tab" type="button" data-tool="crop" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg><span>Crop</span></button>
+        <button class="pe-tab" type="button" data-tool="dim" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><span>Dim</span></button>
         <button class="pe-tab" type="button" data-tool="split" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg><span>Split spreads</span></button>
         <div class="pe-rail-h">Finish</div>
         <button class="pe-tab" type="button" data-tool="resize" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg><span>Re-size</span></button>
@@ -1015,6 +1017,10 @@
               <label class="check-row pe-check pe-end" id="peCropSameF" for="peCropSame"><span>Same on all pages</span><input type="checkbox" class="switch" id="peCropSame" checked></label>
             </div>
           </div>
+          <div class="pe-tv" id="peViewDim" data-tool="dim" hidden>
+            <div class="pe-phead"><div class="pe-pt"><h3>Dim</h3><p class="pe-sub">Visually softens music that repeats.</p></div>
+              <div class="pe-acts"><span class="pe-status" id="peDimStatus" aria-live="polite"></span><button class="btn small" id="peDimClear" type="button">Revert</button></div></div>
+          </div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden>
             <div class="pe-phead"><div class="pe-pt"><h3>Split spreads</h3><p class="pe-sub">Cuts two pages scanned side by side into single pages.</p></div>
               <div class="pe-acts"><span class="pe-status" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary" id="peSplitGo" type="button">Split</button></div></div>
@@ -1050,7 +1056,7 @@
             <div class="pe-stage" id="peCropStage"><div class="pe-glass pe-back"><button type="button" id="peOneBack" aria-label="Back to all pages" title="All pages (Esc)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button></div>
               <div class="pe-glass pe-zoom" role="group" aria-label="Zoom"><button type="button" id="peZmOut" aria-label="Zoom out" title="Zoom out (−)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="peZmIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><button type="button" id="peZmFit" class="txt" aria-label="Fit the page" title="Fit the page (0)">Fit</button></div>
               <span class="pe-side a" id="peSideA" aria-hidden="true">Original</span><span class="pe-side b" id="peSideB" aria-hidden="true">Leveled</span><div class="pe-hint" id="peOneHint" role="status"><span></span></div>
-              <div class="pe-crop-pg" id="peCropPg"><canvas id="peCropCv"></canvas><canvas id="peOneOrig" aria-hidden="true"></canvas><i class="pe-wipe" id="peWipe" role="slider" tabindex="0" aria-label="Original and leveled" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></i><div class="pe-crop-box" id="peCropBox" hidden><i data-h="move"></i><i class="h nw" data-h="nw"></i><i class="h n" data-h="n"></i><i class="h ne" data-h="ne"></i><i class="h e" data-h="e"></i><i class="h se" data-h="se"></i><i class="h s" data-h="s"></i><i class="h sw" data-h="sw"></i><i class="h w" data-h="w"></i></div></div></div>
+              <div class="pe-crop-pg" id="peCropPg"><canvas id="peCropCv"></canvas><canvas id="peOneOrig" aria-hidden="true"></canvas><i class="pe-wipe" id="peWipe" role="slider" tabindex="0" aria-label="Original and leveled" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"></i><div class="pe-dim-layer" id="peDimLayer" hidden></div><div class="pe-crop-box" id="peCropBox" hidden><i data-h="move"></i><i class="h nw" data-h="nw"></i><i class="h n" data-h="n"></i><i class="h ne" data-h="ne"></i><i class="h e" data-h="e"></i><i class="h se" data-h="se"></i><i class="h s" data-h="s"></i><i class="h sw" data-h="sw"></i><i class="h w" data-h="w"></i></div></div></div>
             <div class="pe-nav"><span class="pe-nav-a"></span><button class="icon-btn stroke" id="peCropPrev" type="button" aria-label="Previous page" title="Previous page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><span id="peCropName"></span><button class="icon-btn stroke" id="peCropNext" type="button" aria-label="Next page" title="Next page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button><span class="pe-nav-b"><button class="btn small" id="peOneCmp" type="button" aria-pressed="true">Original</button></span></div>
           </div>
         </div>
@@ -2012,6 +2018,7 @@ function peStepLabel(a, b) {
     const rot = cnt((x, y) => z(x.rot) !== z(y.rot)); if (rot) parts.push('Turned ' + peN(rot));
     const cr = cnt((x, y) => String(x.crop || '') !== String(y.crop || '')); if (cr) parts.push(cnt((x, y) => y.crop) ? 'Crop' : 'Crop reverted');
     const sk = cnt((x, y) => z(x.skew) !== z(y.skew) || z(x.vskew) !== z(y.vskew) || z(x.warp) !== z(y.warp)); if (sk) parts.push(cnt((x, y) => y.skew || y.vskew || y.warp) ? 'Re-kilter' : 'Re-kilter reverted');
+    const dm = cnt((x, y) => dimKey(x) !== dimKey(y)); if (dm) parts.push(cnt((x, y) => dimKey(y)) ? 'Dim' : 'Dim reverted');
     const cl = cnt((x, y) => z(x.bg) !== z(y.bg) || z(x.sp) !== z(y.sp)); if (cl) parts.push(cnt((x, y) => y.bg || y.sp) ? 'Clean' : 'Clean reverted');
     if (cnt((x, y) => !!x.c !== !!y.c || !!x.nw !== !!y.nw)) parts.push('Page options');
   }
@@ -2273,10 +2280,24 @@ async function pdfCleanCanvas(cv, bg, sp, rect) {
 }
 /* the one place a page's edits become render options: every thumbnail, large view and export asks here. `not` leaves out one edit ('crop', 'skew' for the leveling, 'clean') for a tool's own before side or frame */
 function slotGeo(sl, not) {
-  const g = { crop: not === 'crop' ? null : sl.crop || null, skew: 0, vskew: 0, warp: 0, bg: 0, sp: 0 };
+  const g = { crop: not === 'crop' ? null : sl.crop || null, dim: not !== 'dim' && dimKey(sl) ? sl.dim : null, skew: 0, vskew: 0, warp: 0, bg: 0, sp: 0 };
   if (not !== 'skew') { g.skew = sl.skew || 0; g.vskew = sl.vskew || 0; g.warp = sl.warp || 0; }
   if (not !== 'clean') { g.bg = sl.bg || 0; g.sp = sl.sp || 0; }
-  return g.crop || g.skew || g.vskew || g.warp || g.bg || g.sp ? g : null;
+  return g.crop || g.dim || g.skew || g.vskew || g.warp || g.bg || g.sp ? g : null;
+}
+/* where a Dim box lands on the drawn page: the box is in the file's own page, so it is cut to the crop and turned with the page (rot, clockwise) before it is laid on the page rectangle */
+const DIM_ALPHA = 0.62;
+function dimRect(b, rot, cr, px, py, pw, ph) {
+  cr = cr || [0, 0, 1, 1]; const cw = cr[2] - cr[0], chh = cr[3] - cr[1], f = (v, a, w) => clamp((v - a) / w, 0, 1);
+  const u0 = f(b[0], cr[0], cw), u1 = f(b[2], cr[0], cw), v0 = f(b[1], cr[1], chh), v1 = f(b[3], cr[1], chh), r = ((rot || 0) % 360 + 360) % 360;
+  const pt = (u, v) => r === 90 ? [1 - v, u] : r === 180 ? [1 - u, 1 - v] : r === 270 ? [v, 1 - u] : [u, v], A = pt(u0, v0), B = pt(u1, v1);
+  const x0 = Math.min(A[0], B[0]), x1 = Math.max(A[0], B[0]), y0 = Math.min(A[1], B[1]), y1 = Math.max(A[1], B[1]);
+  return [px + x0 * pw, py + y0 * ph, (x1 - x0) * pw, (y1 - y0) * ph];
+}
+function paintDim(ctx, boxes, rot, cr, px, py, pw, ph) {
+  ctx.save(); ctx.fillStyle = 'rgba(255,255,255,' + DIM_ALPHA + ')';
+  boxes.forEach(b => { const q = dimRect(b, rot, cr, px, py, pw, ph); if (q[2] > 0 && q[3] > 0) ctx.fillRect(q[0], q[1], q[2], q[3]); });
+  ctx.restore();
 }
 async function renderPdfPage(doc, idx, w, h, rot = 0, wm = null, geo = null) {
   const page = await doc.getPage(idx + 1);
@@ -2305,6 +2326,7 @@ async function renderPdfPage(doc, idx, w, h, rot = 0, wm = null, geo = null) {
   }
   try { page.cleanup(); } catch (e) {}
   if (geo && (geo.bg || geo.sp)) await pdfCleanCanvas(cv, geo.bg || 0, geo.sp || 0, [px, py, pw, ph]);
+  if (geo && geo.dim) paintDim(ctx, geo.dim, rot, geo.crop, px, py, pw, ph);
   if (wm) drawWatermark(ctx, wm, px, py, pw, ph);
   return cv;
 }
@@ -2328,11 +2350,13 @@ const PageSource = {
    The score is a list of "slots". Each slot is one page of the video: a source page of the PDF, a rotation, whether it is left out,
    and whether it is a repeat. `order` is the order they are arranged in (including pages left out); `keep` is what the video uses. */
 const WM_DEFAULT = { on: false, text: 'Perusal score', angle: 45, opacity: 20, mode: 'center', b: true, i: false };      // angle in degrees, counter-clockwise (45 diagonal, 0 straight, any other is custom); opacity in percent
-const peCopy = r => ({ size: r.size && r.size.w > 0 && r.size.h > 0 ? { w: +r.size.w, h: +r.size.h } : null, each: !!r.each, slots: r.slots.map(s => s ? { src: s.src, rot: s.rot || 0, x: !!s.x, c: !!s.c, nw: !!s.nw, crop: s.crop ? s.crop.slice() : null, skew: s.skew || 0, vskew: s.vskew || 0, warp: s.warp || 0, bg: s.bg || 0, sp: s.sp || 0, half: s.half || '' } : null), order: r.order.slice(), wm: Object.assign({}, WM_DEFAULT, r.wm || {}) });
-const identityRecipe = n => ({ slots: Array.from({ length: n }, (_, i) => ({ src: i, rot: 0, x: false, c: false, nw: false, crop: null, skew: 0, vskew: 0, warp: 0, bg: 0, sp: 0, half: '' })), order: Array.from({ length: n }, (_, i) => i), wm: Object.assign({}, WM_DEFAULT), size: null, each: false });
+/* Dim regions: boxes on a page, each [x0, y0, x1, y1] as fractions of the page as the file draws it (before the page's own turn and before the crop), so they stay put when either changes */
+const dimKey = s => s && s.dim && s.dim.length ? s.dim.map(b => b.map(v => Math.round(v * 10000)).join(',')).join(';') : '';
+const peCopy = r => ({ size: r.size && r.size.w > 0 && r.size.h > 0 ? { w: +r.size.w, h: +r.size.h } : null, each: !!r.each, slots: r.slots.map(s => s ? { src: s.src, rot: s.rot || 0, x: !!s.x, c: !!s.c, nw: !!s.nw, crop: s.crop ? s.crop.slice() : null, dim: s.dim && s.dim.length ? s.dim.map(b => b.slice()) : null, skew: s.skew || 0, vskew: s.vskew || 0, warp: s.warp || 0, bg: s.bg || 0, sp: s.sp || 0, half: s.half || '' } : null), order: r.order.slice(), wm: Object.assign({}, WM_DEFAULT, r.wm || {}) });
+const identityRecipe = n => ({ slots: Array.from({ length: n }, (_, i) => ({ src: i, rot: 0, x: false, c: false, nw: false, crop: null, dim: null, skew: 0, vskew: 0, warp: 0, bg: 0, sp: 0, half: '' })), order: Array.from({ length: n }, (_, i) => i), wm: Object.assign({}, WM_DEFAULT), size: null, each: false });
 const recipeOf = () => peCopy({ slots: S.pdf.slots, order: S.pdf.order, wm: S.pdf.wm, size: S.pdf.size, each: S.pdf.each });
 const recipeKeep = r => r.order.filter(id => r.slots[id] && !r.slots[id].x);
-const recipeSig = r => JSON.stringify([r.order.map(id => { const s = r.slots[id]; return [id, s.src, s.rot || 0, s.x ? 1 : 0, s.c ? 1 : 0, s.nw ? 1 : 0, s.crop || 0, s.skew || 0, s.vskew || 0, s.warp || 0, s.bg || 0, s.sp || 0, s.half || 0]; }), r.wm.on ? [r.wm.text, r.wm.angle, r.wm.opacity, r.wm.mode, r.wm.b ? 1 : 0, r.wm.i ? 1 : 0] : 0, r.size ? [r.size.w, r.size.h, r.each ? 1 : 0] : 0]);
+const recipeSig = r => JSON.stringify([r.order.map(id => { const s = r.slots[id]; return [id, s.src, s.rot || 0, s.x ? 1 : 0, s.c ? 1 : 0, s.nw ? 1 : 0, s.crop || 0, s.skew || 0, s.vskew || 0, s.warp || 0, s.bg || 0, s.sp || 0, s.half || 0, dimKey(s) || 0]; }), r.wm.on ? [r.wm.text, r.wm.angle, r.wm.opacity, r.wm.mode, r.wm.b ? 1 : 0, r.wm.i ? 1 : 0] : 0, r.size ? [r.size.w, r.size.h, r.each ? 1 : 0] : 0]);
 /* the shape every page of the video is fitted into: the first kept page after its crop, or the chosen paper size */
 function recipeAspect(r) {
   const k0 = r.slots[recipeKeep(r)[0]], ca = k0 && k0.crop ? S.pdf.aspect0 * (k0.crop[2] - k0.crop[0]) / (k0.crop[3] - k0.crop[1]) : S.pdf.aspect0;
@@ -2357,11 +2381,11 @@ function setOmit(omit) {                       // the older way of saying it: pa
   setRecipe(r);
 }
 /* true when the recipe is only "some pages left out" (so it can be saved the short way) */
-const recipeIsSimple = r => !r.wm.on && !r.size && r.order.every((id, i) => id === i && !r.slots[id].rot && !r.slots[id].c && !r.slots[id].nw && !r.slots[id].crop && !r.slots[id].skew && !r.slots[id].vskew && !r.slots[id].warp && !r.slots[id].bg && !r.slots[id].sp && !r.slots[id].half) && r.order.length === S.pdf.n;
+const recipeIsSimple = r => !r.wm.on && !r.size && r.order.every((id, i) => id === i && !r.slots[id].rot && !r.slots[id].c && !r.slots[id].nw && !r.slots[id].crop && !r.slots[id].skew && !r.slots[id].vskew && !r.slots[id].warp && !r.slots[id].bg && !r.slots[id].sp && !r.slots[id].half && !dimKey(r.slots[id])) && r.order.length === S.pdf.n;
 /* a position in the video (1, 2, 3 ...) for a page, so labels follow the edited order */
 const pageNo = idx => { const i = S.pdf ? S.pdf.keep.indexOf(idx) : -1; return i >= 0 ? i + 1 : idx + 1; };
 /* a short list for the settings file: [{p: page, r: rotation, x: left out, c: repeat}] in the arranged order */
-const recipeToList = r => r.order.map(id => { const s = r.slots[id], e = { p: s.src + 1 }; if (s.rot) e.r = s.rot; if (s.x) e.x = 1; if (s.c) e.c = 1; if (s.nw) e.n = 1; if (s.crop) e.k = s.crop.map(v => Math.round(v * 10000) / 10000); if (s.skew) e.s = Math.round(s.skew * 100) / 100; if (s.vskew) e.v = Math.round(s.vskew * 100) / 100; if (s.warp) e.w = Math.round(s.warp * 10000) / 10000; if (s.bg) e.g = s.bg; if (s.sp) e.q = s.sp; if (s.half) e.h = s.half; return e; });
+const recipeToList = r => r.order.map(id => { const s = r.slots[id], e = { p: s.src + 1 }; if (s.rot) e.r = s.rot; if (s.x) e.x = 1; if (s.c) e.c = 1; if (s.nw) e.n = 1; if (s.crop) e.k = s.crop.map(v => Math.round(v * 10000) / 10000); if (s.skew) e.s = Math.round(s.skew * 100) / 100; if (s.vskew) e.v = Math.round(s.vskew * 100) / 100; if (s.warp) e.w = Math.round(s.warp * 10000) / 10000; if (s.bg) e.g = s.bg; if (s.sp) e.q = s.sp; if (s.half) e.h = s.half; if (dimKey(s)) e.d = s.dim.map(b => b.map(v => Math.round(v * 10000) / 10000)); return e; });
 function recipeFromList(list, n, wm) {
   if (!Array.isArray(list) || !list.length || list.length > 500) return null;
   const slots = [], order = [];
@@ -2372,7 +2396,8 @@ function recipeFromList(list, n, wm) {
     const warp = e.w === undefined ? 0 : e.w; if (!Number.isFinite(warp) || Math.abs(warp) > 0.2) return null;
     const skew = e.s === undefined ? 0 : e.s, vskew = e.v === undefined ? 0 : e.v; if (!Number.isFinite(skew) || Math.abs(skew) > 15 || !Number.isFinite(vskew) || Math.abs(vskew) > 15) return null;
     const bg = e.g === undefined ? 0 : e.g, sp = e.q === undefined ? 0 : e.q; if (![0, 1, 2].includes(bg) || ![0, 1, 2].includes(sp)) return null;
-    order.push(slots.length); slots.push({ src: e.p - 1, rot, x: !!e.x, c: !!e.c, nw: !!e.n, crop, skew, vskew, warp, bg, sp, half: e.h === 'L' || e.h === 'R' ? e.h : '' });
+    let dim = null; if (e.d !== undefined) { if (!Array.isArray(e.d) || e.d.length > 50 || !e.d.every(b => Array.isArray(b) && b.length === 4 && b.every(v => Number.isFinite(v) && v >= 0 && v <= 1) && b[2] - b[0] >= 0.005 && b[3] - b[1] >= 0.005)) return null; dim = e.d.length ? e.d.map(b => b.slice()) : null; }
+    order.push(slots.length); slots.push({ src: e.p - 1, rot, x: !!e.x, c: !!e.c, nw: !!e.n, crop, dim, skew, vskew, warp, bg, sp, half: e.h === 'L' || e.h === 'R' ? e.h : '' });
   }
   if (slots.every(s => s.x)) return null;
   return { slots, order, wm: wmFromJson(wm) };
@@ -2426,8 +2451,8 @@ function pdfCachesReset() {
   if (typeof PE !== 'undefined') { PE.asp = null; PE.cropScans && PE.cropScans.clear(); PE.raw && PE.raw.clear(); PE.full && PE.full.clear(); PE.rawOne = null; PE.posWas && PE.posWas.clear(); }
 }
 function slotBase(sl, aspect) {
-  if (!sl) return null; if (!sl.crop && !sl.skew && !sl.vskew && !sl.warp && !sl.bg && !sl.sp) return S.thumbs[sl.src] || null;
-  const key = sl.src + '|' + (sl.crop ? sl.crop.join(',') : '') + '|' + (sl.skew || 0) + '|' + (sl.vskew || 0) + '|' + (sl.warp || 0) + '|' + (sl.bg || 0) + (sl.sp || 0) + '|' + aspect.toFixed(4) + '|' + (S.pdf ? S.pdf.gen || 0 : 0), hit = VT.get(key);
+  if (!sl) return null; if (!sl.crop && !sl.skew && !sl.vskew && !sl.warp && !sl.bg && !sl.sp && !dimKey(sl)) return S.thumbs[sl.src] || null;
+  const key = sl.src + '|' + (sl.crop ? sl.crop.join(',') : '') + '|' + (sl.skew || 0) + '|' + (sl.vskew || 0) + '|' + (sl.warp || 0) + '|' + (sl.bg || 0) + (sl.sp || 0) + '|' + dimKey(sl) + '|' + aspect.toFixed(4) + '|' + (S.pdf ? S.pdf.gen || 0 : 0), hit = VT.get(key);
   if (hit) return hit;
   if (!VTpending.has(key) && S.pdf) {
     VTpending.add(key); const doc = S.pdf.doc, w = Math.max(20, Math.round(240 * aspect));
@@ -3918,10 +3943,10 @@ function szBind() {
   $('#szIn').addEventListener('click', () => szAt(SZ.z * 1.6, null, null, true)); $('#szOut').addEventListener('click', () => szAt(SZ.z / 1.6, null, null, true)); $('#szFit').addEventListener('click', () => szReset(true));
   wrap.addEventListener('wheel', e => {
     if (!live(e)) return;
-    if (e.ctrlKey || e.metaKey) { e.preventDefault(); szAt(SZ.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false); }
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation(); szAt(SZ.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false); }          // a pinch over the picture zooms the picture only; the timeline has its own
     else if (SZ.z > 1) { e.preventDefault(); SZ.x -= e.deltaX; SZ.y -= e.deltaY; szClamp(); szApply(false); }
   }, { passive: false });
-  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); gz = SZ.z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); szAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
+  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); gz = SZ.z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); szAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
   wrap.addEventListener('pointerdown', e => {
     if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
     if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: SZ.z }; pan = null; wrap.setPointerCapture(e.pointerId); }
@@ -3969,8 +3994,8 @@ function readColors() {
 /* The timeline's x axis: audio time, with a little empty room at both ends where the video's start and end handles can be
    dragged outward. While a handle is being dragged the axis is frozen, so the handle follows the pointer. */
 const TL_ROOM = 36;
-const tlLo = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.lo : Math.min(S.vStart, 0);
-const tlHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.hi : Math.max(vEnd(), S.audio ? S.audio.duration : 0);
+const tlLo = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.lo : TL.hold ? Math.min(TL.hold.lo, Math.min(S.vStart, 0)) : Math.min(S.vStart, 0);
+const tlHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.hi : TL.hold ? Math.max(TL.hold.hi, vEnd(), S.audio ? S.audio.duration : 0) : Math.max(vEnd(), S.audio ? S.audio.duration : 0);
 const tlInnerWidth = () => Math.max(TL.vw, Math.ceil(2 * TL_ROOM + (tlHi() - tlLo()) * S.pxPerSec - 1e-6));
 const t2x = t => TL_ROOM + (t - tlLo()) * S.pxPerSec - TL.scroller.scrollLeft;
 const x2t = x => (x + TL.scroller.scrollLeft - TL_ROOM) / S.pxPerSec + tlLo();
@@ -3980,6 +4005,7 @@ const fitHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.fitHi : vEnd();
 const fitPps = () => clamp((TL.vw - 2 * TL_ROOM) / Math.max(1, fitHi() - fitLo()), 1, 400);
 const fitScroll = () => { TL.scroller.scrollLeft = Math.max(0, (fitLo() - tlLo()) * S.pxPerSec); };
 function layoutTimeline() {
+  tlGlideStop();
   const sc = TL.scroller, vw = Math.max(200, sc.clientWidth), h = Math.max(150, sc.clientHeight);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   TL.dpr = dpr; TL.vw = vw; TL.h = h;
@@ -3994,9 +4020,31 @@ function layoutTimeline() {
   else TL.inner.style.width = tlInnerWidth() + 'px';
   TL.staticDirty = true;
 }
+/* In Fit, a bracket that lands (or is double-clicked home) changes what Fit shows. The view glides from the picture it had to the one it now has while the bracket stays on its time,
+   so the bracket and the view are one motion, not a jump followed by a slide. The axis keeps the room of both pictures until it lands. */
+const tlMap = (lo = tlLo()) => ({ b: S.pxPerSec, a: TL_ROOM - lo * S.pxPerSec - TL.scroller.scrollLeft });
+function tlGlideStop() {          // ends a glide where it is: what is on screen stays, and the axis goes back to its own room
+  if (!TL.hold && !TL.glideId) return; cancelAnimationFrame(TL.glideId); TL.glideId = 0; TL.glideT = null; TL.scroller.classList.remove('gliding');
+  if (TL.hold) { const m = tlMap(); TL.hold = null; if (!TL.drag) { TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL_ROOM - tlLo() * m.b - m.a); } TL.staticDirty = true; }
+}
+function tlGlide(from) {
+  tlGlideStop();
+  const to = tlMap(); if (reducedMotion() || (Math.abs(to.a - from.a) < 1 && Math.abs(to.b / from.b - 1) < 1e-3)) return;
+  TL.hold = { lo: Math.min(tlLo(), from.lo), hi: Math.max(tlHi(), from.hi) }; const s1 = S.vStart, e1 = vEnd(), lerp = (u, v, k) => u + (v - u) * k;
+  const put = m => { S.pxPerSec = m.b; TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL_ROOM - tlLo() * m.b - m.a); $('#zoom').value = zoomToSlider(m.b); paintRange($('#zoom')); TL.staticDirty = true; };
+  const t0 = performance.now(), D = 700; TL.scroller.classList.add('gliding'); put(from); TL.glideT = { s: from.s, e: from.e };
+  (function step(now) {
+    if (!S.fitMode || TL.drag) { tlGlideStop(); return; }
+    const k = clamp((now - t0) / D, 0, 1), e = .5 - Math.cos(Math.PI * k) / 2;
+    TL.glideT = { s: lerp(from.s, s1, e), e: lerp(from.e, e1, e) };          // the brackets travel in time on the same curve as the view, so the two read as one motion
+    if (k >= 1) { put(to); TL.hold = null; TL.glideId = 0; TL.glideT = null; put(to); TL.scroller.classList.remove('gliding'); return; }
+    put({ b: Math.exp(Math.log(from.b) + (Math.log(to.b) - Math.log(from.b)) * e), a: from.a + (to.a - from.a) * e }); TL.glideId = requestAnimationFrame(step);
+  })(t0);
+}
 function zoomToSlider(pps) { const lo = Math.log(1), hi = Math.log(400); return Math.round(100 * (Math.log(pps) - lo) / (hi - lo)); }
 function sliderToZoom(v) { const lo = Math.log(1), hi = Math.log(400); return Math.exp(lo + (hi - lo) * v / 100); }
 function setZoom(pps, anchorX, keepFit) {
+  tlGlideStop();
   const sc = TL.scroller; if (anchorX == null) anchorX = TL.vw / 2;
   const ta = x2t(anchorX);
   S.pxPerSec = clamp(pps, 1, 400);
@@ -4278,6 +4326,7 @@ function trimStep(dt) {
   const s = S.vStart, e = vEnd(), T = TL.trimD || (TL.trimD = { s, e, vs: 0, ve: 0, bo: 0, bv: 0, ks: -1, ke: 1, big: false });
   const snap = () => { T.s = s; T.e = e; T.vs = T.ve = T.bo = T.bv = 0; };
   if (!(S.pdf || S.audio)) { TL.intro = null; TL.introSeen = false; snap(); return false; }
+  if (TL.glideT) { T.s = TL.glideT.s; T.e = TL.glideT.e; T.vs = T.ve = T.bo = T.bv = 0; return true; }          // a glide (tlGlide) carries the brackets
   if ((TL.drag && TL.drag.kind === 'trim') || reducedMotion() || TL.snapTrim) { TL.intro = TL.snapTrim ? TL.intro : null; TL.snapTrim = false; snap(); return false; }
   let ts = s, te = e, w = 2 * Math.PI / 0.4, z = 0.92;
   if (TL.intro) { const p = (performance.now() - TL.intro.t0) / TL.intro.D; if (p >= 1) TL.intro = null; else { te = s + (e - s) * rvLead(Math.min(1, p + 0.05)); w = 2 * Math.PI / 0.2; z = 0.9; } }
@@ -4476,6 +4525,7 @@ TL.canvas.addEventListener('pointermove', e => {
 });
 function endDrag(e) {
   const d = TL.drag; if (!d) return;
+  const from = d.kind === 'trim' && d.moved && S.fitMode ? Object.assign(tlMap(d.lo), { lo: d.lo, hi: d.hi, s: S.vStart, e: vEnd() }) : null;          // the picture the bracket was let go on, for the glide to the new Fit
   TL.drag = null; TL.box = null;
   if (d.kind === 'box') {
     if (d.moved) { TL.overlayDirty = true; if (d.resume) Transport.play(); return; }
@@ -4494,7 +4544,7 @@ function endDrag(e) {
     if (!d.moved) { S.history.pop(); S.redo = d.rb || []; updateHistoryButtons(); }
     else {
       const sc = TL.scroller;
-      if (S.fitMode) onTrimChanged();
+      if (S.fitMode) { onTrimChanged(); if (from) tlGlide(from); }
       else {                                   // keep the content where it was while the empty room is re-made around the new ends
         TL.inner.style.width = tlInnerWidth() + 'px'; sc.scrollLeft = Math.max(0, sc.scrollLeft + (d.lo - tlLo()) * S.pxPerSec);
         onTrimChanged();
@@ -4511,11 +4561,11 @@ TL.canvas.addEventListener('dblclick', e => {
   const which = hitTrim(tlPoint(e)); if (!which) return;
   const home = which === 'start' ? 0 : null;
   if (which === 'start' ? S.vStart === 0 : S.vEndSet == null) { toast(trimText(which) + '.', 2200); return; }
-  pushHistory(); const lo0 = tlLo();
+  pushHistory(); const lo0 = tlLo(), from = S.fitMode ? Object.assign(tlMap(), { lo: lo0, hi: tlHi(), s: TL.trimD ? TL.trimD.s : S.vStart, e: TL.trimD ? TL.trimD.e : vEnd() }) : null;
   if (which === 'start') S.vStart = 0; else S.vEndSet = home;
   S.time = clamp(S.time, S.vStart, vEnd());
   if (!S.fitMode) { TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL.scroller.scrollLeft + (lo0 - tlLo()) * S.pxPerSec); }
-  normalizeTurns(); onTurnsChanged(); onTrimChanged(); toast(trimText(which) + '.', 2600);
+  normalizeTurns(); onTurnsChanged(); onTrimChanged(); if (from) tlGlide(from); toast(trimText(which) + '.', 2600);
 });
 TL.canvas.addEventListener('pointerup', endDrag);
 TL.canvas.addEventListener('pointercancel', endDrag);
@@ -8879,11 +8929,11 @@ function peRustle(grid) {                          // a quick wave runs down the
 }
 /* the tool list: one tool at a time, each with its own window head (title, what it does, its buttons) and options above the pages */
 const PE_TICK = new Set(['wm', 'split', 'clean', 'skew', 'crop']);          // in these the round tick means "this page gets the tool"
-const peOrder = () => { const o = railOrder('#peRail [data-tool]'); return o.length ? o : ['pages', 'clean', 'skew', 'crop', 'split', 'resize', 'wm']; };
+const peOrder = () => { const o = railOrder('#peRail [data-tool]'); return o.length ? o : ['pages', 'clean', 'skew', 'crop', 'dim', 'split', 'resize', 'wm']; };
 const peTickMode = () => PE_TICK.has(PE.mode);
 const peWmSel = id => PE.d.wm.on ? !PE.d.slots[id].nw : !PE.wmSel || PE.wmSel.has(id);          // the watermark's tick: where it is on, the page has it; before it is added, the page will get it
 const peTicked = id => { const sl = PE.d.slots[id]; return !sl.x && (PE.mode === 'wm' ? peWmSel(id) : PE.mode === 'split' ? !!(PE.splitSel && PE.splitSel.has(id)) : !PE.skip.has(id)); };
-const peTargets = () => PE.d.order.filter(id => !PE.d.slots[id].x && !PE.skip.has(id));
+const peTargets = () => PE.d.order.filter(id => !PE.d.slots[id].x && (PE.mode === 'dim' || !PE.skip.has(id)));          // Dim has no ticks: any page can be opened and drawn on
 const peN = (n, one, many) => n + ' ' + (n === 1 ? one || 'page' : many || 'pages');
 /* a spread is a page wider than tall (by the part a crop keeps); known once its shape has been read (null until then). Halves of a split page never are */
 const peSpread = sl => { if (sl.half) return false; const a = PE.asp && PE.asp.get(sl.src); if (a == null) return null; const c = sl.crop, r = c ? (c[2] - c[0]) / (c[3] - c[1]) : 1, q = ((sl.rot || 0) % 180 ? 1 / a : a) * ((sl.rot || 0) % 180 ? 1 / r : r); return q > 1.15; };
@@ -8896,7 +8946,7 @@ async function peSpreadScan() {
 }
 function peTool(name) {
   if (name === PE.mode || PE.drag) return;
-  const redraw = PE.mode === 'crop' || name === 'crop' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
+  const redraw = PE.mode === 'crop' || name === 'crop' || PE.mode === 'dim' || name === 'dim' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
   const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
   peClearStatus();
   PE.mode = name; PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
@@ -8996,6 +9046,7 @@ function peActs() {
     set('#peSkewGo', !t.length || tried); set('#peSkewClear', !t.some(tilted));
     if (!busy) { if (tried && !line.textContent) peSay('#peSkewStatus', why); else if (!tried && line.textContent === why) peSay('#peSkewStatus', ''); }          // a greyed Re-kilter always says why; the line goes when the pages change
   }
+  else if (PE.mode === 'dim') { const nothing = !d.order.some(id => dimKey(d.slots[id])); set('#peDimClear', nothing); $('#peDimClear').title = nothing ? tx('pe.why.revert') : ''; }
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') set('#peRzGo', !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())));
   else if (PE.mode === 'wm') { const on = !!d.wm.on; $('#peWmAdd').hidden = on; $('#peWmRemove').hidden = !on; set('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id))); set('#peWmRemove'); }
@@ -9077,7 +9128,7 @@ const peRound = a => a.map(v => Math.round(v * 10000) / 10000);
    A page with no music on it takes the shared frame, so it never sticks out ---- */
 const peCropIds = () => peTargets();
 const peHandMode = () => PE.cropMode === 'hand';
-const peOneMode = () => PE.mode === 'crop' || PE.mode === 'skew' || PE.mode === 'clean';
+const peOneMode = () => PE.mode === 'crop' || PE.mode === 'skew' || PE.mode === 'clean' || PE.mode === 'dim';
 PE.one = null; PE.oneSig = ''; PE.orig = true; PE.cropShowRun = 0; PE.cropScans = new Map(); PE.full = new Map();
 async function peCropScan(sl) {                                  // a small memory of the scans, so moving the margin slider stays quick
   const key = sl.src + '|' + (sl.skew || 0) + '|' + (sl.vskew || 0) + '|' + (sl.warp || 0) + '|' + (S.pdf.gen || 0);
@@ -9145,7 +9196,7 @@ function peCropPaintAll() {
 /* a page's whole picture (leveled, not cropped) at thumbnail size, for the cards in Crop; two are drawn at a time */
 const peLimit = (() => { let n = 0; const q = [], next = () => { if (n >= 2 || !q.length) return; n++; const j = q.shift(); j[0]().then(j[1], j[2]).finally(() => { n--; next(); }); }; return fn => new Promise((res, rej) => { q.push([fn, res, rej]); next(); }); })();
 function peFullThumb(sl) {
-  const key = [sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, S.pdf.gen || 0].join('|'), hit = PE.full.get(key); if (hit) return hit.width ? hit : null;
+  const key = [sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, dimKey(sl), S.pdf.gen || 0].join('|'), hit = PE.full.get(key); if (hit) return hit.width ? hit : null;
   const doc = S.pdf.doc, geo = slotGeo(sl, 'crop');
   PE.full.set(key, peLimit(async () => { if (!PE.d || S.pdf.doc !== doc) throw 0; const a = await peAspectOf({ src: sl.src, rot: 0 }); return renderPdfPage(doc, sl.src, Math.max(20, Math.round(240 * a)), 240, 0, null, geo); }).then(cv => {
     PE.full.set(key, cv); if (PE.full.size > 120) PE.full.delete(PE.full.keys().next().value);
@@ -9244,7 +9295,7 @@ function peWipeIn() {
 }
 async function peOneShow() {
   const d = PE.d, id = PE.one, sl = d.slots[id], me = ++PE.cropShowRun, pg = $('#peCropPg');
-  const known = PE.asp && PE.asp.get(sl.src), pageKey = [id, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, PE.mode].join('|'), fresh = PE.shownKey !== pageKey;
+  const known = PE.asp && PE.asp.get(sl.src), pageKey = [id, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode === 'dim' ? '' : dimKey(sl), PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, PE.mode].join('|'), fresh = PE.shownKey !== pageKey;
   if (fresh) { peOneGhost(); peSweepEnd(); }
   peOneFit(peOneAsp(sl, known || S.pdf.aspect), fresh && !!PE.shownKey); if (fresh) { pg.classList.add('loading'); PE.wipeRun = (PE.wipeRun || 0) + 1; } else pg.classList.add('busy');
   const asp = await peAspectOf({ src: sl.src, rot: 0 }); if (me !== PE.cropShowRun || !PE.d) return;
@@ -9252,7 +9303,7 @@ async function peOneShow() {
   const put = (c, from) => { c.width = from.width; c.height = from.height; c.getContext('2d').drawImage(from, 0, 0); };
   let cv, o = null;
   if (PE.mode === 'clean') {
-    const key = [sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, W2].join('|');
+    const key = [sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, dimKey(sl), PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, W2].join('|');
     if (!PE.rawOne || PE.rawOne.key !== key) { const raw = await renderPdfPage(S.pdf.doc, sl.src, W2, H2, 0, null, geo); if (me !== PE.cropShowRun || !PE.d) return; put($('#peOneOrig'), raw); PE.rawOne = { key }; }
     const r = $('#peOneOrig'); cv = document.createElement('canvas'); cv.width = r.width; cv.height = r.height; cv.getContext('2d').drawImage(r, 0, 0);
     await pdfCleanCanvas(cv, PE.cl.bg, PE.cl.sp, [0, 0, cv.width, cv.height]);
@@ -9292,11 +9343,11 @@ function peZoomBind() {
   }, { passive: false });
   let gz = 1; st.addEventListener('gesturestart', e => { e.preventDefault(); gz = PE.zm.z; }); st.addEventListener('gesturechange', e => { e.preventDefault(); peZoomAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
   st.addEventListener('dblclick', e => {
-    if (PE.one == null || e.target.closest('#peWipe, .pe-glass, .pe-crop-box .h') || (PE.mode === 'crop' && peHandMode() && e.target.closest('#peCropBox'))) return;
+    if (PE.one == null || e.target.closest('#peWipe, .pe-glass, .pe-crop-box .h, #peDimLayer') || (PE.mode === 'crop' && peHandMode() && e.target.closest('#peCropBox'))) return;
     PE.zm.z > 1 ? peZoomReset(true) : peZoomAt(2.5, e.clientX, e.clientY, true);
   });
   st.addEventListener('pointerdown', e => {
-    if (PE.one == null || e.target.closest('#peWipe, .pe-glass, #peCropBox [data-h]')) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (PE.one == null || e.target.closest('#peWipe, .pe-glass, #peCropBox [data-h], #peDimLayer')) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
     if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: PE.zm.z }; pan = null; st.setPointerCapture(e.pointerId); }
     else if (PE.zm.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: PE.zm.x, oy: PE.zm.y }; st.setPointerCapture(e.pointerId); st.classList.add('panning'); }
   });
@@ -9313,7 +9364,7 @@ function peOneRefresh() {
   if (PE.one != null && (!peOneMode() || !ids.length)) PE.one = null;
   if (PE.one != null && !ids.includes(PE.one)) PE.one = ids[0];
   const on = PE.one != null; win.classList.toggle('one', on); win.classList.toggle('hand', on && PE.mode === 'crop' && peHandMode());
-  if (!on) { win.classList.remove('wipe'); peSweepEnd(); PE.oneSig = ''; PE.zmFor = null; PE.shownKey = null; if (PE.zm && PE.zm.z !== 1) peZoomReset(false); return; }
+  if (!on) { dimLarge(); win.classList.remove('wipe'); peSweepEnd(); PE.oneSig = ''; PE.zmFor = null; PE.shownKey = null; if (PE.zm && PE.zm.z !== 1) peZoomReset(false); return; }
   if (PE.zmFor !== PE.one) { PE.zmFor = PE.one; if (PE.zm.z !== 1) peZoomReset(false); }
   const sl = d.slots[PE.one], pos = ids.indexOf(PE.one) + 1, tilt = peTilted(sl), cmp = $('#peOneCmp');
   $('#peCropName').textContent = 'Page ' + pos + ' of ' + ids.length; $('#peCropPrev').disabled = pos <= 1; $('#peCropNext').disabled = pos >= ids.length;
@@ -9324,9 +9375,9 @@ function peOneRefresh() {
   PE.sides = { a: showCmp && PE.orig, b: showCmp };          // beside the line both say what is shown; with the original switched off, one label names the page you see
   const hint = crop ? '' : cl && !can ? tx('pe.view.noclean') : PE.mode === 'skew' && !tilt ? (PE.skewSeen.get(PE.one) === peSkewKey(sl) ? tx('pe.skew.none').replace(/\.$/, '') : tx('pe.view.notleveled')) : '', hb = $('#peOneHint');
   if (hint) hb.firstChild.textContent = hint; hb.classList.toggle('on', !!hint);
-  const sig = [PE.mode, PE.one, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, cl ? PE.cl.bg + '' + PE.cl.sp : ''].join('|');
+  const sig = [PE.mode, PE.one, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode === 'dim' ? '' : dimKey(sl), PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, cl ? PE.cl.bg + '' + PE.cl.sp : ''].join('|');
   if (sig !== PE.oneSig) { PE.oneSig = sig; peOneShow(); }
-  peSideLayout(); peOneFrame();
+  peSideLayout(); peOneFrame(); dimLarge();
 }
 function peOneOpen(id) {
   PE.oneAuto = false;
@@ -9385,6 +9436,7 @@ function peCropBind() {
   });
   const end = () => { if (drag) peCropPaintAll(); drag = null; box.classList.remove('dragging'); peActs(); }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
   document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading && PE.cropOn) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
+  $('#peDimClear').addEventListener('click', peDimClear);
   $('#peCropAuto').addEventListener('click', peCropGo); $('#peCropClear').addEventListener('click', peCropClear);
   $('#peCropPad').addEventListener('input', e => { $('#peCropPadVal').textContent = e.target.value + '%'; paintRange(e.target); peCropPaintAll(); peOneFrame(); peActs(); });
   $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
@@ -9417,7 +9469,7 @@ async function peSplitGo() {
   });
   if (!ok) return;
   pePush();
-  ids.forEach(id => { const sl = d.slots[id], [L, R] = res.get(id), ni = d.slots.length; d.slots.push({ src: sl.src, rot: sl.rot || 0, x: false, c: false, nw: !!sl.nw, crop: R, skew: sl.skew || 0, vskew: sl.vskew || 0, warp: sl.warp || 0, bg: sl.bg || 0, sp: sl.sp || 0, half: 'R' }); sl.crop = L; sl.half = 'L'; d.order.splice(d.order.indexOf(id) + 1, 0, ni); PE.splitSel.delete(id); });
+  ids.forEach(id => { const sl = d.slots[id], [L, R] = res.get(id), ni = d.slots.length; d.slots.push({ src: sl.src, rot: sl.rot || 0, x: false, c: false, nw: !!sl.nw, crop: R, dim: dimKey(sl) ? sl.dim.map(b => b.slice()) : null, skew: sl.skew || 0, vskew: sl.vskew || 0, warp: sl.warp || 0, bg: sl.bg || 0, sp: sl.sp || 0, half: 'R' }); sl.crop = L; sl.half = 'L'; d.order.splice(d.order.indexOf(id) + 1, 0, ni); PE.splitSel.delete(id); });
   PE.rustle = true; peRender(true); peSay('#peSplitStatus', '');
 }
 /* ---- Clean: the choices are written onto the ticked pages; the pages are drawn cleaned from then on, and the export draws them cleaned from the original scan ---- */
@@ -9521,7 +9573,7 @@ function peDrawCard(card, sl, frame) {
       x.strokeStyle = PE.accent || '#2f6df6'; x.lineWidth = 3; if (frame.shared) x.setLineDash([9, 6]); x.strokeRect(fx, fy, fw, fh); }          // a dashed frame is borrowed: the page has no music of its own
     x.restore(); return;
   }
-  const t = slotBase(sl, peAspect());
+  const t = slotBase(PE.mode === 'dim' && dimKey(sl) ? Object.assign({}, sl, { dim: null }) : sl, peAspect());          // in Dim the boxes are live on top, so the picture under them is drawn without the dimming
   x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';
   const W = side ? h : w, H = side ? w : h, ta = t.width / t.height, fw = Math.min(W, H * ta), fh = fw / ta;                // the picture is fitted into the card, whatever shape the page was drawn at
   x.save(); x.translate(w / 2, h / 2); x.rotate(rot * Math.PI / 180); x.drawImage(t, -fw / 2, -fh / 2, fw, fh); x.restore();
@@ -9537,7 +9589,7 @@ function peCard(id, sl) {
     + (sl.c ? '<button type="button" data-act="del" aria-label="Remove this repeat" title="Remove repeat">' + peSvg.del + '</button>' : '') + '</span></span>'
     + '<span class="pe-foot"><span class="pe-pos"></span><span class="num">p. ' + (sl.src + 1) + (sl.c ? ' · repeat' : '') + '</span></span>';
   el._far = PE.nearN >= 24; PE.nearN++;          // the first screenful is drawn at once; the rest wait until the view comes near (peFarWatch)
-  peDrawCard(el, sl); if (!S.thumbs[sl.src]) peLoadOn(el); return el;          // no picture yet: the card shimmers until its thumbnail arrives
+  peDrawCard(el, sl); if (!S.thumbs[sl.src]) peLoadOn(el); if (PE.mode === 'dim') dimMount(el.querySelector('.pe-thumb'), id); return el;          // no picture yet: the card shimmers until its thumbnail arrives
 }
 /* the cards are built from the draft; when `anim` is set, cards that moved glide to their new places and new ones rise in (FLIP) */
 /* a card draws its picture only while it is within a screen or so of the view; scrolling away frees the picture (the canvas shrinks to a pixel, the shape stays), so a 200-page score never holds 200 full pictures */
@@ -9610,7 +9662,7 @@ function peState() {
     const sl = d.slots[+c.dataset.id]; if (!sl) return; if (!sl.x) pos++;
     const na = tm && (sl.x || (m === 'split' && !!sl.half)), yes = m === 'pages' || !tm ? !sl.x : !na && peTicked(+c.dataset.id);
     if (m === 'pages' || (tm && !na)) { pool++; if (yes) on++; }
-    c.classList.toggle('off', !yes); c.classList.toggle('na', na); c.classList.toggle('hid', !!sl.x); c.classList.toggle('lvl', m === 'clean' ? peCleaned(sl) : !!(sl.skew || sl.vskew || sl.warp)); { const lv = c.querySelector('.pe-lvl'); lv.textContent = m === 'crop' ? 'Shared' : m === 'clean' ? 'Cleaned' : 'Leveled'; if (m === 'crop') lv.title = 'No music on this page, so it takes the same frame as the other pages'; else lv.removeAttribute('title'); } c.setAttribute('aria-pressed', String(yes));
+    c.classList.toggle('off', !yes); c.classList.toggle('na', na); c.classList.toggle('hid', !!sl.x); c.classList.toggle('lvl', m === 'dim' ? !!dimKey(sl) : m === 'clean' ? peCleaned(sl) : !!(sl.skew || sl.vskew || sl.warp)); { const lv = c.querySelector('.pe-lvl'); lv.textContent = m === 'crop' ? 'Shared' : m === 'dim' ? 'Dimmed' : m === 'clean' ? 'Cleaned' : 'Leveled'; if (m === 'crop') lv.title = 'No music on this page, so it takes the same frame as the other pages'; else lv.removeAttribute('title'); } c.setAttribute('aria-pressed', String(yes));
     if (na) c.setAttribute('aria-disabled', 'true'); else c.removeAttribute('aria-disabled');
     const p = c.querySelector('.pe-pos'), nm = c.querySelector('.num'), same = !sl.c && !sl.x && sl.src + 1 === pos, was = PE.posWas.get(+c.dataset.id), np = sl.x ? 0 : pos;
     if (!p._slide && !(roll && was && np !== was.pos)) p.textContent = np || '';          // a number that is about to slide keeps its old digit until its turn
@@ -9630,8 +9682,8 @@ function peState() {
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
-  else swapText(cnt, m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true);
-  $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
+  else swapText(cnt, m === 'dim' ? d.order.filter(id => dimKey(d.slots[id])).length + ' / ' + d.order.filter(id => !d.slots[id].x).length + ' pages dimmed' : m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true);
+  $('#peAll').hidden = $('#peNone').hidden = m === 'dim'; $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
   $('#peWmB').setAttribute('aria-pressed', String(w.b !== false)); $('#peWmI').setAttribute('aria-pressed', String(!!w.i));
@@ -9690,7 +9742,7 @@ function peAct(act, id) {
     peDrawCard(card, sl); peState(); peGlide(was, cv, ow);
     return;
   }
-  if (act === 'dup') { pePush(); const ni = d.slots.length; d.slots.push({ src: sl.src, rot: sl.rot || 0, x: false, c: true, crop: sl.crop ? sl.crop.slice() : null, skew: sl.skew || 0, vskew: sl.vskew || 0, warp: sl.warp || 0, bg: sl.bg || 0, sp: sl.sp || 0, half: sl.half || '' }); d.order.splice(d.order.indexOf(id) + 1, 0, ni); PE.focusId = ni; edSay('pe', 'dup'); }
+  if (act === 'dup') { pePush(); const ni = d.slots.length; d.slots.push({ src: sl.src, rot: sl.rot || 0, x: false, c: true, crop: sl.crop ? sl.crop.slice() : null, dim: dimKey(sl) ? sl.dim.map(b => b.slice()) : null, skew: sl.skew || 0, vskew: sl.vskew || 0, warp: sl.warp || 0, bg: sl.bg || 0, sp: sl.sp || 0, half: sl.half || '' }); d.order.splice(d.order.indexOf(id) + 1, 0, ni); PE.focusId = ni; edSay('pe', 'dup'); }
   else if (act === 'del') { if (!sl.c) return; pePush(); d.order.splice(d.order.indexOf(id), 1); PE.focusId = d.order[Math.max(0, d.order.indexOf(id))] ?? null; edSay('pe', 'del'); }
   else return;
   peRender(true);
@@ -9811,7 +9863,7 @@ async function buildPdfBlob(r, ui) {
   const keep = recipeKeep(r); ui && ui('Processing');
   for (let ki = 0; ki < keep.length; ki++) {
     const id = keep[ki]; ui && ui('Processing', ki / keep.length); await tick();
-    const sl = r.slots[id]; let pg, R0;
+    const sl = r.slots[id]; let pg, R0, dimGeo = null;          // dimGeo: where a vector page shows its Dim boxes (a page drawn as a picture already has them in it)
     if (sl.warp || sl.bg || sl.sp || enc) {             // a page that needed bending flat, or cleaned, is drawn once from the original scan and saved as a high-quality JPEG (a page that needed bending flat: 200 dpi; a cleaned page: the scan's own resolution, up to 300 dpi)
       const srcPage = enc ? await pdfjsPageBoxes(S.pdf.doc, sl.src) : srcDoc.getPage(sl.src), intrR = ((srcPage.getRotation().angle || 0) % 360 + 360) % 360, rot = ((sl.rot || 0) % 360 + 360) % 360, cr = sl.crop || [0, 0, 1, 1], mb = pdfVisibleBox(srcPage);
       const Ws = intrR % 180 ? mb.height : mb.width, Hs = intrR % 180 ? mb.width : mb.height, cw = (cr[2] - cr[0]) * Ws, chh = (cr[3] - cr[1]) * Hs, vw0 = rot % 180 ? chh : cw, vh0 = rot % 180 ? cw : chh;
@@ -9828,13 +9880,19 @@ async function buildPdfBlob(r, ui) {
       const m = new DOMMatrix(); m.translateSelf(tw0 / 2, th0 / 2); m.scaleSelf(sc); m.rotateSelf(rot); m.translateSelf(-(cr[0] + cr[2]) / 2 * Ws, -(cr[1] + cr[3]) / 2 * Hs);
       m.translateSelf(Ws / 2, Hs / 2); m.multiplySelf(skewMat(sl.skew, sl.vskew)); m.translateSelf(-Ws / 2, -Hs / 2);
       const T = new DOMMatrix([1, 0, 0, -1, 0, th0]).multiply(m).multiply(K), hw = vw0 * sc / 2, hh = vh0 * sc / 2, ox = tw0 / 2, oy = th0 / 2;
-      pg = out.addPage([tw0, th0]); R0 = 0;
+      pg = out.addPage([tw0, th0]); R0 = 0; dimGeo = { rot, cr, a: [ox - hw, oy - hh, hw * 2, hh * 2] };
       pg.pushOperators(pushGraphicsState(), moveTo(ox - hw, oy - hh), lineTo(ox + hw, oy - hh), lineTo(ox + hw, oy + hh), lineTo(ox - hw, oy + hh), closePath(), clip(), endPath(), concatTransformationMatrix(T.a, T.b, T.c, T.d, T.e, T.f));
       pg.drawPage(emb, { x: 0, y: 0, xScale: 1, yScale: 1 });
       pg.pushOperators(popGraphicsState());
     } else {
       [pg] = await out.copyPages(srcDoc, [sl.src]);
-      R0 = ((pg.getRotation().angle || 0) + (sl.rot || 0)) % 360; pg.setRotation(degrees(R0)); out.addPage(pg);
+      R0 = ((pg.getRotation().angle || 0) + (sl.rot || 0)) % 360; pg.setRotation(degrees(R0)); out.addPage(pg); dimGeo = { rot: sl.rot || 0, cr: null, a: null };
+    }
+    if (dimGeo && dimKey(sl)) {
+      const { width: W, height: H } = pg.getSize(), swap = R0 % 180 !== 0, Wv = swap ? H : W, Hv = swap ? W : H, a = dimGeo.a || [0, 0, Wv, Hv];
+      const at = (xv, y) => { const yv = Hv - y; return R0 === 0 ? [xv, yv] : R0 === 90 ? [W - yv, xv] : R0 === 180 ? [W - xv, H - yv] : [yv, H - xv]; };          // a seen position (y down) to the page's own coordinates
+      sl.dim.forEach(b => { const q = dimRect(b, dimGeo.rot, dimGeo.cr, a[0], a[1], a[2], a[3]), A = at(q[0], q[1]), B = at(q[0] + q[2], q[1] + q[3]);
+        pg.drawRectangle({ x: Math.min(A[0], B[0]), y: Math.min(A[1], B[1]), width: Math.abs(A[0] - B[0]), height: Math.abs(A[1] - B[1]), color: rgb(1, 1, 1), opacity: DIM_ALPHA, borderWidth: 0 }); });
     }
     if (wm.on && text && !sl.nw) {
       const { width: W, height: H } = pg.getSize(), swap = R0 % 180 !== 0, Wv = swap ? H : W, Hv = swap ? W : H;      // the page as it is seen
@@ -9879,6 +9937,89 @@ async function peExportPdf() {
   finally { PE.exporting = false; PE.expStop = false; stop.hidden = true; btn.classList.remove('exporting'); btn.style.removeProperty('--p'); lb.textContent = label; if (PE.d) { const eb = $('#peExport'); eb.disabled = !!pdfWhy(); } else btn.disabled = false; }
 }
 const peLeave = () => PE.exporting ? askWarn('Close the editor?', 'Your PDF is still being exported. Closing the editor now stops the export and nothing is saved.', 'Stop export and close', 'Keep exporting') : Promise.resolve(true);
+/* ---- Dim: the user draws boxes on a page; the music under a box is drawn faded in the grid, the large view, the video, and the exported PDF ----
+   A box is kept in the file's own page (see dimKey), so it follows the page when it is turned, cropped, or levelled. While one is drawn or dragged the layer holds the numbers (as fractions of the picture the user sees); the page's recipe changes once, when the pointer lets go. */
+const DIM_MIN = 28, DIM_HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'], dimX = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+/* a box in the file's page to the picture the user sees ([x0, y0, x1, y1]), and back */
+function dimToView(sl, b) { const q = dimRect(b, sl.rot, sl.crop, 0, 0, 1, 1); return [q[0], q[1], q[0] + q[2], q[1] + q[3]]; }
+function dimToFile(sl, v) {
+  const rot = ((sl.rot || 0) % 360 + 360) % 360, cr = sl.crop || [0, 0, 1, 1], un = (x, y) => rot === 90 ? [y, 1 - x] : rot === 180 ? [1 - x, 1 - y] : rot === 270 ? [1 - y, x] : [x, y];
+  const A = un(v[0], v[1]), B = un(v[2], v[3]), cw = cr[2] - cr[0], ch = cr[3] - cr[1], r4 = n => Math.round(n * 10000) / 10000;
+  return [r4(cr[0] + Math.min(A[0], B[0]) * cw), r4(cr[1] + Math.min(A[1], B[1]) * ch), r4(cr[0] + Math.max(A[0], B[0]) * cw), r4(cr[1] + Math.max(A[1], B[1]) * ch)];
+}
+function dimBoxEl(layer, v) {
+  const el = document.createElement('div'); el.className = 'pe-crop-box pe-dimbox';
+  el.innerHTML = '<i data-h="move"></i>' + DIM_HANDLES.map(h => '<i class="h ' + h + '" data-h="' + h + '"></i>').join('') + '<button type="button" class="pe-dimx" aria-label="Delete box" title="Delete box">' + dimX + '</button>';
+  const x = el.querySelector('.pe-dimx'); x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('click', e => { e.stopPropagation(); el.remove(); dimCommit(layer); });
+  layer.appendChild(el); dimSet(layer, el, v); return el;
+}
+function dimSet(layer, el, v) {
+  el._v = v; const W = layer.clientWidth || 1, H = layer.clientHeight || 1, px = Math.min((v[2] - v[0]) * W, (v[3] - v[1]) * H);
+  el.style.left = v[0] * 100 + '%'; el.style.top = v[1] * 100 + '%'; el.style.width = (v[2] - v[0]) * 100 + '%'; el.style.height = (v[3] - v[1]) * 100 + '%';
+  el.style.setProperty('--dz', clamp(px * .5, 6, 22) + 'px'); el.style.setProperty('--hs', clamp(px * .28, 5, 22) + 'px'); el.style.setProperty('--hl', clamp(px * .45, 10, 28) + 'px');
+}
+/* put the page's boxes on a host (a card's picture, or the large view's page) and let the pointer draw, move, and resize them */
+function dimMount(host, id) {
+  const sl = PE.d.slots[id], layer = host.querySelector('.pe-dim-layer') || host.appendChild(Object.assign(document.createElement('div'), { className: 'pe-dim-layer' }));
+  layer.hidden = false; layer.textContent = ''; layer._id = id; layer._bound || dimBind(layer);
+  (sl.dim || []).forEach(b => dimBoxEl(layer, dimToView(sl, b)));
+}
+function dimLarge() {
+  const layer = $('#peDimLayer'), on = PE.mode === 'dim' && PE.one != null;
+  if (!on) { layer.hidden = true; layer.textContent = ''; return; }
+  if (layer._id !== PE.one || layer.hidden) dimMount($('#peCropPg'), PE.one);
+}
+function dimCommit(layer) {
+  const d = PE.d, sl = d.slots[layer._id]; if (!sl) return;
+  const list = Array.from(layer.querySelectorAll('.pe-dimbox')).map(el => dimToFile(sl, el._v)).filter(b => b[2] - b[0] >= 0.005 && b[3] - b[1] >= 0.005);
+  if (JSON.stringify(list) === JSON.stringify(sl.dim || [])) return;
+  pePush(); sl.dim = list.length ? list : null; peState(); peActs();          // one History step per box drawn, moved, or deleted
+  document.querySelectorAll('#pdfDlg .pe-dim-layer').forEach(l => { if (l !== layer && l._id === layer._id) dimMount(l.parentNode, l._id); });          // the card and the large view show the same boxes
+}
+function dimBind(layer) {
+  layer._bound = true; let drag = null;
+  if (window.ResizeObserver) new ResizeObserver(() => layer.querySelectorAll('.pe-dimbox').forEach(el => dimSet(layer, el, el._v))).observe(layer);          // a layer built while hidden has no size yet: the X and handles are sized once it has one
+  const pt = e => { const r = layer.getBoundingClientRect(); return [clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1), clamp((e.clientY - r.top) / Math.max(1, r.height), 0, 1)]; };
+  const mins = () => [Math.max(0.005, DIM_MIN / Math.max(1, layer.clientWidth)), Math.max(0.005, DIM_MIN / Math.max(1, layer.clientHeight))];
+  const select = el => layer.querySelectorAll('.pe-dimbox').forEach(b => b.classList.toggle('sel', b === el));
+  layer.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || drag || PE.busy) return;
+    const el = e.target.closest('.pe-dimbox'), h = e.target.closest('[data-h]'), [x, y] = pt(e);
+    if (el) { const hh = h && el.classList.contains('sel') ? h.dataset.h : 'move'; select(el); drag = { el, hh, x, y, o: el._v.slice(), pid: e.pointerId }; }
+    else { select(null); drag = { el: null, x, y, pid: e.pointerId, draw: true }; }
+    e.preventDefault(); e.stopPropagation(); try { layer.setPointerCapture(e.pointerId); } catch (_) {}
+  });
+  layer.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const [x, y] = pt(e), [mw, mh] = mins();
+    if (drag.draw) {          // a box exists once it reaches the minimum; before that nothing is dimmed
+      const v = [Math.min(drag.x, x), Math.min(drag.y, y), Math.max(drag.x, x), Math.max(drag.y, y)];
+      if (v[2] - v[0] >= mw && v[3] - v[1] >= mh) { if (!drag.el) { drag.el = dimBoxEl(layer, v); select(drag.el); } else dimSet(layer, drag.el, v); drag.moved = true; }
+      else if (drag.el) { drag.el.remove(); drag.el = null; }
+      return;
+    }
+    const o = drag.o, dx = x - drag.x, dy = y - drag.y; let [l, t, r, b] = o;
+    if (drag.hh === 'move') { const w = o[2] - o[0], hgt = o[3] - o[1]; l = clamp(o[0] + dx, 0, 1 - w); t = clamp(o[1] + dy, 0, 1 - hgt); r = l + w; b = t + hgt; }
+    else {          // an edge moves only its own side and stops at the minimum, so a box never collapses, flips, or jumps
+      if (drag.hh.includes('w')) l = clamp(o[0] + dx, 0, r - mw);
+      if (drag.hh.includes('e')) r = clamp(o[2] + dx, l + mw, 1);
+      if (drag.hh.includes('n')) t = clamp(o[1] + dy, 0, b - mh);
+      if (drag.hh.includes('s')) b = clamp(o[3] + dy, t + mh, 1);
+    }
+    drag.moved = true; dimSet(layer, drag.el, [l, t, r, b]);
+  });
+  const end = e => {
+    if (!drag || (e.type !== 'lostpointercapture' && e.pointerId !== drag.pid)) return;
+    try { layer.releasePointerCapture(drag.pid); } catch (_) {}
+    const d = drag; drag = null; if (d.moved) dimCommit(layer);
+  };
+  layer.addEventListener('pointerup', end); layer.addEventListener('pointercancel', end); layer.addEventListener('lostpointercapture', end);
+}
+function dimSelectedDelete() { const el = document.querySelector('#pdfDlg .pe-dimbox.sel'); if (!el) return false; const layer = el.parentNode; el.remove(); dimCommit(layer); return true; }
+function peDimClear() {
+  const d = PE.d, ids = d.order.filter(id => dimKey(d.slots[id])); if (!ids.length) return;
+  pePush(); ids.forEach(id => { d.slots[id].dim = null; }); document.querySelectorAll('#pdfDlg .pe-dim-layer').forEach(l => { l.textContent = ''; }); peState(); peActs(); peSay('#peDimStatus', '');
+}
 function peBind() {
   const grid = $('#peGrid');
   if (window.ResizeObserver) new ResizeObserver(peSheenSync).observe(grid);          // the cards' bands follow where the cards sit when the window or the number of columns changes
@@ -9949,6 +10090,7 @@ function peBind() {
 function peKey(e) {
   if (e.key === 'Escape') { e.preventDefault(); if (PE.drag) { peDragEnd(true); } else if (PE.one != null) peOneClose(); else if (PE.mode !== 'pages') peTool('pages'); else peLeave().then(ok => { if (ok) closePdfEditor(); }); return; }
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) peRedo(); else peUndo(); return; }
+  if (PE.mode === 'dim' && (e.key === 'Delete' || e.key === 'Backspace') && !(e.target.closest && e.target.closest('input, select, textarea')) && dimSelectedDelete()) { e.preventDefault(); return; }
   if (PE.one != null && !(e.target.closest && e.target.closest('input, select, textarea')) && !e.ctrlKey && !e.metaKey && ['+', '=', '-', '_', '0'].includes(e.key)) { e.preventDefault(); if (e.key === '0') peZoomReset(true); else peZoomAt(PE.zm.z * (e.key === '-' || e.key === '_' ? 1 / 1.6 : 1.6), null, null, true); return; }
   if (PE.one != null && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !(e.target.closest && e.target.closest('input, select, [role=slider]'))) { e.preventDefault(); peOneStep(e.key === 'ArrowLeft' ? -1 : 1); return; }
   const card = e.target.closest && e.target.closest('.page-card'); if (!card) return;
@@ -10134,7 +10276,7 @@ function initMenu() {
     const a = menu._a = menu.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: 'cubic-bezier(.22,1,.36,1)' });
     a.onfinish = () => { if (menu._a === a) { menu._a = null; menu.hidden = true; menu.style.pointerEvents = ''; } };
   };
-  btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.hidden || fading(); if (!open) { close(); return; } settle(); menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); disarm(); $('#menuAbout').focus(); });
+  btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.hidden || fading(); if (!open) { close(); return; } settle(); menu.hidden = false; const wr = menu.offsetParent.getBoundingClientRect(), br = btn.getBoundingClientRect(); menu.style.transformOrigin = (br.left + br.width / 2 - wr.left - menu.offsetLeft) + 'px ' + (br.top + br.height / 2 - wr.top - menu.offsetTop) + 'px'; btn.setAttribute('aria-expanded', 'true'); disarm(); $('#menuAbout').focus(); });          // the menu grows from the center of its button (offsets, not rects: the open animation is already scaling the box)
   document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { close(); btn.focus(); } });
   $('#menuIO').addEventListener('click', () => { close(); openIO(); });
@@ -10292,7 +10434,7 @@ function initUiExtras() {
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
   document.addEventListener('touchstart', wakeFs, { passive: true });
-  ['.transport', '.timeline'].forEach(sel => { const el = document.querySelector(sel); el.addEventListener('mouseenter', () => { FS.hover = true; wakeFs(); }); el.addEventListener('mouseleave', () => { FS.hover = false; wakeFs(); }); });
+  ['.transport', '.timeline', '#stageStrip'].forEach(sel => { const el = document.querySelector(sel); el.addEventListener('mouseenter', () => { FS.hover = true; wakeFs(); }); el.addEventListener('mouseleave', () => { FS.hover = false; wakeFs(); }); });
   updateHint(); updateHistoryButtons();
 }
 
@@ -10304,6 +10446,7 @@ function boot() {
   layoutStage(); layoutTimeline(); updateButtons(); updateTimeUI(true); setChips();
   /* A resize wipes the timeline's canvas, so it is painted again in the same frame, before the browser shows it (a redraw left for the next frame showed one blank frame, a flash). */
   new ResizeObserver(() => { layoutStage(); layoutTimeline(); drawTimeline(); }).observe($('#stageWrap'));
+  new ResizeObserver(() => document.querySelector('.app').style.setProperty('--fs-tlh', $('.timeline').offsetHeight + 'px')).observe($('.timeline'));          // full screen: the zoom strip rides above the bar
   new ResizeObserver(() => { const sc = TL.scroller; if (Math.max(200, sc.clientWidth) === TL.vw && Math.max(150, sc.clientHeight) === TL.h) return; layoutTimeline(); drawTimeline(); }).observe(TL.scroller);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
   new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

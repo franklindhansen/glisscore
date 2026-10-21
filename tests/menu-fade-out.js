@@ -12,6 +12,8 @@ const click = p => p.evaluate(() => document.querySelector('#btnSettings').click
     await p.goto(URL); const tag = reduce ? ' (reduced motion)' : '';
     await click(p); await p.waitForTimeout(400); let s = await st(p);
     ok('the menu opens' + tag, !s.hidden && s.exp === 'true' && s.op > 0.99, JSON.stringify(s));
+    if (!reduce) { const o = await p.evaluate(() => { const m = document.querySelector('#settingsMenu'), b = document.querySelector('#btnSettings').getBoundingClientRect(), r = m.getBoundingClientRect(), [x, y] = getComputedStyle(m).transformOrigin.split(' ').map(parseFloat); return { dx: r.left + x - (b.left + b.width / 2), dy: r.top + y - (b.top + b.height / 2) }; });
+      ok('it grows from the center of its button', Math.abs(o.dx) < 2 && Math.abs(o.dy) < 2, JSON.stringify(o)); }
     await click(p); await p.waitForTimeout(50); s = await st(p);
     if (reduce) ok('closes at once' + tag, s.hidden && s.exp === 'false', JSON.stringify(s));
     else ok('mid-fade: still shown, fading, no movement, button already reads closed', !s.hidden && s.op < 1 && s.op > 0 && s.tf === 'none' && s.exp === 'false', JSON.stringify(s));
