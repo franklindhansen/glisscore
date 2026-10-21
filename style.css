@@ -148,6 +148,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .time span{color:var(--muted)}
 .spacer{flex:1}
 .info{color:var(--muted);font-size:13px}
+.transport .info{margin-left:auto}          /* the spread label is always on the right, also when it has a row of its own */
+.info .si{display:inline-grid;justify-items:end;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}          /* the label and, invisibly, the longest one share a cell, so the box never changes width */
+.info .si>span,#spreadMax>span{grid-area:1/1}
+#spreadMax{display:grid;visibility:hidden}
+.transport[data-info=mid] .si .p{display:none}          /* a narrow row drops "Spread ", then the rest but the pages */
+.transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
+.transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:8px}
 kbd{font:inherit;font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 

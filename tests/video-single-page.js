@@ -42,7 +42,7 @@ const K = '__keyframes';
   const off0 = await p.evaluate(() => refOffset()), vs0 = await S(s => s.vStart);
   ok('the turns are spaced evenly', sp.turns.length === 2 && near(sp.turns[1] - sp.turns[0], sp.turns[0] - off0 - vs0, 0.01), JSON.stringify(sp.turns));
 
-  const info = () => p.evaluate(() => document.querySelector('#spreadInfo').textContent);
+  const info = () => p.evaluate(() => document.querySelector('#spreadNow').textContent);
   ok('the counter reads "Page 1 / 3" in Single page', await info() === 'Page 1 / 3', await info());
 
   // the page: centered, at the largest size that fits, in its own shape

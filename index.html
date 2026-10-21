@@ -156,7 +156,7 @@
         <!-- ----- BUTTON: Add page turn ----- -->
         <button class="btn tapbtn" id="bTap" type="button" title="While the music plays, press T at each moment a page should turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V2.8a.8.8 0 0 1 1.17-.71l11.38 5.69a.8.8 0 0 1 0 1.44L6 15.5"/></svg>Add page turn <kbd>T</kbd></button>
         <span class="spacer"></span>
-        <span class="info" id="spreadInfo"></span>
+        <span class="info" id="spreadInfo"><span class="si"><span id="spreadNow"></span><span id="spreadMax" aria-hidden="true"></span></span></span>
         <!-- ----- BUTTONS (full screen only): Hide editor, Show editor, Exit full screen ----- -->
         <button class="btn fs-only" id="btnHideEditor" type="button" title="Hide the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>Hide editor</button>
         <button class="btn fs-only" id="btnShowEditor" type="button" title="Show the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>Show editor</button>
@@ -3909,9 +3909,12 @@ function layoutTimeline() {
   const sc = TL.scroller, vw = Math.max(200, sc.clientWidth), h = Math.max(150, sc.clientHeight);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   TL.dpr = dpr; TL.vw = vw; TL.h = h;
-  TL.canvas.width = Math.round(vw * dpr); TL.canvas.height = Math.round(h * dpr);
+  const cw = Math.round(vw * dpr), ch = Math.round(h * dpr);          // setting a canvas size wipes it, so only do it when the size really changed
+  if (TL.canvas.width !== cw) TL.canvas.width = cw;
+  if (TL.canvas.height !== ch) TL.canvas.height = ch;
   TL.canvas.style.width = vw + 'px'; TL.canvas.style.height = h + 'px';
-  TL.sc.width = TL.canvas.width; TL.sc.height = TL.canvas.height;
+  if (TL.sc.width !== cw) TL.sc.width = cw;
+  if (TL.sc.height !== ch) TL.sc.height = ch;
   TL.trackH = clamp(Math.round(h * 0.42), 68, 92); TL.waveY = TL.trackY + TL.trackH + 10; TL.waveH = Math.max(36, h - TL.waveY - 8);
   if (S.fitMode) { setZoom(fitPps(), 0, true); fitScroll(); }
   else TL.inner.style.width = tlInnerWidth() + 'px';
@@ -4539,12 +4542,39 @@ function updateButtons() {
   ['bStart', 'bPlay'].forEach(id => $('#' + id).disabled = !has);
   $('#tTot').textContent = fmt(duration());
 }
+/* The spread label ("Spread 50 / 100 · pp. 98–99") stays on the right of the row. It sits in a box as wide as the longest label this score can show (kept invisibly in
+   the same cell), so its width never depends on where the playhead is: a longer label used to wrap to a second row while scrubbing, and the preview above it grew and
+   shrank. When the window is narrow the label gets shorter before it ever wraps ("34 / 100 · pp. 66–67", then "pp. 66–67"); fitInfo picks the longest that fits. */
+function infoParts(i, n) {
+  const sp = S.spreads[i], one = singleOn();
+  const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
+  if (one) return [['p', 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits ? [['s', ' · '], ['t', 'credits']] : [])];
+  return [['p', 'Spread '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', pg]];
+}
+function setInfo(el, parts) {
+  el.textContent = '';
+  parts.forEach(([k, t]) => { const e = document.createElement('span'); e.className = k; e.textContent = t; el.appendChild(e); });
+}
+function fitInfo() {
+  const tr = $('#transport'), info = $('#spreadInfo'); if (!tr || !info || !info.offsetParent) return;
+  info.style.display = 'none'; const h0 = tr.offsetHeight; info.style.display = '';          // the row's height without the label: the label must not add a row
+  for (const l of ['full', 'mid', 'short']) { tr.dataset.info = l; if (tr.offsetHeight <= h0 + 1) return; }
+  tr.dataset.info = 'full';                                                                   // nothing fits beside the buttons: the whole label, right-aligned on its own row
+}
 function updateInfo() {
   const n = S.spreads.length; syncToEnd();
-  if (!n) { $('#spreadInfo').textContent = ''; return; }
-  const st = frameState(S.time), sp = S.spreads[st.spread];
-  const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
-  $('#spreadInfo').textContent = singleOn() ? 'Page ' + (st.spread + 1) + ' / ' + n + (sp.credits ? ' · credits' : '') : 'Spread ' + (st.spread + 1) + ' / ' + n + ' · ' + pg;
+  const now = $('#spreadNow'), max = $('#spreadMax');
+  if (!n) { now.textContent = ''; max.textContent = ''; updateInfo.sp = null; return; }
+  setInfo(now, infoParts(frameState(S.time).spread, n));
+  if (updateInfo.sp !== S.spreads || updateInfo.single !== singleOn()) {          // the score or the layout changed: find the longest label of each kind
+    updateInfo.sp = S.spreads; updateInfo.single = singleOn();
+    $('#spreadInfo .si').dataset.l = updateInfo.single ? 'single' : 'spread';
+    const best = {}, len = p => p.reduce((a, [, t]) => a + t.length, 0);
+    S.spreads.forEach((sp, i) => { const p = infoParts(i, n), k = sp.credits ? 'c' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp' : 'p'; if (!best[k] || len(p) > len(best[k])) best[k] = p; });
+    max.textContent = '';
+    Object.values(best).forEach(p => { const e = document.createElement('span'); setInfo(e, p); max.appendChild(e); });
+    fitInfo();
+  }
   $('#tTot').textContent = fmt(duration());
 }
 let lastTimeStr = '';
@@ -5994,6 +6024,11 @@ function introFit() {
   em.style.setProperty('--is', Math.max(0.1, avail / natural).toFixed(3));
 }
 if (window.ResizeObserver) new ResizeObserver(() => introFit()).observe(document.querySelector('.stage-wrap') || document.body);
+if (window.ResizeObserver) {          // the spread label picks the longest wording that fits beside the buttons whenever the row's or the label's width changes (on the next frame, so it never loops)
+  let sig = ''; const tr = $('#transport'), info = $('#spreadInfo');
+  new ResizeObserver(() => { const now = tr.offsetWidth + '|' + info.offsetWidth; if (now !== sig) { sig = now; requestAnimationFrame(() => { fitInfo(); sig = tr.offsetWidth + '|' + info.offsetWidth; }); } }).observe(tr);
+  new ResizeObserver(() => { const now = tr.offsetWidth + '|' + info.offsetWidth; if (now !== sig) { sig = now; requestAnimationFrame(() => { fitInfo(); sig = tr.offsetWidth + '|' + info.offsetWidth; }); } }).observe(info);
+}
 window.addEventListener('resize', introFit); { const em = document.getElementById('empty'); if (em) new MutationObserver(introFit).observe(em, { attributes: true, attributeFilter: ['hidden'] }); } introFit();
 const QUIPS = MSG.quips;
 /* the (i) texts come from the same block */
@@ -10157,8 +10192,9 @@ function boot() {
   catch (e) { toast(e.message, 8000); console.error(e); return; }
   previewR.onUpdate = () => { stageDirty = true; };
   layoutStage(); layoutTimeline(); updateButtons(); updateTimeUI(true); setChips();
-  new ResizeObserver(() => { layoutStage(); layoutTimeline(); }).observe($('#stageWrap'));
-  new ResizeObserver(() => layoutTimeline()).observe(TL.scroller);
+  /* A resize wipes the timeline's canvas, so it is painted again in the same frame, before the browser shows it (a redraw left for the next frame showed one blank frame, a flash). */
+  new ResizeObserver(() => { layoutStage(); layoutTimeline(); drawTimeline(); }).observe($('#stageWrap'));
+  new ResizeObserver(() => { const sc = TL.scroller; if (Math.max(200, sc.clientWidth) === TL.vw && Math.max(150, sc.clientHeight) === TL.h) return; layoutTimeline(); drawTimeline(); }).observe(TL.scroller);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
   new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   $('#zoom').value = zoomToSlider(S.pxPerSec); paintRanges();
