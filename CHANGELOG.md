@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+Letting go of a start or end bracket no longer jumps the timeline when you are zoomed out. Full screen shows the zoom controls above the play bar, and Dim's wording is clearer.
+
 ## 1.1.0
 
 A new Dim tool in the PDF Editor visually softens music that repeats. The video stage gets zoom controls, the start and end brackets glide smoothly, and Support now lives in About.
