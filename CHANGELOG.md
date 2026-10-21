@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
-The Support dialog is now part of About, and /support opens About.
+A new Dim tool in the PDF Editor visually softens music that repeats. The video stage gets zoom controls, the start and end brackets glide smoothly, and Support now lives in About.
 
 ## 1.0.2
 
