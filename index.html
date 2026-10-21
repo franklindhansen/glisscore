@@ -105,7 +105,6 @@
       <div class="menu" id="settingsMenu" role="menu" hidden>
         <button class="menu-item" id="menuAbout" role="menuitem" type="button">About</button>
         <button class="menu-item" id="menuHow" role="menuitem" type="button">How it works</button>
-        <button class="menu-item" id="menuSupport" role="menuitem" type="button">Support</button>
         <button class="menu-item" id="menuIO" role="menuitem" type="button">Import / Export</button>
         <button class="menu-item" id="menuKeys" role="menuitem" type="button">Keyboard shortcuts</button>
         <button class="menu-item" id="menuReset" role="menuitem" type="button">Restore default settings</button>
@@ -611,21 +610,12 @@
     <h2 id="aboutTitle">About</h2>
     <p><em>glisscore</em> was made by composer, conductor, and grad student (who should probably be writing music), <a href="https://franklindhansen.com/" target="_blank" rel="noopener">Franklin D. Hansen</a>.</p>
     <p><em>glisscore</em> is free and open source under the AGPL-3.0. <a href="https://github.com/franklindhansen/glisscore" target="_blank" rel="noopener">View the source</a>.</p>
+    <p>If it’s useful to you and you’d like to help cover hosting and upkeep, you can <a href="https://ko-fi.com/franklindhansen" target="_blank" rel="noopener">buy me a coffee on Ko-fi</a>.</p>
+    <p>There’s no pressure: supporting unlocks nothing, and the app is the same for everyone.</p>
     <p>If this site fits your needs, <a href="https://franklindhansen.com/works" target="_blank" rel="noopener">my music</a> might too.</p>
     <p>Questions, bug reports, odes, love letters, commissions: <a href="https://franklindhansen.com/contact" target="_blank" rel="noopener">all welcome</a>.</p>
     <p class="ver" id="aboutVersion" hidden></p>
     <div class="row"><p class="fine"><a href="https://github.com/franklindhansen/glisscore/blob/main/LICENSE" target="_blank" rel="noopener">License</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/TRADEMARKS.md" target="_blank" rel="noopener">Trademarks</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Third-party notices</a></p><button class="btn primary" id="aboutClose" type="button">Close</button></div>
-  </div>
-</div>
-<!-- ----- DIALOG: Support ----- -->
-<div id="supportDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="supportTitle" hidden>
-  <div class="dlg page about">
-    <h2 id="supportTitle">Support</h2>
-    <p><em>glisscore</em> is free, open source, and made by one person (a composer who should probably be writing music).</p>
-    <p>If it’s useful to you and you’d like to help cover hosting and upkeep, you can <a href="https://ko-fi.com/franklindhansen" target="_blank" rel="noopener">buy me a coffee on Ko-fi</a>.</p>
-    <p>There’s no pressure: supporting unlocks nothing, and the app is the same for everyone.</p>
-    <p>If this site fits your needs, <a href="https://franklindhansen.com/works" target="_blank" rel="noopener">my music</a> might too.</p>
-    <div class="row"><button class="btn primary" id="supportClose" type="button">Close</button></div>
   </div>
 </div>
 <!-- ----- DIALOG: Keyboard shortcuts ----- -->
@@ -10005,7 +9995,7 @@ function restoreDefaults() {
   if (JSON.stringify(snap()) === was) { S.history.pop(); S.redo = redoWas; updateHistoryButtons(); }          // nothing changed: no step, and Redo stays
   toast(tx('app.reset'));
 }
-const DEEP_DIALOGS = { '/about': '#aboutDlg', '/how-it-works': '#howDlg', '/support': '#supportDlg' };
+const DEEP_DIALOGS = { '/about': '#aboutDlg', '/how-it-works': '#howDlg', '/support': '#aboutDlg' };
 /* closing a dialog that a link opened (see initMenu) also takes the address back to the app's own */
 function dlgClose(el) { sheetHide(el); if (DEEP_DIALOGS[location.pathname.replace(/\/+$/, '')]) history.replaceState(null, '', '/' + location.search); }
 function initMenu() {
@@ -10056,9 +10046,6 @@ function initMenu() {
   $('#aboutDlg').addEventListener('click', e => { if (e.target === $('#aboutDlg')) dlgClose($('#aboutDlg')); });
   $('#howDlg').addEventListener('click', e => { if (e.target === $('#howDlg')) dlgClose($('#howDlg')); });
   $('#keysDlg').addEventListener('click', e => { if (e.target === $('#keysDlg')) sheetHide($('#keysDlg')); });
-  $('#menuSupport').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#supportDlg')); $('#supportClose').focus(); });
-  $('#supportClose').addEventListener('click', () => dlgClose($('#supportDlg')));
-  $('#supportDlg').addEventListener('click', e => { if (e.target === $('#supportDlg')) dlgClose($('#supportDlg')); });
   /* the site answers /about, /how-it-works and /support with this page (the _redirects file): the matching dialog opens over the app, and closing it takes the address back to / */
   const deep = DEEP_DIALOGS[location.pathname.replace(/\/+$/, '')];
   if (deep) { sheetShow($(deep)); $(deep + ' .btn.primary').focus(); }
@@ -10273,7 +10260,6 @@ function boot() {
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (type === 'text' || type === 'color'))) return;
     if (!$('#howDlg').hidden) { if (e.key === 'Escape') dlgClose($('#howDlg')); return; }
     if (!$('#aboutDlg').hidden) { if (e.key === 'Escape') dlgClose($('#aboutDlg')); return; }
-    if (!$('#supportDlg').hidden) { if (e.key === 'Escape') dlgClose($('#supportDlg')); return; }
     if (!$('#keysDlg').hidden) { if (e.key === 'Escape') sheetHide($('#keysDlg')); return; }
     if (!$('#ioDlg').hidden) { if (e.key === 'Escape') closeIO(); return; }
     if (!$('#audioDlg').hidden) { if (AE.d) aeKey(e); return; }

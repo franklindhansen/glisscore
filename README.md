@@ -28,7 +28,7 @@ Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen
 
 ## Support
 
-*glisscore* is free and open source. If it's useful to you, you can help cover hosting and upkeep at [glisscore.com/support](https://glisscore.com/support).
+*glisscore* is free and open source. If it's useful to you, you can help cover hosting and upkeep with a coffee on Ko-fi, linked from the About dialog ([glisscore.com/support](https://glisscore.com/support)).
 
 ## License
 
