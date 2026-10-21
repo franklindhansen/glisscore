@@ -2077,7 +2077,7 @@ function audioGain() {
   const s = S.set;
   if (s.normalize && s.normBy === 'loud') {
     const k = [s.normLufs, s.limiter, fxKey(s.fx), S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, s.audioKey, TP_VER, LUC.size].join('|');
-    if (loudAppMemo.k !== k) { const i = aeLoudInfo(aeFromApp()); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(aeFromApp()).catch(() => {}); }
+    if (loudAppMemo.k !== k) { const i = aeLoudInfo(aeFromApp()); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(aeFromApp()).then(() => { const j = aeLoudInfo(aeFromApp()); if (j && j.ready) TL.staticDirty = true; }, () => {}); }
     return loudAppMemo.g;
   }
   const key = [s.normalize, s.normPeakDb, s.gainDb, S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, TP_VER, S.audio ? S.audio.name + S.audio.duration + fxKey(S.set.fx) + (fxPeek(S.set.fx) ? 1 : 0) : ''].join('|');
@@ -4040,7 +4040,7 @@ function drawWave(c) {
     c.fillStyle = C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'center';
     c.fillText('Add your audio to see its waveform here', vw / 2, waveY + waveH / 2); c.textAlign = 'left'; return;
   }
-  const pk = S.audio.peaks, mx = S.audio.peakMax, cy = waveY + waveH / 2, half = waveH / 2 - 3;
+  const d = aeFromApp(), pk = aeShownPeaks(d), G = audioGain(), cap = limOn(d) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, cy = waveY + waveH / 2, half = waveH / 2 - 3;          // the sound that comes out, at its real level against full scale (as the Audio Editor draws it)
   c.fillStyle = C.wave;
   const endX = t2x(S.audio.duration), wp = rvProgress('wave');
   for (let x = 0; x < vw; x++) {
@@ -4049,7 +4049,7 @@ function drawWave(c) {
     let i0 = Math.max(0, Math.floor(t0 * 100)), i1 = Math.min(pk.length - 1, Math.max(i0, Math.ceil(t1 * 100)));
     let m = 0; for (let i = i0; i <= i1; i++) if (pk[i] > m) m = pk[i];
     let g = 1; if (wp < 1) { const k = rvGrow(wp, x / Math.max(1, endX)); g = 1 - Math.pow(1 - k, 3); }       // the waveform grows in from the left, on the same sweep as everything else
-    const a = Math.max(1, (m / mx) * half * g);
+    const a = Math.max(1, Math.min(1, cap ? Math.min(cap, m * G) : m * G) * half * g);
     c.fillRect(x, cy - a, 1, a * 2);
   }
 }
@@ -4157,6 +4157,46 @@ function drawFadeLines(c) {
   if (s.fadeIn && Li > 0) ramp(vs, vs + Li); if (s.fadeOut && Lo > 0) ramp(ve - Lo, ve);
   c.restore();
 }
+/* A dragged bracket follows the pointer (held inside the timeline, so it never leaves the window). Where it may go: the first and last page keep their moment on screen,
+   and the axis may grow a little past its frozen ends; the edge scroll below grows it further. It snaps to the start of the audio and to the default end. */
+function trimTo(d) {
+  const x = clamp(d.rawX, 4, TL.vw - 4), lim = trimLimits(), room = TL_ROOM / S.pxPerSec, t = x2t(x) + d.dx;
+  if (d.which === 'start') {
+    let v = clamp(t, Math.min(d.lo - room, lim.startMax), lim.startMax);
+    if (Math.abs(t2x(v) - t2x(0)) <= 6 && 0 <= lim.startMax) v = 0;          // snaps to the start of the audio
+    if (v !== S.vStart) { d.moved = true; S.vStart = v; S.time = v; }
+  } else {
+    let v = clamp(t, lim.endMin, Math.max(d.hi + room, lim.endMin));
+    if (Math.abs(t2x(v) - t2x(defaultEnd())) <= 6 && defaultEnd() >= lim.endMin) v = defaultEnd();   // snaps to the default end
+    const nv = v === defaultEnd() ? null : v;
+    if (nv !== S.vEndSet) { d.moved = true; S.vEndSet = nv; S.time = Math.max(S.vStart, v - 0.001); }
+  }
+  TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
+}
+/* Holding a bracket near either edge keeps scrolling the timeline that way, and grows it when there is no more of it: one drag can pull the start before the audio or the end past it.
+   The speed eases up with how far the pointer is past the edge, and the handle stays under the pointer. Reduced motion takes the speed straight, with no easing. */
+const TL_EDGE = 24, TL_EDGE_MAX = 2400, TL_EDGE_SPAN = 600;
+function edgeStep(dt) {
+  const d = TL.drag; if (!d || d.kind !== 'trim' || !d.moved) return false;
+  const vw = TL.vw, sc = TL.scroller, pps = S.pxPerSec, left = d.rawX < TL_EDGE, right = d.rawX > vw - TL_EDGE;
+  const depth = left ? (TL_EDGE - d.rawX) / TL_EDGE : right ? (d.rawX - (vw - TL_EDGE)) / TL_EDGE : 0;
+  const want = (left ? -1 : 1) * Math.min(TL_EDGE_MAX, 320 * depth + 760 * depth * depth);
+  d.ev = reducedMotion() ? want : d.ev + (want - d.ev) * Math.min(1, dt * 9);
+  if (Math.abs(d.ev) < 2) { if (!want) d.ev = 0; return false; }
+  const step = d.ev * dt + d.er, whole = Math.trunc(step); d.er = step - whole; if (!whole) return true;
+  const aud = S.audio ? S.audio.duration : 0;
+  if (whole < 0) {
+    const need = -(sc.scrollLeft + whole);                                      // how much is missing to the left of the first pixel
+    let ext = 0; if (need > 0) { const lo = Math.max(d.lo - need / pps, Math.min(d.lo, Math.min(0, S.vStart) - TL_EDGE_SPAN)); ext = (d.lo - lo) * pps; d.lo = lo; }
+    TL.inner.style.width = tlInnerWidth() + 'px'; sc.scrollLeft = Math.max(0, sc.scrollLeft + ext + whole);
+  } else {
+    TL.inner.style.width = tlInnerWidth() + 'px';
+    const over = sc.scrollLeft + whole - (sc.scrollWidth - sc.clientWidth);
+    if (over > 0) { const hi = Math.min(d.hi + over / pps, Math.max(d.hi, Math.max(aud, vEnd()) + TL_EDGE_SPAN)); d.hi = hi; TL.inner.style.width = tlInnerWidth() + 'px'; }
+    sc.scrollLeft = sc.scrollLeft + whole;
+  }
+  trimTo(d); return true;
+}
 /* The trim brackets move like real objects: a spring carries them (they ride the same sweep as the blocks and waveform while the first media arrives),
    and when they land they give a small bounce, the same feel as everything else that is dropped into place on this site.
    Positions are kept in time, so zooming never makes them lag. */
@@ -4253,10 +4293,9 @@ function hitCredEnd(p) {
   return Math.abs(t2x(S.creditsEnd) - p.x) <= 9;
 }
 function hitTrim(p) {
-  if (p.y < TL.rulerH) return null;
-  const xs = t2x(S.vStart), xe = t2x(vEnd());
-  if (p.x >= xs - 9 && p.x <= xs + 13) return 'start';
-  if (p.x >= xe - 13 && p.x <= xe + 9) return 'end';
+  const xs = t2x(S.vStart), xe = t2x(vEnd()), ruler = p.y < TL.rulerH;          // in the ruler only the grip counts (it sits on the inner side of the line); lower down the whole line does
+  if (p.x >= xs - (ruler ? 3 : 9) && p.x <= xs + 13) return 'start';
+  if (p.x >= xe - 13 && p.x <= xe + (ruler ? 3 : 9)) return 'end';
   return null;
 }
 /* How far each end of the video may move: the first and last page keep a moment on screen, and the video stays at least 1 s long */
@@ -4310,7 +4349,7 @@ TL.canvas.addEventListener('pointerdown', e => {
     if (Transport.playing) Transport.pause();
   } else if (tr && (hi < 0 || dTrim < dTurn)) {
     const rb = S.redo.slice(); pushHistory();
-    TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
+    TL.drag = { kind: 'trim', which: tr, rawX: p.x, ev: 0, er: 0, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
   } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
     const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
@@ -4336,18 +4375,7 @@ TL.canvas.addEventListener('pointermove', e => {
     const hi = vEnd(), lo = Math.min(creditsFull() + 0.5, hi), t = clamp(x2t(p.x) + d.dx, lo, hi);
     if (t !== S.creditsEnd) { d.moved = true; S.creditsEnd = t; S.time = clamp(t - CREDITS_OUT - 0.2, S.vStart, hi); TL.staticDirty = true; stageDirty = true; updateTimeUI(true); }
   } else if (d && d.kind === 'trim') {
-    const lim = trimLimits(), room = TL_ROOM / S.pxPerSec, t = x2t(p.x) + d.dx;
-    if (d.which === 'start') {
-      let v = clamp(t, Math.min(d.lo - room, lim.startMax), lim.startMax);
-      if (Math.abs(t2x(v) - t2x(0)) <= 6 && 0 <= lim.startMax) v = 0;          // snaps to the start of the audio
-      if (v !== S.vStart) { d.moved = true; S.vStart = v; S.time = v; }
-    } else {
-      let v = clamp(t, lim.endMin, Math.max(d.hi + room, lim.endMin));
-      if (Math.abs(t2x(v) - t2x(defaultEnd())) <= 6 && defaultEnd() >= lim.endMin) v = defaultEnd();   // snaps to the default end
-      const nv = v === defaultEnd() ? null : v;
-      if (nv !== S.vEndSet) { d.moved = true; S.vEndSet = nv; S.time = Math.max(S.vStart, v - 0.001); }
-    }
-    TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
+    d.rawX = p.x; trimTo(d);
   } else if (d && d.kind === 'turn') {
     const want = x2t(p.x) + d.dx, delta = d.group ? clampGroupDelta(d.base, d.group, want - d.base[d.i]) : 0;
     const t = d.group ? d.base[d.i] + delta : clampTurn(d.i, want);
@@ -6087,7 +6115,8 @@ function aeApply() {
     S.vStart = d.vStart; S.vEndSet = d.vEndSet; AE_SET.forEach(k => { S.set[k] = d[k]; }); S.set.fx = fxClone(d.fx);
     S.time = clamp(S.time, S.vStart, vEnd());
     normalizeTurns(); onTurnsChanged(); onTrimChanged(); syncControls(); saveSettings(); stageDirty = true;
-    fxGet(S.set.fx).then(() => { stageDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
+    TL.staticDirty = true;
+    fxGet(S.set.fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
     toast(tx('vid.updated'), 2400);
   }
   closeAudioEditor();
@@ -10304,7 +10333,7 @@ function boot() {
     }
     if (stageDirty) { stageDirty = false; try { drawStage(); } catch (e) { console.error(e); } }
     if (TL.glow) TL.overlayDirty = true;
-    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
+    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (edgeStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
     if (rvActive()) TL.staticDirty = true;
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
