@@ -10,6 +10,8 @@ This app includes the following open-source components. Each is used under its o
 | Newsreader (The Newsreader Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-newsreader.txt` |
 | Lucide icons (some icons are drawn inline) | `index.html` | ISC (some parts MIT) | `vendor/LICENSE-lucide.txt` |
 
-The Apple Lossless (ALAC) decoder in `audio-store-worker.js` is our own JavaScript, but it follows the bitstream that Apple documented by releasing its reference decoder under the Apache License 2.0 (https://github.com/macosforge/alac). Apple's Apache 2.0 license is compatible with MIT; the decoder was checked sample for sample against ffmpeg.
+The glissando in the *glisscore* wordmark (`brand/glisscore-wordmark.svg`) was drawn from a glyph of Bravura (Copyright © 2015, Steinberg Media Technologies GmbH, with Reserved Font Name "Bravura"), then altered. Bravura is licensed under the SIL Open Font License 1.1. The font itself is not included in this project. The wordmark's text was set in Newsreader.
+
+The Apple Lossless (ALAC) decoder in `audio-store-worker.js` is our own JavaScript, written for this project from the format itself. It contains no code from Apple's reference decoder, which Apple released as open source under the Apache License 2.0 (https://github.com/macosforge/alac). It is checked sample for sample against ffmpeg (`tests/alac-disk.js`).
 
 Everything else (audio processing, loudness measuring, the FLAC and MP4/MOV writers, the limiter, and the resampler) is written for this project from public format descriptions and standards.
