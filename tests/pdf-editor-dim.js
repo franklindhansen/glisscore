@@ -17,7 +17,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     all: getComputedStyle(document.querySelector('#peAll')).display, ticks: document.querySelectorAll('#peGrid.ticks').length, title: document.querySelector('#peViewDim h3').textContent, sub: document.querySelector('#peViewDim .pe-sub').textContent }));
   const s0 = await st();
   ok('before any box: nothing is dimmed, no chip, Revert greyed with a tooltip and no status line, no ticks or Select all', s0.boxes === 0 && s0.chips === 0 && s0.revert && s0.tip === 'Nothing to revert.' && s0.status === '' && s0.all === 'none' && !s0.ticks && /pages dimmed/.test(s0.count) && s0.count.startsWith('0 /'), JSON.stringify(s0));
-  ok('the head says what Dim does', s0.title === 'Dim' && s0.sub === 'Visually softens music that repeats.', s0.sub);
+  ok('the head says what Dim does', s0.title === 'Dim' && s0.sub === 'Visually soften music before or after a repeat.', s0.sub);
   const rect = sel => p.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, sel);
   const c1 = await rect('#peGrid .page-card:nth-child(1) .pe-thumb');
   await p.mouse.move(c1.x + c1.w * .2, c1.y + c1.h * .25); await p.mouse.down(); await p.mouse.move(c1.x + c1.w * .6, c1.y + c1.h * .55, { steps: 6 });

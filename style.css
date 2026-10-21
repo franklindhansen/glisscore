@@ -396,10 +396,10 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .app.fs .transport,.app.fs .timeline{opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),bottom .55s var(--ease-out),visibility 0s}
 .app.fs.fs-min .timeline{transform:translateY(calc(100% + var(--fs-edge) + 8px));visibility:hidden;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),visibility 0s .55s}
 .app.fs.fs-active .transport,.app.fs.fs-active .timeline{opacity:1;pointer-events:auto}
-/* the zoom and full screen strip hovers just above the timeline bar, and follows it when the bar grows, shrinks, or is hidden (--fs-tlh is the bar's height, set by script) */
-.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--fs-edge) + var(--fs-tlh,0px) + 8px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),bottom .55s var(--ease-out)}
+/* the zoom and full screen strip hovers just above the play bar, and follows it when the timeline grows, shrinks, or is hidden (--fs-trh is the play bar's height, set by script) */
+.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + 10px + var(--fs-trh,50px) + 8px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),bottom .55s var(--ease-out)}
 .app.fs.fs-active .stage-strip{opacity:1;pointer-events:auto}
-.app.fs.fs-min .stage-strip{bottom:var(--fs-edge)}
+.app.fs.fs-min .stage-strip{bottom:calc(var(--fs-edge) + var(--fs-trh,50px) + 8px)}
 @media (prefers-reduced-motion:reduce){.app.fs .stage-strip{transition:none}}
 .app.fs:not(.fs-active),.app.fs:not(.fs-active) *{cursor:none!important}
 .app.fs .transport .btn,.app.fs .transport .icon-btn{background:rgba(18,20,28,.82);border-color:rgba(255,255,255,.28);color:#fff}

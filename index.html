@@ -588,7 +588,7 @@
           <h4>Clean</h4><p>Whitens the paper and removes specks. <span class="hb">Revert</span> puts the pages back.</p>
           <h4>Re-kilter</h4><p>Straightens crooked scans.</p>
           <h4>Crop</h4><p>Finds the music and draws a frame around it. <span class="hb">Auto</span> sets the frames. <span class="hb">Manual</span> lets you drag them yourself.</p>
-          <h4>Dim</h4><p>Draw a box over a section to visually soften it, like a repeat, so the eye goes to what is new. Drag a box’s edges to adjust it, and press its X to remove it. <span class="hb">Revert</span> removes every box. Dim needs no ticks: draw on any page.</p>
+          <h4>Dim</h4><p>Duplicated a page to show a repeat, and it also holds other music before or after the repeat? Draw a box over that music to visually soften it, so just the repeat stands clear. Drag a box’s edges to adjust it, and press its X to remove it. <span class="hb">Revert</span> removes every box. Dim needs no ticks: draw on any page.</p>
           <h4>Split spreads</h4><p>Cuts a two-page scan into two pages.</p>
           <h4>Re-size</h4><p>Fits every page to a paper size.</p>
           <h4>Watermark</h4><p>Prints your text across the ticked pages.</p>
@@ -1018,7 +1018,7 @@
             </div>
           </div>
           <div class="pe-tv" id="peViewDim" data-tool="dim" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Dim</h3><p class="pe-sub">Visually softens music that repeats.</p></div>
+            <div class="pe-phead"><div class="pe-pt"><h3>Dim</h3><p class="pe-sub">Visually soften music before or after a repeat.</p></div>
               <div class="pe-acts"><span class="pe-status" id="peDimStatus" aria-live="polite"></span><button class="btn small" id="peDimClear" type="button">Revert</button></div></div>
           </div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden>
@@ -3996,7 +3996,7 @@ function readColors() {
 const TL_ROOM = 36;
 const tlLo = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.lo : TL.hold ? Math.min(TL.hold.lo, Math.min(S.vStart, 0)) : Math.min(S.vStart, 0);
 const tlHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.hi : TL.hold ? Math.max(TL.hold.hi, vEnd(), S.audio ? S.audio.duration : 0) : Math.max(vEnd(), S.audio ? S.audio.duration : 0);
-const tlInnerWidth = () => Math.max(TL.vw, Math.ceil(2 * TL_ROOM + (tlHi() - tlLo()) * S.pxPerSec - 1e-6));
+const tlInnerWidth = () => Math.max(TL.vw + (TL.hold ? TL.hold.pad || 0 : 0), Math.ceil(2 * TL_ROOM + (tlHi() - tlLo()) * S.pxPerSec - 1e-6));          // while a glide runs, a zoomed-out axis (narrower than the window) keeps the scroll room the glide needs to travel
 const t2x = t => TL_ROOM + (t - tlLo()) * S.pxPerSec - TL.scroller.scrollLeft;
 const x2t = x => (x + TL.scroller.scrollLeft - TL_ROOM) / S.pxPerSec + tlLo();
 /* Fit shows the video, bracket to bracket (the axis still holds the whole audio, so the rest is a scroll away). A dragged bracket holds the span it started from. */
@@ -4020,7 +4020,7 @@ function layoutTimeline() {
   else TL.inner.style.width = tlInnerWidth() + 'px';
   TL.staticDirty = true;
 }
-/* In Fit, a bracket that lands (or is double-clicked home) changes what Fit shows. The view glides from the picture it had to the one it now has while the bracket stays on its time,
+/* A bracket that lands (or is double-clicked home) changes what the timeline shows: what Fit fits, or how much empty room the axis keeps. The view glides from the picture it had to the one it now has while the bracket stays on its time,
    so the bracket and the view are one motion, not a jump followed by a slide. The axis keeps the room of both pictures until it lands. */
 const tlMap = (lo = tlLo()) => ({ b: S.pxPerSec, a: TL_ROOM - lo * S.pxPerSec - TL.scroller.scrollLeft });
 function tlGlideStop() {          // ends a glide where it is: what is on screen stays, and the axis goes back to its own room
@@ -4030,11 +4030,11 @@ function tlGlideStop() {          // ends a glide where it is: what is on screen
 function tlGlide(from) {
   tlGlideStop();
   const to = tlMap(); if (reducedMotion() || (Math.abs(to.a - from.a) < 1 && Math.abs(to.b / from.b - 1) < 1e-3)) return;
-  TL.hold = { lo: Math.min(tlLo(), from.lo), hi: Math.max(tlHi(), from.hi) }; const s1 = S.vStart, e1 = vEnd(), lerp = (u, v, k) => u + (v - u) * k;
+  TL.hold = { lo: Math.min(tlLo(), from.lo), hi: Math.max(tlHi(), from.hi), pad: 0 }; TL.hold.pad = Math.max(0, Math.ceil(TL_ROOM - tlLo() * to.b - to.a)); const s1 = S.vStart, e1 = vEnd(), lerp = (u, v, k) => u + (v - u) * k;
   const put = m => { S.pxPerSec = m.b; TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL_ROOM - tlLo() * m.b - m.a); $('#zoom').value = zoomToSlider(m.b); paintRange($('#zoom')); TL.staticDirty = true; };
   const t0 = performance.now(), D = 700; TL.scroller.classList.add('gliding'); put(from); TL.glideT = { s: from.s, e: from.e };
   (function step(now) {
-    if (!S.fitMode || TL.drag) { tlGlideStop(); return; }
+    if (TL.drag) { tlGlideStop(); return; }
     const k = clamp((now - t0) / D, 0, 1), e = .5 - Math.cos(Math.PI * k) / 2;
     TL.glideT = { s: lerp(from.s, s1, e), e: lerp(from.e, e1, e) };          // the brackets travel in time on the same curve as the view, so the two read as one motion
     if (k >= 1) { put(to); TL.hold = null; TL.glideId = 0; TL.glideT = null; put(to); TL.scroller.classList.remove('gliding'); return; }
@@ -4525,7 +4525,7 @@ TL.canvas.addEventListener('pointermove', e => {
 });
 function endDrag(e) {
   const d = TL.drag; if (!d) return;
-  const from = d.kind === 'trim' && d.moved && S.fitMode ? Object.assign(tlMap(d.lo), { lo: d.lo, hi: d.hi, s: S.vStart, e: vEnd() }) : null;          // the picture the bracket was let go on, for the glide to the new Fit
+  const from = d.kind === 'trim' && d.moved ? Object.assign(tlMap(d.lo), { lo: d.lo, hi: d.hi, s: S.vStart, e: vEnd() }) : null;          // the picture the bracket was let go on, for the glide to the new view (Fit, or the same zoom with the empty room re-made)
   TL.drag = null; TL.box = null;
   if (d.kind === 'box') {
     if (d.moved) { TL.overlayDirty = true; if (d.resume) Transport.play(); return; }
@@ -4547,7 +4547,7 @@ function endDrag(e) {
       if (S.fitMode) { onTrimChanged(); if (from) tlGlide(from); }
       else {                                   // keep the content where it was while the empty room is re-made around the new ends
         TL.inner.style.width = tlInnerWidth() + 'px'; sc.scrollLeft = Math.max(0, sc.scrollLeft + (d.lo - tlLo()) * S.pxPerSec);
-        onTrimChanged();
+        onTrimChanged(); if (from) tlGlide(from);          // the axis can shrink under a view scrolled to its end, which would jump: it glides like Fit does
       }
       toast(trimText(d.which) + '.', 2600);
     }
@@ -4561,7 +4561,7 @@ TL.canvas.addEventListener('dblclick', e => {
   const which = hitTrim(tlPoint(e)); if (!which) return;
   const home = which === 'start' ? 0 : null;
   if (which === 'start' ? S.vStart === 0 : S.vEndSet == null) { toast(trimText(which) + '.', 2200); return; }
-  pushHistory(); const lo0 = tlLo(), from = S.fitMode ? Object.assign(tlMap(), { lo: lo0, hi: tlHi(), s: TL.trimD ? TL.trimD.s : S.vStart, e: TL.trimD ? TL.trimD.e : vEnd() }) : null;
+  pushHistory(); const lo0 = tlLo(), from = Object.assign(tlMap(), { lo: lo0, hi: tlHi(), s: TL.trimD ? TL.trimD.s : S.vStart, e: TL.trimD ? TL.trimD.e : vEnd() });
   if (which === 'start') S.vStart = 0; else S.vEndSet = home;
   S.time = clamp(S.time, S.vStart, vEnd());
   if (!S.fitMode) { TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL.scroller.scrollLeft + (lo0 - tlLo()) * S.pxPerSec); }
@@ -10446,7 +10446,7 @@ function boot() {
   layoutStage(); layoutTimeline(); updateButtons(); updateTimeUI(true); setChips();
   /* A resize wipes the timeline's canvas, so it is painted again in the same frame, before the browser shows it (a redraw left for the next frame showed one blank frame, a flash). */
   new ResizeObserver(() => { layoutStage(); layoutTimeline(); drawTimeline(); }).observe($('#stageWrap'));
-  new ResizeObserver(() => document.querySelector('.app').style.setProperty('--fs-tlh', $('.timeline').offsetHeight + 'px')).observe($('.timeline'));          // full screen: the zoom strip rides above the bar
+  new ResizeObserver(() => document.querySelector('.app').style.setProperty('--fs-trh', $('#transport').offsetHeight + 'px')).observe($('#transport'));          // full screen: the zoom strip rides above the play bar
   new ResizeObserver(() => { const sc = TL.scroller; if (Math.max(200, sc.clientWidth) === TL.vw && Math.max(150, sc.clientHeight) === TL.h) return; layoutTimeline(); drawTimeline(); }).observe(TL.scroller);
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readColors);
   new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
