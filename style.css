@@ -361,16 +361,24 @@ body.dragging .dropveil{display:flex}
 
 /* ==================== 10. FULL-SCREEN MODE ==================== */
 /* ----- Full-screen button ----- */
-.fs-btn{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:grid;place-items:center;width:var(--fs,34px);height:var(--fs,34px);padding:0;border:0;border-radius:var(--r-ctl);background:rgba(0,0,0,.5);color:#fff;cursor:pointer;opacity:.7}
-.fs-btn:hover,.fs-btn:focus-visible{opacity:1}
-.fs-btn svg{width:calc(var(--fs,34px) * .53);height:calc(var(--fs,34px) * .53);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stage-strip{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
+.stage-strip[hidden]{display:none}
+.stage-strip button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color)}
+.stage-strip button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
+.stage-strip button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
+.stage-strip button:disabled{color:var(--muted);opacity:.5;cursor:default}
+.stage-strip svg{width:14px;height:14px}
+.stage-div{flex:none;width:1px;height:14px;margin:0 3px;background:var(--line)}
+.stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
+.stage-wrap.zoomed{touch-action:none}
+@media (prefers-reduced-transparency:reduce){.stage-strip{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
 .fs-only{display:none!important}
 :root{--tl-h:262px}
 html.fs-lock,html.fs-lock body{overflow:hidden}
 
 /* ----- Full-screen layout and overlay controls ----- */
 .app.fs{position:fixed;inset:0;z-index:90;display:block;height:100vh;height:100dvh;background:#000}
-.app.fs .top,.app.fs .panel,.app.fs .fs-btn{display:none!important}
+.app.fs .top,.app.fs .panel,.app.fs .stage-strip{display:none!important}
 .app.fs .work{display:block;height:100%}
 .app.fs .stage-col{display:block;padding:0;height:100%}
 .app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:#000}

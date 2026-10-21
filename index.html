@@ -105,7 +105,6 @@
       <div class="menu" id="settingsMenu" role="menu" hidden>
         <button class="menu-item" id="menuAbout" role="menuitem" type="button">About</button>
         <button class="menu-item" id="menuHow" role="menuitem" type="button">How it works</button>
-        <button class="menu-item" id="menuSupport" role="menuitem" type="button">Support</button>
         <button class="menu-item" id="menuIO" role="menuitem" type="button">Import / Export</button>
         <button class="menu-item" id="menuKeys" role="menuitem" type="button">Keyboard shortcuts</button>
         <button class="menu-item" id="menuReset" role="menuitem" type="button">Restore default settings</button>
@@ -124,7 +123,8 @@
       <!-- ----- Work Preview Stage (canvas + full-screen button) ----- -->
       <div class="stage-wrap" id="stageWrap">
         <canvas id="stage" aria-label="Score preview"></canvas>
-        <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)" hidden><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        <div class="stage-strip" id="stageStrip" role="group" aria-label="Zoom and full screen" hidden><button type="button" id="szOut" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="szFit" class="txt" aria-label="Fit the picture" title="Fit the picture (0)">Fit</button><button type="button" id="szIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><span class="stage-div" aria-hidden="true"></span>
+  <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
         <!-- ----- Introduction Text: Logo, tagline, initial instructions, Open PDF + audio buttons ----- -->
         <div class="empty" id="empty"><div class="empty-fit" id="emptyFit">
           <h1 class="empty-logo" aria-label="glisscore"><svg class="logo" viewBox="0 0 1527 394" aria-hidden="true"><use href="#logo"/><g clip-path="url(#logoLineClip)"><use class="logo-line" href="#logoLine"/></g></svg></h1>
@@ -618,21 +618,12 @@
     <h2 id="aboutTitle">About</h2>
     <p><em>glisscore</em> was made by composer, conductor, and grad student (who should probably be writing music), <a href="https://franklindhansen.com/" target="_blank" rel="noopener">Franklin D. Hansen</a>.</p>
     <p><em>glisscore</em> is free and open source under the AGPL-3.0. <a href="https://github.com/franklindhansen/glisscore" target="_blank" rel="noopener">View the source</a>.</p>
+    <p>If it’s useful to you and you’d like to help cover hosting and upkeep, you can <a href="https://ko-fi.com/franklindhansen" target="_blank" rel="noopener">buy me a coffee on Ko-fi</a>.</p>
+    <p>There’s no pressure: supporting unlocks nothing, and the app is the same for everyone.</p>
     <p>If this site fits your needs, <a href="https://franklindhansen.com/works" target="_blank" rel="noopener">my music</a> might too.</p>
     <p>Questions, bug reports, odes, love letters, commissions: <a href="https://franklindhansen.com/contact" target="_blank" rel="noopener">all welcome</a>.</p>
     <p class="ver" id="aboutVersion" hidden></p>
     <div class="row"><p class="fine"><a href="https://github.com/franklindhansen/glisscore/blob/main/LICENSE" target="_blank" rel="noopener">License</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/TRADEMARKS.md" target="_blank" rel="noopener">Trademarks</a> · <a href="https://github.com/franklindhansen/glisscore/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">Third-party notices</a></p><button class="btn primary" id="aboutClose" type="button">Close</button></div>
-  </div>
-</div>
-<!-- ----- DIALOG: Support ----- -->
-<div id="supportDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="supportTitle" hidden>
-  <div class="dlg page about">
-    <h2 id="supportTitle">Support</h2>
-    <p><em>glisscore</em> is free, open source, and made by one person (a composer who should probably be writing music).</p>
-    <p>If it’s useful to you and you’d like to help cover hosting and upkeep, you can <a href="https://ko-fi.com/franklindhansen" target="_blank" rel="noopener">buy me a coffee on Ko-fi</a>.</p>
-    <p>There’s no pressure: supporting unlocks nothing, and the app is the same for everyone.</p>
-    <p>If this site fits your needs, <a href="https://franklindhansen.com/works" target="_blank" rel="noopener">my music</a> might too.</p>
-    <div class="row"><button class="btn primary" id="supportClose" type="button">Close</button></div>
   </div>
 </div>
 <!-- ----- DIALOG: Keyboard shortcuts ----- -->
@@ -2117,7 +2108,7 @@ function audioGain() {
   const s = S.set;
   if (s.normalize && s.normBy === 'loud') {
     const k = [s.normLufs, s.limiter, fxKey(s.fx), S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, s.audioKey, TP_VER, LUC.size].join('|');
-    if (loudAppMemo.k !== k) { const i = aeLoudInfo(aeFromApp()); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(aeFromApp()).catch(() => {}); }
+    if (loudAppMemo.k !== k) { const i = aeLoudInfo(aeFromApp()); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(aeFromApp()).then(() => { const j = aeLoudInfo(aeFromApp()); if (j && j.ready) TL.staticDirty = true; }, () => {}); }
     return loudAppMemo.g;
   }
   const key = [s.normalize, s.normPeakDb, s.gainDb, S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, TP_VER, S.audio ? S.audio.name + S.audio.duration + fxKey(S.set.fx) + (fxPeek(S.set.fx) ? 1 : 0) : ''].join('|');
@@ -3889,17 +3880,60 @@ function layoutStage() {
   if (r.width < 10 || r.height < 10) return;
   const ar = ASPECTS[S.set.aspect] || 16 / 9;
   const fit = h => { let w = r.width - 2, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
-  const fz = clamp(Math.floor(r.height - 6), 22, 34), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
+  const fz = clamp(Math.floor(r.height - 6), 22, 32), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
+  if (SZ.ar !== S.set.aspect) { if (SZ.ar != null && SZ.z !== 1) szReset(false); SZ.ar = S.set.aspect; }          // a new page size starts at Fit
+  const sw = $('#stageStrip').offsetWidth || 150;
   wrap.style.setProperty('--fs', fz + 'px'); wrap.style.setProperty('--fsm', fm + 'px');
   let [cw, ch] = fit(r.height - 2), room = 0;
-  if (!$('#btnFull').hidden && !$('.app').classList.contains('fs') && (r.width - cw) / 2 < need && (r.height - ch) / 2 < need && r.height > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - room); }          // the full screen button sits in the corner: where the picture would reach it, the picture gives it a strip of its own below
+  if (!$('#stageStrip').hidden && !$('.app').classList.contains('fs') && (r.width - cw) / 2 < sw + fm && (r.height - ch) / 2 < need && r.height > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - room); }          // the zoom and full screen strip sits in the corner: where the picture would reach it, the picture gives it a strip of its own below
   wrap.style.paddingBottom = room ? room + 'px' : '';
   stageCanvas.style.width = cw + 'px'; stageCanvas.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W = Math.round(cw * dpr), H = Math.round(ch * dpr);
   const mx = Math.max(W, H); if (mx > 2200) { W = Math.round(W * 2200 / mx); H = Math.round(H * 2200 / mx); }
   if (W !== stageCanvas.width || H !== stageCanvas.height) { previewR.resize(W, H); }
-  stageDirty = true;
+  stageDirty = true; if (SZ.z !== 1) { szClamp(); szApply(false); }
+}
+/* ---- zoom and fit for the stage: view only (never saved, exported, or a History step), a transform on the picture ---- */
+const SZ = { z: 1, x: 0, y: 0, ar: null }, SZ_MAX = 4;
+function szClamp() {
+  const cv = stageCanvas, w = $('#stageWrap'), mx = Math.max(0, (cv.offsetWidth * SZ.z - w.clientWidth) / 2 + 60), my = Math.max(0, (cv.offsetHeight * SZ.z - w.clientHeight) / 2 + 60);
+  SZ.x = clamp(SZ.x, -mx, mx); SZ.y = clamp(SZ.y, -my, my); if (SZ.z <= 1.001) { SZ.z = 1; SZ.x = 0; SZ.y = 0; }
+}
+function szApply(smooth) {
+  const cv = stageCanvas; cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
+  cv.style.transform = SZ.z === 1 ? '' : 'translate(' + SZ.x.toFixed(1) + 'px,' + SZ.y.toFixed(1) + 'px) scale(' + SZ.z.toFixed(3) + ')'; $('#stageWrap').classList.toggle('zoomed', SZ.z > 1);
+  $('#szOut').disabled = $('#szFit').disabled = SZ.z <= 1; $('#szIn').disabled = SZ.z >= SZ_MAX;
+}
+function szAt(nz, cx, cy, smooth) {          // the point under (cx, cy) stays where it is
+  const cv = stageCanvas, r = $('#stageWrap').getBoundingClientRect(); nz = clamp(nz, 1, SZ_MAX);
+  const mx = r.left + cv.offsetLeft + cv.offsetWidth / 2, my = r.top + cv.offsetTop + cv.offsetHeight / 2; if (cx == null) { cx = mx; cy = my; }
+  const ox = cx - mx, oy = cy - my, px = (ox - SZ.x) / SZ.z, py = (oy - SZ.y) / SZ.z;
+  SZ.x = ox - nz * px; SZ.y = oy - nz * py; SZ.z = nz; szClamp(); szApply(smooth);
+}
+function szReset(smooth) { SZ.z = 1; SZ.x = SZ.y = 0; szApply(smooth); }
+function szBind() {
+  const wrap = $('#stageWrap'), ptr = new Map(); let pan = null, pinch = null, gz = 1;
+  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty');
+  $('#szIn').addEventListener('click', () => szAt(SZ.z * 1.6, null, null, true)); $('#szOut').addEventListener('click', () => szAt(SZ.z / 1.6, null, null, true)); $('#szFit').addEventListener('click', () => szReset(true));
+  wrap.addEventListener('wheel', e => {
+    if (!live(e)) return;
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); szAt(SZ.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false); }
+    else if (SZ.z > 1) { e.preventDefault(); SZ.x -= e.deltaX; SZ.y -= e.deltaY; szClamp(); szApply(false); }
+  }, { passive: false });
+  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); gz = SZ.z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); szAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
+  wrap.addEventListener('pointerdown', e => {
+    if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: SZ.z }; pan = null; wrap.setPointerCapture(e.pointerId); }
+    else if (SZ.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: SZ.x, oy: SZ.y }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pinch && ptr.size >= 2) { const [a, b] = [...ptr.values()]; szAt(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, false); }
+    else if (pan) { SZ.x = pan.ox + e.clientX - pan.x; SZ.y = pan.oy + e.clientY - pan.y; szClamp(); szApply(false); }
+  });
+  const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (!ptr.size) { pan = null; wrap.classList.remove('panning'); } };
+  wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up);
 }
 function prefetchAround() {
   if (!previewR || !S.spreads.length) return;
@@ -4080,7 +4114,7 @@ function drawWave(c) {
     c.fillStyle = C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'center';
     c.fillText('Add your audio to see its waveform here', vw / 2, waveY + waveH / 2); c.textAlign = 'left'; return;
   }
-  const pk = S.audio.peaks, mx = S.audio.peakMax, cy = waveY + waveH / 2, half = waveH / 2 - 3;
+  const d = aeFromApp(), pk = aeShownPeaks(d), G = audioGain(), cap = limOn(d) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, cy = waveY + waveH / 2, half = waveH / 2 - 3;          // the sound that comes out, at its real level against full scale (as the Audio Editor draws it)
   c.fillStyle = C.wave;
   const endX = t2x(S.audio.duration), wp = rvProgress('wave');
   for (let x = 0; x < vw; x++) {
@@ -4089,7 +4123,7 @@ function drawWave(c) {
     let i0 = Math.max(0, Math.floor(t0 * 100)), i1 = Math.min(pk.length - 1, Math.max(i0, Math.ceil(t1 * 100)));
     let m = 0; for (let i = i0; i <= i1; i++) if (pk[i] > m) m = pk[i];
     let g = 1; if (wp < 1) { const k = rvGrow(wp, x / Math.max(1, endX)); g = 1 - Math.pow(1 - k, 3); }       // the waveform grows in from the left, on the same sweep as everything else
-    const a = Math.max(1, (m / mx) * half * g);
+    const a = Math.max(1, Math.min(1, cap ? Math.min(cap, m * G) : m * G) * half * g);
     c.fillRect(x, cy - a, 1, a * 2);
   }
 }
@@ -4197,6 +4231,46 @@ function drawFadeLines(c) {
   if (s.fadeIn && Li > 0) ramp(vs, vs + Li); if (s.fadeOut && Lo > 0) ramp(ve - Lo, ve);
   c.restore();
 }
+/* A dragged bracket follows the pointer (held inside the timeline, so it never leaves the window). Where it may go: the first and last page keep their moment on screen,
+   and the axis may grow a little past its frozen ends; the edge scroll below grows it further. It snaps to the start of the audio and to the default end. */
+function trimTo(d) {
+  const x = clamp(d.rawX, 4, TL.vw - 4), lim = trimLimits(), room = TL_ROOM / S.pxPerSec, t = x2t(x) + d.dx;
+  if (d.which === 'start') {
+    let v = clamp(t, Math.min(d.lo - room, lim.startMax), lim.startMax);
+    if (Math.abs(t2x(v) - t2x(0)) <= 6 && 0 <= lim.startMax) v = 0;          // snaps to the start of the audio
+    if (v !== S.vStart) { d.moved = true; S.vStart = v; S.time = v; }
+  } else {
+    let v = clamp(t, lim.endMin, Math.max(d.hi + room, lim.endMin));
+    if (Math.abs(t2x(v) - t2x(defaultEnd())) <= 6 && defaultEnd() >= lim.endMin) v = defaultEnd();   // snaps to the default end
+    const nv = v === defaultEnd() ? null : v;
+    if (nv !== S.vEndSet) { d.moved = true; S.vEndSet = nv; S.time = Math.max(S.vStart, v - 0.001); }
+  }
+  TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
+}
+/* Holding a bracket near either edge keeps scrolling the timeline that way, and grows it when there is no more of it: one drag can pull the start before the audio or the end past it.
+   The speed eases up with how far the pointer is past the edge, and the handle stays under the pointer. Reduced motion takes the speed straight, with no easing. */
+const TL_EDGE = 24, TL_EDGE_MAX = 2400, TL_EDGE_SPAN = 600;
+function edgeStep(dt) {
+  const d = TL.drag; if (!d || d.kind !== 'trim' || !d.moved) return false;
+  const vw = TL.vw, sc = TL.scroller, pps = S.pxPerSec, left = d.rawX < TL_EDGE, right = d.rawX > vw - TL_EDGE;
+  const depth = left ? (TL_EDGE - d.rawX) / TL_EDGE : right ? (d.rawX - (vw - TL_EDGE)) / TL_EDGE : 0;
+  const want = (left ? -1 : 1) * Math.min(TL_EDGE_MAX, 320 * depth + 760 * depth * depth);
+  d.ev = reducedMotion() ? want : d.ev + (want - d.ev) * Math.min(1, dt * 9);
+  if (Math.abs(d.ev) < 2) { if (!want) d.ev = 0; return false; }
+  const step = d.ev * dt + d.er, whole = Math.trunc(step); d.er = step - whole; if (!whole) return true;
+  const aud = S.audio ? S.audio.duration : 0;
+  if (whole < 0) {
+    const need = -(sc.scrollLeft + whole);                                      // how much is missing to the left of the first pixel
+    let ext = 0; if (need > 0) { const lo = Math.max(d.lo - need / pps, Math.min(d.lo, Math.min(0, S.vStart) - TL_EDGE_SPAN)); ext = (d.lo - lo) * pps; d.lo = lo; }
+    TL.inner.style.width = tlInnerWidth() + 'px'; sc.scrollLeft = Math.max(0, sc.scrollLeft + ext + whole);
+  } else {
+    TL.inner.style.width = tlInnerWidth() + 'px';
+    const over = sc.scrollLeft + whole - (sc.scrollWidth - sc.clientWidth);
+    if (over > 0) { const hi = Math.min(d.hi + over / pps, Math.max(d.hi, Math.max(aud, vEnd()) + TL_EDGE_SPAN)); d.hi = hi; TL.inner.style.width = tlInnerWidth() + 'px'; }
+    sc.scrollLeft = sc.scrollLeft + whole;
+  }
+  trimTo(d); return true;
+}
 /* The trim brackets move like real objects: a spring carries them (they ride the same sweep as the blocks and waveform while the first media arrives),
    and when they land they give a small bounce, the same feel as everything else that is dropped into place on this site.
    Positions are kept in time, so zooming never makes them lag. */
@@ -4293,10 +4367,9 @@ function hitCredEnd(p) {
   return Math.abs(t2x(S.creditsEnd) - p.x) <= 9;
 }
 function hitTrim(p) {
-  if (p.y < TL.rulerH) return null;
-  const xs = t2x(S.vStart), xe = t2x(vEnd());
-  if (p.x >= xs - 9 && p.x <= xs + 13) return 'start';
-  if (p.x >= xe - 13 && p.x <= xe + 9) return 'end';
+  const xs = t2x(S.vStart), xe = t2x(vEnd()), ruler = p.y < TL.rulerH;          // in the ruler only the grip counts (it sits on the inner side of the line); lower down the whole line does
+  if (p.x >= xs - (ruler ? 3 : 9) && p.x <= xs + 13) return 'start';
+  if (p.x >= xe - 13 && p.x <= xe + (ruler ? 3 : 9)) return 'end';
   return null;
 }
 /* How far each end of the video may move: the first and last page keep a moment on screen, and the video stays at least 1 s long */
@@ -4350,7 +4423,7 @@ TL.canvas.addEventListener('pointerdown', e => {
     if (Transport.playing) Transport.pause();
   } else if (tr && (hi < 0 || dTrim < dTurn)) {
     const rb = S.redo.slice(); pushHistory();
-    TL.drag = { kind: 'trim', which: tr, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
+    TL.drag = { kind: 'trim', which: tr, rawX: p.x, ev: 0, er: 0, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
   } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
     const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
@@ -4376,18 +4449,7 @@ TL.canvas.addEventListener('pointermove', e => {
     const hi = vEnd(), lo = Math.min(creditsFull() + 0.5, hi), t = clamp(x2t(p.x) + d.dx, lo, hi);
     if (t !== S.creditsEnd) { d.moved = true; S.creditsEnd = t; S.time = clamp(t - CREDITS_OUT - 0.2, S.vStart, hi); TL.staticDirty = true; stageDirty = true; updateTimeUI(true); }
   } else if (d && d.kind === 'trim') {
-    const lim = trimLimits(), room = TL_ROOM / S.pxPerSec, t = x2t(p.x) + d.dx;
-    if (d.which === 'start') {
-      let v = clamp(t, Math.min(d.lo - room, lim.startMax), lim.startMax);
-      if (Math.abs(t2x(v) - t2x(0)) <= 6 && 0 <= lim.startMax) v = 0;          // snaps to the start of the audio
-      if (v !== S.vStart) { d.moved = true; S.vStart = v; S.time = v; }
-    } else {
-      let v = clamp(t, lim.endMin, Math.max(d.hi + room, lim.endMin));
-      if (Math.abs(t2x(v) - t2x(defaultEnd())) <= 6 && defaultEnd() >= lim.endMin) v = defaultEnd();   // snaps to the default end
-      const nv = v === defaultEnd() ? null : v;
-      if (nv !== S.vEndSet) { d.moved = true; S.vEndSet = nv; S.time = Math.max(S.vStart, v - 0.001); }
-    }
-    TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true; updateTimeUI(true);
+    d.rawX = p.x; trimTo(d);
   } else if (d && d.kind === 'turn') {
     const want = x2t(p.x) + d.dx, delta = d.group ? clampGroupDelta(d.base, d.group, want - d.base[d.i]) : 0;
     const t = d.group ? d.base[d.i] + delta : clampTurn(d.i, want);
@@ -4578,7 +4640,7 @@ function updateButtons() {
   if (typeof syncFadeLens === 'function') syncFadeLens();             // an automatic fade length follows the video's length
   $('#exportHint').textContent = !has ? '' : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
   $('#bSpace').disabled = S.spreads.length < 2; $('#bFit').disabled = $('#zoom').disabled = !has;
-  $('#bTap').disabled = S.spreads.length < 2; $('#btnFull').hidden = !S.pdf; try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
+  $('#bTap').disabled = S.spreads.length < 2; $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
   ['bStart', 'bPlay'].forEach(id => $('#' + id).disabled = !has);
   $('#tTot').textContent = fmt(duration());
 }
@@ -6137,7 +6199,8 @@ function aeApply() {
     S.vStart = d.vStart; S.vEndSet = d.vEndSet; AE_SET.forEach(k => { S.set[k] = d[k]; }); S.set.fx = fxClone(d.fx);
     S.time = clamp(S.time, S.vStart, vEnd());
     normalizeTurns(); onTurnsChanged(); onTrimChanged(); syncControls(); saveSettings(); stageDirty = true;
-    fxGet(S.set.fx).then(() => { stageDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
+    TL.staticDirty = true;
+    fxGet(S.set.fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
     toast(tx('vid.updated'), 2400);
   }
   closeAudioEditor();
@@ -10055,7 +10118,7 @@ function restoreDefaults() {
   if (JSON.stringify(snap()) === was) { S.history.pop(); S.redo = redoWas; updateHistoryButtons(); }          // nothing changed: no step, and Redo stays
   toast(tx('app.reset'));
 }
-const DEEP_DIALOGS = { '/about': '#aboutDlg', '/how-it-works': '#howDlg', '/support': '#supportDlg' };
+const DEEP_DIALOGS = { '/about': '#aboutDlg', '/how-it-works': '#howDlg', '/support': '#aboutDlg' };
 /* closing a dialog that a link opened (see initMenu) also takes the address back to the app's own */
 function dlgClose(el) { sheetHide(el); if (DEEP_DIALOGS[location.pathname.replace(/\/+$/, '')]) history.replaceState(null, '', '/' + location.search); }
 function initMenu() {
@@ -10106,9 +10169,6 @@ function initMenu() {
   $('#aboutDlg').addEventListener('click', e => { if (e.target === $('#aboutDlg')) dlgClose($('#aboutDlg')); });
   $('#howDlg').addEventListener('click', e => { if (e.target === $('#howDlg')) dlgClose($('#howDlg')); });
   $('#keysDlg').addEventListener('click', e => { if (e.target === $('#keysDlg')) sheetHide($('#keysDlg')); });
-  $('#menuSupport').addEventListener('click', e => { e.stopPropagation(); close(); sheetShow($('#supportDlg')); $('#supportClose').focus(); });
-  $('#supportClose').addEventListener('click', () => dlgClose($('#supportDlg')));
-  $('#supportDlg').addEventListener('click', e => { if (e.target === $('#supportDlg')) dlgClose($('#supportDlg')); });
   /* the site answers /about, /how-it-works and /support with this page (the _redirects file): the matching dialog opens over the app, and closing it takes the address back to / */
   const deep = DEEP_DIALOGS[location.pathname.replace(/\/+$/, '')];
   if (deep) { sheetShow($(deep)); $(deep + ' .btn.primary').focus(); }
@@ -10168,7 +10228,7 @@ function fsGlide(on, from) {          // from: where the picture and its frame w
 }
 function setFull(on) {
   const app0 = document.querySelector('.app'), glide = !!S.pdf && FS.on !== on && !reducedMotion() && !!stageCanvas.animate, wrap0 = $('#stageWrap');
-  fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = '';
+  fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = ''; if (SZ.z !== 1) szReset(false);          // the picture starts at Fit in either layout
   const from = glide ? { c: stageCanvas.getBoundingClientRect(), w: wrap0.getBoundingClientRect(), rad: parseFloat(getComputedStyle(wrap0).borderTopLeftRadius) || 0, bg: getComputedStyle(wrap0).backgroundColor, ghosts: fsGhosts() } : null;
   FS.on = on; TL.glass = on; const app = document.querySelector('.app');
   app.classList.toggle('fs', on); document.documentElement.classList.toggle('fs-lock', on); if (!on) app.classList.remove('fs-min');
@@ -10227,7 +10287,7 @@ function initUiExtras() {
   hint.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const t = e.target.closest('.term'); if (t) { setGlow(t.dataset.glow); glowTimer = setTimeout(() => setGlow(null), 2400); } });
   $('#btnAudioStop').addEventListener('click', () => { loadSeq++; setBusy(''); toast(tx('app.stopped')); });          // the card has no loading chip above it, so it carries its own way to stop
   $('#chips').addEventListener('click', e => { if (e.target.closest('[data-pages]')) { openPdfEditor(); return; } if (e.target.closest('[data-audio]')) { openAudioEditor(); return; } const cn = e.target.closest('[data-cancel]'); if (cn) { if (cn.dataset.cancel === 'pdf') loadToken++; else loadSeq++; setBusy(''); toast(tx('app.stopped')); return; } const b = e.target.closest('[data-remove]'); if (!b) return; if (b.dataset.remove === 'pdf') removePdf(); else removeAudio(); });          // the X works while a file is still loading too
-  $('#btnFull').addEventListener('click', enterFull);
+  $('#btnFull').addEventListener('click', enterFull); szBind(); szApply(false);
   $('#btnExitFull').addEventListener('click', exitFull);
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
@@ -10323,7 +10383,6 @@ function boot() {
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (type === 'text' || type === 'color'))) return;
     if (!$('#howDlg').hidden) { if (e.key === 'Escape') dlgClose($('#howDlg')); return; }
     if (!$('#aboutDlg').hidden) { if (e.key === 'Escape') dlgClose($('#aboutDlg')); return; }
-    if (!$('#supportDlg').hidden) { if (e.key === 'Escape') dlgClose($('#supportDlg')); return; }
     if (!$('#keysDlg').hidden) { if (e.key === 'Escape') sheetHide($('#keysDlg')); return; }
     if (!$('#ioDlg').hidden) { if (e.key === 'Escape') closeIO(); return; }
     if (!$('#audioDlg').hidden) { if (AE.d) aeKey(e); return; }
@@ -10331,6 +10390,7 @@ function boot() {
     if (!$('#diagDlg').hidden) { if (e.key === 'Escape') setDiagOpen(false); return; }
     if (expOpen()) { if (e.key === 'Escape' && !$('#expCancel').hidden) cancelExport(); return; }
     if (!S.pdf) return;                                  // nothing to play, tap or move yet
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && ['+', '=', '-', '_', '0'].includes(e.key) && !(tg.closest && tg.closest('input, select, textarea'))) { e.preventDefault(); if (e.key === '0') szReset(true); else szAt(SZ.z * (e.key === '-' || e.key === '_' ? 1 / 1.6 : 1.6), null, null, true); return; }
     if (e.code === 'Space') { e.preventDefault(); Transport.toggle(); }
     else if (e.key === 't' || e.key === 'T') { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); tapTurn(); } }
     else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && S.pdf) { e.preventDefault(); toggleFull(); }
@@ -10354,12 +10414,12 @@ function boot() {
     }
     if (stageDirty) { stageDirty = false; try { drawStage(); } catch (e) { console.error(e); } }
     if (TL.glow) TL.overlayDirty = true;
-    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
+    { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (edgeStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
     if (rvActive()) TL.staticDirty = true;
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
 }
-window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, shownTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
+window.__keyframes = { get stageZoom() { return SZ; }, S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, shownTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
 dbg('glisscore loaded'); envInfo().forEach(dbg);
 async function checkHevc() {
   const opt = document.querySelector('#codec option[value="hevc"]'); let ok = false;
