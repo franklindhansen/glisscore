@@ -124,7 +124,8 @@
       <!-- ----- Work Preview Stage (canvas + full-screen button) ----- -->
       <div class="stage-wrap" id="stageWrap">
         <canvas id="stage" aria-label="Score preview"></canvas>
-        <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)" hidden><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+        <div class="stage-strip" id="stageStrip" role="group" aria-label="Zoom and full screen" hidden><button type="button" id="szOut" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="szFit" class="txt" aria-label="Fit the picture" title="Fit the picture (0)">Fit</button><button type="button" id="szIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><span class="stage-div" aria-hidden="true"></span>
+  <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
         <!-- ----- Introduction Text: Logo, tagline, initial instructions, Open PDF + audio buttons ----- -->
         <div class="empty" id="empty"><div class="empty-fit" id="emptyFit">
           <h1 class="empty-logo" aria-label="glisscore"><svg class="logo" viewBox="0 0 1527 394" aria-hidden="true"><use href="#logo"/><g clip-path="url(#logoLineClip)"><use class="logo-line" href="#logoLine"/></g></svg></h1>
@@ -3849,17 +3850,60 @@ function layoutStage() {
   if (r.width < 10 || r.height < 10) return;
   const ar = ASPECTS[S.set.aspect] || 16 / 9;
   const fit = h => { let w = r.width - 2, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
-  const fz = clamp(Math.floor(r.height - 6), 22, 34), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
+  const fz = clamp(Math.floor(r.height - 6), 22, 32), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
+  if (SZ.ar !== S.set.aspect) { if (SZ.ar != null && SZ.z !== 1) szReset(false); SZ.ar = S.set.aspect; }          // a new page size starts at Fit
+  const sw = $('#stageStrip').offsetWidth || 150;
   wrap.style.setProperty('--fs', fz + 'px'); wrap.style.setProperty('--fsm', fm + 'px');
   let [cw, ch] = fit(r.height - 2), room = 0;
-  if (!$('#btnFull').hidden && !$('.app').classList.contains('fs') && (r.width - cw) / 2 < need && (r.height - ch) / 2 < need && r.height > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - room); }          // the full screen button sits in the corner: where the picture would reach it, the picture gives it a strip of its own below
+  if (!$('#stageStrip').hidden && !$('.app').classList.contains('fs') && (r.width - cw) / 2 < sw + fm && (r.height - ch) / 2 < need && r.height > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - room); }          // the zoom and full screen strip sits in the corner: where the picture would reach it, the picture gives it a strip of its own below
   wrap.style.paddingBottom = room ? room + 'px' : '';
   stageCanvas.style.width = cw + 'px'; stageCanvas.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W = Math.round(cw * dpr), H = Math.round(ch * dpr);
   const mx = Math.max(W, H); if (mx > 2200) { W = Math.round(W * 2200 / mx); H = Math.round(H * 2200 / mx); }
   if (W !== stageCanvas.width || H !== stageCanvas.height) { previewR.resize(W, H); }
-  stageDirty = true;
+  stageDirty = true; if (SZ.z !== 1) { szClamp(); szApply(false); }
+}
+/* ---- zoom and fit for the stage: view only (never saved, exported, or a History step), a transform on the picture ---- */
+const SZ = { z: 1, x: 0, y: 0, ar: null }, SZ_MAX = 4;
+function szClamp() {
+  const cv = stageCanvas, w = $('#stageWrap'), mx = Math.max(0, (cv.offsetWidth * SZ.z - w.clientWidth) / 2 + 60), my = Math.max(0, (cv.offsetHeight * SZ.z - w.clientHeight) / 2 + 60);
+  SZ.x = clamp(SZ.x, -mx, mx); SZ.y = clamp(SZ.y, -my, my); if (SZ.z <= 1.001) { SZ.z = 1; SZ.x = 0; SZ.y = 0; }
+}
+function szApply(smooth) {
+  const cv = stageCanvas; cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
+  cv.style.transform = SZ.z === 1 ? '' : 'translate(' + SZ.x.toFixed(1) + 'px,' + SZ.y.toFixed(1) + 'px) scale(' + SZ.z.toFixed(3) + ')'; $('#stageWrap').classList.toggle('zoomed', SZ.z > 1);
+  $('#szOut').disabled = $('#szFit').disabled = SZ.z <= 1; $('#szIn').disabled = SZ.z >= SZ_MAX;
+}
+function szAt(nz, cx, cy, smooth) {          // the point under (cx, cy) stays where it is
+  const cv = stageCanvas, r = $('#stageWrap').getBoundingClientRect(); nz = clamp(nz, 1, SZ_MAX);
+  const mx = r.left + cv.offsetLeft + cv.offsetWidth / 2, my = r.top + cv.offsetTop + cv.offsetHeight / 2; if (cx == null) { cx = mx; cy = my; }
+  const ox = cx - mx, oy = cy - my, px = (ox - SZ.x) / SZ.z, py = (oy - SZ.y) / SZ.z;
+  SZ.x = ox - nz * px; SZ.y = oy - nz * py; SZ.z = nz; szClamp(); szApply(smooth);
+}
+function szReset(smooth) { SZ.z = 1; SZ.x = SZ.y = 0; szApply(smooth); }
+function szBind() {
+  const wrap = $('#stageWrap'), ptr = new Map(); let pan = null, pinch = null, gz = 1;
+  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty');
+  $('#szIn').addEventListener('click', () => szAt(SZ.z * 1.6, null, null, true)); $('#szOut').addEventListener('click', () => szAt(SZ.z / 1.6, null, null, true)); $('#szFit').addEventListener('click', () => szReset(true));
+  wrap.addEventListener('wheel', e => {
+    if (!live(e)) return;
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); szAt(SZ.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false); }
+    else if (SZ.z > 1) { e.preventDefault(); SZ.x -= e.deltaX; SZ.y -= e.deltaY; szClamp(); szApply(false); }
+  }, { passive: false });
+  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); gz = SZ.z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); szAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
+  wrap.addEventListener('pointerdown', e => {
+    if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: SZ.z }; pan = null; wrap.setPointerCapture(e.pointerId); }
+    else if (SZ.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: SZ.x, oy: SZ.y }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pinch && ptr.size >= 2) { const [a, b] = [...ptr.values()]; szAt(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, false); }
+    else if (pan) { SZ.x = pan.ox + e.clientX - pan.x; SZ.y = pan.oy + e.clientY - pan.y; szClamp(); szApply(false); }
+  });
+  const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (!ptr.size) { pan = null; wrap.classList.remove('panning'); } };
+  wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up);
 }
 function prefetchAround() {
   if (!previewR || !S.spreads.length) return;
@@ -4538,7 +4582,7 @@ function updateButtons() {
   if (typeof syncFadeLens === 'function') syncFadeLens();             // an automatic fade length follows the video's length
   $('#exportHint').textContent = !has ? '' : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
   $('#bSpace').disabled = S.spreads.length < 2; $('#bFit').disabled = $('#zoom').disabled = !has;
-  $('#bTap').disabled = S.spreads.length < 2; $('#btnFull').hidden = !S.pdf; try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
+  $('#bTap').disabled = S.spreads.length < 2; $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
   ['bStart', 'bPlay'].forEach(id => $('#' + id).disabled = !has);
   $('#tTot').textContent = fmt(duration());
 }
@@ -10118,7 +10162,7 @@ function fsGlide(on, from) {          // from: where the picture and its frame w
 }
 function setFull(on) {
   const app0 = document.querySelector('.app'), glide = !!S.pdf && FS.on !== on && !reducedMotion() && !!stageCanvas.animate, wrap0 = $('#stageWrap');
-  fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = '';
+  fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = ''; if (SZ.z !== 1) szReset(false);          // the picture starts at Fit in either layout
   const from = glide ? { c: stageCanvas.getBoundingClientRect(), w: wrap0.getBoundingClientRect(), rad: parseFloat(getComputedStyle(wrap0).borderTopLeftRadius) || 0, bg: getComputedStyle(wrap0).backgroundColor, ghosts: fsGhosts() } : null;
   FS.on = on; TL.glass = on; const app = document.querySelector('.app');
   app.classList.toggle('fs', on); document.documentElement.classList.toggle('fs-lock', on); if (!on) app.classList.remove('fs-min');
@@ -10177,7 +10221,7 @@ function initUiExtras() {
   hint.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const t = e.target.closest('.term'); if (t) { setGlow(t.dataset.glow); glowTimer = setTimeout(() => setGlow(null), 2400); } });
   $('#btnAudioStop').addEventListener('click', () => { loadSeq++; setBusy(''); toast(tx('app.stopped')); });          // the card has no loading chip above it, so it carries its own way to stop
   $('#chips').addEventListener('click', e => { if (e.target.closest('[data-pages]')) { openPdfEditor(); return; } if (e.target.closest('[data-audio]')) { openAudioEditor(); return; } const cn = e.target.closest('[data-cancel]'); if (cn) { if (cn.dataset.cancel === 'pdf') loadToken++; else loadSeq++; setBusy(''); toast(tx('app.stopped')); return; } const b = e.target.closest('[data-remove]'); if (!b) return; if (b.dataset.remove === 'pdf') removePdf(); else removeAudio(); });          // the X works while a file is still loading too
-  $('#btnFull').addEventListener('click', enterFull);
+  $('#btnFull').addEventListener('click', enterFull); szBind(); szApply(false);
   $('#btnExitFull').addEventListener('click', exitFull);
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
@@ -10281,6 +10325,7 @@ function boot() {
     if (!$('#diagDlg').hidden) { if (e.key === 'Escape') setDiagOpen(false); return; }
     if (expOpen()) { if (e.key === 'Escape' && !$('#expCancel').hidden) cancelExport(); return; }
     if (!S.pdf) return;                                  // nothing to play, tap or move yet
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && ['+', '=', '-', '_', '0'].includes(e.key) && !(tg.closest && tg.closest('input, select, textarea'))) { e.preventDefault(); if (e.key === '0') szReset(true); else szAt(SZ.z * (e.key === '-' || e.key === '_' ? 1 / 1.6 : 1.6), null, null, true); return; }
     if (e.code === 'Space') { e.preventDefault(); Transport.toggle(); }
     else if (e.key === 't' || e.key === 'T') { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); tapTurn(); } }
     else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && S.pdf) { e.preventDefault(); toggleFull(); }
@@ -10309,7 +10354,7 @@ function boot() {
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
 }
-window.__keyframes = { S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, shownTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
+window.__keyframes = { get stageZoom() { return SZ; }, S, Transport, TL, t2x, x2t, EXP, LOG, TIMEOUTS, FS, redo, removeAudio, removePdf, enterFull, exitFull, restoreDefaults, runSelfTest, FrameMaker, pickProfile, probeProfile, buildProfiles, frameState, get previewR() { return previewR; }, loadPdf, loadAudio, DISK, tapTurn, shownTurn, startExport, outputSize, normalizeTurns, onTrimChanged, onTurnsChanged, vEnd, duration, autoSpace, rebuildSpreads, syncCredits, turnGap, refOffset, ensureCreditsEnd, AE, aeX, audioGain, PE, recipeOf, buildExport, importSettings, pageNo, buildPdfBlob, wmLayout, drawWatermark };
 dbg('glisscore loaded'); envInfo().forEach(dbg);
 async function checkHevc() {
   const opt = document.querySelector('#codec option[value="hevc"]'); let ok = false;
