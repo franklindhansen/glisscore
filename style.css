@@ -206,6 +206,7 @@ input.bad{border-color:var(--danger)}
 .seg label:focus-within{outline-offset:0}          /* the focus ring sits in the 2px inset, so the control's edge does not clip it */
 .seg input:checked+span{color:var(--ink)}
 .seg label:has(input:checked){color:var(--ink)}
+.seg label.dim{opacity:.45}
 .field label.check{justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
 .colorrow{display:flex;gap:8px;align-items:center}
 .sub{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
@@ -471,7 +472,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .fmt-btn:hover{transform:scale(1.04)}
 }
 .btn:not(:disabled):active,.icon-btn:not(:disabled):active,.fmt-btn:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out);box-shadow:none}
-.seg label{transition:background-color .2s var(--ease-color),color .2s var(--ease-color)}
+.seg label{transition:background-color .2s var(--ease-color),color .2s var(--ease-color),opacity .2s var(--ease-color)}
 select,input[type=text],textarea.autogrow,select:hover,input[type=text]:hover,textarea.autogrow:hover{border-color:var(--muted)}
 .chip,.page-card{transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color),transform .3s var(--spring-hover)}
 @media (hover:hover){.page-card:hover{transform:scale(1.02)}}
@@ -2233,8 +2234,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 
 /* a button's name inside a sentence: the name sits in a small button, spelled as on the button; a switch's name carries a tiny switch */
-.how .hb{display:inline-flex;align-items:center;gap:5px;padding:0 7px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel);color:var(--ink);font-size:.88em;font-weight:600;line-height:1.35;white-space:nowrap;vertical-align:baseline;box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent)}
-.how .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
+.hb{display:inline-flex;align-items:center;gap:5px;padding:0 7px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel);color:var(--ink);font-size:.88em;font-weight:600;line-height:1.35;white-space:nowrap;vertical-align:baseline;box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent)}
+.hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
 .pe .page-card.loading .tick{z-index:1}
 .pe .page-card.loading canvas{opacity:0}
 
