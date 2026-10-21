@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+The Support dialog is now part of About, and /support opens About.
+
 ## 1.0.2
 
 Save thumbnail never saves a file over YouTube's 2 MB limit. Site copy gets Oxford commas.
