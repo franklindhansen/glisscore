@@ -8,7 +8,7 @@ This app includes the following open-source components. Each is used under its o
 | pdf-lib 1.17.1 (Andrew Dillon) | `vendor/pdf-lib.min.js` | MIT. The bundle also contains tslib helpers (Microsoft, Apache License 2.0; the notice is at the top of the file) and the pako compression library (MIT and zlib) | `vendor/LICENSE-pdflib.txt` |
 | Instrument Sans (The Instrument Sans Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-instrument-sans.txt` |
 | Newsreader (The Newsreader Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-newsreader.txt` |
-| Lucide icons (some icons are drawn inline) | `index.html` | ISC (some parts MIT) | `vendor/LICENSE-lucide.txt` |
+| Lucide icons (some icons are drawn inline) | `index.html`, `js/ui-and-export.js` | ISC (some parts MIT) | `vendor/LICENSE-lucide.txt` |
 
 The glissando in the *glisscore* wordmark (`brand/glisscore-wordmark.svg`) was drawn from a glyph of Bravura (Copyright © 2015, Steinberg Media Technologies GmbH, with Reserved Font Name "Bravura"), then altered. Bravura is licensed under the SIL Open Font License 1.1. The font itself is not included in this project. The wordmark's text was set in Newsreader.
 

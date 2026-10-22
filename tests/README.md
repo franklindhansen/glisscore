@@ -31,6 +31,8 @@ Run a check once and read its PASS and FAIL lines together. A full run takes min
 
 ## Run everything
 
+The app's code is the script files in `js/`, loaded by the tags in `index.html`. `split-order` checks that the page loads them with no errors and that every file a tag names exists, starts in strict mode, and is in `deploy.sh`'s upload list.
+
     zsh tests/run-all.sh
 
 Runs every check below, eight at a time (`-j N` sets how many; `-j 1` runs them one after another), and prints one line each with its time, any FAIL lines, the five slowest scripts and the total (about 3.5 minutes). It serves the app itself. A check that reads the page a set time after an action and fails when the machine is busy goes in the `serial` list in `run-all.sh`, which runs it alone after the rest (today only `tool-ring`). `-o FILE` writes every PASS and FAIL line, sorted, to FILE; diff two of them to show two runs checked the same things.
@@ -49,7 +51,7 @@ This covers every kind of WAV (8, 16, 24 and 32-bit, 32 and 64-bit float, mono, 
 
 In Safari, for M4A and for real long recordings: open http://localhost:8123/tests/long-file-store.html, choose a file, then press Copy results. Files over 20 minutes skip the comparison with today's import, which would hold the whole recording in memory. Delete frees the disk space.
 
-The Playback joins row plays ~35s from a random place into a silent render through the same player Play uses (the player in `index.html`) and compares it with the stored samples. Play and the slider are for listening.
+The Playback joins row plays ~35s from a random place into a silent render through the same player Play uses (the player in `js/audio-handling.js`) and compares it with the stored samples. Play and the slider are for listening.
 
 ## Tools on the disk store
 

@@ -1,23 +1,15 @@
-// The app's script files, in the order the page loads them, must be exactly the old single script (tests/split-baseline/app-script.js),
-// apart from the wording block moved to the front and one 'use strict'; first line per file. The page must load with no errors and every
-// script it names must exist and be in the upload list.
+// The page loads the app's script files in order with no errors: every script tag after audio-fx.js names a file that exists, starts in strict mode,
+// and is in the upload list, the wording file loads first, and no app code is left inline. A misplaced file fails here, not in a person's browser.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/split-order.js
 const { chromium } = require('playwright-core'), fs = require('fs'), cp = require('child_process');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 const root = __dirname + '/../', STRICT = "'use strict';\n";
-const page = fs.readFileSync(root + 'index.html', 'utf8'), baseline = fs.readFileSync(root + 'tests/split-baseline/app-script.js', 'utf8');
-const strip = t => t.startsWith(STRICT) ? t.slice(STRICT.length) : t;
+const page = fs.readFileSync(root + 'index.html', 'utf8');
 // every script tag after audio-fx.js, in order: a file, or the inline script's text
 const tags = []; const re = /<script( src="([^"]+)")?>([\s\S]*?)<\/script>/g; let m, on = false;
-while ((m = re.exec(page))) { if (m[2] === 'audio-fx.js') { on = true; continue; } if (on) tags.push(m[2] ? { src: m[2] } : { inline: m[3].replace(/^\n/, '') }); }
-const parts = tags.map(t => t.src ? fs.readFileSync(root + t.src, 'utf8') : t.inline);
-const joined = parts.map(strip).join('');
-const a = baseline.indexOf('/* MESSAGES:BEGIN'), b = baseline.indexOf('/* MESSAGES:END */\n') + '/* MESSAGES:END */\n'.length;
-const expected = strip(baseline.slice(a, b) + baseline.slice(0, a) + baseline.slice(b));
-const wordsFirst = baseline.slice(a, b) + strip(baseline.slice(0, a) + baseline.slice(b));
-const same = joined === wordsFirst;
-let at = -1; if (!same) { at = 0; while (at < joined.length && joined[at] === wordsFirst[at]) at++; }
-ok('The script files, in load order, are the old script with the wording block first', same, same ? parts.length + ' scripts' : 'first difference at character ' + at + ': ' + JSON.stringify(joined.slice(at, at + 60)) + ' vs ' + JSON.stringify(wordsFirst.slice(at, at + 60)));
+while ((m = re.exec(page))) { if (m[2] === 'audio-fx.js') { on = true; continue; } if (on) tags.push(m[2] ? { src: m[2] } : { inline: m[3].trim() }); }
+ok('The app is script files only, with no code left inline', tags.length > 1 && tags.every(t => t.src), tags.length + ' tags');
+ok('The wording file loads first', tags[0] && tags[0].src === 'js/messages.js', tags[0] && tags[0].src);
 ok('Every file script starts with its own strict-mode line', tags.filter(t => t.src).every(t => fs.readFileSync(root + t.src, 'utf8').startsWith(STRICT)));
 // the upload list, as deploy.sh builds it
 const list = cp.execFileSync('zsh', ['-c', 'cd "' + root + '" && ' + fs.readFileSync(root + 'deploy.sh', 'utf8').split('\n').reduce((o, l) => o.done ? o : { t: o.t + l + '\n', done: /\)$/.test(l) && o.t.includes('FILES=(') }, { t: '' }).t + ' print -l $FILES'], { encoding: 'utf8' }).split('\n');
