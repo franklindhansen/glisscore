@@ -18,7 +18,9 @@ const record = (p, act) => p.evaluate(act => new Promise(res => {
     await p.evaluate(() => { const a = document.querySelector('.app'); a.requestFullscreen = undefined; a.webkitRequestFullscreen = undefined; });          // the browser's own full screen is not under test
     for (const dir of ['in', 'out']) {
       const tag = (calm ? 'reduced motion, ' : '') + VW + 'x' + VH + ' ' + (dir === 'in' ? 'to full screen' : 'back to the window') + ': ';
-      const rec = await record(p, dir === 'in' ? "document.querySelector('#btnFull').click()" : 'exitFull()'), seen = rec.filter(r => r.ghosts), last = rec[rec.length - 1];
+      const rec = await record(p, "document.querySelector('#btnFull').click()"), seen = rec.filter(r => r.ghosts), last = rec[rec.length - 1];
+      const lbl = await p.evaluate(() => document.querySelector('#btnFull').getAttribute('aria-label'));
+      ok(tag + 'the full screen button toggles both ways and says what it does next', lbl === (dir === 'in' ? 'Exit full screen' : 'Full screen'), lbl);
       if (calm) { ok(tag + 'no copies and nothing gliding', !seen.length); }
       else {
         const first = rec.find(r => r.ghosts);

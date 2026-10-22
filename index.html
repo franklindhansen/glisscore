@@ -124,7 +124,7 @@
       <div class="stage-wrap" id="stageWrap">
         <canvas id="stage" aria-label="Score preview"></canvas>
         <div class="stage-strip" id="stageStrip" role="group" aria-label="Zoom and full screen" hidden><button type="button" id="szOut" aria-label="Zoom out" title="Zoom out (-)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" id="szIn" aria-label="Zoom in" title="Zoom in (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button><button type="button" id="szFit" class="txt" aria-label="Fit the picture" title="Fit the picture (0)">Fit</button><span class="stage-div" aria-hidden="true"></span>
-  <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
+  <button class="fs-btn" id="btnFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button></div>
         <!-- ----- Introduction Text: Logo, tagline, initial instructions, Open PDF + audio buttons ----- -->
         <div class="empty" id="empty"><div class="empty-fit" id="emptyFit">
           <h1 class="empty-logo" aria-label="glisscore"><svg class="logo" viewBox="0 0 1527 394" aria-hidden="true"><use href="#logo"/><g clip-path="url(#logoLineClip)"><use class="logo-line" href="#logoLine"/></g></svg></h1>
@@ -10373,6 +10373,7 @@ function setFull(on) {
   fsGlideStop(); wrap0.style.transformOrigin = stageCanvas.style.transformOrigin = ''; if (SZ.z !== 1) szReset(false);          // the picture starts at Fit in either layout
   const from = glide ? { c: stageCanvas.getBoundingClientRect(), w: wrap0.getBoundingClientRect(), rad: parseFloat(getComputedStyle(wrap0).borderTopLeftRadius) || 0, bg: getComputedStyle(wrap0).backgroundColor, ghosts: fsGhosts() } : null;
   FS.on = on; TL.glass = on; const app = document.querySelector('.app');
+  $('#btnFull').setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); $('#btnFull').title = on ? 'Exit full screen (F)' : 'Full screen (F)';
   app.classList.toggle('fs', on); document.documentElement.classList.toggle('fs-lock', on); if (!on) app.classList.remove('fs-min');
   if (on) wakeFs(); else { clearTimeout(FS.timer); app.classList.remove('fs-active'); FS.hover = false; }
   if (from) { fsGlide(on, from); layoutTimeline(); TL.staticDirty = true; } else
@@ -10429,7 +10430,7 @@ function initUiExtras() {
   hint.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const t = e.target.closest('.term'); if (t) { setGlow(t.dataset.glow); glowTimer = setTimeout(() => setGlow(null), 2400); } });
   $('#btnAudioStop').addEventListener('click', () => { loadSeq++; setBusy(''); toast(tx('app.stopped')); });          // the card has no loading chip above it, so it carries its own way to stop
   $('#chips').addEventListener('click', e => { if (e.target.closest('[data-pages]')) { openPdfEditor(); return; } if (e.target.closest('[data-audio]')) { openAudioEditor(); return; } const cn = e.target.closest('[data-cancel]'); if (cn) { if (cn.dataset.cancel === 'pdf') loadToken++; else loadSeq++; setBusy(''); toast(tx('app.stopped')); return; } const b = e.target.closest('[data-remove]'); if (!b) return; if (b.dataset.remove === 'pdf') removePdf(); else removeAudio(); });          // the X works while a file is still loading too
-  $('#btnFull').addEventListener('click', enterFull); szBind(); szApply(false);
+  $('#btnFull').addEventListener('click', toggleFull); szBind(); szApply(false);
   $('#btnExitFull').addEventListener('click', exitFull);
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
