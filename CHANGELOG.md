@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.4
+
+Leaving full screen is smoother in the Audio Editor and the video editor.
+
 ## 1.1.3
 
 Manual crop now works one page at a time, with Apply to selected to copy a frame to other pages. Buttons that are greyed out explain themselves more consistently.
