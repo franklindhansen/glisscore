@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+Buttons press in when you click them, and the drop screen fades away smoothly. The full screen button and the intro button width are fixed.
+
 ## 1.1.1
 
 Letting go of a start or end bracket no longer jumps the timeline when you are zoomed out. Full screen shows the zoom controls above the play bar, and Dim's wording is clearer.
