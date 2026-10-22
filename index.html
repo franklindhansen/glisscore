@@ -4613,6 +4613,9 @@ const audioFmt = n => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(n || ''); return 
 function btnHold(b, texts) {
   if (!b || !b.offsetParent) return; const t0 = b.textContent, was = b.classList.contains('loading'), key = texts.join('|') + '|' + getComputedStyle(b).font; if (b.dataset.hold === key) return;
   b.style.minWidth = ''; b.classList.add('loading'); let w = 0; texts.forEach(t => { b.textContent = t; w = Math.max(w, b.offsetWidth); }); b.textContent = t0; if (!was) b.classList.remove('loading'); b.style.minWidth = w + 'px'; b.dataset.hold = key;
+  // a width measured before the web font arrives is the fallback's, so measure again once the fonts are in (one wait per button)
+  const waiting = btnHold.waiting || (btnHold.waiting = new WeakSet());
+  if (document.fonts.status !== 'loaded' && !waiting.has(b)) { waiting.add(b); document.fonts.ready.then(() => { waiting.delete(b); delete b.dataset.hold; btnHold(b, texts); }); }
 }
 /* with no score, the Open audio button shows the loading: "Listening" and how far it is, then turns into Open editor */
 function syncAudioCard() {
