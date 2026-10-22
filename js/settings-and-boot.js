@@ -252,9 +252,9 @@ function fsGlide(on, from) {          // from: where the picture and its frame w
   wk[0].backgroundColor = from.bg; wk[n].backgroundColor = bg1;
   const o = { duration: FS_MS, easing: 'linear' }, bgTo = getComputedStyle(document.body).backgroundColor, rise = el => el && el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 140, easing: EASE_OUT, fill: 'backwards' });
   fsGliding = true; wrap.style.transformOrigin = cv.style.transformOrigin = '0 0';
-  const anims = [wrap.animate(wk, o), cv.animate(ck, o), app.animate([{ backgroundColor: on ? bgTo : '#000' }, { backgroundColor: on ? '#000' : bgTo }], { duration: on ? FS_MS : 200, easing: 'ease-out' })];
+  const anims = [wrap.animate(wk, o), cv.animate(ck, o), app.animate([{ backgroundColor: on ? bgTo : '#000' }, { backgroundColor: on ? '#000' : bgTo }], { duration: FS_MS, easing: 'ease-in-out' })];
   if (on) { anims.push(rise(app.querySelector('.transport')), rise(app.querySelector('.timeline'))); }          // the controls come up from the bottom as the picture lands
-  else ['.top', '.panel', '.transport', '.timeline'].forEach(s => { const el = app.querySelector(s) || document.querySelector(s); if (el) anims.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 40, easing: EASE_OUT, fill: 'backwards' })); });
+  else ['.top', '.panel', '.transport', '.timeline'].forEach(s => { const el = app.querySelector(s) || document.querySelector(s); if (el) anims.push(el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 60, easing: EASE_OUT, fill: 'backwards' })); });
   from.ghosts.forEach(g => anims.push(g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-out', fill: 'forwards' })));
   const live = FS.anims = anims.filter(Boolean);
   const end = () => { if (FS.anims !== live) return; fsGlideStop(); wrap.style.transformOrigin = cv.style.transformOrigin = ''; layoutStage(); layoutTimeline(); stageDirty = true; TL.staticDirty = true; };

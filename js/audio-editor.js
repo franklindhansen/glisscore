@@ -2761,7 +2761,7 @@ function aeFsApply(on) {
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
 }
 /* full screen is one gesture: the window travels to the other layout's rectangle on one ease and length, moved by transform alone (no layout at each size); the picture goes with it between its two real rectangles (unseen: it fades with the rest). The old parts fade out at once, the other layout takes over near the end (at the same place and size) and its parts fade in as the motion lands, like a video player's controls. The picture is one of the parts: it is never seen stretched or at a size it does not have */
-const AE_FS_DIP = 0.45, AE_FS_EASE = EASE_GLIDE, AE_FS_MS = 400, AE_FS_SWAP = 0.17, AE_FS_OUT = 64, AE_FS_IN = 220;          // the hand-over is where the picture is about halfway (the ease is at .5), so it is never stretched far from either size
+const AE_FS_LOW = 0.25, AE_FS_DIP = 0.45, AE_FS_EASE = EASE_GLIDE, AE_FS_MS = 400, AE_FS_SWAP = 0.17, AE_FS_OUT = 64, AE_FS_IN = 220;          // the hand-over is where the picture is about halfway (the ease is at .5), so it is never stretched far from either size
 function aeFsGeo(box, wave) {          // the window's rectangle and the picture's gaps to the window's inner edges
   const r = box.getBoundingClientRect(), w = wave.getBoundingClientRect(), cs = getComputedStyle(box), px = v => parseFloat(v) || 0;
   return { l: r.left, t: r.top, w: r.width, h: r.height, rad: px(cs.borderTopLeftRadius), wl: w.left - r.left - px(cs.borderLeftWidth), wt: w.top - r.top - px(cs.borderTopWidth), wr: r.right - w.right - px(cs.borderRightWidth), wb: r.bottom - w.bottom - px(cs.borderBottomWidth) };
@@ -2799,13 +2799,16 @@ function aeFs(on, instant) {
   };
   AE.fsBusy = true; box.style.transformOrigin = wave.style.transformOrigin = '0 0';
   AE.fsPulse = wave.animate([{ opacity: 1, easing: 'ease-out' }, { opacity: AE_FS_DIP, offset: 0.09, easing: 'ease-in-out' }, { opacity: 1, offset: 0.55 }, { opacity: 1 }], { duration: D });          // the picture is stretched most near the hand-over, so it eases to half strength there and comes back, never to empty
-  const first = path(g0, w0, 0, AE_FS_SWAP);
-  AE.fsAnims = first.concat(fade(!on, 1, 0, { duration: AE_FS_OUT, easing: 'ease-out', fill: 'forwards' }));
-  first[0].onfinish = () => {          // the window is partway: the other layout takes over in the same frame, at the same place and size, and the motion goes on to the end with its parts fading in
+  const first = path(g0, w0, 0, AE_FS_SWAP + 0.2);          // runs on past the hand-over, so the window is never left standing while the other layout is made ready
+  const live = AE.fsAnims = first.concat(fade(!on, 1, AE_FS_LOW, { duration: D * AE_FS_SWAP, easing: 'ease-out', fill: 'forwards' }));
+  const swap = () => {          // the window is partway: the other layout takes over in the same frame, at the same place and size (wherever the window has got to), and the motion goes on to the end with its parts fading in
+    const s = Math.min(AE_FS_SWAP + 0.2, Math.max(AE_FS_SWAP, first[0].currentTime / D));
     AE.fsAnims.forEach(a => a.cancel()); aeFsApply(on);
-    const rest = path(g1, w1, AE_FS_SWAP, 1); AE.fsAnims = rest; AE.fsXform = true; fade(on, 0, 1, { duration: AE_FS_IN, easing: 'ease-out' });          // the window lands while its parts are still coming in
+    const rest = path(g1, w1, s, 1); AE.fsAnims = rest; AE.fsXform = true; const ins = fade(on, AE_FS_LOW, 1, { duration: AE_FS_IN, easing: 'ease-out' }), t0 = document.timeline.currentTime; rest.concat(ins).forEach(a => { a.startTime = t0; });          // all start in this frame, not the next, so the window never stands still at the hand-over          // the window lands while its parts are still coming in
     rest[0].onfinish = () => { AE.fsXform = false; aeFsStop(true); box.style.transformOrigin = wave.style.transformOrigin = ''; AE.fsBusy = false; aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); };
   };
+  const watch = () => { if (AE.fsAnims !== live) return; if (first[0].currentTime >= D * AE_FS_SWAP) swap(); else requestAnimationFrame(watch); };
+  requestAnimationFrame(watch);
 }
 /* in full screen the picture reaches just under the floating head and just behind the floating bottom, so nothing important hides behind them but the glass still has something to blur */
 /* the Wave | Spec switch starts where the tool window's heading starts, so the two line up down the page */
