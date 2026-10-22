@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.3
+
+Manual crop now works one page at a time, with Apply to selected to copy a frame to other pages. Buttons that are greyed out explain themselves more consistently.
+
 ## 1.1.2
 
 Buttons press in when you click them, and the drop screen fades away smoothly. The full screen button and the intro button width are fixed.
