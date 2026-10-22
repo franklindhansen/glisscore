@@ -22,7 +22,7 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   await p.evaluate(() => { PE.cl.bg = 0; PE.cl.sp = 0; peActs(); }); s = await st('#peCleanStatus');
   ok('Clean: neither Paper nor Specks chosen says so', await dis('#peCleanGo') && /paper or specks/i.test(s.t), JSON.stringify(s));
   await p.evaluate(() => { PE.cl.bg = 1; PE.cl.sp = 1; PE.d.order.forEach(id => { PE.d.slots[id].bg = 1; PE.d.slots[id].sp = 1; }); peActs(); }); s = await st('#peCleanStatus');
-  ok('Clean: pages already cleaned this way says so', await dis('#peCleanGo') && /already/i.test(s.t), JSON.stringify(s));
+  ok('Clean: pages already cleaned this way says so in a tooltip, not on the status line', await dis('#peCleanGo') && s.t === '' && /already/i.test(await p.evaluate(() => $('#peCleanGo').title)), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].bg = 0; PE.d.slots[id].sp = 0; }); peActs(); });
   // Crop
   await tool('crop'); await skipAll(true); s = await st('#peCropStatus');
@@ -31,13 +31,20 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   ok('Crop: ticking a page takes the Crop reason away', !await dis('#peCropAuto') && !/tick a page/i.test(s.t), JSON.stringify(s));
   ok('Crop: Revert greyed out has a tooltip and no status line', await dis('#peCropClear') && s.t === '' && /nothing to revert/i.test(await p.evaluate(() => $('#peCropClear').title)), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = peRound(peCropBox(id).box); }); peActs(); }); s = await st('#peCropStatus');
-  ok('Crop: every ticked page already cropped says so', await dis('#peCropAuto') && /already cropped/i.test(s.t), JSON.stringify(s));
+  ok('Crop: every ticked page already cropped says so in a tooltip, not on the status line', await dis('#peCropAuto') && s.t === '' && /already cropped/i.test(await p.evaluate(() => $('#peCropAuto').title)), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = null; }); peActs(); });
+  // Re-kilter and Re-size
+  await tool('skew'); await skipAll(true); s = await st('#peSkewStatus');
+  ok('Re-kilter: no page ticked says "Tick a page first." on the status line, and a greyed Revert has its tooltip', await dis('#peSkewGo') && /tick a page/i.test(s.t) && await dis('#peSkewClear') && /nothing to revert/i.test(await p.evaluate(() => $('#peSkewClear').title)), JSON.stringify(s));
+  await skipAll(false); s = await st('#peSkewStatus'); ok('Re-kilter: ticking a page takes the reason away', !await dis('#peSkewGo') && s.t === '', JSON.stringify(s));
+  await p.evaluate(() => { PE.d.order.forEach(id => PE.skewSeen.set(id, peSkewKey(PE.d.slots[id]))); peActs(); }); s = await st('#peSkewStatus');
+  ok('Re-kilter: pages already tried say "Already level." in a tooltip, not on the status line', await dis('#peSkewGo') && s.t === '' && /already level/i.test(await p.evaluate(() => $('#peSkewGo').title)), JSON.stringify(s));
+  await tool('resize'); ok('Re-size: greyed with nothing to apply says so in a tooltip', await dis('#peRzGo') && /nothing to apply/i.test(await p.evaluate(() => $('#peRzGo').title)));
   // Split
   await tool('split'); await p.waitForTimeout(800); await p.evaluate(() => { PE.splitSel = new Set(); peActs(); }); s = await st('#peSplitStatus');
-  ok('Split: no spread ticked says so', await dis('#peSplitGo') && /tick a/i.test(s.t), JSON.stringify(s));
+  ok('Split: no spread ticked says so in a tooltip (the note below already says it), not on the status line', await dis('#peSplitGo') && s.t === '' && /tick a/i.test(await p.evaluate(() => $('#peSplitGo').title)), JSON.stringify(s));
   await p.evaluate(() => { PE.splitSel = new Set([PE.d.order[0]]); peActs(); }); s = await st('#peSplitStatus');
-  ok('Split: ticking a page takes the reason away', !await dis('#peSplitGo') && s.t === '', JSON.stringify(s));
+  ok('Split: ticking a page takes the reason away', !await dis('#peSplitGo') && s.t === '' && (await p.evaluate(() => $('#peSplitGo').title)) === '', JSON.stringify(s));
   await p.evaluate(() => { PE.splitSel = new Set(); peActs(); });
   await tool('clean'); s = await st('#peSplitStatus');
   ok('Switching tools clears the old line', s.t === '', JSON.stringify(s));

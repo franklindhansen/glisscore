@@ -11,7 +11,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   // hold the work: the first page goes through, the rest wait until the gate opens
   await p.evaluate(() => { window.__gate = new Promise(r => { window.__open = r; }); const raw = peRawBox, scan = peScan; let a = 0, c = 0; peRawBox = async sl => { if (a++ >= 1) await window.__gate; return raw(sl); }; peScan = async (...x) => { if (c++ >= 1) await window.__gate; return scan(...x); }; });
-  const go = () => p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading'), fill: $('#peCropAuto').style.getPropertyValue('--p'), off: $('#peCropAuto').disabled, pad: $('#peCropPad').disabled, line: $('#peCropStatus').textContent, bar: !!document.querySelector('#peBand .pe-status i') }));
+  const go = () => p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading'), fill: $('#peCropAuto').style.getPropertyValue('--p'), off: $('#peCropAuto').disabled, pad: $('#peCropPad').disabled, line: $('#peCropStatus').textContent, tip: $('#peCropAuto').title, bar: !!document.querySelector('#peBand .pe-status i') }));
   // Crop's read, in Auto: the Crop button carries the work
   await p.evaluate(() => peTool('crop')); await p.waitForTimeout(900);
   const rd = await go();
@@ -20,7 +20,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   ok('Crop read: the Crop button and the margin slider are greyed, and the status line adds no bar', rd.off && rd.pad && !rd.bar && !/Processing/.test(rd.line), JSON.stringify(rd));
   // Manual does not wait: the Crop button is free and plain, and the reading comes back on the button in Auto
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=hand]').click(); }); await p.waitForTimeout(500);
-  const hd = await go(); ok('Manual during the read: the Crop button is plain and not greyed by the read', hd.text === 'Crop' && !hd.loading && !hd.off, JSON.stringify(hd));
+  const hd = await go(); ok('Manual during the read: the Crop button is plain, and greyed only because no frame is drawn yet', hd.text === 'Crop' && !hd.loading && hd.off && /draw a frame/i.test(hd.line), JSON.stringify(hd));
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=auto]').click(); }); await p.waitForTimeout(500);
   const bk = await go(); ok('Back in Auto during the read: the button shows the work again', /^Processing/.test(bk.text) && bk.off && bk.pad, JSON.stringify(bk));
   // Manual during the read: the frame and its handles are there to drag at once, a drag is kept, and Crop applies it without waiting for the pages to be read
@@ -35,7 +35,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const mn = await p.evaluate(() => ({ crops: PE.d.slots.filter(x => x.crop).length, reading: PE.cropReading, c: PE.d.slots[PE.one] && PE.d.slots[PE.one].crop })); ok('Manual during the read: Crop applies the dragged frame at once, while the read is still going', mn.crops > 0 && mn.reading, JSON.stringify(mn));
   await p.evaluate(() => window.__open()); await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || PE.busy); i++) await sleep(25); await sleep(400); });
   const after = await go();
-  ok('Crop read done: the button is plain "Crop" again (greyed only because the pages are cropped) and the slider is free', after.text === 'Crop' && !after.loading && after.line === 'Already cropped.' && !after.pad, JSON.stringify(after));
+  ok('Crop read done: the button is plain "Crop" again (greyed only because the pages are cropped, which its tooltip says) and the slider is free', after.text === 'Crop' && !after.loading && after.tip === 'Already cropped.' && !after.pad, JSON.stringify(after));
   // Re-kilter's first moment
   await p.evaluate(() => { window.__gate = new Promise(r => { window.__open = r; }); const prev = peScan; peScan = async (...x) => { await window.__gate; return prev(...x); }; });
   await p.evaluate(() => peTool('skew')); await p.waitForTimeout(400); await p.evaluate(() => { peSkewGo(); }); await p.waitForTimeout(300);

@@ -1010,11 +1010,11 @@
           </div>
           <div class="pe-tv" id="peViewCrop" data-tool="crop" hidden>
             <div class="pe-phead"><div class="pe-pt"><h3>Crop</h3><p class="pe-sub" id="peCropSub" data-normal="Finds the music on the ticked pages and trims the extra margins.">Finds the music on the ticked pages and trims the extra margins.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
+              <div class="pe-acts"><span class="pe-status" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
             <div class="pe-opts">
               <div class="seg pe-cmode" role="radiogroup" aria-label="Frame"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div>
               <div class="pe-range" id="peCropPadF"><label for="peCropPad">Margin</label><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2" data-default="2"><output id="peCropPadVal" for="peCropPad">2%</output></div>
-              <label class="check-row pe-check pe-end" id="peCropSameF" for="peCropSame"><span>Same on all pages</span><input type="checkbox" class="switch" id="peCropSame" checked></label>
+              <label class="check-row pe-check pe-end" id="peCropSameF" for="peCropSame"><span>Same frame for selected</span><input type="checkbox" class="switch" id="peCropSame" checked></label>
             </div>
           </div>
           <div class="pe-tv" id="peViewDim" data-tool="dim" hidden>
@@ -4617,13 +4617,18 @@ function btnHold(b, texts) {
   const waiting = btnHold.waiting || (btnHold.waiting = new WeakSet());
   if (document.fonts.status !== 'loaded' && !waiting.has(b)) { waiting.add(b); document.fonts.ready.then(() => { waiting.delete(b); delete b.dataset.hold; btnHold(b, texts); }); }
 }
-/* with no score, the Open audio button shows the loading: "Listening" and how far it is, then turns into Open editor */
+/* with no score, the Open audio button shows the loading: "Loading" and how far it is, then turns into Open editor */
 function syncAudioCard() {
-  const b = $('#btnAudio2'); if (!b) return; btnHold(b, ['Open audio', 'Open editor', 'Listening…', 'Listening 100%']); const on = !S.pdf && busyKind === 'audio' && !!busyMsg;          // a first recording or one that replaces another: the card shows the new one coming in either way
+  const b = $('#btnAudio2'); if (!b) return; btnHold(b, ['Open audio', 'Open editor', 'Loading…', 'Loading 100%']); const x0 = b.offsetParent ? b.getBoundingClientRect().left : null, extras = ['#btnAudio3', '#btnAudioStop'].map(q => $(q)), was = extras.map(e => e.hidden); const on = !S.pdf && busyKind === 'audio' && !!busyMsg;          // a first recording or one that replaces another: the card shows the new one coming in either way
   b.classList.toggle('loading', on); b.disabled = on;
-  if (on) { const pct = busyFrac == null ? null : Math.round(clamp(busyFrac, 0, 1) * 100); b.style.setProperty('--p', (pct == null ? 40 : pct) + '%'); b.classList.toggle('ind', pct == null); b.textContent = pct == null ? 'Listening…' : 'Listening ' + pct + '%'; }
+  if (on) { const pct = busyFrac == null ? null : Math.round(clamp(busyFrac, 0, 1) * 100); b.style.setProperty('--p', (pct == null ? 40 : pct) + '%'); b.classList.toggle('ind', pct == null); b.textContent = pct == null ? 'Loading…' : 'Loading ' + pct + '%'; }
   else { b.style.removeProperty('--p'); b.classList.remove('ind'); b.textContent = S.audio ? 'Open editor' : 'Open audio'; }
   $('#btnAudio3').hidden = !S.audio || on; $('#btnAudioStop').hidden = !on;
+  /* the pair re-centers when Stop or Replace comes or goes: the main button glides from where it was (it keeps the current position if interrupted), and the new button fades in */
+  if (x0 != null && b.animate) {
+    const dx = x0 - b.getBoundingClientRect().left; if (Math.abs(dx) > 0.5 && !reducedMotion()) b.animate([{ transform: 'translateX(' + dx + 'px)' }, { transform: 'none' }], { duration: 280, easing: EASE_GLIDE });
+    extras.forEach((e, i) => { if (was[i] && !e.hidden) e.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, easing: EASE_OUT }); });
+  }
   if (on && S.audio) { $('#scAudT').textContent = busyName || 'New audio'; $('#scAudD').textContent = 'Replacing ' + S.audio.name + '.'; }
 }
 function setChips() {
@@ -6178,7 +6183,7 @@ function openAudioEditor() {
   sheetShow($('#audioDlg')); aeRefresh(); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
 }
 /* MESSAGES:BEGIN (the playful lines and the wording; keep it valid JSON) */
-const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum, or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown beside the first page or at the end. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","turns.layout":"Page turns spaced evenly for the new layout.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.flatbands":"The match is already flat, so there are no bands to make.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","vid.toend":"{n} turns moved to the end","vid.toend.one":"1 turn moved to the end","vid.toend.none":"No turns lie after the playhead, so there is nothing to move","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
+const MSG = {"loud":[{"id":"stream","name":"YouTube, Spotify","lufs":-14},{"id":"apple","name":"Apple Music","lufs":-16},{"id":"podcast","name":"Podcast","lufs":-16},{"id":"eu","name":"Broadcast Europe","lufs":-23},{"id":"us","name":"Broadcast US","lufs":-24}],"quips":{"pe":["Woah. It even has a PDF editor?","Your PDF editor called. It wants $20 a month.","No login. No trial. No sad little watermark.","This one doesn't ask for your email."],"ae":["Free, and no 3-hour tutorial.","Hiss had a good run.","Every knob here does something. Wild!"]},"says":{"ae.silence":"Rests are for the players, not exports.","ae.clip":"It's too loud bro!","ae.clipb":"It's ClipCity in here!","pe.big":"Bigger!","pe.rot":"Gravity has no power here.","ae.learn":"Got you, hiss.","ae.bypass":"Hear the difference?","ae.match":"Same sound, different room.","ae.mono":"Uh... you sure about that??","ae.order":"Order matters. Ask any engineer.","pe.skip":"Skipped. (No one will know.)","pe.dup":"Copy that.","pe.del":"Gone without a trace.","pe.move":"Mix it up now, y'all.","pe.wm":"No one's stealing that!"},"tips":{"tip.limiter":"Turns down only the peaks that would pass the ceiling (−1dB), so the overall loudness can reach the target. It changes the sound a little. Leave it off to keep every dynamic as recorded.","tip.spec":"Press Draw, then drag over a blip, a hum, or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.","tip.eqopts":"Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.","tip.invert":"White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.","tip.fades":"Fades the picture in and out.","tip.credits":"Shown beside the first page or at the end. They only appear once a line has text.","tip.match":"Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.","tip.normalize":"Sets the overall level of the audio. Peak aims the loudest moment at a level you choose. Loudness aims how loud the audio sounds overall, as streaming services measure it.","tip.noise":"Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else."},"text":{"pdf.loaded":"{pages} loaded – {spreads}.","pdf.invideo":"{pages} in the video – {spreads}.","pdf.removed":"Score removed.","pdf.removedkeep":"Score removed. Your page turns are remembered and will be reused when you open a score.","aud.removed":"Audio removed. Your page turns have not moved.","turns.kept":"Kept your page turns.","turns.added.one":"{n} new turn needs placing (dashed).","turns.added.many":"{n} new turns need placing (dashed).","turns.dropped.one":"{n} extra turn was dropped.","turns.dropped.many":"{n} extra turns were dropped.","turns.layout":"Page turns spaced evenly for the new layout.","pe.saved":"PDF saved ({n} pages, {mb} MB).","pe.savefail":"Could not export the PDF.","pe.expstop":"Export stopped.","pe.clean.done":"Cleaned {pages}.","pe.clean.revert":"Reverted.","pe.why.page":"Tick a page first.","pe.why.spread":"Tick a page to split.","pe.why.choose":"Choose Paper or Specks.","pe.why.cleaned":"Already cleaned this way.","pe.why.cropped":"Already cropped.","pe.why.revert":"Nothing to revert.","pe.skew.one":"Leveled {n} page.","pe.skew.many":"Leveled {n} pages.","pe.skew.none":"Already level.","pe.skew.revert":"Reverted.","pe.crop.none":"No music found.","pe.crop.full":"Largest detected frame reaches page edges. No room to add margin.","pe.crop.manual":"Drag the frame to crop one page. Apply to selected copies it.","pe.crop.page1":"Page 1 sets the video’s page shape.","pe.why.apply":"Tick the pages to copy this frame to.","pe.why.draw":"Draw a frame first.","pe.why.level":"Already level.","pe.why.resize":"Nothing to apply.","pe.view.orig":"Original","pe.view.cleaned":"Cleaned","pe.view.leveled":"Leveled","pe.view.notleveled":"Not leveled yet. Run Re-kilter to level this page","pe.view.noclean":"Choose paper or specks to see the page cleaned","aud.loaded":"Audio loaded – {len} long.","aud.mixed":"{n} channels mixed down to stereo.","aud.moved.one":"{n} page turn was past the end of the new audio, so it was moved to fit.","aud.moved.many":"{n} page turns were past the end of the new audio, so they were moved to fit.","aud.clips":"Audio clips ({db}).","aud.long":"Long file: editing needs ~{mb}MB of memory. Close other tabs first, or Safari may reload the page.","aud.clamped":"Part of this file was clipped when it was read. For exact peaks, convert it to float WAV.","aud.empty":"That file is empty. Try a different audio file.","aud.badtype":"{ext} files can’t be read in this browser. Try MP3, WAV, M4A, or FLAC.","aud.readfail":"Could not read this audio file. Try MP3, WAV, M4A, or FLAC.","ae.playfail":"The sound could not be played.","ae.playfail2":"This could not be played.","vid.lastturn":"That was the last spread – there are no more turns to set.","vid.turnset":"{noun} {n} set to {t}","vid.credend":"Credits end at {t}.","vid.trim.startsame":"Video starts with the audio","vid.trim.endsame":"Video ends with the audio","vid.trim.startbefore":"Video starts {s} before the audio","vid.trim.startinto":"Video starts {s} into the audio","vid.trim.endafter":"Video ends {s} after the audio","vid.trim.endbefore":"Video ends {s} before the audio ends","vid.inv.bg":"Background set to Black","vid.inv.shadows":"Shadows off","vid.inv.note":"{notes} for the inverted score.","vid.shadowsreset":"Shadows reset to their defaults.","vid.thumb":"Thumbnail saved ({mb} MB, 1280×720).","vid.thumbfail":"Could not save the thumbnail.","app.badfile":"That file type is not supported. Add a PDF score or an audio file.","vid.fxfail":"The EQ or Imager could not be applied to the video.","vid.updated":"Audio updated.","ae.turnstop":"Page turn {n} is here, so the {which} can’t go further. Move the turn to trim more.","ae.saved.flac":"Audio saved ({len} long, FLAC {bits}-bit).","ae.saved.wav":"Audio saved ({len} long, WAV {kind}).","ae.saved.m4a":"Audio saved ({len} long, M4A).","ae.expstop":"Export stopped.","ae.expchanged":"The export stopped because the settings changed. Try again.","ae.expfail":"Could not export the audio.","ae.nom4a":"This browser can’t make M4A files. Choose WAV instead.","ae.dyn.nosound":"There is not enough sound in this band to set a threshold from.","ae.nosound":"There is not enough sound in the part you kept to measure.","ae.balmatch":"Left and right already match.","ae.nobands":"There is no room for more bands. Remove one first.","ae.flatbands":"The match is already flat, so there are no bands to make.","ae.badprofile.long":"That file is not an EQ profile. Export one from here, or use an audio file.","ae.measurefail":"Could not measure that audio file.","ae.badprofile":"That file is not an EQ profile.","ae.readfail":"Could not read that audio file.","ae.profilesaved":"EQ profile exported.","ae.filefail":"The file could not be saved.","ae.emnosound":"There is not enough sound in that file to measure.","ae.nr.silent":"That part is silent, so there is no noise to learn. Pick a stretch with the hiss or hum in it.","ae.nr.noquiet":"Could not find a quiet part. Drag across the waveform instead.","pe.offline":"Could not load the PDF tools. Reload the page and try again.","app.exported":"Exported {what}.","app.imp.both":"Imported settings and page markings.","app.imp.marks":"Imported page markings.","app.imp.settings":"Imported settings.","app.imp.added.one":"{n} page turn needs placing (dashed handle).","app.imp.added.many":"{n} page turns need placing (dashed handles).","app.imp.dropped.one":"{n} extra turn was left out.","app.imp.dropped.many":"{n} extra turns were left out.","app.reset":"Settings restored to their defaults. Your files and page turns are unchanged.","app.stopped":"Stopped loading.","app.spaced":"Turns spaced evenly.","vid.toend":"{n} turns moved to the end","vid.toend.one":"1 turn moved to the end","vid.toend.none":"No turns lie after the playhead, so there is nothing to move","app.logcopied":"Log copied.","app.logmanual":"Select the log text and copy it manually.","app.saved":"Saved.","app.savefail":"The video could not be saved: {why}","pdf.password":"This PDF is password-protected. Remove the password and try again.","pdf.readfail":"Could not read this PDF. Make sure it is a valid PDF file."}};
 /* MESSAGES:END */
 /* the opening screen always fits its box: at full size when there is room, scaled down evenly when there is not, never with a scroll bar */
 function introFit() {
@@ -8886,7 +8891,7 @@ function edLead(which, quip, once, hold) {
 function openPdfEditor() {
   if (!S.pdf) return;
   peClearStatus();
-  PE.d = recipeOf(); PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.handAll = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
+  PE.d = recipeOf(); PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.manTicks = false; PE.manSkip = null; PE.autoSkip = null; PE.handLast = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
   [['peClBg', 1], ['peClSp', 1]].forEach(([n, v]) => document.querySelectorAll('input[name=' + n + ']').forEach(r => { r.checked = +r.value === v; }));
   document.querySelectorAll('input[name=peCropMode]').forEach(r => { r.checked = r.value === 'auto'; });
   document.querySelectorAll('#peBand .pe-tv').forEach(v => { v.hidden = v.dataset.tool !== 'pages'; v.classList.remove('sliding'); });
@@ -8936,7 +8941,7 @@ const peOrder = () => { const o = railOrder('#peRail [data-tool]'); return o.len
 const peTickMode = () => PE_TICK.has(PE.mode);
 const peWmSel = id => PE.d.wm.on ? !PE.d.slots[id].nw : !PE.wmSel || PE.wmSel.has(id);          // the watermark's tick: where it is on, the page has it; before it is added, the page will get it
 const peTicked = id => { const sl = PE.d.slots[id]; return !sl.x && (PE.mode === 'wm' ? peWmSel(id) : PE.mode === 'split' ? !!(PE.splitSel && PE.splitSel.has(id)) : !PE.skip.has(id)); };
-const peTargets = () => PE.d.order.filter(id => !PE.d.slots[id].x && (PE.mode === 'dim' || !PE.skip.has(id)));          // Dim has no ticks: any page can be opened and drawn on
+const peTargets = () => PE.d.order.filter(id => !PE.d.slots[id].x && (PE.mode === 'dim' || (PE.mode === 'crop' && peHandMode()) || !PE.skip.has(id)));          // Dim has no ticks, and neither has Manual: any page can be opened and drawn on
 const peN = (n, one, many) => n + ' ' + (n === 1 ? one || 'page' : many || 'pages');
 /* a spread is a page wider than tall (by the part a crop keeps); known once its shape has been read (null until then). Halves of a split page never are */
 const peSpread = sl => { if (sl.half) return false; const a = PE.asp && PE.asp.get(sl.src); if (a == null) return null; const c = sl.crop, r = c ? (c[2] - c[0]) / (c[3] - c[1]) : 1, q = ((sl.rot || 0) % 180 ? 1 / a : a) * ((sl.rot || 0) % 180 ? 1 / r : r); return q > 1.15; };
@@ -8952,7 +8957,7 @@ function peTool(name) {
   const redraw = PE.mode === 'crop' || name === 'crop' || PE.mode === 'dim' || name === 'dim' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
   const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
   peClearStatus();
-  PE.mode = name; PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
+  PE.mode = name; peCropTicks(); PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
   if (redraw) peRender(false); else peState();
   peBodySlide(snap, dir);
   if (name === 'split') peSpreadScan();
@@ -9030,8 +9035,17 @@ function peSplitNote() {
   if (msg.textContent !== t) swapText(msg, t, true);
 }
 /* a greyed main button says why on its tool's status line; the line goes when the button is enabled (a message the tool set itself is left alone) */
-function peWhy(sel, key) {
-  const el = $(sel); if (!el || PE.busy) return; const w = PE.why || (PE.why = {}), t = key ? tx(key) : '';
+/* a reason goes on the status line only when the user can fix it and nothing else on screen says it; these belong on the greyed button's tooltip, whichever call sends them */
+const PE_WHY_TIP = new Set(['pe.why.cleaned', 'pe.why.cropped', 'pe.why.spread', 'pe.why.level', 'pe.why.resize', 'pe.why.revert']);
+function peTip(sel, key) {          // a greyed button's tooltip: set from a reason, cleared when the reason goes
+  const b = typeof sel === 'string' ? $(sel) : sel; if (!b) return;
+  if (key) { b.title = tx(key); b.dataset.tipWhy = '1'; } else if (b.dataset.tipWhy) { b.title = ''; delete b.dataset.tipWhy; }
+}
+function peWhy(sel, key, tipKey) {
+  const el = $(sel); if (!el || PE.busy) return; const btn = el.parentElement.querySelector('.btn.primary'), tk = tipKey || (PE_WHY_TIP.has(key) ? key : '');
+  if (btn) peTip(btn, tk);
+  if (PE_WHY_TIP.has(key)) key = '';
+  const w = PE.why || (PE.why = {}), t = key ? tx(key) : '';
   if (t && (!el.textContent || el.textContent === w[sel])) { peSay(sel, t); w[sel] = t; } else if (!t && w[sel] && el.textContent === w[sel]) { peSay(sel, ''); w[sel] = ''; }
 }
 /* each tool's buttons say what they do; they are greyed out when there is nothing to do */
@@ -9042,19 +9056,20 @@ function peActs() {
     const t = peTargets(), cl = PE.cl, none = !t.length, bare = !cl.bg && !cl.sp, same = t.every(id => (d.slots[id].bg || 0) === cl.bg && (d.slots[id].sp || 0) === cl.sp), nothing = !t.some(id => peCleaned(d.slots[id]));
     set('#peCleanGo', none || bare || same); set('#peCleanClear', nothing);
     peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : same ? 'pe.why.cleaned' : '');
-    $('#peCleanClear').title = nothing ? tx('pe.why.revert') : '';          // Revert is greyed for a plain state, not something to fix, so its reason is a tooltip and not a status line
   }
   else if (PE.mode === 'skew') {
-    const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id])), line = $('#peSkewStatus'), why = tx('pe.skew.none');
+    const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id])), line = $('#peSkewStatus');
     set('#peSkewGo', !t.length || tried); set('#peSkewClear', !t.some(tilted));
-    if (!busy) { if (tried && !line.textContent) peSay('#peSkewStatus', why); else if (!tried && line.textContent === why) peSay('#peSkewStatus', ''); }          // a greyed Re-kilter always says why; the line goes when the pages change
+    peWhy('#peSkewStatus', !t.length ? 'pe.why.page' : '', tried ? 'pe.why.level' : '');
+    if (!busy && !tried && line.textContent === tx('pe.skew.none')) peSay('#peSkewStatus', '');          // the result line goes when the pages change
   }
-  else if (PE.mode === 'dim') { const nothing = !d.order.some(id => dimKey(d.slots[id])); set('#peDimClear', nothing); $('#peDimClear').title = nothing ? tx('pe.why.revert') : ''; }
+  else if (PE.mode === 'dim') { const nothing = !d.order.some(id => dimKey(d.slots[id])); set('#peDimClear', nothing); }
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
-  else if (PE.mode === 'resize') set('#peRzGo', !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())));
+  else if (PE.mode === 'resize') { const off = !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())); set('#peRzGo', off); peTip('#peRzGo', off ? 'pe.why.resize' : ''); }
   else if (PE.mode === 'wm') { const on = !!d.wm.on; $('#peWmAdd').hidden = on; $('#peWmRemove').hidden = !on; set('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id))); set('#peWmRemove'); }
-  else if (PE.mode === 'crop') { const ids = peCropIds(), u = new Map(), qs = ids.map(id => peCropBox(id, u)), done = ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = !ids.length, nothing = !ids.some(id => d.slots[id].crop && !d.slots[id].half); set('#peCropAuto', none || done || PE.cropShown); set('#peCropClear', nothing); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', none ? 'pe.why.page' : done ? 'pe.why.cropped' : ''); $('#peCropClear').title = nothing ? tx('pe.why.revert') : ''; }
+  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, nothing = !ids.some(id => d.slots[id].crop && !d.slots[id].half), src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; set('#peCropAuto', none || done || PE.cropShown); set('#peCropClear', nothing); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', hand ? (apply ? '' : src == null ? 'pe.why.draw' : 'pe.why.apply') : none ? 'pe.why.page' : '', done && !none && !(hand && !mm.size) ? 'pe.why.cropped' : ''); }
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
+  document.querySelectorAll('.pe-acts [id^="pe"][id$="Clear"]').forEach(b => peTip(b, b.disabled ? 'pe.why.revert' : ''));          // every tool's greyed Revert says so in a tooltip (a plain state, not something to fix)
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
 function peRailSel(animate) {
@@ -9157,15 +9172,43 @@ function peShared(pad, like) {
 }
 /* the frame a page will get, from what has been read so far (null until its music box is known). `shared` marks a page with no music of its own */
 function peCropBox(id, memo) {
-  const d = PE.d, sl = d.slots[id], pad = +$('#peCropPad').value / 100, hand = peHandMode(), all = $('#peCropSame').checked;
-  if (hand) { const hb = all && !sl.half ? PE.handAll && PE.handAll.get(peShape(sl)) : PE.hand.get(id); if (hb) return { box: hb }; }
+  if (peHandMode()) { const hb = PE.hand.get(id); return hb ? { box: hb } : null; }          // Manual: only the pages you drew on have a frame
+  return peAutoBox(id, memo);
+}
+/* the frame Auto works out for a page */
+function peAutoBox(id, memo) {
+  const d = PE.d, sl = d.slots[id], pad = +$('#peCropPad').value / 100, all = $('#peCropSame').checked;
   const key = peRawKey(sl); if (!PE.raw.has(key)) return null;
   const mine = pePadBox(PE.raw.get(key), pad, sl.half ? sl.crop : [0, 0, 1, 1]);
   if (sl.half || (mine && !all)) return { box: mine };
   const sh = peShape(sl); let u; if (memo && memo.has(sh)) u = memo.get(sh); else { u = peShared(pad, sl); if (memo) memo.set(sh, u); } if (u === undefined) return null;
   return { box: u || mine, shared: !mine && !!u };
 }
-function peHandSet(id, b) { const sl = PE.d.slots[id]; if ($('#peCropSame').checked && !sl.half) (PE.handAll = PE.handAll || new Map()).set(peShape(sl), b); else PE.hand.set(id, b); }
+/* a page whose frame Crop shows: ticked in Auto, any page in Manual */
+const peCropOn = id => !PE.d.slots[id].x && (peHandMode() || !PE.skip.has(id));
+const peHandSet = (id, b) => { PE.handLast = id; PE.hand.set(id, b); };
+/* Manual's frames: the pages you drew on (a page you only opened keeps what it has) */
+function peManualBoxes() {
+  const d = PE.d, m = new Map(); d.order.forEach(id => { if (!d.slots[id].x && PE.hand.has(id)) m.set(id, PE.hand.get(id)); });
+  return m;
+}
+/* Manual keeps its own ticks, starting with none: they only choose where Apply to selected copies a frame. Auto's ticks wait until you come back */
+function peCropTicks() {
+  const want = PE.mode === 'crop' && peHandMode(); if (want === !!PE.manTicks) return;
+  if (want) { PE.autoSkip = PE.skip; PE.skip = PE.manSkip || new Set(PE.d.order); } else { PE.manSkip = PE.skip; PE.skip = PE.autoSkip; }
+  PE.manTicks = want;
+}
+/* the page whose frame Apply to selected copies: the open page, or in the grid the page you drew on last */
+const peSrcBox = id => PE.hand.get(id) || (id === PE.one && !PE.d.slots[id].half && PE.d.slots[id].crop) || null;          // the frame you drew, or the crop the open page already has
+const peApplySrc = () => { const d = PE.d, id = PE.one != null ? PE.one : PE.handLast; return id != null && d.slots[id] && !d.slots[id].x && peSrcBox(id) ? id : null; };
+const peApplyTo = src => PE.d.order.filter(id => id !== src && !PE.d.slots[id].x && !PE.d.slots[id].half && !PE.skip.has(id));
+/* crops that page and the ticked pages with its frame */
+function peCropApply() {
+  const d = PE.d, src = peApplySrc(); if (src == null) return;
+  const b = peSrcBox(src), to = peApplyTo(src); if (!b || !to.length) return;
+  pePush(); [src].concat(to).forEach(id => { d.slots[id].crop = peRound(b); });          // only the crop is set, so Undo reverses it all
+  PE.rustle = true; peRender(true); peSay('#peCropStatus', '');
+}
 /* while Crop is open and the pages are read for their frames, the Crop button says so ("Processing 40%", filling as it goes) and it and the margin slider are greyed in Auto; the Crop button is only ever busy once you press it */
 function peCropReadSay(pc) {
   const show = pc != null && !peHandMode(), was = !!PE.cropShown; PE.cropShown = show; peProg('#peCropAuto', show ? pc : null);
@@ -9192,7 +9235,7 @@ async function peCropRead() {
 function peCropPaintAll() {
   const d = PE.d, u = new Map();
   document.querySelectorAll('#peGrid .page-card').forEach(c => {
-    const id = +c.dataset.id, sl = d.slots[id]; if (!sl) return; const on = !sl.x && !PE.skip.has(id), q = on ? peCropBox(id, u) : null;
+    const id = +c.dataset.id, sl = d.slots[id]; if (!sl) return; const on = peCropOn(id), q = on ? peCropBox(id, u) : null;
     peDrawCard(c, sl, q); c.classList.toggle('shared', !!(q && q.shared));
   });
 }
@@ -9203,14 +9246,19 @@ function peFullThumb(sl) {
   const doc = S.pdf.doc, geo = slotGeo(sl, 'crop');
   PE.full.set(key, peLimit(async () => { if (!PE.d || S.pdf.doc !== doc) throw 0; const a = await peAspectOf({ src: sl.src, rot: 0 }); return renderPdfPage(doc, sl.src, Math.max(20, Math.round(240 * a)), 240, 0, null, geo); }).then(cv => {
     PE.full.set(key, cv); if (PE.full.size > 120) PE.full.delete(PE.full.keys().next().value);
-    const d = PE.d; if (d && PE.mode === 'crop') document.querySelectorAll('#peGrid .page-card').forEach(c => { const s2 = d.slots[+c.dataset.id]; if (s2 && s2.src === sl.src) { const id = +c.dataset.id; peDrawCard(c, s2, !s2.x && !PE.skip.has(id) ? peCropBox(id) : null); } });
+    const d = PE.d; if (d && PE.mode === 'crop') document.querySelectorAll('#peGrid .page-card').forEach(c => { const s2 = d.slots[+c.dataset.id]; if (s2 && s2.src === sl.src) { const id = +c.dataset.id; peDrawCard(c, s2, peCropOn(id) ? peCropBox(id) : null); } });
   }, () => PE.full.delete(key)));
   return null;
 }
 async function peCropGo() {
-  const d = PE.d, ids = peTargets(); if (!ids.length) return;
-  if (peHandMode()) for (const id of ids) { try { await peAspectOf(d.slots[id]); } catch (e) {} }          // the shapes first, so a shared hand-drawn frame is found for every page without reading it
-  const hand = id => { const sl = d.slots[id]; return !!(peHandMode() && (($('#peCropSame').checked && !sl.half ? PE.handAll && PE.handAll.get(peShape(sl)) : PE.hand.get(id)))); }, need = ids.filter(id => !hand(id));          // a hand-drawn frame needs no reading of the page, so Manual never waits for it
+  const d = PE.d;
+  if (peHandMode()) {          // Manual crops the pages you drew on, and the open page, each with its own frame
+    const mm = peManualBoxes(); if (!mm.size) return;
+    pePush(); mm.forEach((b, id) => { PE.hand.set(id, b.slice()); d.slots[id].crop = peRound(b); });
+    PE.rustle = true; peRender(true); peSay('#peCropStatus', ''); return;
+  }
+  const ids = peTargets(); if (!ids.length) return;
+  const need = ids;
   const ok = need.length ? await peEach(need, '#peCropAuto', id => peRawBox(d.slots[id])) : true;
   if (!ok) return;
   const boxes = ids.map(id => [id, (peCropBox(id) || {}).box]).filter(q => q[1]);          // all worked out before any page changes
@@ -9220,16 +9268,21 @@ async function peCropGo() {
 }
 function peCropClear() {
   const d = PE.d, ids = peTargets().filter(id => d.slots[id].crop && !d.slots[id].half); if (!ids.length) return;
-  pePush(); ids.forEach(id => { d.slots[id].crop = null; }); PE.hand.clear(); PE.handAll = null; PE.rustle = true; peRender(true); peSay('#peCropStatus', '');
+  pePush(); ids.forEach(id => { d.slots[id].crop = null; }); PE.hand.clear(); PE.rustle = true; peRender(true); peSay('#peCropStatus', '');
 }
 /* Margin adds room around the music but never past the page edge: when the frame already reaches every edge there is nothing left to add, and the note says so */
 function peCropNote(qs) {
   const sub = $('#peCropSub'), pad = +$('#peCropPad').value, full = !peHandMode() && pad > 0 && qs.length > 0 && qs.every(q => q && q.box && q.box[0] < 0.002 && q.box[1] < 0.002 && q.box[2] > 0.998 && q.box[3] > 0.998);
-  const t = full ? tx('pe.crop.full') : sub.dataset.normal; if (sub.classList.contains('warn') !== full || sub.textContent !== t) { sub.classList.toggle('warn', full); swapText(sub, t, true); }          // the note takes the subtitle's own line, so nothing moves
+  const t = full ? tx('pe.crop.full') : peCropSubText(sub); if (sub.classList.contains('warn') !== full || sub.textContent !== t) { sub.classList.toggle('warn', full); swapText(sub, t, true); }          // the note takes the subtitle's own line, so nothing moves
+}
+/* the subtitle's usual line: Auto's own, or Manual's, and the note that page 1 sets the video's page shape */
+function peCropSubText(sub) {
+  const d = PE.d, first = d.order.find(id => !d.slots[id].x); sub.dataset.auto = sub.dataset.auto || sub.dataset.normal;
+  return (peHandMode() ? tx('pe.crop.manual') : sub.dataset.auto) + (first != null && d.slots[first].crop && !d.size ? ' ' + tx('pe.crop.page1') : '');
 }
 /* called whenever the window is drawn while Crop is open */
 function peCropRefresh() {
-  const hand = peHandMode(); $('#peCropPadF').classList.toggle('dim', hand);
+  const hand = peHandMode(); $('#peCropPadF').classList.toggle('dim', hand); $('#peCropSameF').hidden = hand; $('#peCropApply').hidden = !hand;
   peCropPaintAll(); peCropRead();
 }
 /* ---- one page, large: opened from a page's corner button in Re-kilter and Crop. Crop shows the frame (yours to drag in Manual);
@@ -9245,9 +9298,9 @@ function peOneFrame() {
   if (PE.one == null || PE.mode !== 'crop') { peCropPaint(null); return; }
   const q = peCropBox(PE.one), sl = PE.d.slots[PE.one], id = PE.one, d = PE.d;
   if (peHandMode() && !(PE.asp && PE.asp.has(sl.src))) peAspectOf(sl).then(() => { if (PE.d === d && PE.one === id) peOneFrame(); }, () => {});          // the page's shape is needed to know which shared frame it takes; it is found at once, not with the reading
-  peCropPaint(q && q.box ? q.box : peHandMode() ? (sl.half && sl.crop ? sl.crop : PE_FULL) : null);          // Manual always has a frame to drag, even before the page has been read: it starts from the whole page
+  peCropPaint(q && q.box ? q.box : peHandMode() ? (sl.crop || PE_FULL) : null);          // Manual always has a frame to drag, and never starts from what Auto would find: it starts from the page's own crop, or the whole page, so nothing changes until you move it
 }
-const PE_FULL = [0.03, 0.03, 0.97, 0.97];
+const PE_FULL = [0, 0, 1, 1];
 const peTilted = sl => !!(sl.skew || sl.vskew || sl.warp);
 const peCleaned = sl => !!(sl.bg || sl.sp);
 PE.cl = { bg: 1, sp: 1 };          // what the Clean button will apply: the paper (1 white, 2 the page's own color) and the specks (1 light, 2 strong); 0 leaves it alone
@@ -9438,11 +9491,11 @@ function peCropBind() {
     peHandSet(PE.one, c); peCropPaint(c);
   });
   const end = () => { if (drag) peCropPaintAll(); drag = null; box.classList.remove('dragging'); peActs(); }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
-  document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading && PE.cropOn) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
+  document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; peCropTicks(); if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading && PE.cropOn) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
   $('#peDimClear').addEventListener('click', peDimClear);
   $('#peCropAuto').addEventListener('click', peCropGo); $('#peCropClear').addEventListener('click', peCropClear);
   $('#peCropPad').addEventListener('input', e => { $('#peCropPadVal').textContent = e.target.value + '%'; paintRange(e.target); peCropPaintAll(); peOneFrame(); peActs(); });
-  $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
+  $('#peCropApply').addEventListener('click', peCropApply); $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
   $('#peOneBack').addEventListener('click', peOneClose); $('#peOneCmp').addEventListener('click', () => { PE.orig = !PE.orig; peOneRefresh(); });
   { const wp = $('#peWipe'); let on = false;          // the line between the original and the leveled page
     wp.addEventListener('pointerdown', e => { e.preventDefault(); PE.wipeRun = (PE.wipeRun || 0) + 1; wp.setPointerCapture(e.pointerId); on = true; });
@@ -9568,7 +9621,7 @@ function peDrawCard(card, sl, frame) {
   const x = cv.getContext('2d'), w = cv.width, h = cv.height;
   if (PE.mode === 'crop' && !sl.x && !(sl.crop && !sl.half)) {          // in Crop: an uncropped page shows whole, with the frame it will get and the rest dimmed; a cropped page shows its result
     const t = peFullThumb(sl), id = +card.dataset.id; x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';
-    if (frame === undefined) frame = PE.skip.has(id) ? null : peCropBox(id);
+    if (frame === undefined) frame = peCropOn(id) ? peCropBox(id) : null;
     const k = Math.min(w / (side ? t.height : t.width), h / (side ? t.width : t.height)), tw = t.width * k, th = t.height * k, b = frame && frame.box;
     x.save(); x.translate(w / 2, h / 2); x.rotate(rot * Math.PI / 180); x.drawImage(t, -tw / 2, -th / 2, tw, th);
     if (b) { const fx = -tw / 2 + b[0] * tw, fy = -th / 2 + b[1] * th, fw = (b[2] - b[0]) * tw, fh = (b[3] - b[1]) * th;
@@ -9665,7 +9718,7 @@ function peState() {
     const sl = d.slots[+c.dataset.id]; if (!sl) return; if (!sl.x) pos++;
     const na = tm && (sl.x || (m === 'split' && !!sl.half)), yes = m === 'pages' || !tm ? !sl.x : !na && peTicked(+c.dataset.id);
     if (m === 'pages' || (tm && !na)) { pool++; if (yes) on++; }
-    c.classList.toggle('off', !yes); c.classList.toggle('na', na); c.classList.toggle('hid', !!sl.x); c.classList.toggle('lvl', m === 'dim' ? !!dimKey(sl) : m === 'clean' ? peCleaned(sl) : !!(sl.skew || sl.vskew || sl.warp)); { const lv = c.querySelector('.pe-lvl'); lv.textContent = m === 'crop' ? 'Shared' : m === 'dim' ? 'Dimmed' : m === 'clean' ? 'Cleaned' : 'Leveled'; if (m === 'crop') lv.title = 'No music on this page, so it takes the same frame as the other pages'; else lv.removeAttribute('title'); } c.setAttribute('aria-pressed', String(yes));
+    c.classList.toggle('off', !yes); c.classList.toggle('na', na); c.classList.toggle('cropped', m === 'crop' && !!sl.crop && !sl.half); c.classList.toggle('hid', !!sl.x); c.classList.toggle('lvl', m === 'dim' ? !!dimKey(sl) : m === 'clean' ? peCleaned(sl) : !!(sl.skew || sl.vskew || sl.warp)); { const lv = c.querySelector('.pe-lvl'); lv.textContent = m === 'crop' ? (c.classList.contains('cropped') ? 'Cropped' : 'Shared') : m === 'dim' ? 'Dimmed' : m === 'clean' ? 'Cleaned' : 'Leveled'; if (m === 'crop' && !c.classList.contains('cropped')) lv.title = 'No music on this page, so it takes the same frame as the other pages'; else lv.removeAttribute('title'); } c.setAttribute('aria-pressed', String(yes));
     if (na) c.setAttribute('aria-disabled', 'true'); else c.removeAttribute('aria-disabled');
     const p = c.querySelector('.pe-pos'), nm = c.querySelector('.num'), same = !sl.c && !sl.x && sl.src + 1 === pos, was = PE.posWas.get(+c.dataset.id), np = sl.x ? 0 : pos;
     if (!p._slide && !(roll && was && np !== was.pos)) p.textContent = np || '';          // a number that is about to slide keeps its old digit until its turn
@@ -10575,6 +10628,8 @@ async function checkHevc() {
   if (!ok) { opt.textContent = 'HEVC (not available in this browser)'; if (S.set.codec === 'hevc') { S.set.codec = 'avc'; $('#codec').value = 'avc'; saveSettings(); } }
   dbg('HEVC encoding: ' + (ok ? 'reported as available' : 'not available'));
 }
+/* on localhost the development guard (dev-guard.js) is loaded; the live site never asks for it */
+if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) { const g = document.createElement('script'); g.src = 'dev-guard.js'; document.head.appendChild(g); }
 boot();
 checkHevc();
 </script>

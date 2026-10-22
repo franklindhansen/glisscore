@@ -1,5 +1,5 @@
 // Main view and Audio Editor layout: the full screen button never sits on the preview picture at small window sizes; dragging a page turn while the video plays
-// leaves the playhead and the playback alone (paused, the playhead still goes to the marker); the Audio Editor's controls share two heights (small 28px, medium 34px).
+// leaves the playhead and the playback alone (paused, the playhead still goes to the marker); the Audio Editor's controls share two heights (small 30px, medium 34px).
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/stage-and-controls.js
 const { chromium } = require('playwright-core');
 const FX = process.env.S || 'tests/fixtures';
@@ -41,8 +41,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       out.eqTop = ['#aeEqPreset', '.band-pill', '#aeBandPlace', '#aeAutoBtn', '#aeMatchBtn'].map(ht); out.eqBand = ['#aeBandHear', '#aeBandDyn', '#aeBandType', '#aeBandF'].map(ht);
       aeTool('noise'); await sleep(800); out.noise = ['#aeNrFind', '#aeNrHand', '#aeNrLearn'].map(ht); out.noiseSeg = ht('#aeNrMode');
       aeTool('level'); await sleep(800); out.level = [ht('#aeNormMode'), ht('#aeLoudPreset')]; aeTool('fades'); await sleep(800); out.fades = [ht('#aeFadeSide'), ht('#aeFadeShape')]; return out; });
-    ok('The EQ toolbar and band row controls are all 28px, + and − included', h.eqTop.every(v => v === 28) && h.eqBand.every(v => v === 28), JSON.stringify(h));
-    ok('Noise reduction buttons are 28px and its method choice 34px', h.noise.every(v => v === 28) && h.noiseSeg === 34, JSON.stringify(h));
+    ok('The EQ toolbar and band row controls are all 30px, + and − included', h.eqTop.every(v => v === 30) && h.eqBand.every(v => v === 30), JSON.stringify(h));
+    ok('Noise reduction buttons are 30px and its method choice 34px', h.noise.every(v => v === 30) && h.noiseSeg === 34, JSON.stringify(h));
     ok('Stand-alone segmented controls and menus are 34px', h.level.every(v => v === 34) && h.fades.every(v => v === 34), JSON.stringify(h));
     await p.close(); }
   ok('No script errors', errs.length === 0, errs.join(' | '));

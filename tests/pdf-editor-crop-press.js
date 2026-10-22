@@ -38,9 +38,14 @@ const marks = () => [...document.querySelectorAll('#peGrid .page-card')].map(c =
   await p.evaluate(() => { peUndo(); peTool('crop'); }); await p.waitForTimeout(900); await read();
   await p.evaluate(() => document.querySelector('input[name=peCropMode][value=hand]').click()); await p.waitForTimeout(900);
   await p.evaluate(async () => { document.querySelector('#peOneBack').click(); await sleep(400); });
-  const b3 = await p.evaluate(marks); await press();
+  const g3 = await p.evaluate(() => ({ go: document.querySelector('#peCropAuto').disabled, dims: [...document.querySelectorAll('#peGrid .page-card')].length }));
+  ok('Manual: with nothing drawn and no page open, Crop is greyed out', g3.go, JSON.stringify(g3));
+  await p.evaluate(async () => { peOneOpen(peTargets()[0]); await sleep(900); });
+  const g4 = await p.evaluate(() => ({ off: document.querySelector('#peCropAuto').disabled, box: peBoxNow && peBoxNow.slice() })); ok('Manual: with a page open and nothing drawn, Crop is greyed out and the frame is the whole page', g4.off && g4.box && g4.box.join() === '0,0,1,1', JSON.stringify(g4));
+  await p.evaluate(() => { peHandSet(PE.one, [0.1, 0.1, 0.9, 0.9]); peCropPaint([0.1, 0.1, 0.9, 0.9]); peActs(); });
+  await press();
   const a3 = await p.evaluate(marks), s3 = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').disabled }));
-  ok('Manual: after the press every ticked card is the cropped page, with no dimming and no frame line, and the button is greyed out', b3.every(m => m.dim > 300) && s3.crops.every(Boolean) && a3.every(m => m.dim === 0 && m.blue === 0) && s3.go, JSON.stringify({ b3, a3, s3 }));
+  ok('Manual: after the press the open page is the cropped page, with no dimming and no frame line, no other page is cropped, and the button is greyed out', s3.crops.filter(Boolean).length === 1 && a3[0].dim === 0 && a3[0].blue === 0 && s3.go, JSON.stringify({ a3, s3 }));
 
   ok('no page errors', !errs.length, errs.join(' | '));
   await b.close();

@@ -19,6 +19,7 @@
 /* ==================== 1. THEME & VARIABLES ==================== */
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
+  --h-s:30px; --h-m:34px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
   --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
@@ -936,7 +937,6 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-dyn .eq-cell{gap:2px}
 .eq-dyn .eq-ctl{height:22px}
 .eq-lbl-r{display:inline-flex;align-items:baseline;gap:8px}
-.eq-lbl-r .btn.loading{min-width:84px}
 .eq-lbl-r .btn{padding:0 8px;font-size:11.5px;line-height:18px;height:20px;align-self:center}
 .eq-top .seg.dim{opacity:.45;pointer-events:none}
 .eq-top .seg label{padding:4px 10px;font-size:12.5px}
@@ -1249,11 +1249,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* Noise reduction: the graph spans the whole window; the two cards sit under it */
 .nr-grid>.nr-stage{grid-column:1/-1}
-.nr-learn{flex-wrap:nowrap;min-height:30px}
-.nr-learn .btn,.nr-learn .mt-chip{height:30px;box-sizing:border-box;margin:0}
+.nr-learn{flex-wrap:nowrap;min-height:var(--h-s)}
+.nr-learn .btn,.nr-learn .mt-chip{height:var(--h-s);box-sizing:border-box;margin:0}
 .nr-learn .mt-chip{padding:0 4px 0 12px;white-space:nowrap}
-.mt-pick{min-height:30px}
-#aeMatch .mt-chip{height:30px;box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
+.mt-pick{min-height:var(--h-s)}
+#aeMatch .mt-chip{height:var(--h-s);box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
 .mt-pick span.bad{color:var(--bad)}
 
 /* tool windows slide */
@@ -1823,7 +1823,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* options: one tidy row under the head */
 .pe-opts{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin-top:14px}
-.pe-opts select{width:auto;min-width:150px;height:28px;padding-top:0;padding-bottom:0;border-radius:var(--r-sm);font-size:13px}
+.pe-opts select{width:auto;min-width:150px;height:var(--pe-h);padding-top:0;padding-bottom:0;border-radius:var(--r-sm);font-size:13px}
 .pe-check{gap:12px;font-size:13.5px;cursor:pointer;min-height:28px}
 .pe-check .switch{margin-left:0}
 .pe-end{margin-left:auto}
@@ -1868,7 +1868,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-rz .rz-shapes{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));margin-top:8px}
 .pe-rz .rz-shape b{white-space:nowrap}
 .pe-rz .rz-custom{margin-top:0;gap:6px;align-items:center}
-.pe-rz .rz-custom input{flex:none;width:76px;height:30px}
+.pe-rz .rz-custom input{flex:none;width:76px;height:var(--pe-h)}
 
 /* Watermark: labels beside their controls, two rows */
 .pe-wm-grid{display:grid;grid-template-columns:auto minmax(0,1.2fr) auto minmax(0,1fr);align-items:center;gap:10px 14px;margin-top:14px;transition:opacity .3s var(--ease-ui)}
@@ -2031,7 +2031,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-nav .btn:not(:disabled):hover,.pe-nav .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;box-shadow:none;transform:none}
 .pe-nav .btn:disabled{color:var(--muted);opacity:.55}
 .pe-win:not([data-mode="skew"]):not([data-mode="clean"]) #peOneCmp{visibility:hidden}
-.pe-nav .icon-btn{width:30px;height:30px;border-color:transparent;background:none;color:var(--muted)}
+.pe-nav .icon-btn{width:var(--h-s);height:var(--h-s);border-color:transparent;background:none;color:var(--muted)}
 .pe-nav .icon-btn:not(:disabled):hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:none}
 .pe-nav .icon-btn svg{width:17px;height:17px}
 
@@ -2088,6 +2088,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 .pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
+.pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
 /* Noise reduction: the Processing label sits on the right of the Removal heading and a thin bar runs along the card's bottom edge, so the row takes no room and nothing is cut off */
 #aeNrCtl .nr-prog{position:absolute;inset:0;display:block;height:auto;margin:0;background:none;border-radius:0;overflow:visible;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-ui)}
@@ -2141,7 +2142,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* ---- the Audio Editor's controls bar and its buttons share one recipe (the Undo group is a .btn-group, see the end of this file): a soft glass edge, buttons the same height and corner,
    and a group corner that is the button corner plus the gap around it (7px + 4px = 11px), so the curves nest ---- */
-#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:28px;box-sizing:border-box;background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:var(--h-s);box-sizing:border-box;background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 #audioDlg .ae-bar .btn{border-radius:var(--r-sm)}          /* Wave|Spec keeps the segmented control's own corner */
 #audioDlg .ae-bar .btn.small{padding:0 9px;font-size:13px}
 #audioDlg .ae-bar .ae-view{min-height:28px;font-size:13px}          /* as tall as the buttons beside it */
@@ -2181,7 +2182,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-take{display:flex;flex-wrap:wrap;gap:6px}
 #aeEmChip{width:fit-content}
 @media (min-width:761px){#aePaneEmu:not([hidden]){display:flex;flex-direction:column;height:100%}#aePaneEmu .em-grid{flex:1 1 auto;min-height:0}}
-.em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:30px}
+.em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:var(--h-s)}
 .em-say{min-width:0;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .em-view{display:flex;flex-direction:column;min-width:0}
 .em-view .mt-head{margin-bottom:8px}
@@ -2213,8 +2214,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.em-bar i{transition:none}}
 .em-view .lv-sum b,.em-view .lv-sum small{white-space:normal;overflow:visible;text-overflow:clip}
 
-/* Audio Editor control sizes: two heights only. Small (28px) for buttons, the band pill, and the EQ's toolbar and band row; medium (34px) for segmented controls and menus that stand alone. Controls side by side always match */
-#audioDlg{--h-s:28px;--h-m:34px}
+/* Audio Editor control sizes: two heights only. Small (--h-s, 30px) for buttons, the band pill, and the EQ's toolbar and band row; medium (34px) for segmented controls and menus that stand alone. Controls side by side always match */
 #audioDlg .btn.small{min-height:var(--h-s)}
 #audioDlg .seg{min-height:var(--h-m);box-sizing:border-box}
 #audioDlg .seg label{display:flex;align-items:center;justify-content:center}
@@ -2228,8 +2228,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .seg label{padding-top:0;padding-bottom:0}
 #audioDlg .im-head .seg span{padding:0 10px}
 
-/* PDF Editor controls: one height (30px) for every button, choice and menu in a tool's head, so what sits side by side always matches */
-.pe{--pe-h:30px}
+/* PDF Editor controls: one height (--h-s) for every button, choice and menu in a tool's head, so what sits side by side always matches */
+.pe{--pe-h:var(--h-s)}
 .pe .pe-tv .btn.small{min-height:var(--pe-h)}
 .pe .pe-tv .seg{min-height:var(--pe-h);box-sizing:border-box}
 .pe .pe-tv .seg label{display:flex;align-items:center;justify-content:center;padding-top:0;padding-bottom:0}

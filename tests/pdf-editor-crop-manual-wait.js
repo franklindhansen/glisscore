@@ -1,5 +1,5 @@
 // PDF Editor: Manual in Crop while the pages are still being read. The frame and its handles are there to drag, each page keeps its own frame when you step with the arrows,
-// "Same on all pages" switches between the shared frame and each page's own, and Crop applies the frames at once.
+// Apply to selected copies the open page's frame to the ticked pages, and Crop applies the frames you drew at once, without waiting for the read.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-crop-manual-wait.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -25,8 +25,8 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
   const crops = p => p.evaluate(() => PE.d.order.map(id => PE.d.slots[id].crop && PE.d.slots[id].crop.map(v => +v.toFixed(3))));
   const same = (p, on) => p.evaluate(on => { const s = document.querySelector('#peCropSame'); if (s.checked !== on) s.click(); }, on).then(() => p.waitForTimeout(400));
 
-  // 1. Same on all pages OFF: each page has its own frame, kept when stepping with the button and the arrow keys
-  { const p = await fresh(); await same(p, false); await hand(p);
+  // 1. Each page has its own frame, kept when stepping with the button and the arrow keys
+  { const p = await fresh(); await hand(p);
     const a0 = await frame(p); ok('Own frames: page 1 shows a frame to drag', !!a0 && (await page(p)) === 'Page 1 of 4', JSON.stringify(a0));
     await drag(p, -70, -90); const a1 = await frame(p); ok('Own frames: dragging page 1 changes its frame', a1 && a0 && a1[2] < a0[2] - 0.1, JSON.stringify({ a0, a1 }));
     await p.click('#peCropNext'); await p.waitForTimeout(500); const b0 = await frame(p);
@@ -44,38 +44,21 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
     await p.click('#peCropPrev'); await p.click('#peCropPrev'); await p.click('#peCropPrev'); await p.waitForTimeout(500); const a3 = await frame(p); ok('Own frames: after the read, page 1 still shows its dragged frame', near(a3, a1, 0.02), JSON.stringify({ a3, a1 }));
     await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(1500); const cr2 = await crops(p);
     ok('Own frames: Crop gives page 1 and page 2 their own dragged frames', near(cr2[0], a1, 0.03) && near(cr2[1], b1, 0.03) && !near(cr2[0], cr2[1], 0.03), JSON.stringify({ cr2, a1, b1 }));
-    ok('Own frames: pages not dragged get their own fitted frame', cr2[2] && cr2[3], JSON.stringify(cr2)); await p.close(); }
+    ok('Own frames: pages not drawn on are left alone', cr2[2] === null && cr2[3] === null, JSON.stringify(cr2)); await p.close(); }
 
-  // 2. Same on all pages ON: one frame for every page of the same shape; switching Same off and on again brings each back
-  { const p = await fresh(); await same(p, true); await hand(p);
-    const a0 = await frame(p); await drag(p, -80, -80); const a1 = await frame(p);
-    ok('Shared frame: dragging changes the frame', a0 && a1 && a1[2] < a0[2] - 0.1, JSON.stringify({ a0, a1 }));
-    await p.click('#peCropNext'); await p.waitForTimeout(500); const b0 = await frame(p); ok('Shared frame: page 2 shows the same frame', (await page(p)) === 'Page 2 of 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
-    await same(p, false); const off = await frame(p); ok('Same switched off during the read: page 2 shows a frame of its own, with handles', off && !near(off, a1, 0.05) && (await p.evaluate(() => document.querySelectorAll('#peCropBox [data-h]').length)) >= 8, JSON.stringify({ off, a1 }));
-    await drag(p, 50, 50, 'nw'); const own = await frame(p);
-    await same(p, true); const on = await frame(p); ok('Same switched back on: page 2 shows the shared frame again', near(on, a1, 0.02), JSON.stringify({ on, a1 }));
-    await same(p, false); const own2 = await frame(p); ok('Same off again: page 2 has the frame it was given', near(own2, own, 0.02), JSON.stringify({ own2, own }));
-    await same(p, true);
-    const go = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent })); ok('Shared frame: Crop is free through all of this', !go.off && go.text === 'Crop', JSON.stringify(go));
-    await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr = await crops(p);
-    ok('Shared frame: Crop gives every page the shared frame at once', cr.every(c => near(c, a1, 0.03)), JSON.stringify({ cr, a1 }));
-    await settle(p); const cr2 = await crops(p); ok('Shared frame: it is still the shared frame after the read ends', cr2.every(c => near(c, a1, 0.03)), JSON.stringify(cr2)); await p.close(); }
+  // 2. Apply to selected copies the open page's frame to the ticked pages while the read is still going
+  { const p = await fresh(); await hand(p); await drag(p, -80, -80); const a1 = await frame(p);
+    const off = await p.evaluate(() => $('#peCropApply').disabled); await p.evaluate(() => { PE.skip.delete(PE.d.order[1]); PE.skip.delete(PE.d.order[2]); peState(); peActs(); }); await p.waitForTimeout(300);
+    const on = await p.evaluate(() => $('#peCropApply').disabled); await p.click('#peCropApply'); await p.waitForTimeout(900); const cr = await crops(p);
+    ok('Apply to selected: greyed out until a page is ticked, then crops the open page and the ticked pages with its frame, and no other', off && !on && near(cr[0], a1, 0.03) && near(cr[1], a1, 0.03) && near(cr[2], a1, 0.03) && cr[3] === null, JSON.stringify({ off, on, cr, a1 }));
+    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Apply to selected: page 2 shows the copied frame', (await page(p)) === 'Page 2 of 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
+    await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr2 = await crops(p);
+    ok('Crop in Manual crops the open page too and leaves the rest', near(cr2[1], a1, 0.03) && cr2[3] === null, JSON.stringify({ cr2, a1 })); await p.close(); }
 
-  // 3. The shape of the next page is not known yet when you step to it (a long file: the shapes are found one page at a time)
-  { const p = await fresh(); await same(p, true); await hand(p); await drag(p, -80, -80); const a1 = await frame(p);
-    await p.evaluate(() => { PE.d.order.slice(1).forEach(id => PE.asp.delete(PE.d.slots[id].src)); });
-    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p);
-    ok('Shape not known yet: stepping to page 2 shows the shared frame', (await page(p)) === 'Page 2 of 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
-    await p.evaluate(() => { PE.d.order.slice(2).forEach(id => PE.asp.delete(PE.d.slots[id].src)); document.querySelector('#peCropAuto').click(); }); await p.waitForTimeout(900); const cr = await crops(p);
-    ok('Shape not known yet: Crop still gives every page the shared frame', cr.every(c => near(c, a1, 0.03)), JSON.stringify({ cr, a1 })); await p.close(); }
-
-  // 4. Crop pressed in Manual while the read is still going and only page 1 was given a frame: the button shows the work and the other pages get their fitted frame when it is done
-  { const p = await fresh(); await same(p, false); await hand(p); await drag(p, -70, -90); const a1 = await frame(p);
+  // 3. Crop pressed in Manual while the read is still going and only page 1 was given a frame: it crops that page at once and no other
+  { const p = await fresh(); await hand(p); await drag(p, -70, -90); const a1 = await frame(p);
     await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(700);
-    const w = await p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading'), crops: PE.d.slots.filter(x => x.crop).length }));
-    ok('Crop with unframed pages, read still going: the button shows "Processing" and nothing is cropped yet', /^Processing/.test(w.text) && w.loading && w.crops === 0, JSON.stringify(w));
-    await settle(p); const cr = await crops(p), after = await p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading') }));
-    ok('Crop with unframed pages, read done: page 1 has its dragged frame and the others their fitted frame', near(cr[0], a1, 0.03) && cr.slice(1).every(c => c && !near(c, a1, 0.03)), JSON.stringify({ cr, a1 }));
-    ok('Crop with unframed pages, read done: the button is plain again', !after.loading && after.text === 'Crop', JSON.stringify(after)); await p.close(); }
+    const w = await p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading') })); const cr = await crops(p);
+    ok('Crop with one framed page, read still going: no waiting, and only that page is cropped', !w.loading && w.text === 'Crop' && near(cr[0], a1, 0.03) && cr.slice(1).every(c => c === null), JSON.stringify({ w, cr, a1 })); await p.close(); }
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();
