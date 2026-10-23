@@ -2262,8 +2262,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 
 /* a button's name inside a sentence: the name sits in a small button, spelled as on the button; a switch's name carries a tiny switch */
-.hb{display:inline-flex;align-items:center;gap:5px;padding:0 7px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel);color:var(--ink);font-size:.88em;font-weight:600;line-height:1.35;white-space:nowrap;vertical-align:baseline;box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 6%,transparent)}
+.hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;line-height:1.35;white-space:nowrap;vertical-align:baseline}
+.hb.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
+.hb.sw{padding:0;border-color:transparent;background:none;font-weight:600}
 .pe .page-card.loading .tick{z-index:1}
 .pe .page-card.loading canvas{opacity:0}
 

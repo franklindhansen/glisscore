@@ -583,32 +583,31 @@
       <section><h3>Your files stay with you</h3><p>Your files are read into this tab’s memory. Nothing goes to a server, and closing the tab clears them. The only thing fetched from outside the site is a Google Font, and only when you pick one for the credits.</p></section>
       <section><h3>Your score</h3><p>PDF.js, from Mozilla, draws each page. Your changes are a list of steps on top of the original PDF, which is never touched. Export PDF builds a new file from that list.</p>
         <details class="how-d"><summary>How the PDF Editor works</summary><div class="how-in">
-          <p>Click the file name under the title to open it. Tick the pages you want, then press a tool’s button. Each tool only works on the ticked pages, except Dim.</p>
+          <p>Click the file’s name at the top to open it. Make your changes, then press <span class="hb primary">Done</span> to apply them.</p>
           <h4>Arrange</h4><p>Drag pages to reorder them. Click a page to leave it out.</p>
           <h4>Clean</h4><p>Whitens the paper and removes specks. <span class="hb">Revert</span> puts the pages back.</p>
           <h4>Re-kilter</h4><p>Straightens crooked scans.</p>
           <h4>Crop</h4><p>Finds the music and draws a frame around it. <span class="hb">Auto</span> sets the frames. <span class="hb">Manual</span> lets you drag them yourself.</p>
-          <h4>Dim</h4><p>Visually softens parts of a page to draw less attention. Draw a box over sections to visually soften them, such as the extra music around a repeat on a duplicated page. Drag a box’s edges to adjust it, and press its X to remove it. <span class="hb">Revert</span> removes every box. Dim needs no ticks: draw on any page.</p>
+          <h4>Dim</h4><p>Visually softens parts of a page to draw less attention. Draw a box over sections to visually soften them, such as the extra music around a repeat on a duplicated page. Drag a box’s edges to adjust it, and press its X to remove it. <span class="hb">Revert</span> removes every box.</p>
           <h4>Split spreads</h4><p>Cuts a two-page scan into two pages.</p>
           <h4>Re-size</h4><p>Fits every page to a paper size.</p>
           <h4>Watermark</h4><p>Prints your text across the ticked pages.</p>
         </div></details></section>
       <section><h3>Your audio</h3><p>Your browser reads the audio, and the waveform is measured on your device. What you hear while editing is what you export. Long recordings are kept in your browser’s private file storage, so they don’t have to fit in memory.</p>
         <details class="how-d"><summary>How the Audio Editor works</summary><div class="how-in">
-          <p>Click the audio file’s name under the title to open it. Its tools are listed on the left.</p>
-          <h4>Pipeline</h4><p>Sound runs through the modules from top to bottom. A lit module is active. <span class="hb sw">Bypass</span> takes out only the open module.</p>
-          <h4>Noise reduction</h4><p><span class="hb">Learn noise</span> from a stretch with only hiss in it. <span class="hb">Auto</span> finds that stretch for you. <span class="hb">Manual</span> lets you pick it.</p>
-          <h4>Spectra</h4><p>Press <span class="hb">Draw</span>, then mark a <span class="hb">Box</span>, a <span class="hb">Band</span> or a <span class="hb">Moment</span> on the spectrogram. <span class="hb">Heal</span> fills it in from the sound around it. <span class="hb">Reduce</span> turns it down.</p>
+          <p>Click the file’s name at the top to open it. Make your changes, then press <span class="hb primary">Done</span> to apply them. Sound runs through the modules from top to bottom. A lit module is active. <span class="hb sw">Bypass</span> takes out only the open module.</p>
+          <h4>Noise reduction</h4><p><span class="hb primary">Learn noise</span> from a stretch with only hiss in it. <span class="hb">Auto</span> finds that stretch for you. <span class="hb">Manual</span> lets you pick it.</p>
+          <h4>Spectra</h4><p>Press <span class="hb">Draw</span>, then mark a <span class="hb">Box</span>, <span class="hb">Band</span>, or <span class="hb">Moment</span> on the spectrogram. <span class="hb">Heal</span> fills it in from the sound around it. <span class="hb">Reduce</span> turns it down.</p>
           <h4>EQ</h4><p>Bands can be Bell, Low shelf, High shelf, High-pass, Low-pass, or Notch. <span class="hb">EQ Match</span> fits bands to the difference between your recording and a reference.</p>
           <h4>Imager</h4><p>Width makes the stereo image wider or narrower.</p>
-          <h4>Level</h4><p>Gain changes the volume. <span class="hb">Normalize</span> sets a target loudness. The <span class="hb sw">Limiter</span> keeps peaks under the ceiling, so nothing clips.</p>
-          <h4>Fades</h4><p>Fade the start in and the end out.</p>
-          <h4>Emulator (beta)</h4><p><span class="hb">Emulate</span> measures another recording’s tone and loudness, then moves your EQ, width, and level toward it.</p>
+          <h4>Level</h4><p>Gain changes the volume. Normalize sets a target loudness. The <span class="hb sw">Limiter</span> keeps peaks under the ceiling, so nothing clips.</p>
+          <h4>Fades</h4><p>Eases the sound in at the start and out at the end.</p>
+          <h4>Emulator (beta)</h4><p>Measures another recording’s tone and loudness, then moves your EQ, width, and level toward it.</p>
           <h4>History</h4><p>Each editor keeps its own undo steps, and you can go back to any one.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold Shift and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. <span class="hb">Style</span> chooses between Turn, Slide, and Cut.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold Shift and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. Style chooses between <span class="hb">Turn</span>, <span class="hb">Slide</span>, and <span class="hb">Cut</span>.</p></section>
       <section><h3>Your video</h3><p>Your browser renders and encodes every frame. Unless you pick Real-time recording, the sound is stored losslessly (24-bit) and the video goes into a MOV file. Real-time recording compresses the sound and saves an MP4 or WebM file. On Automatic, if fast export isn’t available, the video is recorded in real time instead.</p></section>
-      <section><h3>Saved settings</h3><p>Settings stay in this browser. <span class="hb">Import / Export</span> saves them to a small text file you keep.</p></section>
+      <section><h3>Saved settings</h3><p>Settings stay in this browser. Import / Export saves them to a small text file you keep.</p></section>
     </div>
     <div class="row"><button class="btn primary" id="howClose" type="button">Close</button></div>
   </div>
