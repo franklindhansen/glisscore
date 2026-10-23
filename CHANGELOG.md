@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.5
+
+The How it works text is shorter and clearer, and the button names in it now look like the real buttons.
+
 ## 1.1.4
 
 Leaving full screen is smoother in the Audio Editor and the video editor.
