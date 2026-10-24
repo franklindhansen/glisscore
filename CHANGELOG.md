@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6
+
+Warning and reason text is easier to read. The title box now fits its text instead of jumping wider when you click it, and the (i) buttons are easier to hit.
+
 ## 1.1.5
 
 The How it works text is shorter and clearer, and the button names in it now look like the real buttons.
