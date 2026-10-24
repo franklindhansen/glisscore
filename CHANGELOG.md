@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.7
+
+The app has a new font, Hanken Grotesk. The Credits panel is easier to use, with an Aa button on each line for its own font, bold, and italic, and the glisscore wordmark now asks before it clears your work.
+
 ## 1.1.6
 
 Warning and reason text is easier to read. The title box now fits its text instead of jumping wider when you click it, and the (i) buttons are easier to hit.
