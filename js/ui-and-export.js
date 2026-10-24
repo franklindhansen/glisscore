@@ -642,7 +642,7 @@ function bindSettings() {
     updateLineStyles(); syncCredits(); stageDirty = true;
   });
   $('#pieceTitle').addEventListener('input', e => { S.credits.title = e.target.value; $('#credTitle').value = e.target.value; titleFit(); updateLineStyles(); syncCredits(); stageDirty = true; });
-  $('.brand .home').addEventListener('click', e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); if (reducedMotion()) { location.reload(); return; } document.documentElement.classList.add('leaving'); setTimeout(() => location.reload(), 190); });      // the page fades out first, so the reload is one smooth fade out and in      // a fresh start; also works when the page is opened as a file
+  $('.brand .home').addEventListener('click', async e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); if (S.pdf || S.audio) { const go = await askWarn('Start over?', 'Your page turns and edits will be lost.', 'Start over', 'Cancel'); if (!go) return; } if (reducedMotion()) { location.reload(); return; } document.documentElement.classList.add('leaving'); setTimeout(() => location.reload(), 190); });      // the page fades out first, so the reload is one smooth fade out and in      // a fresh start; also works when the page is opened as a file
   $('#pieceTitle').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
   titleFit(); window.addEventListener('resize', titleFit); if (document.fonts && document.fonts.ready) document.fonts.ready.then(titleFit);
   onLine('title', 'credTitle'); onLine('l2', 'credL2'); onLine('l3', 'credL3');
