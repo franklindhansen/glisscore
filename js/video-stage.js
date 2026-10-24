@@ -148,14 +148,17 @@ function makeProgram(gl, vs, fs, attrs) {
 /* Lays out the closing credits on one page-sized area, centered as one block: the title largest (it may wrap), then line 2
    (one or two lines), then line 3 a little smaller. Lines 2 and 3 never wrap; they scale down to fit. Each line has its
    own bold / italic, and optionally its own font. */
-const CREDITS_FONT_FALLBACK = "'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
+/* the font the credits use when none is chosen: Hanken Grotesk, or Instrument Sans for work saved with credits before the font changed (S.set.creditsBase), so a video made again looks as it did */
+const creditsBase = () => S.set.creditsBase === 'Instrument Sans' ? 'Instrument Sans' : 'Hanken Grotesk';
+const creditsFallback = () => "'" + creditsBase() + "',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
+const creditsBaseLoad = () => Promise.all([400, 500, 600, 700].map(w => document.fonts.load(w + ' 16px "' + creditsBase() + '"')));
 const lineStyle = key => { const s = S.set; return { b: !!s['cred' + key + 'B'], i: !!s['cred' + key + 'I'], font: s.creditsFontEach ? (s['cred' + key + 'Font'] || '') : (s.creditsFont || '') }; };
 /* the weight each line is drawn in: Bold is 700, otherwise a little lighter for the lower lines */
 const lineWeight = (key, st) => st.b ? 700 : key === 'L3' ? 400 : 500;
 function drawCreditsCard(cv, o) {
   const w = cv.width, h = cv.height, c = cv.getContext('2d'); c.clearRect(0, 0, w, h);
   const maxW = w * 0.88, s0 = w * 0.095, s1 = w * 0.062;
-  const setFont = (size, weight, st) => { c.font = (st.i ? 'italic ' : '') + weight + ' ' + size + 'px ' + (st.font ? '"' + st.font + '",' : '') + CREDITS_FONT_FALLBACK; };
+  const setFont = (size, weight, st) => { c.font = (st.i ? 'italic ' : '') + weight + ' ' + size + 'px ' + (st.font ? '"' + st.font + '",' : '') + creditsFallback(); };
   const wrapAt = (words, width) => { const lines = []; let cur = ''; words.forEach(wd => { const t = cur ? cur + ' ' + wd : wd; if (cur && c.measureText(t).width > width) { lines.push(cur); cur = wd; } else cur = t; }); if (cur) lines.push(cur); return lines; };
   /* the title: one line if it fits (shrinking a little), otherwise evenly filled lines */
   const fitWrap = (txt, size, weight, st) => {
@@ -328,7 +331,7 @@ class Renderer {
     /* the exact font faces this card needs (e.g. Playfair Display bold italic) must be loaded before it is drawn, or a
        fallback font gets drawn instead; if one is still loading, the card is redrawn as soon as it arrives */
     const ready = ['Title', 'L2', 'L3'].map(k => {
-      const st = lineStyle(k), spec = (st.i ? 'italic ' : '') + lineWeight(k, st) + ' 20px "' + (st.font || 'Instrument Sans') + '"';
+      const st = lineStyle(k), spec = (st.i ? 'italic ' : '') + lineWeight(k, st) + ' 20px "' + (st.font || creditsBase()) + '"';
       const ok = !!(document.fonts && document.fonts.check && document.fonts.check(spec));
       if (!ok && document.fonts && document.fonts.load) document.fonts.load(spec).then(() => { stageDirty = true; }, () => {});
       return ok ? 1 : 0;
@@ -724,7 +727,7 @@ function drawRuler(c) {
   const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1200];
   let step = steps.find(s => s * S.pxPerSec >= 80) || 1200;
   const base = S.vStart, t0 = Math.max(0, x2t(0) - base), t1 = Math.min(duration(), x2t(vw) - base);   // the ruler counts video time
-  c.font = '11px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.strokeStyle = C.muted;
+  c.font = '11px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.strokeStyle = C.muted;
   const minor = step / 5;
   c.globalAlpha = .45; c.beginPath();
   for (let t = Math.floor(t0 / minor) * minor; t <= t1 + 1e-6; t += minor) { if (t < 0) continue; const x = Math.round(t2x(base + t)) + .5; c.moveTo(x, rulerH - 5); c.lineTo(x, rulerH); }
@@ -799,10 +802,10 @@ function drawBlocks(c) {
       c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(x + .5, y + .5, tw - 1, th - 1);
     });
     let lbl = sp.credits ? 'Credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
-    c.fillStyle = C.ink; c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'top';
+    c.fillStyle = C.ink; c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top';
     if (c.measureText(lbl).width > x1 - labelX - 8) lbl = lbl.replace('Pages ', 'pp. ').replace('Page ', 'p. ');       // a narrow block gets the short form
     c.fillText(lbl, labelX, trackY + 5 + th + 6);
-    c.fillStyle = C.muted; c.font = '11px "Instrument Sans",system-ui,sans-serif';
+    c.fillStyle = C.muted; c.font = '11px "Hanken Grotesk",system-ui,sans-serif';
     c.fillText(fmt(a - S.vStart) + ' – ' + fmt(b - S.vStart), labelX, trackY + 5 + th + 21);
     c.restore();
   }
@@ -819,7 +822,7 @@ function drawWave(c) {
   const { C, vw, waveY, waveH } = TL;
   drawLane(c, waveY, waveH);
   if (!S.audio) {
-    c.fillStyle = C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'center';
+    c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'center';
     c.fillText('Add your audio to see its waveform here', vw / 2, waveY + waveH / 2); c.textAlign = 'left'; return;
   }
   const d = aeFromApp(), pk = aeShownPeaks(d), G = audioGain(), cap = limOn(d) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, cy = waveY + waveH / 2, half = waveH / 2 - 3;          // the sound that comes out, at its real level against full scale (as the Audio Editor draws it)
@@ -901,7 +904,7 @@ function drawTimelineStatic() {
   if (S.spreads.length) { drawBlocks(c); drawCredits(c); }
   else {
     drawLane(c, TL.trackY, TL.trackH);
-    c.fillStyle = TL.C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle';
+    c.fillStyle = TL.C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle';
     c.textAlign = 'center'; c.fillText('Add your PDF to see its layout here.', TL.vw / 2, TL.trackY + TL.trackH / 2); c.textAlign = 'left';
   }
   drawTrim(c);
@@ -1014,7 +1017,7 @@ function drawTrimHandles(c) {
     c.save(); c.fillStyle = C.accent; if (hot) { c.shadowColor = 'rgba(63,85,230,.45)'; c.shadowBlur = 8 * sc; }
     c.fillRect(px - 1, 0, 2, bottom);          // the line runs from the ruler to the bottom of the track
     roundRect(c, dir > 0 ? px + 2 : px - 2 - tw, (rulerH - th) / 2, tw, th, 3 * sc); c.fill();          // the grip tab sits in the ruler
-    if (dir > 0) { c.font = '11px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.fillText('0:00', px + tw + 6, 11); }          // the 0:00 sits just after the grip tab, so the tab never covers it; it slides with the tab
+    if (dir > 0) { c.font = '11px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.fillText('0:00', px + tw + 6, 11); }          // the 0:00 sits just after the grip tab, so the tab never covers it; it slides with the tab
     c.restore();
   });
 }
@@ -1042,14 +1045,14 @@ function drawTimeline() {
   let tipI = TL.drag && TL.drag.kind === 'turn' ? TL.drag.i : TL.hover;
   if (tipI >= 0 && S.turns[tipI] != null) {
     const x = t2x(shownTurn(tipI)), txt = (hasCreditsSpread() && tipI === S.turns.length - 1 ? 'Credits' : turnNoun() + ' ' + (tipI + 1)) + ' · ' + fmt(shownTurn(tipI) - S.vStart);
-    c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
+    c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
     const bx = clamp(x - w / 2, 4, TL.vw - w - 4), by = TL.trackY - 26 < TL.rulerH ? TL.trackY + TL.trackH + 2 : TL.trackY - 26;
     c.fillStyle = C.ink; roundRect(c, bx, by, w, 20, 6); c.fill();
     c.fillStyle = C.bg; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5);
   }
   if (TL.hoverCr || (TL.drag && TL.drag.kind === 'credEnd')) {
     const x = t2x(S.creditsEnd), txt = 'Credits end · ' + fmt(S.creditsEnd - S.vStart);
-    c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
+    c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
     const bx = clamp(x - w / 2, 4, TL.vw - w - 4), by = TL.trackY - 26 < TL.rulerH ? TL.trackY + TL.trackH + 2 : TL.trackY - 26;
     c.fillStyle = C.ink; roundRect(c, bx, by, w, 20, 6); c.fill();
     c.fillStyle = C.bg; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5);
@@ -1057,7 +1060,7 @@ function drawTimeline() {
   const tw = TL.drag && TL.drag.kind === 'trim' ? TL.drag.which : TL.hoverTrim;
   if (tw) {
     const atHome = tw === 'start' ? S.vStart === 0 : S.vEndSet == null, x = t2x(tw === 'start' ? S.vStart : vEnd()), txt = trimText(tw) + (atHome ? '' : ' · Double-click to reset');
-    c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
+    c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 16;
     const bx = clamp(x - w / 2, 4, TL.vw - w - 4), by = TL.rulerH + 4;
     c.fillStyle = C.ink; roundRect(c, bx, by, w, 20, 6); c.fill();
     c.fillStyle = C.bg; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5);

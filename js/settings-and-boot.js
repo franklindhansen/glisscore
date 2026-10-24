@@ -4,7 +4,7 @@
    ==================================================================== */
 /* The file is plain text (compact JSON) holding only what is needed to read it back. */
 const IO_RANGES = { normLufs: [-36, -6], normPeakDb: [-12, 0], audioFadeLen: [0.1, 3], audioFadeOutLen: [0, 3], flipDur: [0.3, 3], slideDur: [0.1, 3], bend: [0, 100], margin: [0, 10], gutter: [0, 100], divider: [0, 100], turnShadow: [0, 150], turnSoft: [0, 100], scoreAmt: [0, 100], scoreSoft: [0, 100], fadeLen: [0.2, 3], fadeOutLen: [0.2, 3], gainDb: [-12, 12] };
-const IO_CHOICES = { pageLayout: ['spread', 'single'], creditsAt: ['start', 'end'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
+const IO_CHOICES = { creditsBase: ['Hanken Grotesk', 'Instrument Sans'], pageLayout: ['spread', 'single'], creditsAt: ['start', 'end'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
 const IO_HINTS = {
   all: 'Your settings, the work title, your credits text, and your page markings: page turns, where the video starts and ends, and any pages you left out.',
   settings: 'Only the settings in the side panel. Page markings are not included.',
@@ -68,6 +68,7 @@ async function importSettings(file) {
   const bad = 'That file could not be read. Choose a file that was exported from here.';
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
   const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(data.settings) : null;
+  if (clean && !('creditsBase' in clean) && clean.creditsOn) clean.creditsBase = 'Instrument Sans';          // a file made before the font changed, with credits on
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }
   Transport.pause();
@@ -77,7 +78,7 @@ async function importSettings(file) {
   const oldRef = S.set.ref;
   if (clean) { Object.assign(S.set, clean); S.set.audioKey = ''; }          // settings brought in from a file apply to whichever recording is loaded next
   if (marks && typeof data.firstAlone === 'boolean') S.set.firstAlone = data.firstAlone;
-  saveSettings(); if (S.audio) fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {});
+  saveSettings(); creditsBaseLoad().then(() => { stageDirty = true; }); if (S.audio) fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {});
   if (!marks && S.turns.length && S.set.ref !== oldRef) { const d = refOffset() - refOffset(oldRef); S.turns = S.turns.map(t => t + d); }   // same as changing the handle reference by hand
   syncControls(); layoutStage();
   let adopted = null;
@@ -332,6 +333,7 @@ function initUiExtras() {
 }
 
 function boot() {
+  creditsBaseLoad().then(() => { stageDirty = true; });          // the credits' own font, drawn on the stage, has to be there before the first frame
   syncControls(); bindSettings(); readColors();
   try { previewR = new Renderer(stageCanvas, PageSource, { cap: 14 }); }
   catch (e) { toast(e.message, 8000); console.error(e); return; }

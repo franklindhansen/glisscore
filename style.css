@@ -10,7 +10,7 @@
            USE OR PERFORMANCE OF THIS SOFTWARE.
            Feather: MIT License, Copyright (c) 2013-present Cole Bemis (https://github.com/feathericons/feather).
            Full texts: https://github.com/lucide-icons/lucide/blob/main/LICENSE
-   Fonts:  Newsreader and Instrument Sans, bundled in vendor/ (the optional custom Credits fonts load from Google Fonts),
+   Fonts:  Newsreader and Hanken Grotesk, bundled in vendor/ (Instrument Sans stays only for the credits of work saved before the change; the optional custom Credits fonts load from Google Fonts),
            SIL Open Font License 1.1 (https://openfontlicense.org).
    PDF engine: PDF.js (Mozilla and contributors), Apache License 2.0, bundled in vendor/.
    PDF export: pdf-lib (Copyright (c) 2019 Andrew Dillon), MIT License (https://github.com/Hopding/pdf-lib), bundled in vendor/.
@@ -66,7 +66,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 input[type=range]{touch-action:pan-y}
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);
-  font:14px/1.45 'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  font:14px/1.45 'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
 
 /* ----- App grid: header / work area / timeline ----- */
@@ -882,7 +882,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .sc-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--r-lg);background:var(--accent-soft);color:var(--accent);margin-bottom:4px;transition:transform .5s var(--spring-hover)}
 .sc-ic svg{width:25px;height:25px}
 @media (hover:hover) and (pointer:fine){.start-card:hover .sc-ic{transform:scale(1.1) rotate(-4deg)}}
-.start-card h3{margin:0;max-width:100%;font:600 16px/1.2 'Instrument Sans',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.start-card h3{margin:0;max-width:100%;font:600 16px/1.2 'Hanken Grotesk',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .start-card p{margin:0 0 8px;font-size:13px;line-height:1.45;color:var(--muted);text-wrap:balance}
 .start-card .row{margin-top:auto}
 .empty .empty-intro{font-size:13px;margin-bottom:0}
@@ -2202,7 +2202,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
 .ae-ptl{display:flex;align-items:center;gap:10px;min-width:0}
-.ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Instrument Sans',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
+.ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
 #audioDlg[data-by="1"][data-tool="level"] .ae-bypill,#audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
 

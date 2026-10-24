@@ -6,6 +6,7 @@ This app includes the following open-source components. Each is used under its o
 | --- | --- | --- | --- |
 | PDF.js 3.11.174 (Mozilla) | `vendor/pdf.min.js`, `vendor/pdf.worker.min.js`, `vendor/pdf.worker.src.js` | Apache License 2.0 | `vendor/LICENSE-pdfjs.txt` |
 | pdf-lib 1.17.1 (Andrew Dillon) | `vendor/pdf-lib.min.js` | MIT. The bundle also contains tslib helpers (Microsoft, Apache License 2.0; the notice is at the top of the file) and the pako compression library (MIT and zlib) | `vendor/LICENSE-pdflib.txt` |
+| Hanken Grotesk (The Hanken Grotesk Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-hanken-grotesk.txt` |
 | Instrument Sans (The Instrument Sans Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-instrument-sans.txt` |
 | Newsreader (The Newsreader Project Authors) | `vendor/fonts/` | SIL Open Font License 1.1 | `vendor/OFL-newsreader.txt` |
 | Lucide icons (some icons are drawn inline) | `index.html`, `js/ui-and-export.js` | ISC (some parts MIT) | `vendor/LICENSE-lucide.txt` |

@@ -466,7 +466,7 @@ function specDraw(c, top, bot) {
 const specY = (f, top, bot) => bot - specFrac(f, AE.spec ? AE.spec.fmax : 20000) * (bot - top);
 function specAxis(c, top, bot) {
   const S0 = AE.spec; if (!S0) return;
-  c.save(); c.font = '10px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left';
+  c.save(); c.font = '10px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left';
   [[100, '100'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { if (f > S0.fmax) return; const y = Math.round(specY(f, top, bot)) + 0.5; c.globalAlpha = 0.16; c.fillStyle = '#fff'; c.fillRect(AE_PAD, y, aeW() - 2 * AE_PAD, 1); c.globalAlpha = 0.78; c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 3; c.fillText(t, AE_PAD + 14, y - 0.5); });
   c.restore();
 }
@@ -475,7 +475,7 @@ function specHover(c, top, bot) {
   const ra = specRaw(SPEC_FMIN), rb = specRaw(S0.fmax), f = specRawInv(ra + (bot - m.y) / (bot - top) * (rb - ra)), col = clamp(Math.floor((t - S0.t0) / S0.cs), 0, S0.cols - 1), inside = t >= S0.t0 && t <= S0.t0 + S0.cols * S0.cs, band = clamp(Math.round(Math.log(f / SPEC_FMIN) / Math.log(S0.fmax / SPEC_FMIN) * SPEC_B - 0.5), 0, SPEC_B - 1);
   const db = inside && col < S0.done ? S0.db[col * SPEC_B + band] : null, txt = fmt(t, 1) + '   ' + (f >= 1000 ? (f / 1000).toFixed(2) + 'kHz' : Math.round(f) + 'Hz') + (db != null ? '   ' + Math.round(db) + 'dB' : '');
   c.save(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(m.x + 0.5, top); c.lineTo(m.x + 0.5, bot); c.moveTo(AE_PAD, m.y + 0.5); c.lineTo(aeW() - AE_PAD, m.y + 0.5); c.stroke(); c.setLineDash([]);
-  c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 16, bx = clamp(m.x + 12, 4, aeW() - w - 4), by = clamp(m.y - 30, top + 4, bot - 24); roundRect(c, bx, by, w, 20, 8); c.fillStyle = 'rgba(14,17,40,.88)'; c.fill(); c.fillStyle = '#fff'; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5); c.restore();
+  c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 16, bx = clamp(m.x + 12, 4, aeW() - w - 4), by = clamp(m.y - 30, top + 4, bot - 24); roundRect(c, bx, by, w, 20, 8); c.fillStyle = 'rgba(14,17,40,.88)'; c.fill(); c.fillStyle = '#fff'; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5); c.restore();
 }
 /* ---------------- Spectra: rectangles on the picture ----------------
    Drag over a blip, a hum, or a squeak. Each rectangle is healed (bridged from the sound around it) or turned down. They are listed beside the picture, and each can be picked, changed or removed. */
@@ -543,7 +543,7 @@ function spOverlay(c, W, H) {
     box({ x0, x1, y0, y1 }, SP.mode, 1);
   }
   c.restore();
-  if (tool && SP.arm && !ed.length && !dr) { const txt = 'Drag over a sound to fix'; c.save(); c.font = '600 12px "Instrument Sans",system-ui,sans-serif'; const w = c.measureText(txt).width + 26; roundRect(c, W / 2 - w / 2, 14, w, 24, 12); c.fillStyle = 'rgba(14,17,40,.78)'; c.fill(); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 26.5); c.restore(); }
+  if (tool && SP.arm && !ed.length && !dr) { const txt = 'Drag over a sound to fix'; c.save(); c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 26; roundRect(c, W / 2 - w / 2, 14, w, 24, 12); c.fillStyle = 'rgba(14,17,40,.78)'; c.fill(); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 26.5); c.restore(); }
 }
 /* the waveform's frame: a pane of frosted glass. A light from above, a soft shade at the bottom, a bright hairline just inside the top edge */
 const AE_RULER = 24;          // the ruler: the time labels and the tabs of the start and end sit in this band across the top
@@ -553,7 +553,7 @@ function aeTicks(lo, hi, px) { const span = hi - lo, want = span / Math.max(1, p
 /* the ruler across the top of the picture, the same in the wave and the spectrogram: its floor, a tall tick and a time at every step, and small ticks between (as in the video timeline) */
 function aeRuler(c, W, C, lo, hi, grid, Hc) {
   const x0 = AE_PAD, x1 = W - AE_PAD, st = aeTicks(lo, hi, x1 - x0), k = (x1 - x0) / (hi - lo), first = Math.ceil(lo / st) * st, minor = st / 5;
-  c.save(); c.font = '10px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.save(); c.font = '10px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
   c.globalAlpha = 0.5; c.fillStyle = C.line; c.fillRect(0, AE_RULER - 1, W, 1);          // the ruler's floor
   c.globalAlpha = 0.55; c.fillStyle = C.muted; for (let t = Math.ceil(lo / minor) * minor, n = 0; t <= hi && n < 400; t += minor, n++) { const x = Math.round(x0 + (t - lo) * k) + 0.5; if (x < x0 - 1 || x > x1 + 1) continue; c.fillRect(x - 0.5, AE_RULER - 5, 1, 4); }          // the small ticks
   for (let t = first, n = 0; t <= hi && n < 80; t += st, n++) {
@@ -638,7 +638,7 @@ function specVeil(c, W, Hc, hadPicture) {
   const top = AE_RULER, L = AE.specLoad, R = AE.specRev, C = TL.C, now = performance.now();
   if (L) {
     if (hadPicture) { c.fillStyle = C.panel2; c.globalAlpha = 0.6; c.fillRect(0, top, W, Hc - top); c.globalAlpha = 1; }
-    c.font = '600 12.5px "Instrument Sans",system-ui,sans-serif'; const txt = (hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + (L.f > 0.02 ? ' ' + Math.round(L.f * 100) + '%' : ''), tw = Math.ceil(c.measureText((hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + ' 100%').width), w = tw + 46, h = 34, x = W / 2 - w / 2, y = top + (Hc - top) / 2 - h / 2;
+    c.font = '600 12.5px "Hanken Grotesk",system-ui,sans-serif'; const txt = (hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + (L.f > 0.02 ? ' ' + Math.round(L.f * 100) + '%' : ''), tw = Math.ceil(c.measureText((hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + ' 100%').width), w = tw + 46, h = 34, x = W / 2 - w / 2, y = top + (Hc - top) / 2 - h / 2;
     c.save(); c.shadowColor = 'rgba(20,24,60,.16)'; c.shadowBlur = 14; c.shadowOffsetY = 3; roundRect(c, x, y, w, h, 17); c.fillStyle = C.bg; c.fill(); c.restore();
     roundRect(c, x, y, w, h, 17); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
     const a0 = reducedMotion() ? 0 : now / 260, cx = x + 20, cy = y + h / 2;
@@ -699,7 +699,7 @@ function aeDraw() {
     if (showWave) pass(true, 1 - e); if (showSpec) pass(false, e); } }
   { const nsA = hsGet('ae-ns', AE.nsel && AE.tool === 'noise' ? 1 : 0); if (AE.nsel) AE.nsShow = AE.nsel; if (nsA > 0.01 && AE.nsShow) { const x1 = aeX(AE.nsShow.a), x2 = aeX(AE.nsShow.b); c.save(); c.globalAlpha = nsA; c.fillStyle = 'rgba(217,119,6,.2)'; c.fillRect(x1, 0, Math.max(1, x2 - x1), H); c.fillStyle = C.turn; c.fillRect(x1, 0, 2, H); c.fillRect(x2 - 2, 0, 2, H); c.restore(); } }
   c.restore();
-  if (AE.nsArm) { const txt = 'Drag over isolated noise', w = c.measureText ? (c.font = '600 12px "Instrument Sans",system-ui,sans-serif', c.measureText(txt).width + 26) : 190; c.save(); roundRect(c, W / 2 - w / 2, 12, w, 24, 12); c.fillStyle = 'rgba(217,119,6,.92)'; c.shadowColor = 'rgba(217,119,6,.45)'; c.shadowBlur = 10; c.fill(); c.shadowBlur = 0; c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 24.5); c.restore(); }
+  if (AE.nsArm) { const txt = 'Drag over isolated noise', w = c.measureText ? (c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif', c.measureText(txt).width + 26) : 190; c.save(); roundRect(c, W / 2 - w / 2, 12, w, 24, 12); c.fillStyle = 'rgba(217,119,6,.92)'; c.shadowColor = 'rgba(217,119,6,.45)'; c.shadowBlur = 10; c.fill(); c.shadowBlur = 0; c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 24.5); c.restore(); }
   { const za = hsGet('ae-zb', AE.zoom ? 1 : 0); if (za > 0.01) { const [flo, fhi] = aeFull(), fx = t => x0 + (t - flo) / (fhi - flo) * (x1 - x0), tx0 = fx(AE.rlo), tx1 = fx(AE.rhi); c.save(); c.globalAlpha = za; roundRect(c, x0, Hc - 6, x1 - x0, 3, 1.5); c.fillStyle = C.line; c.fill(); roundRect(c, tx0, Hc - 6, Math.max(8, tx1 - tx0), 3, 1.5); c.fillStyle = C.accent; c.globalAlpha = 0.55 * za; c.fill(); c.restore(); } }
   if (AE.stopMark) { const px = Math.round(aeX(AE.stopMark.t)); c.save(); c.strokeStyle = C.accent; c.globalAlpha = 0.7; c.lineWidth = 1.5; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(px, AE_RULER); c.lineTo(px, Hc - 1); c.stroke(); c.restore(); }          // where the page turn holds the handle
   // the start and end: a thin line down the picture, with a grip tab in the ruler (the same design as the video timeline)
@@ -1575,7 +1575,7 @@ function aeEqDraw() {
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, real = AE.d.fx.eq.bands, bands = eqDisp(real), on = AE.d.fx.eq.on;
   c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
-  c.font = '10.5px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted;
+  c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted;
   [-9, -6, -3, 3, 6, 9].forEach(g => { c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(EQ_PAD, Math.round(eqY(g, H)), W - 2 * EQ_PAD, 1); });
   c.globalAlpha = 1; c.fillStyle = C.line; c.fillRect(EQ_PAD, Math.round(eqY(0, H)), W - 2 * EQ_PAD, 1.5);
   [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
@@ -1608,7 +1608,7 @@ function aeEqDraw() {
   bands.forEach((b, i) => {
     if (b.a < 0.02) return; const x = eqFx(b.f, W), y = eqY(eqNoGain(b.type) ? 0 : b.g, H), sel = i === AE.band, hot = AE.eqHover === i || (AE.eqDrag && AE.eqDrag.i === i), r = (sel || hot ? 9.5 : 8) * (0.5 + 0.5 * b.a);
     c.beginPath(); c.arc(x, y, r, 0, 7); c.globalAlpha = (b.on && on ? 1 : 0.5) * (1 - 0.55 * by) * b.a; const hue = b.place === 'side' ? C.fade : C.accent; c.fillStyle = sel ? hue : C.panel2; c.fill(); c.lineWidth = 2; c.strokeStyle = hue; c.stroke();
-    c.fillStyle = sel ? '#fff' : hue; c.font = '600 10.5px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(String(i + 1), x, y + 0.5); c.globalAlpha = 1;
+    c.fillStyle = sel ? '#fff' : hue; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(String(i + 1), x, y + 0.5); c.globalAlpha = 1;
   });
   { // the match target: a clear line, with the gap between it and your EQ softly shaded
     const tgOn = !!(AE.matchOpen && AE.match && AE.match.target); if (tgOn) AE.tgt = AE.match.target; const ta = hsGet('ae-tg', tgOn ? 1 : 0);
@@ -1617,11 +1617,11 @@ function aeEqDraw() {
       c.save(); c.globalAlpha = 0.14 * ta; c.fillStyle = C.turn; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); });
       for (let i = eqAxis.length - 1; i >= 0; i--) c.lineTo(eqFx(eqAxis[i], W), y(cur[i])); c.closePath(); c.fill(); c.restore();
       c.save(); c.globalAlpha = ta; c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.6; c.strokeStyle = C.turn; c.shadowColor = C.turn; c.shadowBlur = 8; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); }); c.stroke(); c.restore();
-      c.save(); c.globalAlpha = ta; c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = C.turn; c.fillText('━ Target', EQ_PAD + 8, 16); c.fillStyle = C.accent; c.fillText('━ Your EQ', EQ_PAD + 76, 16); if (AE.zoneShown) { c.globalAlpha = 0.45 * ta; c.fillStyle = C.turn; c.fillRect(EQ_PAD + 150, 11, 12, 10); c.globalAlpha = ta; c.fillStyle = C.muted; c.fillText('Spread of six recordings', EQ_PAD + 167, 16); } c.restore();
+      c.save(); c.globalAlpha = ta; c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = C.turn; c.fillText('━ Target', EQ_PAD + 8, 16); c.fillStyle = C.accent; c.fillText('━ Your EQ', EQ_PAD + 76, 16); if (AE.zoneShown) { c.globalAlpha = 0.45 * ta; c.fillStyle = C.turn; c.fillRect(EQ_PAD + 150, 11, 12, 10); c.globalAlpha = ta; c.fillStyle = C.muted; c.fillText('Spread of six recordings', EQ_PAD + 167, 16); } c.restore();
     }
-    if (split) { c.save(); c.globalAlpha = 1 - by * 0.5; c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; const ly = tgOn ? 34 : 16; c.fillStyle = C.accent; c.fillText('━ Mid', EQ_PAD + 8, ly); c.fillStyle = C.fade; c.fillText('━ Side', EQ_PAD + 56, ly); c.restore(); }
+    if (split) { c.save(); c.globalAlpha = 1 - by * 0.5; c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; const ly = tgOn ? 34 : 16; c.fillStyle = C.accent; c.fillText('━ Mid', EQ_PAD + 8, ly); c.fillStyle = C.fade; c.fillText('━ Side', EQ_PAD + 56, ly); c.restore(); }
     const nud = AE.eqNudge ? clamp(1 - (performance.now() - AE.eqNudge) / 900, 0, 1) : 0;
-    if (!real.length && !AE.d.fx.eq.curve && !(ta > 0.01)) { c.save(); c.fillStyle = nud > 0 ? C.accent : C.muted; c.font = (nud > 0 ? '600 ' : '') + '13px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.9; c.translate(W / 2, eqY(0, H) - 22); c.scale(1 + 0.06 * nud, 1 + 0.06 * nud); c.fillText(AE.matchOpen ? 'Import a reference to see its target' : 'Double-click to add a band', 0, 0); c.restore(); }
+    if (!real.length && !AE.d.fx.eq.curve && !(ta > 0.01)) { c.save(); c.fillStyle = nud > 0 ? C.accent : C.muted; c.font = (nud > 0 ? '600 ' : '') + '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.9; c.translate(W / 2, eqY(0, H) - 22); c.scale(1 + 0.06 * nud, 1 + 0.06 * nud); c.fillText(AE.matchOpen ? 'Import a reference to see its target' : 'Double-click to add a band', 0, 0); c.restore(); }
     if (nud > 0) AE.eqMoving = true;
   }
   aePill(c, W, by);
@@ -1631,7 +1631,7 @@ function aeEqDraw() {
 /* "Bypassed" slides in at the top corner of a stage while the processing is switched off */
 function aePill(c, W, by) {
   if (by < 0.02) return; c.save(); c.globalAlpha = Math.min(1, by * 1.4); const t = 'Bypassed', w = 70, h = 22, x = W - w - 12, y = 10 + (1 - Math.min(1, by)) * -8;
-  roundRect(c, x, y, w, h, 11); c.fillStyle = TL.C.ink; c.fill(); c.globalAlpha *= 1; c.fillStyle = TL.C.panel2; c.font = '600 11.5px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, x + w / 2, y + h / 2 + 0.5); c.restore();
+  roundRect(c, x, y, w, h, 11); c.fillStyle = TL.C.ink; c.fill(); c.globalAlpha *= 1; c.fillStyle = TL.C.panel2; c.font = '600 11.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, x + w / 2, y + h / 2 + 0.5); c.restore();
 }
 function eqSelected() { const b = AE.d && AE.d.fx.eq.bands[AE.band]; return b || null; }
 function aeEqPanel() {
@@ -1802,9 +1802,9 @@ function aeScopeDraw() {
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 18;
   c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
   c.save(); c.strokeStyle = C.line; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
-  c.fillStyle = C.muted; c.font = '10.5px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = C.muted; c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText('Mono', cx, cy - R - 8); c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
-  if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
+  if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
   aePill(c, W, hsGet('ae-by', aeBy()));
   if (!AE.an || !AE.playing) return;
   const a = AE.an; a.l.getFloatTimeDomainData(a.buf); a.r.getFloatTimeDomainData(a.buf2);
@@ -1871,7 +1871,7 @@ function aeFadeDraw() {
   const { Li, Lo, f } = aeFadeFn(d);
   const top = 10, bot = H - 24, span = Math.max(0.5, +$('#aeFadeLen').max || 3), a0 = 8, a1 = W * 0.42, b0 = W * 0.58, b1 = W - 8;
   c.clearRect(0, 0, W, H); c.strokeStyle = C.line; c.lineWidth = 1; c.beginPath(); c.moveTo(0, top + 0.5); c.lineTo(W, top + 0.5); c.moveTo(0, bot + 0.5); c.lineTo(W, bot + 0.5); c.stroke();
-  const y = v => top + (1 - v) * (bot - top), font = '11px "Instrument Sans",system-ui,sans-serif';
+  const y = v => top + (1 - v) * (bot - top), font = '11px "Hanken Grotesk",system-ui,sans-serif';
   /* time runs left to right in both pictures: the first rises into the music, the second falls away from it, each with a caption */
   const zone = (x0, x1, L, dir, name, on) => {
     const al = (on ? 1 : 0.4) * (0.35 + 0.65 * Math.min(1, L / 0.25)), pt = px => { const t = (dir > 0 ? px : (x1 - x0) - px) / (x1 - x0) * span; return [x0 + px, y(L < 0.001 ? 1 : f(t / L))]; };
@@ -1882,7 +1882,7 @@ function aeFadeDraw() {
       const k = Math.max(3, Math.round(L / span * (x1 - x0))), tx = dir > 0 ? x0 + k : x1 - k;
       c.globalAlpha = Math.min(1, L / 0.15) * (on ? 1 : 0.5); c.fillStyle = C.muted; c.font = font; c.textBaseline = 'top'; c.fillRect(Math.round(tx), bot - 3, 1, 7); c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(L.toFixed(1) + 's', tx + (dir > 0 ? -3 : 3), bot + 7);
     }
-    c.globalAlpha = on ? 0.9 : 0.45; c.fillStyle = C.muted; c.font = '600 10.5px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'bottom'; c.textAlign = dir > 0 ? 'right' : 'left'; c.fillText(name, dir > 0 ? x1 - 6 : x0 + 6, bot - 6); c.globalAlpha = 1;
+    c.globalAlpha = on ? 0.9 : 0.45; c.fillStyle = C.muted; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'bottom'; c.textAlign = dir > 0 ? 'right' : 'left'; c.fillText(name, dir > 0 ? x1 - 6 : x0 + 6, bot - 6); c.globalAlpha = 1;
   };
   zone(a0, a1, Li, 1, 'FADE IN', side !== 'out'); zone(b0, b1, Lo, -1, 'FADE OUT', side !== 'in');
   c.save(); c.setLineDash([2, 5]); c.strokeStyle = C.muted; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(a1 + 4, y(1)); c.lineTo(b0 - 4, y(1)); c.stroke(); c.restore();          // the music carries on in between
@@ -2673,12 +2673,12 @@ function aeNrDraw() {
   const pa = hsGet('ae-nrp', has ? 1 : 0), red = hsGet('ae-nrr', has && nz.on ? nz.reduction : 0), by = hsGet('ae-by', aeBy());
   c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
-  c.font = '10.5px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'middle';
+  c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle';
   [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
   { const hm = nz.hum && !aeBp('noise') ? nz.hum : null, ha = hsGet('ae-hum', hm ? 1 : 0); if (hm) AE.humLast = hm; const hh = hm || AE.humLast;
     if (hh && ha > 0.01) { c.save(); c.globalAlpha = ha; const col = C.accent, hs = (hh.n && hh.n.length ? hh.n : [1]).filter(k => hh.f * k < 20000);          // the hum's own pitch and its overtones: thin dashed lines where the notches are
       hs.forEach((k, i) => { const x = Math.round(eqFx(hh.f * k, W)); c.save(); c.globalAlpha = ha * (i ? 0.55 : 0.9); c.strokeStyle = col; c.lineWidth = 1.4; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x + 0.5, 22); c.lineTo(x + 0.5, H - 24); c.stroke(); c.restore(); });
-      c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out · ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
+      c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out · ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
   const P = AE.nrProf;
   if (P && pa > 0.01) {
     let mx = -1e9; P.forEach(v => { if (v > mx) mx = v; }); const lv = nrLive(); let lm = -1e9; if (lv.inp) lv.inp.forEach(v => { if (v > lm) lm = v; });
@@ -2694,11 +2694,11 @@ function aeNrDraw() {
     if (lv.out && by < 0.5) { c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W), yy = Math.min(bot, y(lv.out[i])); if (i) c.lineTo(x, yy); else c.moveTo(x, yy); }); c.lineWidth = 1.6; c.strokeStyle = C.accent; c.globalAlpha = 0.9 * pa * (1 - 2 * by); c.stroke(); }
     c.restore();
     { const la = clamp(red / 2, 0, 1), e = 1 - Math.pow(1 - la, 3);          // 'After' slides in beside 'Noise' as Reduction rises from Off and slides out as it falls
-      c.save(); c.font = '600 11px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'right'; const lx = W - 14;
+      c.save(); c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'right'; const lx = W - 14;
       if (la > 0.01) { c.globalAlpha = pa * la; c.fillStyle = C.accent; c.fillText('╍ After', lx + 10 * (1 - e), 16); }
       c.globalAlpha = pa; c.fillStyle = C.turn; c.fillText('━ Noise', lx - 68 * e, 16); c.restore(); }
   }
-  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = '13px "Instrument Sans",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet', W / 2, H / 2 - 6); c.restore(); }
+  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet', W / 2, H / 2 - 6); c.restore(); }
   aePill(c, W, by); c.restore();
 }
 /* what the editor plays: the cleaned-up sound while Noise reduction is on (the last one that was ready until a new one is), or just the noise */

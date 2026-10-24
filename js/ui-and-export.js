@@ -287,7 +287,7 @@ function paintFadeShape() {
   const zone = (x0, x1, L, dir, al, name) => {
     c.beginPath(); for (let px = 0; px <= x1 - x0; px++) { const t = (dir > 0 ? px : (x1 - x0) - px) / (x1 - x0) * span, yy = y(L < 0.001 ? 1 : g(clamp(t / L, 0, 1))); px ? c.lineTo(x0 + px, yy) : c.moveTo(x0 + px, yy); }
     c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.4; c.strokeStyle = acc; c.globalAlpha = al; c.stroke(); c.lineTo(x1, bot); c.lineTo(x0, bot); c.closePath(); c.globalAlpha = 0.12 * al; c.fillStyle = acc; c.fill();
-    c.globalAlpha = 0.45 + 0.45 * ((al - 0.35) / 0.65); c.fillStyle = mut; c.font = '600 10.5px "Instrument Sans",system-ui,sans-serif'; c.textBaseline = 'top'; c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(name, dir > 0 ? x0 : x1, bot + 5); c.globalAlpha = 1;
+    c.globalAlpha = 0.45 + 0.45 * ((al - 0.35) / 0.65); c.fillStyle = mut; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top'; c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(name, dir > 0 ? x0 : x1, bot + 5); c.globalAlpha = 1;
   };
   zone(6, W * 0.46, FSH.li, 1, FSH.ai, 'IN'); zone(W * 0.54, W - 6, FSH.lo, -1, FSH.ao, 'OUT');
 }
@@ -1194,7 +1194,7 @@ function cancelExport() {
 async function startExport(opts = {}) {
   if (!S.pdf) return;
   Transport.pause();
-  if (creditsActive()) await Promise.all(creditsFontsInUse().map(f => resolveGoogleFont(f)));       // the credits fonts must be ready before frames are drawn
+  if (creditsActive()) await Promise.all([creditsBaseLoad(), ...creditsFontsInUse().map(f => resolveGoogleFont(f))]);       // the credits fonts must be ready before frames are drawn
   const o = outputSize(), fps = S.set.fps, dur = Math.max(1, duration()), family = S.set.codec === 'hevc' ? 'hevc' : 'avc';
   const ctl = { cancelled: false }; EXP.ctl = ctl; EXP.blob = null; EXP.running = true; EXP.stage = 'starting'; EXP.stageT = performance.now();
   setExpOpen(true); foldSet('#expStallFold', false); $('#expMethod').textContent = '';
