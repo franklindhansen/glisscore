@@ -26,6 +26,7 @@
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
   --fade:#b0389c; --turn:#d97706; --turn-soft:rgba(251,185,40,.34); --play:#d6333f; --cred:#12907c; --cred-soft:rgba(18,144,124,.20);
   --stage:#dfe3ea; --block:#ffffff; --wave:#7c8bf0; --danger:#c4283a;
+  --turn-ink:#bf6500; --ok-ink:#1f9a5b;
   --shadow:0 1px 2px rgba(20,24,40,.08),0 8px 24px rgba(20,24,40,.08);
   --glass-bg:linear-gradient(180deg,rgba(255,255,255,.76),rgba(244,246,252,.64)); --glass-edge:rgba(255,255,255,.7);
   --glass-shadow:0 6px 18px -10px rgba(10,14,30,.26),inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(255,255,255,.35);
@@ -36,7 +37,7 @@
   :root:not([data-theme="light"]){
     --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
     --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26);
+    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --ok-ink:#2fb872;
     --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
     --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
@@ -48,7 +49,7 @@
 :root[data-theme="dark"]{
   --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
   --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26);
+  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --ok-ink:#2fb872;
   --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
   --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
@@ -600,7 +601,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 
 /* ----- PDF Editor ----- */
 
-.hint.warn{color:var(--turn);font-weight:600}
+.hint.warn{color:var(--turn-ink);font-weight:600}
 
 /* ==================== 16. FILE CHIPS (a steady size) ==================== */
 /* the name is cut with an ellipsis, and on hover the small text (page count or length) trades places with the action, in the same space,
@@ -1097,7 +1098,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-zone::before{content:'';position:absolute;top:0;bottom:0;right:100%;width:50%;background:rgba(47,184,114,.16)}
 .lv-meter.good .lv-fill{background:var(--ok)}
 .lv-meter.hot .lv-fill{background:var(--bad)}
-.lv-meter.good .lv-read b{color:var(--ok)}
+.lv-meter.good .lv-read b{color:var(--ok-ink)}
 .lv-meter.hot .lv-read b{color:var(--bad)}
 .lv-big.clip{color:var(--bad)}
 /* EQ Match */
@@ -1161,7 +1162,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-hum-l small{font-size:12px;line-height:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
 .nr-hum-l small:empty{display:none}
 .nr-hum.on small,.nr-hum.busy small{color:var(--accent)}
-.nr-hum.none small{color:var(--turn)}
+.nr-hum.none small{color:var(--turn-ink)}
 .nr-hum-bar{position:absolute;left:0;right:0;bottom:-7px;height:3px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
 .nr-hum.busy .nr-hum-bar{opacity:1}
 .nr-hum-bar b{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .25s linear}
@@ -1503,8 +1504,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- Imager balance: say what the sound is like now, and mark on the slider where it becomes even ----- */
 
 /* ----- a button that is greyed out but still tells you why (hover, focus or click) ----- */
-.btn.soft{position:relative;opacity:.45;cursor:default}
-.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:7px 10px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12px;font-weight:400;line-height:1.35;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
+.btn.soft{position:relative;cursor:default;color:color-mix(in srgb,currentColor 45%,transparent);background:color-mix(in srgb,var(--panel2) 45%,transparent);border-color:color-mix(in srgb,var(--line) 45%,transparent)}
+.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:400;line-height:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .btn.soft:hover::after,.btn.soft:focus-visible::after,.btn.soft.say::after{opacity:1;transform:none}
 .btn.soft:not([data-why])::after,.btn.soft[data-why=""]::after{display:none}
 @media (prefers-reduced-motion:reduce){.btn.soft::after{transition:none}}
@@ -1814,7 +1815,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
 .pe-pt h3{margin:0;font-size:16px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pe-sub.warn{color:var(--turn)}
+.pe-sub.warn{color:var(--turn-ink)}
 .pe-sub{margin:1px 0 0;font-size:13px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
 .pe-status{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -2038,7 +2039,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* the status bar: how many pages, and Select all / Deselect all as plain text buttons */
 .pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:6px 12px 6px 20px;border-top:1px solid var(--line)}
 .pe-count{margin-right:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.pe-count.warn{color:var(--turn);font-weight:600}
+.pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
 .pe-bar .btn:not(:disabled):hover{background:var(--accent-soft);border-color:transparent;box-shadow:none;transform:none}
 .pe-bar .btn:disabled{color:var(--muted);opacity:.55}
