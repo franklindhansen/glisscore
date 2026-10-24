@@ -199,6 +199,20 @@ input.bad{border-color:var(--danger)}
 .fmt-btn{flex:none;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit}
 .fmt-btn:hover{border-color:var(--muted)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.line-row{display:flex;gap:6px;align-items:flex-start}
+.line-row>input,.line-row>textarea{flex:1;min-width:0}
+.fmt-btn.aa{width:36px;height:auto;align-self:stretch;font-size:13px;font-weight:600}
+.line-row:has(textarea)>.aa{align-self:flex-start;height:36px}
+.fmt-btn.aa[data-own]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.fmt-btn.aa[aria-expanded="true"]{border-color:var(--accent)}
+.line-fold{margin-top:-6px;transition:grid-template-rows .45s var(--ease-out),margin-top .45s var(--ease-out)}
+.line-fold.open{margin-top:0}
+.line-fold>.fa-in{transition:opacity .25s var(--ease-color),padding .45s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){.line-fold>.fa-in{transition:none}}
+.combo .ph{position:absolute;left:10px;right:34px;top:50%;transform:translateY(-50%);line-height:normal;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
+.combo .ph b{font-weight:inherit;color:var(--ink)}
+.line-font~.ph{left:9px;font-size:13px}
+.combo input:not(:placeholder-shown)~.ph{display:none}
 
 /* ----- Segmented radio buttons ----- */
 .seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border:1px solid var(--line);border-radius:calc(var(--r-sm) + 2px);overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
@@ -230,6 +244,7 @@ input.bad{border-color:var(--danger)}
 .combo-btn:hover{color:var(--ink)}
 .combo-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;max-height:210px;overflow:auto;margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-ctl);box-shadow:var(--shadow)}
 .combo-list li{padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer}
+.combo-list li+li{border-top:1px solid var(--line)}
 .combo-list li:hover,.combo-list li.act{background:var(--accent-soft)}
 .combo-list li[aria-selected="true"]{font-weight:600;color:var(--accent)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */

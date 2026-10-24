@@ -292,14 +292,16 @@ function paintFadeShape() {
   zone(6, W * 0.46, FSH.li, 1, FSH.ai, 'IN'); zone(W * 0.54, W - 6, FSH.lo, -1, FSH.ao, 'OUT');
 }
 /* The switches in the Shadows and depth and Fades headers: off hides the rest of the group but keeps its values */
-/* the credits text boxes and their style rows: a row (font box, B, I) shows only once its line has text */
+/* the credits text boxes: each line's Aa button opens that line's own row (font box, B, I); Aa is lit when the line has any setting of its own. Which rows are open is only on screen, never saved. A line uses its own font, else the shared Font, else the default. */
+const credOpen = {};
 function growBox(el) { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
 function updateLineStyles() {
-  const each = !!S.set.creditsFontEach;           // with a font per line, the single Font box gives way to those
-  $('#credFontField').hidden = each; $('#credFontNote').hidden = !each;
-  [['Title', S.credits.title], ['L2', S.credits.l2], ['L3', S.credits.l3]].forEach(([k, text]) => {
-    $('#cred' + k + 'Style').hidden = !(text.trim() || each);
-    $('#cred' + k + 'FontBox').hidden = !S.set.creditsFontEach;
+  const base = creditsBase(), shared = S.set.creditsFont || '';
+  const ph = $('#credFontBox .ph'); ph.textContent = ''; ph.append(Object.assign(document.createElement('b'), { textContent: base }), ' · Any Google Font');
+  ['Title', 'L2', 'L3'].forEach(k => {
+    const own = !!(S.set['cred' + k + 'Font'] || S.set['cred' + k + 'B'] || S.set['cred' + k + 'I']), aa = $('#cred' + k + 'Aa');
+    aa.toggleAttribute('data-own', own); aa.setAttribute('aria-expanded', String(!!credOpen[k])); foldSet('#cred' + k + 'Fold', !!credOpen[k]);
+    $('#cred' + k + 'FontBox .ph').textContent = shared || base;
     $('#cred' + k + 'B').setAttribute('aria-pressed', String(!!S.set['cred' + k + 'B']));
     $('#cred' + k + 'I').setAttribute('aria-pressed', String(!!S.set['cred' + k + 'I']));
   });
@@ -316,7 +318,7 @@ function syncCreditsControls() {
   const s = S.set;
   $('#credTitle').value = $('#pieceTitle').value = S.credits.title; $('#credL2').value = S.credits.l2; $('#credL3').value = S.credits.l3; growBox($('#credL2')); titleFit();
   document.querySelectorAll('input[name=creditsAt]').forEach(r => r.checked = r.value === (s.creditsAt === 'start' ? 'start' : 'end')); { const sg = document.querySelector('#creditsAtField .seg'); if (sg && sg._place) sg._place(false); }
-  document.querySelectorAll('input[name=credStart]').forEach(r => r.checked = r.value === (s.creditsWithLast !== false ? 'with' : 'after')); $('#creditsFontEach').checked = !!s.creditsFontEach;
+  document.querySelectorAll('input[name=credStart]').forEach(r => r.checked = r.value === (s.creditsWithLast !== false ? 'with' : 'after'));
   $('#credFont').value = s.creditsFont || ''; ['Title', 'L2', 'L3'].forEach(k => { $('#cred' + k + 'Font').value = s['cred' + k + 'Font'] || ''; });
   updateLineStyles(); applyCreditsUI(); preloadCreditsFonts();
 }
@@ -333,11 +335,11 @@ function bindFontField(id, key, msgId) {
     clearTimeout(fontTimers[id]);
     fontTimers[id] = setTimeout(async () => {
       const typed = input.value.trim();
-      if (!typed) { S.set[key] = ''; say(''); saveSettings(); stageDirty = true; return; }
+      if (!typed) { S.set[key] = ''; say(''); saveSettings(); updateLineStyles(); stageDirty = true; return; }
       say('Processing…');
       const name = await resolveGoogleFont(typed);
       if (input.value.trim() !== typed) return;                     // the box changed while it loaded
-      if (name) { S.set[key] = name; if (name !== typed) input.value = name; say(''); saveSettings(); stageDirty = true; }
+      if (name) { S.set[key] = name; if (name !== typed) input.value = name; say(''); saveSettings(); updateLineStyles(); stageDirty = true; }
       else say(validFontName(typed) ? "Couldn't find “" + typed + "” on Google Fonts (or you're offline). Check the spelling." : 'Use the font name exactly as it appears on fonts.google.com.', true);
     }, 450);
   });
@@ -381,11 +383,13 @@ function initCombo(box) {
   const open = filter => {
     const q = (filter || '').trim().toLowerCase(), cur = input.value.trim().toLowerCase();
     settle(); list.textContent = '';
+    if (!q) { const shared = input.id !== 'credFont' && S.set.creditsFont, li = document.createElement('li'); li.setAttribute('role', 'option'); li.dataset.def = ''; li.textContent = shared ? shared + ' (Shared)' : creditsBase() + ' (Default)'; if (!cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); }
     CRED_FONTS.filter(f => !q || f.toLowerCase().includes(q)).forEach(f => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = f; if (f.toLowerCase() === cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); });
     if (!list.children.length) { close(true); return; }
     list.hidden = false; input.setAttribute('aria-expanded', 'true'); act = -1;
     const sel = list.querySelector('[aria-selected]'); if (sel && !q) sel.scrollIntoView({ block: 'nearest' });
   };
+  const val = li => li.hasAttribute('data-def') ? '' : li.textContent;
   const pick = f => { input.value = f; quiet = true; input.dispatchEvent(new Event('input', { bubbles: true })); quiet = false; close(); };
   input.addEventListener('focus', () => open(''));
   input.addEventListener('click', () => { if (!shown()) open(''); });
@@ -394,11 +398,11 @@ function initCombo(box) {
   input.addEventListener('keydown', e => {
     const n = list.children.length;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (!shown()) open(''); mark((act + (e.key === 'ArrowDown' ? 1 : -1) + list.children.length) % Math.max(1, list.children.length)); }
-    else if (e.key === 'Enter' && shown() && act >= 0 && n) { e.preventDefault(); pick(list.children[act].textContent); }
+    else if (e.key === 'Enter' && shown() && act >= 0 && n) { e.preventDefault(); pick(val(list.children[act])); }
     else if (e.key === 'Escape' && shown()) { e.preventDefault(); close(); }
   });
   list.addEventListener('mousedown', e => e.preventDefault());                    // keep the cursor in the box while picking
-  list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(li.textContent); });
+  list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) pick(val(li)); });
   btn.addEventListener('mousedown', e => e.preventDefault());
   btn.addEventListener('click', () => { if (shown()) { close(); return; } input.focus(); open(''); });
 }
@@ -652,10 +656,10 @@ function bindSettings() {
     });
   });
   document.querySelectorAll('input[name=credStart]').forEach(r => r.addEventListener('change', e => { S.set.creditsWithLast = e.target.value === 'with'; syncCredits(); dirty(); }));
-  $('#creditsFontEach').addEventListener('change', e => { S.set.creditsFontEach = e.target.checked; updateLineStyles(); dirty(); });
   bindFontField('credFont', 'creditsFont', 'credFontMsg');
   [['Title', 'credTitleFont'], ['L2', 'credL2Font'], ['L3', 'credL3Font']].forEach(([k, key]) => {
     bindFontField('cred' + k + 'Font', key);
+    $('#cred' + k + 'Aa').addEventListener('click', () => { credOpen[k] = !credOpen[k]; updateLineStyles(); });
     ['B', 'I'].forEach(f => $('#cred' + k + f).addEventListener('click', () => { S.set['cred' + k + f] = !S.set['cred' + k + f]; updateLineStyles(); dirty(); }));
   });
   document.querySelectorAll('input[name=credEnd]').forEach(r => r.addEventListener('change', e => { S.set.creditsEarly = e.target.value === 'early'; if (S.set.creditsEarly) ensureCreditsEnd(); else S.creditsEnd = null; applyCreditsUI(); TL.staticDirty = true; stageDirty = true; dirty(); }));

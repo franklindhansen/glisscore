@@ -67,7 +67,7 @@ async function importSettings(file) {
   try { data = JSON.parse(await file.text()); } catch (e) { /* handled below */ }
   const bad = 'That file could not be read. Choose a file that was exported from here.';
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
-  const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(data.settings) : null;
+  const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(creditsFontsMigrate(Object.assign({}, data.settings))) : null;
   if (clean && !('creditsBase' in clean) && clean.creditsOn) clean.creditsBase = 'Instrument Sans';          // a file made before the font changed, with credits on
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }

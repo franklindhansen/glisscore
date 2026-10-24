@@ -152,7 +152,7 @@ function makeProgram(gl, vs, fs, attrs) {
 const creditsBase = () => S.set.creditsBase === 'Instrument Sans' ? 'Instrument Sans' : 'Hanken Grotesk';
 const creditsFallback = () => "'" + creditsBase() + "',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
 const creditsBaseLoad = () => Promise.all([400, 500, 600, 700].map(w => document.fonts.load(w + ' 16px "' + creditsBase() + '"')));
-const lineStyle = key => { const s = S.set; return { b: !!s['cred' + key + 'B'], i: !!s['cred' + key + 'I'], font: s.creditsFontEach ? (s['cred' + key + 'Font'] || '') : (s.creditsFont || '') }; };
+const lineStyle = key => { const s = S.set; return { b: !!s['cred' + key + 'B'], i: !!s['cred' + key + 'I'], font: s['cred' + key + 'Font'] || s.creditsFont || '' }; };
 /* the weight each line is drawn in: Bold is 700, otherwise a little lighter for the lower lines */
 const lineWeight = (key, st) => st.b ? 700 : key === 'L3' ? 400 : 500;
 function drawCreditsCard(cv, o) {
@@ -219,7 +219,7 @@ async function resolveGoogleFont(raw) {
   return r;
 }
 const CRED_FONT_KEYS = ['creditsFont', 'credTitleFont', 'credL2Font', 'credL3Font'];
-const creditsFontsInUse = () => (S.set.creditsFontEach ? ['credTitleFont', 'credL2Font', 'credL3Font'] : ['creditsFont']).map(k => S.set[k]).filter(Boolean);
+const creditsFontsInUse = () => CRED_FONT_KEYS.map(k => S.set[k]).filter(Boolean);
 class Renderer {
   constructor(canvas, src, opts = {}) {
     this.canvas = canvas; this.src = src; this.cap = opts.cap || 14;

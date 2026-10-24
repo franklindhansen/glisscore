@@ -358,6 +358,45 @@
           <span class="tip" role="tooltip" data-tip="tip.credits">Shown beside the first page or at the end. They only appear once a line has text.</span>
           <label class="group-toggle"><input type="checkbox" class="switch" id="creditsOn" aria-label="Credits on or off"></label>
         </div>
+        <div class="field">
+          <label for="credTitle">Title</label>
+          <div class="line-row"><input type="text" id="credTitle" maxlength="120" placeholder="Incredible Title" autocomplete="off" spellcheck="false"><button type="button" class="fmt-btn aa" id="credTitleAa" aria-expanded="false" aria-controls="credTitleFold" aria-label="Font, bold, and italic for the title" title="Font, bold, and italic">Aa</button></div>
+          <div class="fa line-fold" id="credTitleFold"><div class="fa-in" inert>
+            <div class="line-style sub" id="credTitleStyle">
+              <div class="combo" id="credTitleFontBox"><input type="text" class="line-font" id="credTitleFont" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for the title"><span class="ph" aria-hidden="true"></span></div>
+              <button type="button" class="fmt-btn" id="credTitleB" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
+              <button type="button" class="fmt-btn" id="credTitleI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+            </div>
+          </div></div>
+        </div>
+        <div class="field">
+          <label for="credL2">Line 2</label>
+          <div class="line-row"><textarea id="credL2" class="autogrow" rows="1" maxlength="160" placeholder="Performed by…" spellcheck="false"></textarea><button type="button" class="fmt-btn aa" id="credL2Aa" aria-expanded="false" aria-controls="credL2Fold" aria-label="Font, bold, and italic for line 2" title="Font, bold, and italic">Aa</button></div>
+          <div class="fa line-fold" id="credL2Fold"><div class="fa-in" inert>
+            <div class="line-style sub" id="credL2Style">
+              <div class="combo" id="credL2FontBox"><input type="text" class="line-font" id="credL2Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 2"><span class="ph" aria-hidden="true"></span></div>
+              <button type="button" class="fmt-btn" id="credL2B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
+              <button type="button" class="fmt-btn" id="credL2I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+            </div>
+          </div></div>
+          <p class="hint">Press Enter to split this into two lines.</p>
+        </div>
+        <div class="field">
+          <label for="credL3">Line 3</label>
+          <div class="line-row"><input type="text" id="credL3" maxlength="120" placeholder="C. Conductorson, conductor" autocomplete="off" spellcheck="false"><button type="button" class="fmt-btn aa" id="credL3Aa" aria-expanded="false" aria-controls="credL3Fold" aria-label="Font, bold, and italic for line 3" title="Font, bold, and italic">Aa</button></div>
+          <div class="fa line-fold" id="credL3Fold"><div class="fa-in" inert>
+            <div class="line-style sub" id="credL3Style">
+              <div class="combo" id="credL3FontBox"><input type="text" class="line-font" id="credL3Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 3"><span class="ph" aria-hidden="true"></span></div>
+              <button type="button" class="fmt-btn" id="credL3B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
+              <button type="button" class="fmt-btn" id="credL3I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+            </div>
+          </div></div>
+        </div>
+        <div class="field" id="credFontField">
+          <label for="credFont">Font</label>
+          <div class="combo" id="credFontBox"><input type="text" id="credFont" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false"><span class="ph" aria-hidden="true"></span></div>
+          <p class="hint" id="credFontMsg"></p>
+        </div>
         <div class="field" id="creditsAtField">
           <span class="lbl" id="credAtLbl">Credits at</span>
           <div class="seg" role="radiogroup" aria-labelledby="credAtLbl">
@@ -365,43 +404,6 @@
             <label><input type="radio" name="creditsAt" value="end" checked><span>End</span></label>
           </div>
           <p class="hint" id="creditsAtHint" hidden></p>
-        </div>
-        <div class="field">
-          <label for="credTitle">Title</label>
-          <input type="text" id="credTitle" maxlength="120" placeholder="Incredible Title" autocomplete="off" spellcheck="false">
-          <div class="line-style sub" id="credTitleStyle" hidden>
-            <div class="combo" id="credTitleFontBox"><input type="text" class="line-font" id="credTitleFont" maxlength="60" placeholder="Default" autocomplete="off" spellcheck="false" aria-label="Font for the title"></div>
-            <button type="button" class="fmt-btn" id="credTitleB" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-            <button type="button" class="fmt-btn" id="credTitleI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="credL2">Line 2</label>
-          <textarea id="credL2" class="autogrow" rows="1" maxlength="160" placeholder="Performed by the Illustrious Musicians" spellcheck="false"></textarea>
-          <p class="hint">Press Enter to split this into two lines.</p>
-          <div class="line-style sub" id="credL2Style" hidden>
-            <div class="combo" id="credL2FontBox"><input type="text" class="line-font" id="credL2Font" maxlength="60" placeholder="Default" autocomplete="off" spellcheck="false" aria-label="Font for line 2"></div>
-            <button type="button" class="fmt-btn" id="credL2B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-            <button type="button" class="fmt-btn" id="credL2I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="credL3">Line 3</label>
-          <input type="text" id="credL3" maxlength="120" placeholder="Conducty Conductorson, conductor" autocomplete="off" spellcheck="false">
-          <div class="line-style sub" id="credL3Style" hidden>
-            <div class="combo" id="credL3FontBox"><input type="text" class="line-font" id="credL3Font" maxlength="60" placeholder="Default" autocomplete="off" spellcheck="false" aria-label="Font for line 3"></div>
-            <button type="button" class="fmt-btn" id="credL3B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-            <button type="button" class="fmt-btn" id="credL3I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
-          </div>
-        </div>
-        <div class="field">
-          <label class="check"><input type="checkbox" class="switch" id="creditsFontEach"> Different font for each line</label>
-          <p class="hint" id="credFontNote" hidden>Pick a font for each line above.</p>
-        </div>
-        <div class="field" id="credFontField">
-          <label for="credFont">Font</label>
-          <div class="combo" id="credFontBox"><input type="text" id="credFont" maxlength="60" placeholder="Default · type any Google Font" autocomplete="off" spellcheck="false"></div>
-          <p class="hint" id="credFontMsg"></p>
         </div>
         <div class="field" id="creditsWithLastField">
           <span class="lbl" id="credStartLbl">Credits appear</span>
