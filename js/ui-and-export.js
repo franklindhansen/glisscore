@@ -304,9 +304,17 @@ function updateLineStyles() {
     $('#cred' + k + 'I').setAttribute('aria-pressed', String(!!S.set['cred' + k + 'I']));
   });
 }
+// The header title box is as wide as its text (never narrower than its placeholder, never wider than 300px); the CSS glides it to the new width.
+function titleFit() {
+  const inp = $('#pieceTitle'), pill = inp.parentElement, cs = getComputedStyle(inp), cv = titleFit.cv || (titleFit.cv = document.createElement('canvas').getContext('2d'));
+  cv.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const w = t => Math.ceil(cv.measureText(t).width) + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 4;
+  if (!titleFit.done) { titleFit.done = true; pill.style.transition = 'none'; requestAnimationFrame(() => requestAnimationFrame(() => { pill.style.transition = ''; })); }
+  pill.style.setProperty('--tw', Math.min(300, Math.max(w(inp.placeholder), w(inp.value))) + 'px');
+}
 function syncCreditsControls() {
   const s = S.set;
-  $('#credTitle').value = $('#pieceTitle').value = S.credits.title; $('#credL2').value = S.credits.l2; $('#credL3').value = S.credits.l3; growBox($('#credL2'));
+  $('#credTitle').value = $('#pieceTitle').value = S.credits.title; $('#credL2').value = S.credits.l2; $('#credL3').value = S.credits.l3; growBox($('#credL2')); titleFit();
   document.querySelectorAll('input[name=creditsAt]').forEach(r => r.checked = r.value === (s.creditsAt === 'start' ? 'start' : 'end')); { const sg = document.querySelector('#creditsAtField .seg'); if (sg && sg._place) sg._place(false); }
   document.querySelectorAll('input[name=credStart]').forEach(r => r.checked = r.value === (s.creditsWithLast !== false ? 'with' : 'after')); $('#creditsFontEach').checked = !!s.creditsFontEach;
   $('#credFont').value = s.creditsFont || ''; ['Title', 'L2', 'L3'].forEach(k => { $('#cred' + k + 'Font').value = s['cred' + k + 'Font'] || ''; });
@@ -626,12 +634,13 @@ function bindSettings() {
   $('#creditsOn').addEventListener('change', e => { S.set.creditsOn = e.target.checked; applyGroupSwitches(); syncCredits(); dirty(); });
   const onLine = (key, id) => $('#' + id).addEventListener('input', e => {
     if (id === 'credL2') { let v = e.target.value.replace(/\r/g, '').split('\n'); if (v.length > 2) { v = v.slice(0, 2); e.target.value = v.join('\n'); } growBox(e.target); }
-    S.credits[key] = e.target.value; if (key === 'title') $('#pieceTitle').value = e.target.value;      // the header title and the credits title are one and the same
+    S.credits[key] = e.target.value; if (key === 'title') { $('#pieceTitle').value = e.target.value; titleFit(); }      // the header title and the credits title are one and the same
     updateLineStyles(); syncCredits(); stageDirty = true;
   });
-  $('#pieceTitle').addEventListener('input', e => { S.credits.title = e.target.value; $('#credTitle').value = e.target.value; updateLineStyles(); syncCredits(); stageDirty = true; });
+  $('#pieceTitle').addEventListener('input', e => { S.credits.title = e.target.value; $('#credTitle').value = e.target.value; titleFit(); updateLineStyles(); syncCredits(); stageDirty = true; });
   $('.brand .home').addEventListener('click', e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); if (reducedMotion()) { location.reload(); return; } document.documentElement.classList.add('leaving'); setTimeout(() => location.reload(), 190); });      // the page fades out first, so the reload is one smooth fade out and in      // a fresh start; also works when the page is opened as a file
   $('#pieceTitle').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+  titleFit(); window.addEventListener('resize', titleFit); if (document.fonts && document.fonts.ready) document.fonts.ready.then(titleFit);
   onLine('title', 'credTitle'); onLine('l2', 'credL2'); onLine('l3', 'credL3');
   $('#credL2').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.includes('\n')) e.preventDefault(); });   // two lines at most
   document.querySelectorAll('input[name=creditsAt]').forEach(r => {

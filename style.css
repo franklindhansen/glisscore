@@ -85,11 +85,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .chips .chip{min-width:0;flex:0 1 auto}
 .chips{margin-right:auto}
 .brand h1 .home{color:inherit;text-decoration:none}
-.title-pill{flex:0 1 220px;min-width:90px;max-width:340px;display:block;transition:flex-basis .5s var(--ease-out)}
-.title-pill:focus-within{flex-basis:340px}
+.title-pill{flex:0 1 var(--tw,136px);min-width:90px;max-width:300px;display:block;transition:flex-basis .2s var(--ease-out)}          /* --tw is the width of the text (never less than the placeholder), set by titleFit */
 .title-pill input{width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:500 15px/1.2 inherit;font-family:inherit;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color)}
 .title-pill input:hover{border-color:var(--line)}
-.title-pill input:focus{outline:none;border-color:var(--accent);background:var(--panel2)}
+.title-pill input:focus{border-color:var(--accent);background:var(--panel2)}
 .title-pill input::placeholder{color:var(--muted)}
 .top .btn{flex:none}
 @media (max-width:1280px){.top #btnPdf span,.top #btnAudio span{display:none}.top #btnPdf,.top #btnAudio{padding-left:10px;padding-right:10px}}
@@ -264,6 +263,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .info-i .ring{fill:none;stroke:currentColor;stroke-width:1.9}
 .info-i .dot{fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round}
 .info-i .stem{fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round}
+.info-i::before{content:"";position:absolute;inset:-3px}          /* a 24px target around the 18px icon */
 .info-i:hover,.info-i:focus-visible,.info-i[aria-expanded="true"]{color:var(--accent);background:var(--accent-soft);transform:scale(1.1)}
 .info-i:not(:disabled):active{transform:scale(.92);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 @media (prefers-reduced-motion:reduce){.info-i:not(:disabled):active{transform:none}}
