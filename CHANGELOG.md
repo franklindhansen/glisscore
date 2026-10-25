@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.8
+
+The video settings are easier to scan: labels sit closer to their controls, Page colors has its own group, and First page alone sits under Spread. The folded Credits line shows what you typed, and each line's font list opens in full.
+
 ## 1.1.7
 
 The app has a new font, Hanken Grotesk. The Credits panel is easier to use, with an Aa button on each line for its own font, bold, and italic, and the glisscore wordmark now asks before it clears your work.
