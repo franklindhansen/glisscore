@@ -1034,13 +1034,11 @@ function peDragEnd(cancel) {
   };
   if (calm) { settle(); return; }
   const dx = nx - dr.rects[dr.from].x, dy = ny - dr.rects[dr.from].y - (wrap.scrollTop - dr.s0), at = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
-  // lands with the others, then gives a small press (scale .985) before it rests: the drop is felt, not just stopped
+  // one smooth glide on the same clock and curve as the pages it passed, so nothing wobbles before it rests
   const a = g.animate([
-    { transform: g.style.transform, scale: '.8', easing: 'cubic-bezier(.22,1,.36,1)' },
-    { transform: at, scale: '1', offset: .66, easing: 'ease-out' },
-    { transform: at, scale: '.985', offset: .82, easing: 'ease-out' },
+    { transform: g.style.transform, scale: '.8' },
     { transform: at, scale: '1' }
-  ], { duration: 300, fill: 'forwards' });
+  ], { duration: PE_TURN_MS, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
   a.onfinish = a.oncancel = settle;
 }
 /* ---- Export PDF: the draft as a new PDF file (pages in your order, rotated, repeated, left out, watermarked) ---- */
