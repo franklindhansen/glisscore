@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.11
+
+The About and How it works windows are roomier and more consistent with the others, with small touches as they open.
+
 ## 1.1.10
 
 The PDF Editor and Audio Editor now share one layout, and Noise reduction and Imager fit on a laptop screen.
