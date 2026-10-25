@@ -42,7 +42,7 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   const box = await p.locator('#peCropPg').boundingBox();
   await p.mouse.dblclick(box.x + box.width * 0.3, box.y + box.height * 0.3); await p.waitForTimeout(500); const z3 = await zs();
   ok('Double-click on the page zooms in at the pointer, again zooms out', z3.z > 2, JSON.stringify(z3));
-  await p.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2); await p.mouse.down(); await p.mouse.move(box.x + box.width * 0.8 + 60, box.y + box.height / 2 + 40, { steps: 6 }); await p.mouse.up(); const z4 = await zs();
+  const sb = await p.locator('#peCropStage').boundingBox(), cx = sb.x + sb.width / 2, cy = sb.y + sb.height / 2; await p.mouse.move(cx, cy); await p.mouse.down(); await p.mouse.move(cx - 60, cy - 40, { steps: 6 }); await p.mouse.up(); const z4 = await zs();
   ok('A zoomed page moves with a drag', z4.x !== z3.x || z4.y !== z3.y, JSON.stringify({ z3, z4 }));
   await p.keyboard.press('0'); await p.waitForTimeout(500); const z5 = await zs();
   ok('0 fits the page', z5.z === 1, JSON.stringify(z5));

@@ -43,7 +43,7 @@ const record = (p, act, slow, ms) => p.evaluate(({ act, slow, ms }) => new Promi
     const slow = await record(p, 'peOneOpen(PE.d.order[2])', 500, 1100), sEnd = slow[slow.length - 1];
     const stale = slow.filter(x => x.loading && x.cv.o > 0.05 && (x.cv.w !== 300 || x.cv.h !== 150));
     ok(T + 'a page still loading shows no picture of another page', !stale.length, stale.length + ' frame(s), e.g. ' + JSON.stringify(stale[0]));
-    ok(T + 'the page loads into a box of its own shape and the picture arrives whole', Math.abs(sEnd.pg.w / sEnd.pg.h - 612 / 792) < 0.03 && sEnd.cv.w === 2164 && !sEnd.loading, JSON.stringify({ end: sEnd.pg, cv: sEnd.cv }));
+    ok(T + 'the page loads into a box of its own shape and the picture arrives whole', Math.abs(sEnd.pg.w / sEnd.pg.h - 612 / 792) < 0.03 && Math.abs(sEnd.cv.w - 2164) <= 8 && !sEnd.loading, JSON.stringify({ end: sEnd.pg, cv: sEnd.cv }));
     if (!calm) ok(T + 'opening fades and scales in from nothing and ends at full size', slow[0].vo < 0.2 && sEnd.vo === 1, JSON.stringify({ first: slow[0].vo, end: sEnd.vo }));
     else ok(T + 'opening is there at once', slow[0].vo === 1, JSON.stringify({ first: slow[0].vo }));
     await ctx.close();

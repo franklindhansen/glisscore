@@ -1194,7 +1194,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-tool{padding:8px 8px;white-space:nowrap}
 #aeNrCtl .field:last-of-type{margin-bottom:0}
 .nr-listen{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.nr-hum{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:14px}
+.nr-hum{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
 .nr-hum{position:relative}
 .nr-hum-l{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;cursor:pointer}
 .nr-hum-l small{font-size:12px;line-height:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
@@ -1309,13 +1309,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-grid #aeNrCtl{grid-area:2/2;min-height:0}
 .nr-stage{background:color-mix(in srgb,var(--ink) 6%,var(--panel2));border:1px solid var(--line);border-radius:var(--r-card)}
 .nr-stage canvas{transition:opacity .5s var(--ease-ui)}
-.nr-grid.pre #aeNrSample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent;padding:12px 22px}
+.nr-grid.pre #aeNrSample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent;padding:10px 22px}
 .nr-grid.pre #aeNrCtl{grid-area:2/1/3/3}
 .nr-grid.pre .nr-stage canvas{opacity:0}
 .nr-grid.pre .mt-steps{flex-direction:row;gap:32px}
 .nr-grid.pre .mt-step{flex:1}
 .nr-grid.pre .mt-head{margin-bottom:12px}
-#aeNrSample .mt-head{margin-bottom:10px}
+#aeNrSample .mt-head{margin-bottom:8px}
 #aeNrSample .mt-steps{gap:12px}
 @media (max-width:760px){
   .ae-pbody{min-height:0}
@@ -1598,16 +1598,16 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.lv-limrow.nudge .switch:not(:checked){animation:none;box-shadow:inset 0 0 0 1px rgba(128,128,128,.22),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}}
 
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
-:root{--ae-body:clamp(318px,calc(100dvh - 452px),412px)}          /* the tool window's height: as tall as the screen allows, never needing a scroll bar */
-.dlg.editor.ae{padding:16px 18px;gap:10px}
-.dlg.editor.ae .ed-lead{margin:-4px 0 0;line-height:1.2}
+:root{--ae-body:clamp(318px,calc(100dvh - 442px),412px)}          /* the tool window's height: as tall as the screen allows, never needing a scroll bar */
+.dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
+.dlg.editor.ae .ed-lead,.dlg.editor.pe .ed-lead{margin:-4px 0 0;line-height:1.2}
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:9px;height:22px;margin:2px 0;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-end i{flex:none;width:16px;height:16px;margin-left:3px;border:2px solid var(--accent);border-radius:50%;background:var(--panel2);box-shadow:0 0 0 3px var(--accent-soft)}
 /* the tool window: head, a line, the tool, a status bar. The head, the line and the tool slide together. */
 .ae-win{padding:0;min-height:0;overflow:hidden;position:relative;display:flex;flex-direction:column}
 .ae-panes{min-height:0}
-.ae-top{position:relative;flex:none;height:60px;overflow:clip}
+.ae-top{position:relative;flex:none;height:56px;overflow:clip}
 .ae-win .ae-phead,.ae-phead{position:absolute;inset:0;margin:0;min-height:0;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .ae-pt{min-width:0;display:grid;gap:2px}
 .ae-win .ae-phead h3{margin:0;font-size:16px;font-weight:600;line-height:1.25}
@@ -1615,7 +1615,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-rule{display:block;flex:none;height:1px;background:var(--line)}
 .ae-rule.ghost{position:absolute;left:0;right:0;pointer-events:none}
 .ae-pbody{position:relative;flex:none;height:var(--ae-body);min-height:0;overflow:hidden;padding:0}
-.ae-pane{height:100%;padding:14px 16px;overflow:hidden}
+.ae-pane{height:100%;padding:12px 16px;overflow:hidden}
 .ae-stat{flex:none;display:flex;align-items:center;gap:12px;min-height:34px;padding:6px 20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
 .ae-chain{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap}
 .ae-chain b{padding:1px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:500}
@@ -1627,6 +1627,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* the picture, with the transport floating over its lower edge as glass (the picture keeps its drawing above it) */
 @media (min-width:761px){
   #audioDlg:not(.afull) .ae-wave{height:170px}
+  #audioDlg:not(.afull) .ae-main{margin-top:-6px}          /* the tool window sits a little closer to the picture, so a tool has the room it was drawn for on a laptop screen */
   #audioDlg:not(.afull) .ae-bar{position:relative;z-index:3;flex-wrap:nowrap;height:48px;margin:-66px 8px 8px;padding:0 8px 0 10px;gap:12px;border:1px solid var(--glass-edge);border-radius:var(--r-lg);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow);isolation:isolate}
   #audioDlg:not(.afull) .ae-bar::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.5),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);opacity:.7}
   #audioDlg:not(.afull) .ae-bar .btn,#audioDlg:not(.afull) .ae-bar .seg,#audioDlg:not(.afull) .ae-bar .icon-btn:not(.play){background:color-mix(in srgb,var(--panel2) 58%,transparent)}
@@ -1678,10 +1679,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* Imager: both columns end together */
 .im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:10px;align-items:stretch}
 @media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
-.im-ctl{display:flex;flex-direction:column;gap:10px;min-height:0}
+.im-ctl{display:flex;flex-direction:column;gap:8px;min-height:0}
 #aeWidthCard{flex:none;padding:10px 14px}
 #aeBalCard{flex:1 1 0;min-height:0;padding:10px 14px;align-content:space-between}
-.im-views{display:grid;align-content:center;height:72px}
+.im-views{display:grid;align-content:center;height:64px}
 .im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:12px;align-items:center}
 .im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 /* the slider and its end labels share one track, so Normal sits under the middle of the slider */
@@ -1694,20 +1695,22 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-slrow input{margin:0}
 .im-view .field{margin:0}
 .field.row3{margin-bottom:2px}
-.im-low{margin-top:6px;padding-top:8px}
+.im-low{margin-top:4px;padding-top:6px}
 .bal-say{margin-left:auto;display:inline-flex;align-items:center;font-size:12.5px;color:var(--muted);white-space:nowrap}
 .bal-say.auto{color:var(--accent);font-weight:600}
 .bal-say.auto::before{content:'';flex:none;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 30%,transparent);animation:bal-pulse 1.8s var(--ease-ui) infinite}
 @keyframes bal-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 0%,transparent)}}
 #aeBalAuto.on,#aeBandThrAuto.on,#aeNrFind.on,#aeNrHum.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 #aeBalCard .field{margin:0}
-.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:4px 0 12px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
+.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:2px 0 8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
 .bal-meter.none{opacity:.35}
 .bm-name{min-width:34px}
 .bm-val{min-width:64px;text-align:right;color:var(--ink);font-weight:500}
 .bm-track{position:relative;display:block;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bm-track b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 38%,transparent);transition:width .4s var(--ease-out)}
 .bal-foot{display:flex;align-items:baseline;justify-content:flex-start;gap:12px;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.im-head .bal-foot{align-items:center;margin:0 0 0 auto}
+.im-head .bal-foot output{margin-left:0}
 .bal-foot output{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
 .bal-foot .bal-say{margin-left:0}
 .bal-say.even{color:var(--ink)}
@@ -1823,7 +1826,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-main{display:grid;grid-template-columns:196px minmax(0,1fr);gap:20px;min-height:0}
 
 /* the tool list: grouped, with the same gliding pill as the Audio Editor */
-.pe-rail{align-self:start;min-width:0;padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
+.pe-rail{align-self:stretch;min-width:0;padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
 .pe-rail-in{position:relative;display:flex;flex-direction:column;gap:2px}
 .pe-rail-h{margin:12px 0 4px 10px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .pe-sel+.pe-rail-h{margin-top:4px}
