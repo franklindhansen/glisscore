@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.9
+
+Buttons and choices across the app now share consistent sizes, and the How it works headings are simpler.
+
 ## 1.1.8
 
 The video settings are easier to scan: labels sit closer to their controls, Page colors has its own group, and First page alone sits under Spread. The folded Credits line shows what you typed, and each line's font list opens in full.
