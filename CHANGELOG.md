@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.10
+
+The PDF Editor and Audio Editor now share one layout, and Noise reduction and Imager fit on a laptop screen.
+
 ## 1.1.9
 
 Buttons and choices across the app now share consistent sizes, and the How it works headings are simpler.
