@@ -167,7 +167,7 @@ kbd{font:inherit;font-size:11px;padding:1px 5px;border-radius:4px;border:1px sol
   .panel{overflow-x:hidden;overflow-y:scroll}
   @supports (scrollbar-gutter:stable){.panel{overflow-y:auto;scrollbar-gutter:stable}}
 }
-.group{padding:14px 0;border-bottom:1px solid var(--line)}
+.group{padding:18px 0;border-bottom:1px solid var(--line)}
 .group:last-child{border-bottom:0}
 .group h3{margin:0 0 10px;font-size:14px;font-weight:600}
 .group-head{position:relative;display:flex;align-items:center;gap:8px;margin:0 0 10px}
@@ -178,6 +178,14 @@ kbd{font:inherit;font-size:11px;padding:1px 5px;border-radius:4px;border:1px sol
 /* ----- Form fields: labels, sliders, selects ----- */
 .field{display:grid;gap:6px;margin-bottom:12px}
 .field:last-child{margin-bottom:0}
+/* the settings panel: a label sits close to its control and a note sits right under the control it explains, while one setting stands clearly apart from the next */
+.panel .field{gap:4px}
+.panel .field:not(:last-child){margin-bottom:16px}
+.panel .field>.hint:not(.err):not(.warn),.panel .field>.vq-note{margin-top:-2px}
+.panel .sub>.field+.hint{margin-top:-12px}
+.panel .field>.hint:empty{display:none}
+.panel .adv,.panel .adv[open]{margin-bottom:10px}        /* the same 16px above Export video (with its 6px) whether Advanced is open or not */
+#creditsAtField:has(~ #creditsEarlyField[hidden]){margin-bottom:0}        /* at Start the two rows after it are closed, so it ends the group */
 .field label,.field .lbl{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
 .field output{color:var(--ink);font-variant-numeric:tabular-nums}
 /* Sliders are drawn by the site instead of the browser, so they look the same whether or not the window is active
@@ -207,7 +215,16 @@ input.bad{border-color:var(--danger)}
 .fmt-btn.aa[aria-expanded="true"]{border-color:var(--accent)}
 .line-fold{margin-top:-6px;transition:grid-template-rows .45s var(--ease-out),margin-top .45s var(--ease-out)}
 .line-fold.open{margin-top:0}
-.line-fold>.fa-in{transition:opacity .25s var(--ease-color),padding .45s var(--ease-out)}
+/* a credits line: its label, box, and note stay together, and a closed font row takes no room at all, so the next setting is the usual 16px away */
+.panel .field:has(>.line-row){gap:0}
+.panel .field:has(>.line-row)>.line-row{margin-top:4px}
+.panel .field:has(>.line-row)>.hint{margin-top:2px}
+.panel .field:has(>.line-row)>.line-fold{margin-top:0}
+.panel .field:has(>.line-row)>.line-fold.open{margin-top:4px}
+.line-fold>.fa-in{transition:opacity .25s var(--ease-color),padding .45s var(--ease-out),overflow 0s allow-discrete}
+.line-fold.open>.fa-in{overflow:visible;transition:opacity .25s var(--ease-color),padding .45s var(--ease-out),overflow 0s .45s allow-discrete}        /* once the row has finished opening, its font list may drop below it; while it opens or closes the row is still clipped */
+.line-style .combo-list{width:max-content;min-width:100%;max-width:240px}
+.line-style .combo-list li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){.line-fold>.fa-in{transition:none}}
 .combo .ph{position:absolute;left:10px;right:34px;top:50%;transform:translateY(-50%);line-height:normal;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
 .combo .ph b{font-weight:inherit;color:var(--ink)}
@@ -225,17 +242,18 @@ input.bad{border-color:var(--danger)}
 .field label.check{justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
 .colorrow{display:flex;gap:8px;align-items:center}
 .sub{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
+.group[data-sum="shadows"] .sub,#firstAloneField,#inkField,.line-style.sub{margin-left:8px}        /* a setting that belongs to the one above it (First page alone, Ink color) and the Shadows sliders share one small indent, so the controls keep most of the panel's width */
 .field.sub{margin-top:-6px}
+.panel .field.sub{margin-top:-10px}
 /* the invert switch has no gap under it while its ink color row is hidden (the hidden row keeps no space) */
 .field:has(+ #inkField[hidden]){margin-bottom:0}
 
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .sub>.field:last-child{margin-bottom:0}
 /* small notes under a control: tucked to the right and quieter, so they stay out of the way of the labels */
-.group .hint{margin:0;font-size:11px;line-height:1.35;text-align:right}
-#exportHint{margin-top:6px!important}
+.group .hint{margin:0;font-size:11px;line-height:1.35;text-align:left;text-wrap:pretty}
+#exportHint{margin-top:4px!important}
 .group .hint.err,.group .hint.warn{text-align:left;font-size:12.5px}
-.group .field>.hint:not(.err):not(.warn):not(#exportHint){margin-left:-12px}      /* notes run a little wider than the controls (but stay inside the panel's padding), so a short sentence stays on one line */
 #shadowReset{margin-top:14px}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
@@ -290,7 +308,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .term:hover,.term:focus-visible{background:var(--accent-soft);outline:none}
 
 /* ----- Glow highlight, color picker, hints ----- */
-#turnField{padding:6px 8px;margin:-6px -8px 6px;border-radius:var(--r-ctl);transition:box-shadow .15s var(--ease-color),background .15s var(--ease-color)}
+#turnField{padding:6px 8px;margin:-6px -8px 10px;border-radius:var(--r-ctl);transition:box-shadow .15s var(--ease-color),background .15s var(--ease-color)}
 #turnField.glow-ring{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent),0 0 18px 4px var(--accent)}
 .colorrow[hidden]{display:none}
 .colorrow input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
@@ -539,7 +557,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
   .timeline{animation:rise .8s var(--ease-out) .2s backwards;--rise:14px}
   .panel>*{animation:rise .7s var(--ease-out) backwards;--rise:12px}
   .panel>:nth-child(1){animation-delay:.14s}.panel>:nth-child(2){animation-delay:.19s}.panel>:nth-child(3){animation-delay:.24s}
-  .panel>:nth-child(4){animation-delay:.29s}.panel>:nth-child(5){animation-delay:.34s}.panel>:nth-child(6){animation-delay:.39s}.panel>:nth-child(7){animation-delay:.44s}
+  .panel>:nth-child(4){animation-delay:.29s}.panel>:nth-child(5){animation-delay:.34s}.panel>:nth-child(6){animation-delay:.39s}.panel>:nth-child(7){animation-delay:.44s}.panel>:nth-child(8){animation-delay:.49s}
   .empty-fit>*{animation:rise .9s var(--ease-out) backwards;--rise:18px}
   .empty-fit>:nth-child(2){animation-duration:.6s;animation-delay:.1s;--rise:12px}
   .empty-fit>:nth-child(3){animation-duration:.6s;animation-delay:.2s;--rise:12px}
@@ -578,7 +596,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 .timeline.locked .tl-scroll{pointer-events:none;opacity:.5}
 /* when a score arrives the parts wake up one after another, and the intro text and stage trade places */
 .panel:not(.locked)>.group{transition-delay:calc(var(--gi,0) * .07s)}
-.panel>.group:nth-child(2){--gi:0}.panel>.group:nth-child(3){--gi:1}.panel>.group:nth-child(4){--gi:2}.panel>.group:nth-child(5){--gi:3}.panel>.group:nth-child(6){--gi:4}.panel>.group:nth-child(7){--gi:5}
+.panel>.group:nth-child(2){--gi:0}.panel>.group:nth-child(3){--gi:1}.panel>.group:nth-child(4){--gi:2}.panel>.group:nth-child(5){--gi:3}.panel>.group:nth-child(6){--gi:4}.panel>.group:nth-child(7){--gi:5}.panel>.group:nth-child(8){--gi:6}
 #stage.in{animation:fade .8s var(--ease-ui)}
 .top .btn:not([hidden]){animation:rise .55s var(--ease-out) backwards;--rise:6px}
 /* settings menu: keyboard shortcuts */
@@ -648,7 +666,8 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .ed-head{flex-wrap:wrap}
 .ed-head h2{white-space:nowrap}
 .line-style.sub{display:flex}
-.adv *,details.adv::details-content{box-sizing:border-box}
+.adv *{box-sizing:border-box}
+details.adv::details-content{box-sizing:border-box}        /* two rules, since a browser that does not know ::details-content would drop a combined one */
 
 /* ----- Polish: loading chips, editor open and close, tactile pages, audio hint, watermark row ----- */
 .chip.busy{color:var(--ink);animation:breathe 1.6s var(--ease-ui) infinite alternate}
@@ -917,7 +936,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .status .st{border:1px solid var(--line);border-radius:999px;background:var(--panel2);transition:color .3s var(--ease-color),border-color .3s var(--ease-color),background-color .3s var(--ease-color)}
 .status .st.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
 .status{border-bottom:0;padding-bottom:6px}.status .st{padding:3px 9px 3px 7px;font-size:12.5px}
-.vq-note{margin:0;font-size:11px;line-height:1.35;text-align:right;color:var(--muted)}
+.vq-note{margin:0;font-size:11px;line-height:1.35;text-align:left;color:var(--muted)}
 /* the two file checks share the row evenly */
 .status{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .status .st{justify-content:center;white-space:nowrap}
@@ -1493,13 +1512,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeExpDlg{background:color-mix(in srgb,var(--bg) 52%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);place-items:center}
 
 /* a little more room: under every group's last row (before the divider), and between a group's heading and its first row of toggles */
-.panel .group{padding-bottom:20px}
+.panel .group{padding-bottom:18px}
 .group-body>.field.fade-pair{margin-top:10px}
 /* Bypass dims every lit module (Level and Fades too); a module that is already off stays as quiet as it was */
 .ae-proc.bp.off .ae-tn{opacity:.55}
 
 /* ----- Export audio: the Advanced fold (sample rate, metadata) ----- */
-.adv{display:grid}
+.adv{display:grid;grid-template-columns:minmax(0,1fr)}
 .fa{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease-out)}
 .fa.open{grid-template-rows:1fr}
 .fa-in{overflow:hidden;min-height:0;opacity:0;transition:opacity .25s var(--ease-color)}
@@ -2288,8 +2307,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* video Fades: the shape picture fits the settings column */
 .fade-shape canvas{display:block;width:100%;height:84px}
-#fadeSide{margin-bottom:8px}
-#fadeMoreFold .field:nth-child(2){margin-bottom:12px}
+#fadeSide{margin-bottom:0}
+.fade-shape{margin-top:2px}
+.fade-len-lbl{margin-top:12px}
+.field output .ov-dim{color:var(--muted)}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
 #fadeLenField .fade-ends{position:relative;display:block;height:20px}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin:0}

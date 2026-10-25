@@ -36,6 +36,23 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   await p.click('#credL2I'); a = await aa('L2'); ok('Aa goes dark when the line has nothing of its own', !a.lit);
   await p.click('#credL2Aa'); await p.waitForTimeout(700); a = await aa('L2'); ok('Aa shuts the row again', a.open === 'false' && !a.fold && a.inert);
 
+  // each line's own font list drops below its row (the row does not clip it), says no Default, and picks a font for that line
+  for (const k of ['Title', 'L2', 'L3']) {
+    await p.click('#cred' + k + 'Aa'); await p.waitForTimeout(900);
+    await p.evaluate(k => document.querySelector('#cred' + k + 'Font').focus(), k); await p.waitForTimeout(400);
+    const r = await p.evaluate(k => { const l = document.querySelector('#cred' + k + 'FontList'), c = document.querySelector('#cred' + k + 'FontBox'), lr = l.getBoundingClientRect(), cr = c.getBoundingClientRect(), fold = document.querySelector('#cred' + k + 'Fold > .fa-in'), el = document.elementFromPoint(lr.left + lr.width / 2, lr.top + lr.height / 2); return { first: l.children[0].textContent, below: lr.top >= cr.bottom - 1, tall: lr.height > 100, clip: getComputedStyle(fold).overflow, hit: !!(el && l.contains(el)), box: cr.height > 20 }; }, k);
+    ok(k + ': the font list drops below the font box and is not clipped', r.below && r.tall && r.clip === 'visible' && r.hit && r.box, JSON.stringify(r));
+    ok(k + ': the font list names the default without the word Default', r.first === 'Hanken Grotesk', r.first);
+    await p.evaluate(k => document.querySelector('#cred' + k + 'FontList li:nth-child(2)').click(), k);
+    await p.waitForFunction(k => window.__keyframes.S.set['cred' + k + 'Font'], k, { timeout: 15000 }).catch(() => {});          // the name is looked up on Google Fonts first, which can take a moment
+    ok(k + ': picking from the list sets that line only', await p.evaluate(k => { const S = window.__keyframes.S.set; return S['cred' + k + 'Font'] === document.querySelector('#cred' + k + 'Font').value && !!S['cred' + k + 'Font'] && ['Title', 'L2', 'L3'].filter(o => o !== k).every(o => !S['cred' + o + 'Font']); }, k));
+    await p.evaluate(k => { document.querySelector('#cred' + k + 'Font').focus(); }, k); await p.waitForTimeout(300);
+    await p.evaluate(k => document.querySelector('#cred' + k + 'FontList li:first-child').click(), k);
+    await p.waitForFunction(k => !window.__keyframes.S.set['cred' + k + 'Font'], k, { timeout: 15000 }).catch(() => {});
+    ok(k + ': picking the first item puts the line back on the shared font', await p.evaluate(k => !window.__keyframes.S.set['cred' + k + 'Font'], k));
+    await p.evaluate(() => document.activeElement.blur()); await p.click('#cred' + k + 'Aa'); await p.waitForTimeout(800);
+  }
+
   // the list shows the default first; picking it clears the font
   await p.evaluate(() => { const i = document.querySelector('#credFont'); i.value = 'Lora'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(700);
   await p.evaluate(() => document.querySelector('#credFont').dispatchEvent(new Event('focus'))); await p.waitForTimeout(300);
@@ -49,6 +66,13 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   const file = { glisscore: 1, settings: { creditsOn: true, creditsFontEach: true, creditsFont: 'Lora', credTitleFont: 'Cinzel' } };
   await p.evaluate(async f => { await importSettings(new File([JSON.stringify(f)], 'x.txt')); }, file); await p.waitForTimeout(500); s = await set(p);
   ok('an imported file with the switch on keeps its line fonts', s.t === 'Cinzel' && s.font === '' && !s.each, JSON.stringify(s));
+  // the folded Credits row shows the lines you filled in (a blank line is skipped), every one of them, and says Empty when there is nothing
+  const fold = async open => { await p.evaluate(open => { const g = document.querySelector('.group[data-sum="credits"]'); if (g.classList.contains('collapsed') === open) g.querySelector('.fold-btn').click(); }, open); await p.waitForTimeout(700); };
+  const sumOf = async (t, a, c) => { await fold(true); await p.fill('#credTitle', t); await p.fill('#credL2', a); await p.fill('#credL3', c); await fold(false); return p.evaluate(() => document.querySelector('.group[data-sum="credits"] .group-sum').textContent); };
+  ok('the folded row shows the lines you wrote with no Title or Line 2 words', (await sumOf('Moonlight', '', 'Conductor')) === 'Moonlight · Conductor');
+  const lng = await sumOf('The Complete Piano Sonatas of Ludwig van Beethoven', 'Performed by the Illustrious Musicians of the Royal Orchestra', 'C. Conductorson, conductor and artistic director');
+  ok('three long lines are each shortened, so all three still show', lng.split(' · ').length === 3 && lng.split(' · ').every(x => x.length > 3), lng);
+  ok('with nothing written it says Empty', (await sumOf('', '', '')) === 'Empty');
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

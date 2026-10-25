@@ -255,7 +255,7 @@ function syncFadeLens() {
   if (FADE_SIDE === 'both' && !FADE_FORCE && (oi !== oo || (oi && (ai !== ao || (!ai && Li !== Lo))))) { FADE_SIDE = 'in'; applyFadeUI(); }          // the two sides differ (a saved setting, an undo), so Both cannot say what they are
   const on = FADE_SIDE === 'out' ? oo : FADE_SIDE === 'in' ? oi : oi || oo, len = FADE_SIDE === 'out' ? Lo : Li, au = FADE_SIDE === 'out' ? ao : ai;
   r.dataset.default = pa; r.parentNode.querySelector('.fade-ends').style.setProperty('--apos', pa / FADE_MAX); r.parentNode.querySelector('.sl-end.auto').dataset.v = pa;
-  if (!r._glide) r.value = !on ? 0 : au ? pa : Math.round(len * 10); $('#fadeLenVal').textContent = !on ? 'Off' : (au ? 'Auto ' : '') + len.toFixed(1) + 's';
+  if (!r._glide) r.value = !on ? 0 : au ? pa : Math.round(len * 10); { const lv = $('#fadeLenVal'); lv.textContent = !on ? 'Off' : au ? 'Auto' : len.toFixed(1) + 's'; if (on && au) { const d = document.createElement('span'); d.className = 'ov-dim'; d.textContent = ' · ' + len.toFixed(1) + 's'; lv.appendChild(d); } }
   foldSet('#fadeMoreFold', oi || oo); paintRanges(); drawFadeShape();          // Shape, Curve and Fade to fold away while both fades are off
 }
 /* the Shape picture: the fade in rising and the fade out falling, in the chosen curve and the chosen lengths */
@@ -383,11 +383,12 @@ function initCombo(box) {
   const open = filter => {
     const q = (filter || '').trim().toLowerCase(), cur = input.value.trim().toLowerCase();
     settle(); list.textContent = '';
-    if (!q) { const shared = input.id !== 'credFont' && S.set.creditsFont, li = document.createElement('li'); li.setAttribute('role', 'option'); li.dataset.def = ''; li.textContent = shared ? shared + ' (Shared)' : creditsBase() + ' (Default)'; if (!cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); }
+    if (!q) { const line = input.id !== 'credFont', shared = line && S.set.creditsFont, li = document.createElement('li'); li.setAttribute('role', 'option'); li.dataset.def = ''; li.textContent = shared ? shared + ' (Shared)' : line ? creditsBase() : creditsBase() + ' (Default)'; if (!cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); }
     CRED_FONTS.filter(f => !q || f.toLowerCase().includes(q)).forEach(f => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = f; if (f.toLowerCase() === cur) li.setAttribute('aria-selected', 'true'); list.appendChild(li); });
     if (!list.children.length) { close(true); return; }
     list.hidden = false; input.setAttribute('aria-expanded', 'true'); act = -1;
     const sel = list.querySelector('[aria-selected]'); if (sel && !q) sel.scrollIntoView({ block: 'nearest' });
+    list.scrollIntoView({ block: 'nearest' });          // near the bottom of the panel, the panel scrolls so the whole list shows
   };
   const val = li => li.hasAttribute('data-def') ? '' : li.textContent;
   const pick = f => { input.value = f; quiet = true; input.dispatchEvent(new Event('input', { bubbles: true })); quiet = false; close(); };
@@ -428,26 +429,35 @@ function groupSummary(k) {
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
     return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
-  if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null, iv = s.invert ? 'Invert colors' : null; return [j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv, s.invert ? 'Ink ' + ink() : null), j(fa, 'Margin ' + pc(s.margin), bg(), iv), j(fa, pc(s.margin), bg(), iv)]; }
+  if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null; return [j(fa, 'Margin ' + pc(s.margin)), j(fa, pc(s.margin))]; }
+  if (k === 'colors') { const iv = s.invert ? 'Invert colors' : null; return [j(bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(bg(), iv, s.invert ? 'Ink ' + ink() : null), j(bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
   if (k === 'fades') return [fd(false), fd(true)];
   if (k === 'credits') {
-    const clip = (t, n) => t.length > n ? t.slice(0, n - 1) + '…' : t, lines = [['Title', S.credits.title], ['Line 2', S.credits.l2], ['Line 3', S.credits.l3]].map(([n, t]) => [n, String(t).replace(/\s+/g, ' ').trim()]).filter(([, t]) => t);
-    if (!lines.length) return 'Empty: add text or turn off';
-    const at = S.set.creditsAt === 'start' ? 'Start · ' : '';
-    return [at + lines.map(([n, t]) => n + ' ' + clip(t, 40)).join(' · '), at + lines.map(([n, t]) => n + ' ' + clip(t, 20)).join(' · '), at + lines[0][0] + ' ' + clip(lines[0][1], 26)];
+    const lines = [S.credits.title, S.credits.l2, S.credits.l3].map(t => String(t).replace(/\s+/g, ' ').trim()).filter(Boolean);       // the lines you filled in, as you wrote them; a blank line is skipped
+    if (!lines.length) return 'Empty';
+    return { prefix: S.set.creditsAt === 'start' ? 'Start · ' : '', parts: lines, join: ' · ' };         // fitSummary shortens the longest lines first, so every line you filled in stays visible
   }
   if (k === 'video') { const r = Array.from($('#res').options).find(o => +o.value === +s.res); return s.aspect + ' · ' + (r ? r.textContent : s.res + 'p') + ' · ' + s.fps + 'fps'; }
   return '';
 }
 function fitSummary(el, options) {
-  const list = [].concat(options); if (list.length === 1) return list[0];
+  const parts = options && options.parts, list = parts ? [] : [].concat(options); if (!parts && list.length === 1) return list[0];
   const cs = getComputedStyle(el), ctx = fitSummary.ctx || (fitSummary.ctx = document.createElement('canvas').getContext('2d'));
   ctx.font = cs.fontSize + ' ' + cs.fontFamily;
-  const avail = el.parentElement.clientWidth - parseFloat(cs.paddingLeft) - 2;
+  const avail = el.parentElement.clientWidth - parseFloat(cs.paddingLeft) - 2, w = t => ctx.measureText(t).width;
+  if (parts) {          // lines you filled in: each keeps its own words, and the longest ones give up room first, so all of them show
+    const full = options.prefix + parts.join(options.join);
+    if (w(full) <= avail) return full;
+    let room = avail - w(options.prefix) - w(options.join) * (parts.length - 1), left = parts.length;
+    const cut = (t, px) => { if (w(t) <= px) return t; let n = t.length; while (n > 1 && w(t.slice(0, n).trimEnd() + '…') > px) n--; return t.slice(0, n).trimEnd() + '…'; };
+    const order = parts.map((t, i) => [i, w(t)]).sort((a, b) => a[1] - b[1]), share = [];
+    for (const [i, wi] of order) { const fair = room / left; share[i] = Math.min(wi, fair); room -= share[i]; left--; }
+    return options.prefix + parts.map((t, i) => cut(t, share[i])).join(options.join);
+  }
   return list.find(t => ctx.measureText(t).width <= avail) || list[list.length - 1];
 }
-function updateGroupSummaries() { document.querySelectorAll('.panel .group[data-sum]').forEach(g => { const el = g.querySelector(':scope > .group-sum'); if (el) { const t = fitSummary(el, groupSummary(g.dataset.sum)); el.textContent = t; el.title = t; } }); }
+function updateGroupSummaries() { document.querySelectorAll('.panel .group[data-sum]').forEach(g => { const el = g.querySelector(':scope > .group-sum'); if (el) { const o = groupSummary(g.dataset.sum), t = fitSummary(el, o); el.textContent = t; el.title = o && o.parts ? o.prefix + o.parts.join(o.join) : t; } }); }
 /* a folded or switched-off group hides its body (smoothly, see initSmooth); the heading and summary stay */
 function syncGroupBodies() {
   document.querySelectorAll('.panel .group[data-sum]').forEach(g => {

@@ -212,13 +212,12 @@
       <div class="group" data-sum="layout">
         <h3>Page layout</h3>
         <div class="field" id="pagesField">
-          <span class="lbl" id="pagesLbl">Pages</span>
-          <div class="seg" role="radiogroup" aria-labelledby="pagesLbl">
+          <div class="seg" role="radiogroup" aria-label="Page layout">
             <label><input type="radio" name="pageLayout" value="spread" checked><span>Spread</span></label>
             <label><input type="radio" name="pageLayout" value="single"><span>Single page</span></label>
           </div>
         </div>
-        <div class="field" id="firstAloneField">
+        <div class="field sub" id="firstAloneField">
           <div class="check-row">
             <label class="check" for="firstAlone">First page alone</label>
             <input type="checkbox" class="switch" id="firstAlone" aria-label="First page alone" checked>
@@ -228,13 +227,18 @@
           <label for="margin">Page margin <output id="marginOut">3%</output></label>
           <input type="range" id="margin" min="0" max="10" step="0.5" value="3">
         </div>
+      </div>
+
+      <!-- ----- PANEL GROUP: PAGE COLORS ----- -->
+      <div class="group" data-sum="colors">
+        <h3>Page colors</h3>
         <div class="field">
           <label for="bgPreset">Background</label>
           <select id="bgPreset">
             <option value="#000000">Black</option>
-            <option value="#1C1C1E">Space Black</option>
-            <option value="#3C4042">Night Sky</option>
-            <option value="#FCFCFC">Cloud White</option>
+            <option value="#1C1C1E">Space black</option>
+            <option value="#3C4042">Night sky</option>
+            <option value="#FCFCFC">Cloud white</option>
             <option value="#FFFFFF">White</option>
             <option value="custom">Custom…</option>
           </select>
@@ -248,18 +252,16 @@
         <div class="field">
           <div class="check-row">
             <label class="check" for="invert">Invert colors</label>
-            <button class="info-i" type="button" aria-label="About inverted colors" aria-expanded="false">i</button>
-            <span class="tip" role="tooltip" data-tip="tip.invert">White paper becomes see-through and the notes turn light, so the score sits on your background. Shows in the video and thumbnail, not in an exported PDF.</span>
             <input type="checkbox" class="switch" id="invert" aria-label="Invert colors">
           </div>
         </div>
         <div class="field sub" id="inkField" hidden>
           <label for="inkPreset">Ink color</label>
           <select id="inkPreset">
-            <option value="#FCFCFC">Cloud White</option>
+            <option value="#FCFCFC">Cloud white</option>
             <option value="#FFFFFF">White</option>
-            <option value="#F4EBD8">Warm White</option>
-            <option value="#CFD3DB">Soft Gray</option>
+            <option value="#F4EBD8">Warm white</option>
+            <option value="#CFD3DB">Soft gray</option>
             <option value="custom">Custom…</option>
           </select>
           <div class="fa" id="inkCustomFold"><div class="fa-in" inert>
@@ -302,7 +304,7 @@
                   <input type="range" id="turnSoft" min="0" max="100" step="1" value="50">
                 </div>
               </div>
-            </div>    
+          </div>
           <div class="subhead">Under the score</div>
         <div class="sub">
           <div class="field">
@@ -329,15 +331,16 @@
         </div>
         <div id="fadeBody">
           <div class="field" id="fadeLenField">
-            <span class="lbl" id="fadeSideLbl">Length <output id="fadeLenVal">1.0s</output></span>
+            <span class="lbl" id="fadeSideLbl">Apply to</span>
             <div class="seg" id="fadeSide" role="radiogroup" aria-labelledby="fadeSideLbl"><label><input type="radio" name="fadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="fadeSide" value="in"><span>In</span></label><label><input type="radio" name="fadeSide" value="out"><span>Out</span></label></div>
-            <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" aria-labelledby="fadeSideLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end auto" type="button" data-v="10">Auto</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
+            <span class="lbl fade-len-lbl" id="fadeLenLbl">Length <output id="fadeLenVal">1.0s</output></span>
+            <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" aria-labelledby="fadeLenLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end auto" type="button" data-v="10">Auto</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
           </div>
           <div class="fa open" id="fadeMoreFold"><div class="fa-in">
-            <div class="field fade-shape"><span class="lbl">Shape</span><canvas id="fadeCv" aria-label="Fade shape"></canvas></div>
             <div class="field">
               <span class="lbl" id="fadeShapeLbl">Curve</span>
               <div class="seg" id="fadeShape" role="radiogroup" aria-labelledby="fadeShapeLbl"><label><input type="radio" name="fadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="fadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: rises quickly and settles"><input type="radio" name="fadeShape" value="natural"><span>Natural</span></label></div>
+              <div class="fade-shape"><canvas id="fadeCv" aria-label="Fade shape"></canvas></div>
             </div>
             <div class="field">
               <span class="lbl" id="fadeStyleLbl">Fade to</span>
@@ -372,6 +375,7 @@
         <div class="field">
           <label for="credL2">Line 2</label>
           <div class="line-row"><textarea id="credL2" class="autogrow" rows="1" maxlength="160" placeholder="Performed by…" spellcheck="false"></textarea><button type="button" class="fmt-btn aa" id="credL2Aa" aria-expanded="false" aria-controls="credL2Fold" aria-label="Font, bold, and italic for line 2" title="Font, bold, and italic">Aa</button></div>
+          <p class="hint">Press Enter to split this into two lines.</p>
           <div class="fa line-fold" id="credL2Fold"><div class="fa-in" inert>
             <div class="line-style sub" id="credL2Style">
               <div class="combo" id="credL2FontBox"><input type="text" class="line-font" id="credL2Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 2"><span class="ph" aria-hidden="true"></span></div>
@@ -379,7 +383,6 @@
               <button type="button" class="fmt-btn" id="credL2I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
             </div>
           </div></div>
-          <p class="hint">Press Enter to split this into two lines.</p>
         </div>
         <div class="field">
           <label for="credL3">Line 3</label>
@@ -423,9 +426,9 @@
         </div>
       </div>
 
-      <!-- ----- PANEL GROUP: VIDEO EXPORT ----- -->
+      <!-- ----- PANEL GROUP: OUTPUT (video export) ----- -->
       <div class="group" data-sum="video">
-        <h3>Video</h3>
+        <h3>Output</h3>
         <div class="field">
           <label for="aspect">Aspect ratio</label>
           <select id="aspect">
@@ -481,8 +484,8 @@
           </div>
           <!-- ----- BUTTON: Save thumbnail ----- -->
           <div class="field">
-            <span class="lbl">Save current viewer position as thumbnail</span>
-            <button class="btn wide" id="btnThumb" type="button" disabled>Save thumbnail</button>
+            <span class="lbl">Thumbnail</span>
+            <button class="btn wide" id="btnThumb" type="button" disabled>Save current frame</button>
           </div>
         </details>
         <!-- ----- BUTTON: Export video ----- -->

@@ -59,7 +59,7 @@ const K = '__keyframes';
   { await p.evaluate(K => window[K].restoreDefaults(), K); await p.waitForTimeout(400);
     const pos = () => p.evaluate(AUTO => { const r = document.querySelector('#fadeLen'), rc = r.getBoundingClientRect(), f = (r.value - r.min) / (r.max - r.min), thumb = rc.left + 8 + f * (rc.width - 16), c = s => { const b = document.querySelector('#fadeLenField .sl-end[data-v="' + s + '"]').getBoundingClientRect(); return b.left + b.width / 2; }; return { thumb, off: c(0), auto: c(AUTO), longer: c(30), v: +r.value }; }, AUTO);
     let q = await pos(); ok('after Reset the slider sits on Auto, under its Auto label and well away from Off', Math.abs(q.thumb - q.auto) < 5 && q.auto - q.off > 25 && q.v === AUTO, JSON.stringify(q));
-    { const lab = await label(); ok('Auto sits on the scale at the length it works out to, so shorter lengths are to its left and longer ones to its right', /^Auto/.test(lab) && Math.round(parseFloat(lab.slice(5)) * 10) === AUTO && N(0.5) < AUTO && N(2.5) > AUTO, lab + ' @' + AUTO); }
+    { const lab = await label(); ok('Auto sits on the scale at the length it works out to, so shorter lengths are to its left and longer ones to its right', /^Auto/.test(lab) && Math.round(parseFloat(lab.replace(/^Auto · /, '')) * 10) === AUTO && N(0.5) < AUTO && N(2.5) > AUTO, lab + ' @' + AUTO); }
     await slide(N(2.0)); await p.waitForTimeout(100);
     await p.evaluate(() => { const r = document.querySelector('#fadeLen'); window.__seen = []; r.addEventListener('input', () => window.__seen.push(+r.value)); r.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); });
     await p.waitForTimeout(900); q = await pos(); const seen = await p.evaluate(() => window.__seen);
