@@ -1,4 +1,4 @@
-// About, How it works, Import/Export and Diagnostics share one size: 600px (Diagnostics 720px, How it works and Keyboard shortcuts 900px) wide (92vw on a phone), at least 380px tall, none scrolling at 1280x720 except How it works, which scrolls inside its window with Close in view. The editors and the warning window keep their widths.
+// About, How it works, Import/Export and Diagnostics share one size: 680px (Diagnostics 720px, Keyboard shortcuts 900px, How it works 720px) wide (92vw on a phone), at least 420px tall, none scrolling at 1280x720 except How it works, which scrolls inside its window with Close in view. The editors and the warning window keep their widths.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/page-window-size.js
 const { chromium } = require('playwright-core');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -15,7 +15,7 @@ const WINS = { About: '#aboutDlg', 'How it works': '#howDlg', 'Import/Export': '
   }, sel);
   for (const [name, sel] of Object.entries(WINS)) {
     const d = await read(sel);
-    ok(name + ' (1280x720): at its width (600px; Diagnostics 720px, How it works 900px), at least 380px tall', Math.abs(d.w - ({ 'How it works': 900, Diagnostics: 720 }[name] || 600)) < 0.6 && d.h >= 379.5, d.w + 'x' + d.h);
+    ok(name + ' (1280x720): at its width (680px; Diagnostics 720px, How it works 720px), at least 420px tall', Math.abs(d.w - ({ 'How it works': 720, Diagnostics: 720 }[name] || 680)) < 0.6 && d.h >= 419.5, d.w + 'x' + d.h);
     if (name === 'How it works') {
       ok('How it works scrolls inside its window, Close in view, window within the screen minus 32px', d.bodyScroll > 0 && d.closeIn && d.h <= d.vh - 32 + 0.5 && d.ovScroll <= 0 && d.dlgScroll <= 0, JSON.stringify(d));
     } else ok(name + ' (1280x720): no scroll, centered when short', d.ovScroll <= 0 && d.dlgScroll <= 0 && Math.abs(d.top - (d.vh - d.bottom)) < 1.5, JSON.stringify(d));
@@ -28,7 +28,7 @@ const WINS = { About: '#aboutDlg', 'How it works': '#howDlg', 'Import/Export': '
   await p.setViewportSize({ width: 390, height: 800 }); await p.waitForTimeout(300);
   for (const [name, sel] of Object.entries(WINS)) {
     const d = await read(sel);
-    ok(name + ' (390 wide): is 92vw wide, inside the gutter, and is at least 380px tall', Math.abs(d.w - 390 * 0.92) < 1 && d.h >= 379.5, d.w + 'x' + d.h);
+    ok(name + ' (390 wide): is 92vw wide, inside the gutter, and is at least 420px tall', Math.abs(d.w - 390 * 0.92) < 1 && d.h >= 419.5, d.w + 'x' + d.h);
   }
   const tall = await p.evaluate(() => { const o = document.querySelector('#ioDlg'); o.hidden = false; const hs = [...o.querySelectorAll('.row .btn')].map(e => e.getBoundingClientRect().height); o.hidden = true; return hs; });
   ok('Import/Export buttons keep their normal height', tall.every(h => h < 44), tall.join(','));

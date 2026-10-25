@@ -30,7 +30,7 @@ const read = p => p.evaluate(() => { const o = document.querySelector('#aboutDlg
   for (const [w, h] of [[1440, 900], [1280, 720], [1040, 700], [700, 900], [390, 800], [320, 568]]) {
     p = await b.newPage({ viewport: { width: w, height: h } }); p.on('pageerror', e => errs.push(e.message));
     await open(p);
-    const g = await p.evaluate(() => { const q = s => document.querySelector(s).getBoundingClientRect(), d = q('#aboutDlg .dlg'), v = q('#aboutVersion'), l = q('#aboutDlg .row .fine'), last = [...document.querySelectorAll('#aboutDlg .dlg>p')].filter(x => x.id !== 'aboutVersion').pop().getBoundingClientRect();
+    const g = await p.evaluate(() => { const q = s => document.querySelector(s).getBoundingClientRect(), d = q('#aboutDlg .dlg'), v = q('#aboutVersion'), l = q('#aboutDlg .row .fine'), last = [...document.querySelectorAll('#aboutDlg .dlg .about-g p')].pop().getBoundingClientRect();
       return { above: Math.round(v.top - last.bottom), below: Math.round(l.top - v.bottom), left: Math.round(v.left - l.left), inside: v.left >= d.left && v.right <= d.right && l.right <= d.right + 0.5, pageX: document.documentElement.scrollWidth - innerWidth, dlgScroll: document.querySelector('#aboutDlg .dlg').scrollHeight - document.querySelector('#aboutDlg .dlg').clientHeight }; });
     ok(w + 'x' + h + ': the version sits close above the links (gap above it at least the paragraph gap, below it about 8px), aligned, inside, nothing scrolls',
       g.above >= 14 && g.below >= 4 && g.below <= 10 && Math.abs(g.left) <= 1 && g.inside && g.pageX <= 0 && g.dlgScroll <= 0, JSON.stringify(g));

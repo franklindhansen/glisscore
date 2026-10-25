@@ -875,12 +875,12 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about .fine{margin:0 auto 0 0;font-size:12.5px}
 .about .fine a{color:inherit}
 .about .fine a:hover{color:var(--ink)}      /* fine print sits left of Close and wraps above it on a narrow screen */
-.dlg.page{width:min(600px,92vw);min-height:380px}
+.dlg.page{width:min(680px,92vw);min-height:420px}
 .dlg.page:not(.how){display:flex;flex-direction:column}      /* extra height goes above the buttons, not into stretched rows and tall buttons */
 .dlg.page:not(.how)>.row:last-child{margin-top:auto}
 #diagDlg .dlg.page{width:min(720px,92vw)}      /* About, How it works, Import/Export, Keyboard shortcuts and Diagnostics share one size */
-#keysDlg .dlg.page,.dlg.page.how{width:min(900px,92vw)}      /* the reading window and the two-column shortcuts get the editors' width */
-.dlg.page.how{height:min(830px,calc(100dvh - 32px))}      /* one frame: opening a dropdown scrolls the text inside, it never resizes the window */
+#keysDlg .dlg.page{width:min(900px,92vw)}      /* the reading window and the two-column shortcuts get the editors' width */
+.dlg.page.how{width:min(720px,92vw);height:min(830px,calc(100dvh - 32px))}      /* one frame: opening a dropdown scrolls the text inside, it never resizes the window */
 .keys-groups{column-count:2;column-gap:20px}      /* the groups fill two columns; one group never splits */
 .keys-groups section{break-inside:avoid;margin-bottom:14px}
 .keys-groups h3{margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -2356,3 +2356,51 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* the start and end glide: no scroll bar flickers in while the axis is wider than the window */
 .tl-scroll.gliding{overflow-x:hidden}
+
+/* ----- Info windows (About, How it works, Import/Export, Keyboard shortcuts, Diagnostics): one voice for the subtitle, one for the section labels ----- */
+.dlg.page>.hint,.how-lead{margin:-8px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted);text-wrap:pretty}      /* the subtitle sits tight under the title, the same in every window */
+.dlg.page p{text-wrap:pretty}
+/* About: three short groups (who made it, how to help, how to reach out): close inside a group, more room between groups */
+.about-g{display:grid;gap:12px}
+.about-g+.about-g{margin-top:12px}
+.about-g p{line-height:1.55}
+/* small delights, none of them an icon: the answers settle in one after another when the window opens, a dropdown's lines follow it down as it opens, and its arrow leans toward where it will go */
+@keyframes howIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .how-d[open]:not([data-closing="1"])>.how-in>*{animation:howIn .42s var(--ease-out) backwards;animation-delay:calc(60ms + min(var(--k,0)*26ms,340ms))}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(1){--k:1}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(2){--k:2}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(3){--k:3}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(4){--k:4}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(5){--k:5}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(6){--k:6}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(7){--k:7}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(8){--k:8}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(9){--k:9}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(10){--k:10}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(11){--k:11}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(12){--k:12}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(13){--k:13}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(14){--k:14}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(15){--k:15}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(16){--k:16}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(17){--k:17}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(18){--k:18}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(19){--k:19}
+  .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(20){--k:20}
+  #howDlg:not([hidden]) .how-body>section{animation:howIn .5s var(--ease-out) backwards;animation-delay:calc(140ms + var(--i,0)*55ms)}
+  #howDlg:not([hidden]) .how-body>section:nth-child(2){--i:1}
+  #howDlg:not([hidden]) .how-body>section:nth-child(3){--i:2}
+  #howDlg:not([hidden]) .how-body>section:nth-child(4){--i:3}
+  #howDlg:not([hidden]) .how-body>section:nth-child(5){--i:4}
+  #howDlg:not([hidden]) .how-body>section:nth-child(6){--i:5}
+}
+
+.how-d>summary::before{transition:transform .3s var(--ease-ui),translate .25s var(--ease-ui)}
+.how-d:not([open])>summary:hover::before{translate:2px 0}
+.how-d[open]:not([data-closing="1"])>summary:hover::before{translate:0 2px}
+/* About: the version, hovered, gets one soft sweep of light across it, a glissando for the eye, and its words come up to full ink */
+.about .ver{background:linear-gradient(105deg,transparent 35%,var(--accent-soft) 50%,transparent 65%) 100% 0/250% 100% no-repeat;transition:color .25s var(--ease-ui),border-color .25s var(--ease-ui)}
+.about .ver:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+@keyframes verGliss{from{background-position:100% 0}to{background-position:0 0}}
+@media (prefers-reduced-motion:no-preference){.about .ver:hover{animation:verGliss .9s var(--ease-out)}}
