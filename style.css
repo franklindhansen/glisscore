@@ -19,7 +19,7 @@
 /* ==================== 1. THEME & VARIABLES ==================== */
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
-  --h-s:30px; --h-m:34px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one */
+  --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:29px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
   --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
@@ -101,6 +101,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ==================== 4. BUTTONS ==================== */
 /* ----- Standard button: size, padding, colors ----- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:7px 13px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;line-height:1.2}
+.btn:not(.small){min-height:var(--h-m)}          /* a full-size button is one --h-m tall whatever its text; .btn.small sizes itself */
 .btn:hover{border-color:var(--muted)}
 .btn:focus-visible,.icon-btn:focus-visible,input:focus-visible,select:focus-visible,.seg label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 .btn svg{width:16px;height:16px}
@@ -109,7 +110,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .btn.primary:hover{filter:brightness(1.06)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
-.btn.small{padding:4px 9px;font-size:13px;border-radius:var(--r-sm)}
+.btn.small{padding:4px 9px;min-height:var(--h-s);font-size:13px;border-radius:var(--r-sm)}
 
 /* ==================== 5. WORK AREA (STAGE & TRANSPORT) ==================== */
 /* ----- Layout: stage column + side panel ----- */
@@ -138,11 +139,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ----- Transport controls: play, time, tap button ----- */
 .transport{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.icon-btn{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer}
+.icon-btn{display:inline-grid;place-items:center;width:var(--h-l);height:var(--h-l);border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer}
 .icon-btn:hover{border-color:var(--muted)}
 .icon-btn svg{width:18px;height:18px;fill:currentColor}
 .icon-btn.stroke svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.icon-btn.play{width:44px;height:36px;background:var(--accent);border-color:transparent;color:var(--accent-ink)}
+.icon-btn.play{width:44px;height:var(--h-l);background:var(--accent);border-color:transparent;color:var(--accent-ink)}
 .icon-btn[disabled]{opacity:.45;cursor:not-allowed}
 .time{font-variant-numeric:tabular-nums;margin:0 8px 0 10px;min-width:140px}
 .time b{font-weight:600}
@@ -204,7 +205,7 @@ input.bad{border-color:var(--danger)}
 .line-style{display:flex;align-items:center;gap:6px}
 .line-style .combo{flex:1;min-width:0}
 .line-style .line-font{padding:5px 28px 5px 8px;font-size:13px}
-.fmt-btn{flex:none;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit}
+.fmt-btn{flex:none;display:grid;place-items:center;width:var(--h-s);height:var(--h-s);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit}
 .fmt-btn:hover{border-color:var(--muted)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .line-row{display:flex;gap:6px;align-items:flex-start}
@@ -232,7 +233,8 @@ input.bad{border-color:var(--danger)}
 .combo input:not(:placeholder-shown)~.ph{display:none}
 
 /* ----- Segmented radio buttons ----- */
-.seg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border:1px solid var(--line);border-radius:calc(var(--r-sm) + 2px);overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
+.seg{position:relative;box-sizing:border-box;height:var(--h-m);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border:1px solid var(--line);border-radius:calc(var(--r-sm) + 2px);overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
+.pe .seg{height:var(--h-s)}          /* the PDF Editor's choices are the small control height */
 .seg label{position:relative;z-index:1;display:block;text-align:center;padding:6px 4px;border-radius:var(--r-sm);cursor:pointer;font-size:13px;color:var(--muted)}
 .seg input{position:absolute;opacity:0;pointer-events:none}
 .seg label:focus-within{outline-offset:0}          /* the focus ring sits in the 2px inset, so the control's edge does not clip it */
@@ -261,7 +263,7 @@ input.bad{border-color:var(--danger)}
 .combo-btn{position:absolute;right:1px;top:1px;bottom:1px;width:28px;display:grid;place-items:center;padding:0;border:0;border-radius:0 7px 7px 0;background:none;color:var(--muted);cursor:pointer}
 .combo-btn:hover{color:var(--ink)}
 .combo-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;max-height:210px;overflow:auto;margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-ctl);box-shadow:var(--shadow)}
-.combo-list li{padding:6px 8px;border-radius:6px;font-size:13px;cursor:pointer}
+.combo-list li{padding:6px 8px;border-radius:var(--r-sm);font-size:13px;cursor:pointer}
 .combo-list li+li{border-top:1px solid var(--line)}
 .combo-list li:hover,.combo-list li.act{background:var(--accent-soft)}
 .combo-list li[aria-selected="true"]{font-weight:600;color:var(--accent)}
@@ -734,6 +736,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 @media (max-width:960px){
   .top-main{display:contents}
 }
+.tl-bar #bFit{height:var(--h-xs);min-height:0}
 .tl-bar{min-height:38px;padding-top:0;padding-bottom:0;box-sizing:border-box}
 .adv[open]{margin-bottom:18px}
 
@@ -1118,7 +1121,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-badge{margin-right:6px}
 /* slider labels that are also buttons */
 .sl-ends{margin-top:4px}
-.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .sl-end:hover,.sl-end:focus-visible{color:var(--accent);background:var(--accent-soft)}
 .sl-end:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.sl-end:not(:disabled):active{transform:none}}
@@ -1563,9 +1566,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .fa-stack{display:grid}
 .fa-stack>.fa{grid-area:1/1;align-self:start}
 #aeNormCard #aeNormTarget{margin-top:12px;padding-top:0}
-.lv-loud select{width:100%;min-width:0;height:36px}
-.lv-loud .lv-trow input{height:36px;box-sizing:border-box}
-#aeNormCard .lv-loud .lv-trow{height:36px;margin:0;padding:0;align-items:center}
+.lv-loud select{width:100%;min-width:0;height:var(--h-l)}
+.lv-loud .lv-trow input{height:var(--h-l);box-sizing:border-box}
+#aeNormCard .lv-loud .lv-trow{height:var(--h-l);margin:0;padding:0;align-items:center}
 .lv-trow{margin-top:10px}
 .lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:8px 0 0;min-height:17px;font-size:12px;line-height:1.35;color:var(--muted);transition:color .3s var(--ease-color)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
@@ -1782,7 +1785,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .hs-row.target>.hs-main .hs-btn{background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .hs-row.drop>.hs-main .hs-n{opacity:.45;text-decoration:line-through}
 .hs-row.kept>.hs-main .hs-dot{background:var(--accent);border-color:var(--accent)}
-.hs-more{flex:none;width:22px;height:22px;display:grid;place-items:center;border:0;border-radius:6px;background:none;cursor:pointer;color:var(--muted)}
+.hs-more{flex:none;width:22px;height:22px;display:grid;place-items:center;border:0;border-radius:var(--r-sm);background:none;cursor:pointer;color:var(--muted)}
 .hs-more:hover{background:var(--hover,rgba(127,127,127,.1));color:var(--ink)}
 .hs-more i{width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .35s var(--ease-out)}
 .hs-row.open .hs-more i{transform:rotate(45deg)}
@@ -1824,7 +1827,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-rail-in{position:relative;display:flex;flex-direction:column;gap:2px}
 .pe-rail-h{margin:12px 0 4px 10px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .pe-sel+.pe-rail-h{margin-top:4px}
-.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:36px;padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:var(--h-l);padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tab svg{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);transition:color .2s var(--ease-color)}
 @media (hover:hover){.pe-tab:not(.on):hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}}
 .pe-tab.on,.pe-tab.on svg{color:var(--accent)}
@@ -1910,8 +1913,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-wm-grid{display:grid;grid-template-columns:auto minmax(0,1.2fr) auto minmax(0,1fr);align-items:center;gap:10px 14px;margin-top:14px;transition:opacity .3s var(--ease-ui)}
 .pe-wl{font-size:13.5px;color:var(--muted);white-space:nowrap}
 .pe-wm-grid .line-style{display:flex;gap:6px;min-width:0}
-.pe-wm-grid .line-style input{flex:1;min-width:0;height:32px}
-.pe-wm-grid .fmt-btn{flex:none;width:34px;height:32px}
+.pe-wm-grid .line-style input{flex:1;min-width:0;height:var(--h-s)}
 .pe-wm-grid .pe-fmt i{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:600}
 .pe-wm-grid .seg label{padding:6px 2px;font-size:12.5px}
 .pe-wm-grid .pe-range input{flex:1;width:auto;min-width:0}
@@ -1919,7 +1921,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-dir .seg{flex:1;min-width:0}
 .pe-deg{display:none;align-items:center;gap:3px;color:var(--muted)}
 .pe-deg.shown{display:flex}
-.pe-deg input{width:62px;height:32px}
+.pe-deg input{width:62px;height:var(--h-s)}
 
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
@@ -2322,7 +2324,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
    One outline round the group, flat buttons inside it, a thin divider between them. The group corner is the button corner plus the gap (7px + 2px = 9px), so the curves nest.
    Mark up a group as <span class="btn-group"> with .btn buttons and <span class="vsep"> dividers; a lone button, a slider or a toggle that stands apart is not in one. ---- */
 .btn-group{display:inline-flex;align-items:center;gap:0;padding:2px;border-radius:calc(var(--r-sm) + 2px);border:1px solid var(--line);background:var(--panel2)}
-.btn-group>.btn{box-sizing:border-box;height:23px;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:13px}
+.btn-group>.btn{box-sizing:border-box;height:calc(var(--h-xs) - 6px);min-height:0;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:13px}
 .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
 .btn-group>.btn[aria-pressed=true]{background:var(--accent-soft)}
 .btn-group .vsep{display:block;width:1px;height:16px;margin:0 3px;background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
