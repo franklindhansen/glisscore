@@ -27,6 +27,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   // a real click on a dropdown: the title, the frame and the text above it stay where they are, and the spacing does not change
   const c = await p.evaluate(async () => {
     const o = document.querySelector('#howDlg'); o.hidden = false; await new Promise(r => setTimeout(r, 300));
+    await Promise.all(o.getAnimations({ subtree: true }).map(a => a.finished.catch(() => {})));          // the sections slide in over half a second; measure once they have settled
     const d = o.querySelector('.dlg'), first = d.querySelector('.how-body h3'), sum = d.querySelector('.how-d summary');
     const snap = () => ({ title: d.querySelector('#howTitle').getBoundingClientRect().top, h3: first.getBoundingClientRect().top, frame: d.scrollTop });
     const before = snap(), gap = d.querySelectorAll('.how-body h3')[1].getBoundingClientRect().top - d.querySelectorAll('.how-body h3')[0].getBoundingClientRect().top;
