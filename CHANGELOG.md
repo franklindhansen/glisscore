@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.15
+
+Every scrolling area, including How it works, the history lists, and the font lists, now has the same thin scrollbar.
+
 ## 1.1.14
 
 The loading bars for fonts, files, and noise reduction now share one smooth sweep that starts at the left edge and finishes its pass. The README now names the fonts the site uses today.
