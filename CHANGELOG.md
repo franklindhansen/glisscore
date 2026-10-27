@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.13
+
+Looking up a credits font now shows a thin loading bar instead of a line of text that nudged the panel. Hovering Save current frame previews the frame it will save, and the preset font list is tidier.
+
 ## 1.1.12
 
 Dropping a page after reordering now glides into place smoothly. Your browser is also now set to only let this page talk to its own server.
