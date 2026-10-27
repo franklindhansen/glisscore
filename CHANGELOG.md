@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.12
+
+Dropping a page after reordering now glides into place smoothly. Your browser is also now set to only let this page talk to its own server.
+
 ## 1.1.11
 
 The About and How it works windows are roomier and more consistent with the others, with small touches as they open.
