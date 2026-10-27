@@ -1,4 +1,4 @@
-// Consistent waits: the video editor's waits (the export's loudness reading, sound preparing, rendering and finishing, and the credits font box) use the one word, "Processing", and never show Preparing, Measuring, Rendering, Finishing, Loading or Finding.
+// Consistent waits: the video editor's waits (the export's loudness reading, sound preparing, rendering and finishing) use the one word, "Processing", and never show Preparing, Measuring, Rendering, Finishing, Loading or Finding. The credits font box shows a thin bar, not a line of text, so nothing moves.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/waits-video-editor.js
 const { chromium } = require('playwright-core');
 const FX = process.env.S || 'tests/fixtures';
@@ -14,8 +14,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const m = await p.evaluate(() => [...window.__msgs].filter(Boolean)), waits = m.filter(t => /^Processing/.test(t));
   ok('the video export never says Preparing, Measuring, Rendering, Finishing, Loading or Finding', !m.some(t => /\b(Preparing|Measuring|Rendering|Finishing|Loading|Finding)\b/.test(t)), JSON.stringify(m));
   ok('the video export waits say "Processing" or "Processing N%"', waits.length > 0 && waits.every(t => /^Processing( \d+%)?( · about \d+s left)?$|^Processing…$/.test(t)), JSON.stringify(m));
-  // the credits font box says it is working in the same word
-  const f = await p.evaluate(async () => { const i = document.querySelector('#credFont'), s = document.querySelector('#credFontMsg'); window.resolveGoogleFont = () => new Promise(() => {}); i.value = 'Some Font'; i.dispatchEvent(new Event('input', { bubbles: true })); await sleep(900); return s.textContent; });
-  ok('the font box says "Processing…" while it looks the font up', /^Processing…?$/.test(f), JSON.stringify(f));
+  // the credits font box shows it is working with a bar along its edge, and adds no line of text
+  const f = await p.evaluate(async () => { const i = document.querySelector('#credFont'), s = document.querySelector('#credFontMsg'); window.resolveGoogleFont = () => new Promise(() => {}); i.value = 'Some Font'; i.dispatchEvent(new Event('input', { bubbles: true })); await sleep(900); return { text: s.textContent, busy: i.closest('.combo').classList.contains('busy') }; });
+  ok('the font box shows its bar, and no text, while it looks the font up', f.busy && f.text === '', JSON.stringify(f));
   ok('no errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

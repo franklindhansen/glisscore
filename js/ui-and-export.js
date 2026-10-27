@@ -329,16 +329,18 @@ function preloadCreditsFonts() {
 /* a font box: loads the Google Font as you type (after a short pause) and says so if it can't be found */
 const fontTimers = {};
 function bindFontField(id, key, msgId) {
-  const input = $('#' + id), msg = msgId ? $('#' + msgId) : null;
+  const input = $('#' + id), msg = msgId ? $('#' + msgId) : null, box = input.closest('.combo'), bar = document.createElement('span');
+  bar.className = 'combo-bar'; bar.setAttribute('aria-hidden', 'true'); bar.innerHTML = '<b></b>'; box.appendChild(bar);          // a thin bar along the box's bottom edge while the font is looked up, so no line of text pushes the panel down
   const say = (t, bad) => { if (msg) { msg.textContent = t; msg.classList.toggle('err', !!bad); } input.classList.toggle('bad', !!bad); input.title = bad ? t : ''; };
   input.addEventListener('input', () => {
     clearTimeout(fontTimers[id]);
     fontTimers[id] = setTimeout(async () => {
       const typed = input.value.trim();
-      if (!typed) { S.set[key] = ''; say(''); saveSettings(); updateLineStyles(); stageDirty = true; return; }
-      say('Processing…');
+      if (!typed) { S.set[key] = ''; box.classList.remove('busy'); say(''); saveSettings(); updateLineStyles(); stageDirty = true; return; }
+      say(''); box.classList.add('busy');
       const name = await resolveGoogleFont(typed);
-      if (input.value.trim() !== typed) return;                     // the box changed while it loaded
+      if (input.value.trim() !== typed) return;                     // the box changed while it loaded; the lookup for the new text ends the bar
+      box.classList.remove('busy');
       if (name) { S.set[key] = name; if (name !== typed) input.value = name; say(''); saveSettings(); updateLineStyles(); stageDirty = true; }
       else say(validFontName(typed) ? "Couldn't find “" + typed + "” on Google Fonts (or you're offline). Check the spelling." : 'Use the font name exactly as it appears on fonts.google.com.', true);
     }, 450);
@@ -361,7 +363,7 @@ function applyTransitionUI() {
   $('#turnShadowBlock').hidden = t !== 'flip';
 }
 /* A font box you can type in, which also drops down a list of popular Google Fonts when you click it */
-const CRED_FONTS = ['Playfair Display', 'Cormorant Garamond', 'EB Garamond', 'Libre Baskerville', 'Lora', 'Merriweather', 'Crimson Text', 'Cinzel', 'Source Serif 4', 'Montserrat', 'Raleway', 'Josefin Sans', 'Poppins', 'Lato', 'Open Sans', 'Roboto', 'Oswald', 'Inter'];
+const CRED_FONTS = ['Playfair Display', 'EB Garamond', 'Libre Baskerville', 'Lora', 'Merriweather', 'Crimson Pro', 'Cinzel', 'Source Serif 4', 'Montserrat', 'Josefin Sans', 'Lato', 'Open Sans', 'Roboto', 'Inter'];
 function initCombo(box) {
   const input = box.querySelector('input'), list = document.createElement('ul'), btn = document.createElement('button');
   list.className = 'combo-list'; list.hidden = true; list.setAttribute('role', 'listbox'); list.id = input.id + 'List';
@@ -1361,19 +1363,25 @@ async function runSelfTest() {
   } finally { dbg('===== SELF-TEST END ====='); btn.disabled = false; }
 }
 
-/* The frame under the playhead as a YouTube thumbnail: 1280x720, JPG, kept under their 2 MB limit */
-async function saveThumbnail() {
-  if (!S.pdf) return;
-  const btn = $('#btnThumb'); btn.disabled = true;
+/* The frame under the playhead, W by H, flat on the background color: what the thumbnail saves and what its hover preview shows */
+async function thumbFrame(W, H) {
+  const st = frameState(S.time); st.fade = 1;
+  const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+  const rend = new Renderer(canvas, PageSource, { cap: 6 }); rend.resize(W, H);
   try {
-    const W = 1280, H = 720, st = frameState(S.time); st.fade = 1;
-    const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
-    const rend = new Renderer(canvas, PageSource, { cap: 6 }); rend.resize(W, H);
     await rend.ensure(pagesFor(st));
     rend.render(st); if (pagesFor(st).length === 0 || st.spread >= 0) { await sleep(60); rend.render(st); }          // a second pass lets any late credits font settle
     const flat = document.createElement('canvas'); flat.width = W; flat.height = H; const fx = flat.getContext('2d');
     fx.fillStyle = S.set.bg; fx.fillRect(0, 0, W, H); fx.drawImage(canvas, 0, 0);
-    rend.destroy();
+    return flat;
+  } finally { rend.destroy(); }
+}
+/* The frame under the playhead as a YouTube thumbnail: 1280x720, JPG, kept under their 2 MB limit */
+async function saveThumbnail() {
+  if (!S.pdf) return;
+  const btn = $('#btnThumb'); btn.disabled = true; thumbPeekHide();
+  try {
+    const flat = await thumbFrame(1280, 720);
     let q = 0.93, blob = null;
     for (let i = 0; i < 8; i++) { blob = await new Promise(r => flat.toBlob(r, 'image/jpeg', q)); if (!blob || blob.size <= 1.9 * 1024 * 1024) break; q -= 0.08; }
     if (!blob || blob.size > 1.9 * 1024 * 1024) throw new Error('could not make the image under 2 MB');
@@ -1381,6 +1389,22 @@ async function saveThumbnail() {
     await saveFile(blob, name); toast(tx('vid.thumb', { mb: (blob.size / 1048576).toFixed(1) }));
   } catch (e) { console.error(e); toast(tx('vid.thumbfail'), 5000); }
   finally { updateButtons(); }
+}
+/* Hovering (or focusing) Save current frame shows a small picture of the frame it would save, above the button */
+let thumbPeekEl = null, thumbPeekTimer = 0, thumbPeekRun = 0;
+function thumbPeekHide() { clearTimeout(thumbPeekTimer); thumbPeekRun++; if (thumbPeekEl) thumbPeekEl.classList.remove('show'); }
+function thumbPeekShow() {
+  thumbPeekHide(); const run = thumbPeekRun, btn = $('#btnThumb');
+  if (!S.pdf || btn.disabled) return;
+  thumbPeekTimer = setTimeout(async () => {
+    let flat; try { flat = await thumbFrame(432, 243); } catch (e) { return; }
+    if (run !== thumbPeekRun) return;                              // the pointer left while the picture was made
+    if (!thumbPeekEl) { thumbPeekEl = document.createElement('div'); thumbPeekEl.className = 'thumb-peek'; thumbPeekEl.setAttribute('aria-hidden', 'true'); thumbPeekEl.innerHTML = '<canvas width="432" height="243"></canvas>'; document.body.appendChild(thumbPeekEl); }
+    thumbPeekEl.firstChild.getContext('2d').drawImage(flat, 0, 0);
+    const r = btn.getBoundingClientRect(), w = 230, left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+    thumbPeekEl.style.left = left + 'px'; thumbPeekEl.style.bottom = (innerHeight - r.top + 8) + 'px';
+    thumbPeekEl.classList.add('show');
+  }, 250);
 }
 async function saveFile(blob, filename) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();

@@ -259,6 +259,17 @@ input.bad{border-color:var(--danger)}
 #shadowReset{margin-top:14px}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
+/* a font lookup runs a thin bar along the box's bottom edge, end to end (it follows the box's rounded corners), so nothing around the box moves */
+.combo-bar{position:absolute;inset:0;border-radius:var(--r-ctl);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
+.combo.busy .combo-bar{opacity:1}
+.combo-bar b{position:absolute;left:0;bottom:0;width:40%;height:2px;border-radius:99px;background:var(--accent);animation:combo-sweep 1.3s cubic-bezier(.45,0,.25,1) infinite}
+@keyframes combo-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){.combo-bar b{animation:none;width:100%;opacity:.5}}
+/* the hover preview of the frame Save current frame would save */
+.thumb-peek{position:fixed;z-index:60;width:230px;padding:3px;border-radius:var(--r-ctl);background:var(--ink);box-shadow:var(--shadow);line-height:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
+.thumb-peek.show{visibility:visible;opacity:1;transform:none;transition-delay:0s}
+.thumb-peek canvas{display:block;width:100%;height:auto;border-radius:calc(var(--r-ctl) - 3px)}
+@media (prefers-reduced-motion:reduce){.thumb-peek{transition:none}}
 .combo input[type=text]{padding-right:28px}
 .combo-btn{position:absolute;right:1px;top:1px;bottom:1px;width:28px;display:grid;place-items:center;padding:0;border:0;border-radius:0 7px 7px 0;background:none;color:var(--muted);cursor:pointer}
 .combo-btn:hover{color:var(--ink)}

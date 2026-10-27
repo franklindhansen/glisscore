@@ -365,6 +365,7 @@ function boot() {
   $('#zoom').addEventListener('input', e => setZoom(sliderToZoom(+e.target.value), TL.vw / 2));
   $('#btnExport').addEventListener('click', () => onExportClick());
   $('#btnThumb').addEventListener('click', saveThumbnail);
+  { const tb = $('#btnThumb'); tb.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') thumbPeekShow(); }); tb.addEventListener('pointerleave', thumbPeekHide); tb.addEventListener('focus', () => { if (tb.matches(':focus-visible')) thumbPeekShow(); }); tb.addEventListener('blur', thumbPeekHide); }
   $('#expCancel').addEventListener('click', cancelExport);
   $('#expLogBtn').addEventListener('click', () => setDiagOpen(true));
   $('#expRetry').addEventListener('click', () => {
