@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.14
+
+The loading bars for fonts, files, and noise reduction now share one smooth sweep that starts at the left edge and finishes its pass. The README now names the fonts the site uses today.
+
 ## 1.1.13
 
 Looking up a credits font now shows a thin loading bar instead of a line of text that nudged the panel. Hovering Save current frame previews the frame it will save, and the preset font list is tidier.
