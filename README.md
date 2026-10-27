@@ -40,4 +40,4 @@ The name *glisscore*, its logo, wordmark, and icons, the glisscore.com domain an
 
 ## Third-party software
 
-*glisscore* bundles PDF.js, pdf-lib, the Instrument Sans and Newsreader fonts, and Lucide icons, each under its own license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+*glisscore* bundles PDF.js, pdf-lib, the Hanken Grotesk, Newsreader, and Instrument Sans fonts, and Lucide icons, each under its own license. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

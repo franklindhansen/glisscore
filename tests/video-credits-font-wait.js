@@ -11,7 +11,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K); await p.waitForTimeout(800);
   await p.evaluate(() => document.querySelector('#creditsOn').click()); await p.waitForTimeout(2000);          // the Credits group glides open first; measure once it has
   await p.evaluate(() => { window.__release = null; window.resolveGoogleFont = raw => new Promise(res => { window.__release = v => res(v); }); });
-  const look = () => p.evaluate(() => { const bx = document.querySelector('#credFontBox'), bar = bx.querySelector('.combo-bar'), next = document.querySelector('#creditsAtField'); return { busy: bx.classList.contains('busy'), bar: bar ? +getComputedStyle(bar).opacity : -1, text: document.querySelector('#credFontMsg').textContent, next: Math.round((next.getBoundingClientRect().top - document.querySelector('#credFont').getBoundingClientRect().top) * 10) / 10,          // how far the next field sits below the font box (the panel itself may scroll)
+  const look = () => p.evaluate(() => { const bx = document.querySelector('#credFontBox'), bar = bx.querySelector('.combo-bar'), next = document.querySelector('#creditsAtField'); return { busy: bx.classList.contains('busy'), bar: bar && bar.classList.contains('sweeping') ? 1 : 0, text: document.querySelector('#credFontMsg').textContent, next: Math.round((next.getBoundingClientRect().top - document.querySelector('#credFont').getBoundingClientRect().top) * 10) / 10,          // how far the next field sits below the font box (the panel itself may scroll)
  field: document.querySelector('#credFontField').getBoundingClientRect().height }; });
   const idle = await look();
   ok('at rest the bar is hidden and there is no message', !idle.busy && idle.bar === 0 && idle.text === '', JSON.stringify(idle));
@@ -19,12 +19,16 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const wait = await look();
   if (process.env.SHOTS) { await p.locator('#credFontField').scrollIntoViewIfNeeded(); for (const n of [1, 2, 3]) { await p.waitForTimeout(300); await p.screenshot({ path: process.env.SHOTS + '/font-wait' + n + '.png', clip: await p.locator('#credFontField').boundingBox().then(r => ({ x: r.x - 20, y: r.y - 10, width: r.width + 40, height: r.height + 20 })) }); } }
   ok('while the font is looked up the bar shows and no text appears', wait.busy && wait.bar > 0.9 && wait.text === '', JSON.stringify(wait));
-  const sw = await p.evaluate(async () => { const bx = document.querySelector('#credFontBox').getBoundingClientRect(), b = document.querySelector('#credFontBox .combo-bar b'); let lo = 1e9, hi = -1e9; for (let i = 0; i < 40; i++) { const r = b.getBoundingClientRect(); lo = Math.min(lo, r.left); hi = Math.max(hi, r.right); await new Promise(r => setTimeout(r, 50)); } return { lo: Math.round(lo - bx.left), hi: Math.round(hi - bx.right) }; });
-  ok('the bar runs the whole length of the box, from its first edge to its last', sw.lo <= 0 && sw.hi >= 0, JSON.stringify(sw));
+  const sw = await p.evaluate(async () => { const e = document.querySelector('#credFontBox .combo-bar'), W = e.getBoundingClientRect().width; let lo = 1e9, hi = -1e9; for (let i = 0; i < 60; i++) { const c = getComputedStyle(e, '::after'), x = new DOMMatrix(c.transform).m41, w = parseFloat(c.width); lo = Math.min(lo, x); hi = Math.max(hi, x + w); await new Promise(r => setTimeout(r, 25)); } return { lo: Math.round(lo), hi: Math.round(hi - W) }; });
+  ok('the band runs the whole length of the box: in from before its first edge, out past its last', sw.lo <= 0 && sw.hi >= 0, JSON.stringify(sw));
   ok('and nothing below the box moves', wait.next === idle.next && wait.field === idle.field, JSON.stringify({ idle, wait }));
-  await p.evaluate(() => window.__release('Lora')); await p.waitForTimeout(600);
+  await p.evaluate(() => window.__release('Lora')); await p.waitForTimeout(80);
+  ok('the bar finishes the pass it is on instead of stopping short', await p.evaluate(() => document.querySelector('#credFontBox .combo-bar').classList.contains('sweeping')));
+  await p.waitForTimeout(1800);
   const done = await look();
   ok('when it is found the bar goes and the font is set', !done.busy && done.bar === 0 && done.text === '' && done.next === idle.next, JSON.stringify(done));
+  const first = await p.evaluate(async () => { const i = document.querySelector('#credFont'); i.value = 'Lora Two'; i.dispatchEvent(new Event('input', { bubbles: true })); const e = document.querySelector('#credFontBox .combo-bar'); for (let n = 0; n < 200 && !e.classList.contains('sweeping'); n++) await new Promise(r => setTimeout(r, 10)); const c = getComputedStyle(e, '::after'); return { x: Math.round(new DOMMatrix(c.transform).m41), w: Math.round(parseFloat(c.width)) }; });
+  ok('a new lookup starts the band at the left edge, off the box', first.x <= -first.w + 8, JSON.stringify(first)); await p.evaluate(() => window.__release('Lora')); await p.waitForTimeout(2000);
   await p.evaluate(() => { const i = document.querySelector('#credFont'); i.value = 'Zzqx Notafont'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(1000);
   await p.evaluate(() => window.__release(null)); await p.waitForTimeout(600);
   const bad = await look();

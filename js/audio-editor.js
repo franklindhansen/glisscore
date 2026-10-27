@@ -2643,7 +2643,7 @@ function nrLive() {
 }
 function aeNrProg(v) {
   const bar = $('#aeNrProgBar'), busy = v < 0.999; if (!bar) return;
-  AE.nrTarget = clamp(v, 0, 1); bar.classList.toggle('wait', busy && AE.nrTarget <= 0.001);          // no tick yet: a sweep shows it is working
+  AE.nrTarget = clamp(v, 0, 1); { const tr = bar.querySelector('.nr-prog-t'); if (busy && AE.nrTarget <= 0.001) sweepStart(tr); else sweepStop(tr); }          // no tick yet: a sweep shows it is working
   if (busy !== !!AE.nrShown) { AE.nrShown = busy; if (busy) AE.nrCur = 0;          // a new job fills from empty, not down from where the last one ended
      bar.classList.toggle('on', busy); aeToolsRefresh(); if (AE.d && !$('#audioDlg').hidden) aeNrPanel(); }          // the light, the badge and the row change once per job, not per tick
   if (!AE.nrRaf) AE.nrRaf = requestAnimationFrame(aeNrTween);

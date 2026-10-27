@@ -60,7 +60,7 @@ function setChips() {
   const seen = setChips.seen || (setChips.seen = {}), fresh = (k, v) => seen[k] === v ? '' : ' enter';      // a chip rises in only when it is new
   const chip = (kind, icon, name, meta, label) => '<div class="chip' + fresh(kind, name) + '"><button class="chip-icon" type="button" data-remove="' + kind + '" aria-label="Remove ' + label + '" title="Remove ' + label + '"><span class="ic">' + icon + '</span><span class="x">' + xIcon + '</span></button><span>' + esc(name) + '</span><small>' + meta + '</small></div>';
   const seenNow = {}, spin = '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-  const holder = (kind, name) => '<div class="chip busy' + fresh(kind, name) + '" data-k="' + kind + '"><button class="chip-icon" type="button" data-cancel="' + kind + '" aria-label="Stop loading" title="Stop loading"><span class="ic">' + spin + '</span><span class="x">' + xIcon + '</span></button><span class="chip-main plain"><span class="chip-name">' + dotsHTML(busyMsg) + '</span><span class="pp-box"><span class="busybar' + (busyFrac == null ? ' ind' : '') + '"><b style="width:' + Math.round((busyFrac || 0) * 100) + '%"></b></span></span></span></div>';          // while it works the chip says what it is doing (not the file name) and shows how far it is; the name settles in when it is done
+  const holder = (kind, name) => '<div class="chip busy' + fresh(kind, name) + '" data-k="' + kind + '"><button class="chip-icon" type="button" data-cancel="' + kind + '" aria-label="Stop loading" title="Stop loading"><span class="ic">' + spin + '</span><span class="x">' + xIcon + '</span></button><span class="chip-main plain"><span class="chip-name">' + dotsHTML(busyMsg) + '</span><span class="pp-box"><span class="busybar' + (busyFrac == null ? ' sweeping" style="--sweep-delay:' + sweepDelay(busySweepT0) : '') + '"><b style="width:' + Math.round((busyFrac || 0) * 100) + '%"></b></span></span></span></div>';          // while it works the chip says what it is doing (not the file name) and shows how far it is; the name settles in when it is done
   const settled = k => setChips.holding && setChips.holding[k] ? ' settle' : '';          // a chip that replaces its loading twin does not rise in again, it settles
   if (!S.pdf && busyMsg && busyKind === 'pdf') { h += holder('pdf', busyName); seenNow.pdf = busyName; }
   if (S.pdf) {
@@ -83,11 +83,26 @@ function setChips() {
 /* a trailing … becomes three dots that bounce one after another (set only when the words change, so the bounce is not restarted by every update) */
 const dotsHTML = t => /…$/.test(t) ? '<span>' + esc(t.slice(0, -1)) + '<span class="dots"><i>.</i><i>.</i><i>.</i></span></span>' : esc(t);          // one piece, so a button's flex gap does not open a space before the dots
 function setDots(el, t) { if (el._dt === t) return; el._dt = t; el.innerHTML = dotsHTML(t); }
+/* The shared sweep (.sweeping, style.css) for a bar of unknown length: the busy chip, the noise-reduction track, the font box. Start puts the band at the left edge, or where t0 says it would be if the bar was rebuilt mid-pass. Stop lets the pass in progress finish, so the band never stops short. */
+const SWEEP_MS = 1300, sweepDelay = t0 => t0 ? (-((performance.now() - t0) % SWEEP_MS)).toFixed(0) + 'ms' : '0s';
+function sweepStart(host, t0) {
+  if (host._sweepEnd) { host.removeEventListener('animationiteration', host._sweepEnd); clearTimeout(host._sweepT); host._sweepEnd = null; }
+  if (host.classList.contains('sweeping')) return;
+  host.style.setProperty('--sweep-delay', sweepDelay(t0)); host.classList.add('sweeping');
+}
+function sweepStop(host) {
+  if (!host.classList.contains('sweeping') || host._sweepEnd) return;
+  const end = e => { if (e && e.animationName !== 'bar-sweep') return; host.removeEventListener('animationiteration', end); clearTimeout(host._sweepT); host._sweepEnd = null; host.classList.remove('sweeping'); };
+  host._sweepEnd = end;
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return end();
+  host.addEventListener('animationiteration', end); host._sweepT = setTimeout(end, SWEEP_MS + 300);          // the timer only matters in a hidden tab, where animations stop
+}
 let busyMsg = '';
 let busyKind = '', busyName = '', busyFrac = null;
-function setBusy(m, kind, name, frac) { busyMsg = m; busyKind = m ? kind || '' : ''; busyName = m ? name || '' : ''; busyFrac = m && frac != null ? frac : null; setChips(); syncAudioCard(); }
+let busySweepT0 = 0;          // when the chip's bar began to sweep: the chip is rebuilt on each change, and the new bar picks the sweep up where it was
+function setBusy(m, kind, name, frac) { busyMsg = m; busyKind = m ? kind || '' : ''; busyName = m ? name || '' : ''; busyFrac = m && frac != null ? frac : null; busySweepT0 = m && busyFrac == null ? busySweepT0 || performance.now() : 0; setChips(); syncAudioCard(); }
 /* move the busy chip's bar without rebuilding the chip (null = no measurable progress, the bar just slides) */
-function setBusyFrac(f) { busyFrac = f; syncAudioCard(); const bar = document.querySelector('#chips .busybar'); if (!bar) return; bar.classList.toggle('ind', f == null); if (f != null) bar.firstElementChild.style.width = Math.round(clamp(f, 0, 1) * 100) + '%'; }
+function setBusyFrac(f) { busyFrac = f; busySweepT0 = f == null ? busySweepT0 || performance.now() : 0; syncAudioCard(); const bar = document.querySelector('#chips .busybar'); if (!bar) return; if (f == null) sweepStart(bar, busySweepT0); else sweepStop(bar); if (f != null) bar.firstElementChild.style.width = Math.round(clamp(f, 0, 1) * 100) + '%'; }
 /* Before a score is loaded the intro text carries the Open buttons; afterwards they live in the header and say Change */
 /* one line of the status: the circle fills and the check draws itself when something loads, and the words swap with a small rise */
 function setStatus(sel, done, yes, no) {
@@ -330,17 +345,17 @@ function preloadCreditsFonts() {
 const fontTimers = {};
 function bindFontField(id, key, msgId) {
   const input = $('#' + id), msg = msgId ? $('#' + msgId) : null, box = input.closest('.combo'), bar = document.createElement('span');
-  bar.className = 'combo-bar'; bar.setAttribute('aria-hidden', 'true'); bar.innerHTML = '<b></b>'; box.appendChild(bar);          // a thin bar along the box's bottom edge while the font is looked up, so no line of text pushes the panel down
+  bar.className = 'combo-bar'; bar.setAttribute('aria-hidden', 'true'); box.appendChild(bar);          // a thin bar along the box's bottom edge while the font is looked up, so no line of text pushes the panel down
   const say = (t, bad) => { if (msg) { msg.textContent = t; msg.classList.toggle('err', !!bad); } input.classList.toggle('bad', !!bad); input.title = bad ? t : ''; };
   input.addEventListener('input', () => {
     clearTimeout(fontTimers[id]);
     fontTimers[id] = setTimeout(async () => {
       const typed = input.value.trim();
-      if (!typed) { S.set[key] = ''; box.classList.remove('busy'); say(''); saveSettings(); updateLineStyles(); stageDirty = true; return; }
-      say(''); box.classList.add('busy');
+      if (!typed) { S.set[key] = ''; box.classList.remove('busy'); sweepStop(bar); say(''); saveSettings(); updateLineStyles(); stageDirty = true; return; }
+      say(''); box.classList.add('busy'); sweepStart(bar);
       const name = await resolveGoogleFont(typed);
       if (input.value.trim() !== typed) return;                     // the box changed while it loaded; the lookup for the new text ends the bar
-      box.classList.remove('busy');
+      box.classList.remove('busy'); sweepStop(bar);          // the bar finishes the pass it is on
       if (name) { S.set[key] = name; if (name !== typed) input.value = name; say(''); saveSettings(); updateLineStyles(); stageDirty = true; }
       else say(validFontName(typed) ? "Couldn't find “" + typed + "” on Google Fonts (or you're offline). Check the spelling." : 'Use the font name exactly as it appears on fonts.google.com.', true);
     }, 450);

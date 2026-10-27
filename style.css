@@ -260,11 +260,11 @@ input.bad{border-color:var(--danger)}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
 /* a font lookup runs a thin bar along the box's bottom edge, end to end (it follows the box's rounded corners), so nothing around the box moves */
-.combo-bar{position:absolute;inset:0;border-radius:var(--r-ctl);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
-.combo.busy .combo-bar{opacity:1}
-.combo-bar b{position:absolute;left:0;bottom:0;width:40%;height:2px;border-radius:99px;background:var(--accent);animation:combo-sweep 1.3s cubic-bezier(.45,0,.25,1) infinite}
-@keyframes combo-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
-@media (prefers-reduced-motion:reduce){.combo-bar b{animation:none;width:100%;opacity:.5}}
+.combo-bar{position:absolute;inset:0;border-radius:var(--r-ctl);overflow:hidden;pointer-events:none;--sweep-h:2px}
+/* the one sweep every bar of unknown length uses (the busy chip, the noise-reduction track, the font box): a band that enters from the left edge, crosses, and leaves past the right, so it always starts and ends off the bar. sweepStart and sweepStop (js/ui-and-export.js) set .sweeping; a stop lets the pass in progress finish, so the band never starts part way or stops short. Only transform moves */
+.sweeping::after{content:'';position:absolute;left:0;bottom:0;width:40%;height:var(--sweep-h,100%);border-radius:99px;background:var(--accent);transform:translateX(-100%);animation:bar-sweep 1.3s cubic-bezier(.45,0,.25,1) var(--sweep-delay,0s) infinite;will-change:transform}
+@keyframes bar-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){.sweeping::after{animation:none;transform:none;width:100%;opacity:.5}}
 /* the hover preview of the frame Save current frame would save */
 .thumb-peek{position:fixed;z-index:60;width:230px;padding:3px;border-radius:var(--r-ctl);background:var(--ink);box-shadow:var(--shadow);line-height:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
 .thumb-peek.show{visibility:visible;opacity:1;transform:none;transition-delay:0s}
@@ -1563,10 +1563,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- the busy chip: what it is doing, and how far along ----- */
 .busybar{display:block;position:relative;width:84px;height:4px;border-radius:99px;background:var(--line);overflow:hidden}
 .busybar b{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .45s var(--ease-out)}
-.busybar.ind b{width:38%;animation:busy-slide 1.25s var(--ease-ui) infinite alternate}
-@keyframes busy-slide{from{transform:translateX(-10%)}to{transform:translateX(160%)}}
 .chip.settle .chip-name{animation:settle .65s var(--ease-out) .08s backwards}
-@media (prefers-reduced-motion:reduce){.busybar b{transition:none}.busybar.ind b{animation:none;width:100%;opacity:.5}.chip.settle .chip-name{animation:none}}
+@media (prefers-reduced-motion:reduce){.busybar b{transition:none}.chip.settle .chip-name{animation:none}}
 
 /* ----- Level: Normalize by Peak or Loudness ----- */
 #aeNormCard{gap:0}
@@ -2172,11 +2170,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.ae-jack.busy.wait::before{animation:none}.ae-jack::before{transition:opacity .3s var(--ease-ui)}}
 /* the Removal card: the processing row sits right under Noise only, and its space is kept when idle so nothing shifts */
 #aeNrCtl .nr-listen{margin-top:0}
-/* before the first tick, a short sweep moves along the track: it says the job has started */
+/* before the first tick, the shared sweep (.sweeping) moves along the track: it says the job has started */
 #aeNrProgBar .nr-prog-t{overflow:hidden}
-#aeNrProgBar.wait .nr-prog-t::after{content:'';position:absolute;top:0;bottom:0;left:0;width:30%;border-radius:99px;background:var(--accent);opacity:.6;animation:nr-sweep 1.2s ease-in-out infinite}
-@keyframes nr-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(333%)}}
-@media (prefers-reduced-motion:reduce){#aeNrProgBar.wait .nr-prog-t::after{animation:none;transform:translateX(0)}}
 
 
 /* Export audio: the button fills as the export goes */
