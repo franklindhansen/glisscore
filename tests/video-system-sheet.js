@@ -30,9 +30,10 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   await p.waitForFunction(() => S.pdf && S.pdf.keep.length === 4, null, { timeout: 60000 }); await p.waitForTimeout(800);
   await p.evaluate(() => { const r = document.querySelector('input[name=pageLayout][value=system]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); });
   await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(500);
+  await p.evaluate(() => { window.showAt = (i, k) => { const n = S.spreads.findIndex(sp => sp[1] === sysKey(i, k)); return n <= 0 ? S.vStart : S.turns[n - 1] + flipDur() + 0.05; }; });
   // show system `k` of page `i` and read the frame back: the paper color, and the box that holds everything unlike it
   const look = (i, k = 0) => p.evaluate(async ([i, k]) => {
-    SYS.pick.set(i, k); previewR.clearTextures(); S.time = i === 0 ? S.vStart : S.turns[i - 1] + flipDur() + 0.05;
+    previewR.clearTextures(); S.time = showAt(i, k);
     const st = frameState(S.time); st.fade = 1; await previewR.ensure(pagesFor(st)); previewR.render(st);
     const gl = previewR.gl, W = previewR.W, H = previewR.H, px = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
     const at = (x, y) => { const o = ((H - 1 - y) * W + x) * 4; return [px[o], px[o + 1], px[o + 2]]; }, paper = at(2, 2);
@@ -82,7 +83,7 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   // the exported video draws what the preview draws
   const same = await p.evaluate(async () => {
     const W = previewR.W, H = previewR.H, cv = document.createElement('canvas'), rend = new Renderer(cv, PageSource, { cap: 6 }); rend.resize(W, H);
-    S.time = S.turns[0] + flipDur() + 0.05; const st = frameState(S.time); st.fade = 1; SYS.pick.set(1, 0); previewR.clearTextures(); await rend.ensure(pagesFor(st)); await previewR.ensure(pagesFor(st));
+    S.time = showAt(1, 0); const st = frameState(S.time); st.fade = 1; previewR.clearTextures(); await rend.ensure(pagesFor(st)); await previewR.ensure(pagesFor(st));
     const read = r => { r.render(st); const g = r.gl, px = new Uint8Array(W * H * 4); g.readPixels(0, 0, W, H, g.RGBA, g.UNSIGNED_BYTE, px); return px; };
     const a = read(previewR), b = read(rend); let d = 0; for (let i = 0; i < a.length; i++) d += Math.abs(a[i] - b[i]); rend.destroy(); return d / a.length;
   });
@@ -99,8 +100,8 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   await set('transition', 'flip');
   // an uneven scan shows no hard seam where the page meets the paper
   const u = await p.evaluate(async () => {
-    SYS.pick.set(3, 0); previewR.clearTextures(); S.time = S.turns[2] + flipDur() + 0.05; const st = frameState(S.time); st.fade = 1; await previewR.ensure(pagesFor(st)); previewR.render(st);
-    const W = previewR.W, H = previewR.H, f = sysFit(3, W, H), x = Math.round((W - f.dw) / 2), y0 = Math.round((H - f.dh) / 2), xc = x + 12, g = previewR.gl, px = new Uint8Array(W * H * 4); g.readPixels(0, 0, W, H, g.RGBA, g.UNSIGNED_BYTE, px);
+    previewR.clearTextures(); S.time = showAt(3, 0); const st = frameState(S.time); st.fade = 1; await previewR.ensure(pagesFor(st)); previewR.render(st);
+    const W = previewR.W, H = previewR.H, f = sysFit(sysKey(3, 0), W, H), x = Math.round((W - f.dw) / 2), y0 = Math.round((H - f.dh) / 2), xc = x + 12, g = previewR.gl, px = new Uint8Array(W * H * 4); g.readPixels(0, 0, W, H, g.RGBA, g.UNSIGNED_BYTE, px);
     const v = yy => px[((H - 1 - yy) * W + xc) * 4]; let step = 0; for (let yy = y0 - 5; yy < y0 + 1; yy++) step = Math.max(step, Math.abs(v(yy + 1) - v(yy)));
     return { step, paper: v(2), src: 0.88 * 255 };
   });

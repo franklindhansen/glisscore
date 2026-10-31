@@ -13,6 +13,7 @@ function syncFirstAlone() {
 function baseSpreads() {
   const pages = S.pdf ? S.pdf.keep : [], n = pages.length, out = [];
   if (!n) return out;
+  if (sysOn()) return pages.flatMap(p => sysEntries(p).map(k => [-1, k]));          // one entry per system
   if (soloOn()) return pages.map(p => [-1, p]);          // each page sits in the right-hand slot, which the layout centers
   if (firstAloneOn()) {
     out.push([-1, pages[0]]);
@@ -25,8 +26,10 @@ function baseSpreads() {
 /* When the last page stands alone, its empty right side can carry the credits from the moment that page turns in. */
 const lastPageAlone = () => { const b = baseSpreads(), l = b[b.length - 1]; return !!l && l[1] === -1; };
 function buildSpreads() {
+  if (sysOn()) sysKick();
   const out = baseSpreads();
   if (!out.length || !creditsActive()) return out;
+  if (creditsAtStart() && sysOn()) { out.unshift(Object.assign([-1, CARD], { startCredits: true })); return out; }       // a centered card the first turn covers
   if (creditsAtStart()) { out[0] = Object.assign([CARD, out[0][1]], { startCredits: true }); return out; }       // the credits sit on the empty left of the opening spread; the first turn covers them
   if (soloOn()) { out.push(Object.assign([-1, CARD], { credits: true })); return out; }       // the credits are their own centered card after the last page
   const last = out[out.length - 1];
@@ -71,15 +74,18 @@ const creditsTurn = () => audioLen() - flipDur() + refOffset();
 /* the credits were added, removed, moved, or only their wording changed */
 const spreadSig = () => S.spreads.map(s => s.join(',') + (s.credits ? 'c' : '') + (s.inlineCredits ? 'i' : '') + (s.startCredits ? 's' : '')).join('|');
 function syncCredits() {
-  const had = hasCreditsSpread(), before = spreadSig();
+  const had = hasCreditsSpread(), hadS = startCardOn(), before = spreadSig();
   S.spreads = buildSpreads();
-  const has = hasCreditsSpread();
+  const has = hasCreditsSpread(), hasS = startCardOn();
   if (spreadSig() === before) { stageDirty = true; TL.staticDirty = true; applyCreditsUI(); return; }      // just the wording: redraw
-  if (has && !had) { S.turns.push(creditsTurn()); S.ph.push(false); } else if (!has && had) { S.turns.pop(); S.ph.pop(); }
+  if (!has && had) { S.turns.pop(); S.ph.pop(); }
+  if (!hasS && hadS) { S.turns.shift(); S.ph.shift(); }
+  if (has && !had) { S.turns.push(creditsTurn()); S.ph.push(false); }
+  if (hasS && !hadS) { S.turns.unshift(S.turns.length ? (turnMin() + S.turns[0]) / 2 : turnMin()); S.ph.unshift(true); }
   normalizeTurns(); ensureCreditsEnd(); afterStructureChange(); onTurnsChanged(); onTrimChanged();
 }
 /* Why Start cannot be used now (null when it can, or when no score is open): the layout, then the page count, then First page alone */
-const startWhy = () => !S.pdf ? null : soloOn() ? 'layout' : pageTotal() === 2 ? 'pages' : !S.set.firstAlone ? 'first' : null;
+const startWhy = () => !S.pdf ? null : sysOn() ? null : singleOn() ? 'layout' : pageTotal() === 2 ? 'pages' : !S.set.firstAlone ? 'first' : null;
 const START_WHY = { layout: 'Requires <span class="hb">Spread</span> layout.', pages: 'Requires 3 or more pages.', first: 'Requires <span class="hb sw">First page alone</span>.' };
 const START_TOAST = { layout: 'Spread layout', pages: '3 or more pages', first: 'First page alone' };
 /* Start was chosen and the score can no longer carry it: the credits go to the end (inside the History step of the change that caused it) */
@@ -109,7 +115,7 @@ function applyCreditsUI() {
   const why = startWhy(), r = document.querySelector('input[name=creditsAt][value=start]'), hint = $('#creditsAtHint');
   r.closest('label').classList.toggle('dim', !!why);
   if (why) { r.setAttribute('aria-disabled', 'true'); r.setAttribute('aria-describedby', 'creditsAtHint'); } else { r.removeAttribute('aria-disabled'); r.removeAttribute('aria-describedby'); }
-  const html = why ? START_WHY[why] : atStart ? 'Credits show beside the first page until it turns.' : '';
+  const html = why ? START_WHY[why] : atStart ? (sysOn() ? 'Credits show centered until the first turn.' : 'Credits show beside the first page until it turns.') : '';
   if (hint.dataset.k !== html) { hint.dataset.k = html; hint.innerHTML = html; }
   hint.hidden = !html;
   if (typeof updateGroupSummaries === 'function') updateGroupSummaries();
@@ -653,7 +659,7 @@ function setOmit(omit) {                       // the older way of saying it: pa
 /* true when the recipe is only "some pages left out" (so it can be saved the short way) */
 const recipeIsSimple = r => !r.wm.on && !r.size && r.order.every((id, i) => id === i && !r.slots[id].rot && !r.slots[id].c && !r.slots[id].nw && !r.slots[id].crop && !r.slots[id].skew && !r.slots[id].vskew && !r.slots[id].warp && !r.slots[id].bg && !r.slots[id].sp && !r.slots[id].half && !dimKey(r.slots[id])) && r.order.length === S.pdf.n;
 /* a position in the video (1, 2, 3 ...) for a page, so labels follow the edited order */
-const pageNo = idx => { const i = S.pdf ? S.pdf.keep.indexOf(idx) : -1; return i >= 0 ? i + 1 : idx + 1; };
+const pageNo = key => { const idx = sysPage(key), i = S.pdf ? S.pdf.keep.indexOf(idx) : -1; return i >= 0 ? i + 1 : idx + 1; };
 /* a short list for the settings file: [{p: page, r: rotation, x: left out, c: repeat}] in the arranged order */
 const recipeToList = r => r.order.map(id => { const s = r.slots[id], e = { p: s.src + 1 }; if (s.rot) e.r = s.rot; if (s.x) e.x = 1; if (s.c) e.c = 1; if (s.nw) e.n = 1; if (s.crop) e.k = s.crop.map(v => Math.round(v * 10000) / 10000); if (s.skew) e.s = Math.round(s.skew * 100) / 100; if (s.vskew) e.v = Math.round(s.vskew * 100) / 100; if (s.warp) e.w = Math.round(s.warp * 10000) / 10000; if (s.bg) e.g = s.bg; if (s.sp) e.q = s.sp; if (s.half) e.h = s.half; if (dimKey(s)) e.d = s.dim.map(b => b.map(v => Math.round(v * 10000) / 10000)); return e; });
 function recipeFromList(list, n, wm) {
@@ -731,8 +737,8 @@ function slotBase(sl, aspect) {
   return S.thumbs[sl.src] || null;
 }
 /* a page picture for the timeline and the editor, turned if the page is rotated */
-function slotThumb(idx) {
-  const sl = S.pdf && S.pdf.slots[idx]; if (!sl) return null;
+function slotThumb(key) {
+  const idx = sysPage(key), sl = S.pdf && S.pdf.slots[idx]; if (!sl) return null;
   const t = slotBase(sl, S.pdf.aspect); if (!t) return null;
   if (!sl.rot) return t;
   if (sl._rt && sl._rt.rot === sl.rot && sl._rt.base === t) return sl._rt.cv;

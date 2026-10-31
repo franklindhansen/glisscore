@@ -802,8 +802,10 @@ function drawBlocks(c) {
       if (th_) c.drawImage(th_, x, y, tw, th); else { c.fillStyle = '#fff'; c.fillRect(x, y, tw, th); }
       c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(x + .5, y + .5, tw - 1, th - 1);
     });
-    let lbl = sp.credits ? 'Credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
+    const sysTag = sysOn() && sp[1] >= 0 && (SYS.byPage.get(sysPage(sp[1])) || { systems: [] }).systems.length > 1 ? ' · sys. ' + (sysNo(sp[1]) + 1) : '';
+    let lbl = sp.credits || (sp[0] === -1 && sp[1] === CARD) ? 'Credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
     c.fillStyle = C.ink; c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top';
+    lbl += sysTag;
     if (c.measureText(lbl).width > x1 - labelX - 8) lbl = lbl.replace('Pages ', 'pp. ').replace('Page ', 'p. ');       // a narrow block gets the short form
     c.fillText(lbl, labelX, trackY + 5 + th + 6);
     c.fillStyle = C.muted; c.font = '11px "Hanken Grotesk",system-ui,sans-serif';

@@ -121,9 +121,30 @@ function sysDetectCore(ink, w, h, deg, reg) {
   return { systems: out, staves: staves.length, d: sys.reduce((t, q) => t + q.d, 0) / sys.length };
 }
 
+/* A system on the timeline is a page number plus a multiple of SYS_STRIDE, so system 0 is the page itself and every other part of the app keeps reading a page number. */
+const SYS_STRIDE = 100000;
+const sysKey = (page, k) => page + k * SYS_STRIDE;
+const sysPage = key => key >= 0 ? key % SYS_STRIDE : key;
+const sysNo = key => key >= 0 ? Math.floor(key / SYS_STRIDE) : 0;
+/* the entries one page gives in System: one per system found, or the whole page when none was (or it is not found yet) */
+function sysEntries(page) { const r = SYS.byPage.get(page), n = r && r.systems.length ? r.systems.length : 1; return Array.from({ length: n }, (_, k) => sysKey(page, k)); }
+/* the pages not yet measured are found in the background; the timeline follows when they are all in */
+function sysKick() {
+  if (!S.pdf) return; sysFresh();
+  if ([...new Set(S.pdf.keep)].every(i => SYS.byPage.has(i))) return;
+  sysDetectAll().then(done => { if (done) sysSettle(); });
+}
+function sysSettle() {
+  if (!sysOn() || !S.pdf) return;
+  const before = spreadSig(); S.spreads = buildSpreads();
+  if (spreadSig() === before) return;
+  if (S.turnsEdited) reconcileTurns(); else autoSpace(false);
+  afterStructureChange(); onTurnsChanged();
+}
+
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), pick: new Map(), gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
+  byPage: new Map(), gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
   worker() {
     if (this.w) return this.w;
     const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
@@ -181,11 +202,11 @@ function sysDetectAll(opt = {}) {
 const SYS_FEATHER = 3;          // dots over which the join between the page and the plain paper around it is softened
 /* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
    left by the Top and bottom margin shrinks alone. A page with no system is fitted whole. */
-function sysFit(idx, W, H) {
-  const pa = S.pdf.aspect, mx = S.set.margin / 100, ty = (S.set.tbMargin || 0) / 100, whole = { top: 0, bottom: 1, left: 0, right: 1 };
+function sysFit(key, W, H) {
+  const idx = sysPage(key), pa = S.pdf.aspect, mx = S.set.margin / 100, ty = (S.set.tbMargin || 0) / 100, whole = { top: 0, bottom: 1, left: 0, right: 1 };
   let wide = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
   const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
-  const box = list[Math.min(SYS.pick.get(idx) || 0, list.length - 1)];
+  const box = list[Math.min(sysNo(key), list.length - 1)];
   const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), H * (1 - 2 * ty) / Math.max(1e-6, box.bottom - box.top));
   return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
@@ -197,9 +218,9 @@ function sysPaper(cv) {
   for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
   return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
 }
-async function sysSheet(idx, W, H) {
+async function sysSheet(key, W, H) {
   await sysDetectAll();
-  const f = sysFit(idx, W, H), sl = S.pdf.slots[idx], pa = S.pdf.aspect, box = f.box;
+  const idx = sysPage(key), f = sysFit(key, W, H), sl = S.pdf.slots[idx], pa = S.pdf.aspect, box = f.box;
   const page = await S.pdf.doc.getPage(sl.src + 1), rot = page.rotate || 0, v1 = page.getViewport({ scale: 1, rotation: rot });
   const sc = pa * f.s / v1.width, vp = page.getViewport({ scale: sc, rotation: rot });
   const src = document.createElement('canvas'); src.width = f.dw; src.height = f.dh;

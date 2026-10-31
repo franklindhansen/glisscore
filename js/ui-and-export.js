@@ -146,7 +146,7 @@ function updateButtons() {
 function infoParts(i, n) {
   const sp = S.spreads[i], one = soloOn();
   const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
-  if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits ? [['s', ' · '], ['t', 'credits']] : [])];
+  if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits || sp.startCredits ? [['s', ' · '], ['t', 'credits']] : [])];
   return [['p', 'Spread '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', pg]];
 }
 function setInfo(el, parts) {

@@ -531,10 +531,11 @@ const CARD = -2, BLANK = -3;                                          // special
 const isSheet = i => i >= 0 || i === BLANK;                           // a real sheet of paper (as opposed to nothing, or loose text)
 const creditsActive = () => !!(S.pdf && S.set.creditsOn === true && (S.credits.l2.trim() || S.credits.l3.trim() || S.credits.title.trim()));
 /* Credits at the start sit on the empty left of the opening spread, which needs First page alone; otherwise they stay at the end. */
-const creditsAtStart = () => S.set.creditsAt === 'start' && creditsActive() && firstAloneOn();
+const creditsAtStart = () => S.set.creditsAt === 'start' && creditsActive() && (firstAloneOn() || sysOn());
 const creditsAtEnd = () => creditsActive() && !creditsAtStart();
 const creditsHasText = () => !!(S.credits.title.trim() || S.credits.l2.trim() || S.credits.l3.trim());
 const creditsTitle = () => S.credits.title.trim();
+const startCardOn = () => { const f = S.spreads[0]; return !!(f && f.startCredits && f[1] === CARD); };         // System: the credits are their own centered card before the first system
 const hasCreditsSpread = () => { const l = S.spreads[S.spreads.length - 1]; return !!(l && l.credits); }
 const CREDITS_TAIL = 5, CREDITS_OUT = 0.6;                         // a separate credits page adds 5 s after the audio (drag the video's end bracket to change it); credits fade out over 0.6 s
 const defaultEnd = () => audioLen() + (hasCreditsSpread() ? CREDITS_TAIL : 0);
