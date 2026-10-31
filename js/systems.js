@@ -168,7 +168,7 @@ function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) 
 async function sysDetectPage(idx) {
   sysFresh();
   const hit = SYS.byPage.get(idx); if (hit) return hit;
-  const tok = SYS.token, sc = await peScan(idx, SYS_W, null, 0.85, false);
+  const tok = SYS.token, sc = await peScan(S.pdf.slots[idx].src, SYS_W, null, 0.85, false);
   if (tok !== SYS.token) return null;
   const reg = peInkBox(sc, 0), t = reg ? peTilt(sc) : { deg: 0, gain: 0 }, tilt = t.gain > 0.03 ? t.deg : 0;
   let r = { systems: [], tilt, staves: 0 };
