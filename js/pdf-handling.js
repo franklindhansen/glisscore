@@ -745,16 +745,16 @@ function slotThumb(idx) {
 /* ---------- looking at the pages: margins, two-page spreads, tilt ----------
    Everything here runs on this device. A page is drawn small in grey, and the ink on it is measured. */
 const PEA = { cache: new Map() };
-async function peScan(idx, width = 760, geo = null) {
-  const hit = geo ? null : PEA.cache.get(idx); if (hit) return hit;
+async function peScan(idx, width = 760, geo = null, k = 0.7, cache = true) {          // k: how dark a dot must be, against the paper, to count as ink; cache false: the caller keeps the scan, so it is not remembered here
+  const use = !geo && cache, hit = use ? PEA.cache.get(idx) : null; if (hit) return hit;
   const page = await S.pdf.doc.getPage(idx + 1), v = page.getViewport({ scale: 1, rotation: page.rotate || 0 }), w = width, h = Math.max(8, Math.round(width * v.height / v.width));
   const cv = await renderPdfPage(S.pdf.doc, idx, w, h, 0, null, geo), px = cv.getContext('2d').getImageData(0, 0, w, h).data, g = new Uint8Array(w * h);
   cv.width = cv.height = 0;          // the picture is not kept, only what was measured; freeing it now stops Safari holding hundreds of them until it next collects
   for (let i = 0, k = 0; i < g.length; i++, k += 4) g[i] = (px[k] * 77 + px[k + 1] * 150 + px[k + 2] * 29) >> 8;
   const hist = new Uint32Array(256); for (let i = 0; i < g.length; i++) hist[g[i]]++;
   let acc = 0, bg = 255; for (let t = 255; t >= 0; t--) { acc += hist[t]; if (acc > g.length * 0.08) { bg = t; break; } }          // the paper: bright, so the 92nd percentile
-  const lim = Math.max(30, bg * 0.7), ink = new Uint8Array(w * h); let n = 0; for (let i = 0; i < g.length; i++) if (g[i] < lim) { ink[i] = 1; n++; }
-  const r = { w, h, ink, n, aspect: v.width / v.height }; if (!geo) { PEA.cache.set(idx, r); if (PEA.cache.size > 10) PEA.cache.delete(PEA.cache.keys().next().value); } return r;
+  const lim = Math.max(30, bg * k), ink = new Uint8Array(w * h); let n = 0; for (let i = 0; i < g.length; i++) if (g[i] < lim) { ink[i] = 1; n++; }
+  const r = { w, h, ink, n, aspect: v.width / v.height }; if (use) { PEA.cache.set(idx, r); if (PEA.cache.size > 10) PEA.cache.delete(PEA.cache.keys().next().value); } return r;
 }
 /* where the music is, as fractions of the page. Scans bring their own clutter, so before the box is drawn:
    1. dark bands along the edges (the scanner lid, shadows, a black border) are peeled off, edge by edge, while a line is mostly dark;
