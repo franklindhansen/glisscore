@@ -54,7 +54,7 @@ function syncPageLayout(glide) {
   const one = soloOn();
   document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === S.set.pageLayout; });
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
-  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; applyTransitionUI();
+  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; $('#tbMarginField').hidden = !sysOn(); applyTransitionUI();
 }
 /* changing it is one History step; the turns are spaced evenly again for the new number of pages, and it says so when they had been placed by hand */
 function setPageLayout(v) {
@@ -202,7 +202,7 @@ const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!H
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
   ['Transition', ['transition', 'slideDir']], ['Turn length', ['flipDur', 'slideDur']], ['Turn reference', ['ref']], ['Bend', ['bend']], ['First page alone', ['firstAlone']],
-  ['Margin', ['margin']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
+  ['Margin', ['margin']], ['Top and bottom margin', ['tbMargin']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
   ['Aspect', ['aspect']], ['Resolution', ['res']], ['Frame rate', ['fps']], ['Render method', ['method']], ['Codec', ['codec']], ['Video quality', ['videoQuality']],
   ['Credits', ['creditsOn', 'creditsAt', 'creditsWithLast', 'creditsEarly', 'creditsFont', 'creditsBase', 'credTitleB', 'credTitleI', 'credTitleFont', 'credL2B', 'credL2I', 'credL2Font', 'credL3B', 'credL3I', 'credL3Font']],
   ['Audio format', ['audioFormat', 'audioKbps', 'audioRate']], ['Tags', ['tagsOn', 'tagTitle', 'tagArtist', 'tagAlbumArtist', 'tagAlbum', 'tagYear', 'tagTrack', 'tagDisc', 'tagComposer', 'tagWork', 'tagMovement', 'tagMovementNo', 'tagGenre', 'tagComment', 'tagShowWork', 'tagCompilation']]];

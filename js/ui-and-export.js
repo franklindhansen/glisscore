@@ -205,7 +205,7 @@ function syncControls() {
   $('#bend').value = s.bend; $('#bendOut').textContent = s.bend + '%';
   document.querySelectorAll('input[name=ref]').forEach(r => r.checked = r.value === s.ref);
   syncFirstAlone(); syncPageLayout(false);
-  $('#margin').value = s.margin; $('#marginOut').textContent = s.margin + '%';
+  $('#margin').value = s.margin; $('#marginOut').textContent = s.margin + '%'; $('#tbMargin').value = s.tbMargin; $('#tbMarginOut').textContent = s.tbMargin + '%';
   const pre = Array.from($('#bgPreset').options).find(o => o.value.toLowerCase() === String(s.bg).toLowerCase());
   $('#bgPreset').value = pre ? pre.value : 'custom'; foldSet('#bgCustomFold', !pre);
   $('#bgColor').value = s.bg; $('#bgHex').value = s.bg; updateHint();
@@ -583,7 +583,7 @@ function bindSettings() {
   document.querySelectorAll('.combo').forEach(initCombo);
   const dirty = () => { saveSettings(); stageDirty = true; TL.overlayDirty = true; };      // the timeline's fade lines follow the settings
   /* Reset to default: a double-click on a slider glides it back to its default, as in the Audio Editor; a drag in progress stops a glide. The Audio Editor and the Fade length slider have their own. */
-  ['flipDur', 'bend', 'margin', 'gutter', 'divider', 'turnShadow', 'turnSoft', 'scoreAmt', 'scoreSoft', 'peCropPad', 'peWmOpacity'].forEach(id => {
+  ['flipDur', 'bend', 'margin', 'tbMargin', 'gutter', 'divider', 'turnShadow', 'turnSoft', 'scoreAmt', 'scoreSoft', 'peCropPad', 'peWmOpacity'].forEach(id => {
     const r = $('#' + id);
     r.addEventListener('pointerdown', () => { if (r._glide) { cancelAnimationFrame(r._glide.raf); r._glide = null; } });
     r.addEventListener('dblclick', () => aeGlideTo(r, id === 'flipDur' ? DEFAULTS[lenKey()] : id in DEFAULTS ? DEFAULTS[id] : r.dataset.default));
@@ -604,6 +604,7 @@ function bindSettings() {
     if (S.pdf) { S.time = S.vStart; rebuildSpreads(false); }
   });
   $('#margin').addEventListener('input', e => { S.set.margin = +e.target.value; $('#marginOut').textContent = S.set.margin + '%'; dirty(); });
+  $('#tbMargin').addEventListener('input', e => { S.set.tbMargin = +e.target.value; $('#tbMarginOut').textContent = S.set.tbMargin + '%'; dirty(); });
   const setBg = v => { S.set.bg = v; $('#bgColor').value = v; dirty(); };
   $('#bgPreset').addEventListener('change', e => {
     if (e.target.value === 'custom') { foldSet('#bgCustomFold', true); $('#bgHex').value = S.set.bg; $('#bgHex').focus({ preventScroll: true }); }

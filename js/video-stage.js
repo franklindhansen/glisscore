@@ -257,6 +257,7 @@ class Renderer {
   }
   resize(W, H) { this.canvas.width = W; this.canvas.height = H; this.W = W; this.H = H; }
   layout() {
+    if (sysOn()) return { pw: this.W, ph: this.H, x0: -this.W, y0: 0, cx: 0, cy: this.H / 2, xs: 0 };          // System: the sheet is the whole frame, held as a single page
     const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H, one = soloOn();
     let pw = Math.floor(Math.min(W * (1 - 2 * m) / (one ? 1 : 2), H * (1 - 2 * m) * pa));
     pw = Math.max(8, pw);
@@ -269,7 +270,7 @@ class Renderer {
     const gl = this.gl; this.tex.forEach(e => gl.deleteTexture(e.t)); this.tex.clear(); this.pending.clear(); this.sizeKey = '';
   }
   checkSize(lay) {
-    const key = lay.pw + 'x' + lay.ph;
+    const key = lay.pw + 'x' + lay.ph + (sysOn() ? 's' + [S.set.margin, S.set.tbMargin, SYS.byPage.size, SYS.gen].join() : '');          // a sheet depends on the margins and on what was found
     if (key !== this.sizeKey) { this.clearTextures(); this.sizeKey = key; }
   }
   tex_(idx) {
@@ -285,7 +286,7 @@ class Renderer {
   request(idx) {
     if (this.pending.has(idx)) return this.pending.get(idx);
     const key = this.sizeKey, lay = this.lay, gl = this.gl;
-    const p = this.src.render(idx, lay.pw, lay.ph).then(cv => {
+    const p = (sysOn() && idx >= 0 ? sysSheet(idx, lay.pw, lay.ph) : this.src.render(idx, lay.pw, lay.ph)).then(cv => {
       this.pending.delete(idx);
       if (key !== this.sizeKey) return;
       const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);

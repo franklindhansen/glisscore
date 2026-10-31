@@ -123,7 +123,7 @@ function sysDetectCore(ink, w, h, deg, reg) {
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
+  byPage: new Map(), pick: new Map(), gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
   worker() {
     if (this.w) return this.w;
     const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
@@ -175,4 +175,43 @@ function sysDetectAll(opt = {}) {
   })();
   job.then(() => { if (SYS.job === job) SYS.job = null; });
   return job;
+}
+
+/* ---------- the sheet: one system alone on a full-frame sheet of the page's own paper ---------- */
+const SYS_FEATHER = 3;          // dots over which the join between the page and the plain paper around it is softened
+/* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
+   left by the Top and bottom margin shrinks alone. A page with no system is fitted whole. */
+function sysFit(idx, W, H) {
+  const pa = S.pdf.aspect, mx = S.set.margin / 100, ty = (S.set.tbMargin || 0) / 100, whole = { top: 0, bottom: 1, left: 0, right: 1 };
+  let wide = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
+  const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
+  const box = list[Math.min(SYS.pick.get(idx) || 0, list.length - 1)];
+  const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), H * (1 - 2 * ty) / Math.max(1e-6, box.bottom - box.top));
+  return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
+}
+/* the paper: the median color of what is not ink inside the box */
+function sysPaper(cv) {
+  const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, step = Math.max(1, Math.floor(d.length / 4 / 40000)), lum = [];
+  for (let i = 0; i < d.length; i += 4 * step) lum.push(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8);
+  const top = lum.slice().sort((a, b) => a - b)[Math.floor(lum.length * 0.95)] || 255, cut = top * 0.9, ch = [[], [], []];
+  for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
+  return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
+}
+async function sysSheet(idx, W, H) {
+  await sysDetectAll();
+  const f = sysFit(idx, W, H), sl = S.pdf.slots[idx], pa = S.pdf.aspect, box = f.box;
+  const page = await S.pdf.doc.getPage(sl.src + 1), rot = page.rotate || 0, v1 = page.getViewport({ scale: 1, rotation: rot });
+  const sc = pa * f.s / v1.width, vp = page.getViewport({ scale: sc, rotation: rot });
+  const src = document.createElement('canvas'); src.width = f.dw; src.height = f.dh;
+  const sx = src.getContext('2d', { alpha: false }); sx.fillStyle = '#fff'; sx.fillRect(0, 0, f.dw, f.dh);
+  await page.render({ canvasContext: sx, viewport: vp, transform: [1, 0, 0, 1, -box.left * vp.width, -box.top * vp.height], background: '#ffffff' }).promise;
+  try { page.cleanup(); } catch (e) {}
+  const paper = sysPaper(src), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2), y = Math.round((H - f.dh) / 2), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
+  c.fillStyle = col(1); c.fillRect(0, 0, W, H); c.drawImage(src, x, y);
+  const F = Math.min(SYS_FEATHER, f.dw >> 2, f.dh >> 2);          // each edge fades into the paper around it, so an uneven scan shows no hard seam
+  [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {
+    const g = c.createLinearGradient(q[4], q[5], q[6], q[7]); g.addColorStop(0, col(1)); g.addColorStop(1, col(0)); c.fillStyle = g; c.fillRect(q[0], q[1], q[2], q[3]);
+  });
+  return cv;
 }
