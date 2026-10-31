@@ -163,7 +163,7 @@ const SYS = {
   }
 };
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */
-function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.byPage.clear(); SYS.gen = g; } }
+function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.gen = g; } }
 /* one page: its systems as fractions of the page ({ systems, tilt, staves }), found once and kept */
 async function sysDetectPage(idx) {
   sysFresh();

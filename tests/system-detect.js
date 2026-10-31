@@ -111,6 +111,15 @@ const trio = (extra = {}) => ({ texts: [['Piano Trio', 220, 60, 28]], systems: [
   ok('Stop ends the run, and the worker with it', st.res === false && st.worker === false, JSON.stringify(st));
   ok('the pages found before Stop are kept', st.kept >= 1 && st.kept < 9, String(st.kept));
   ok('the next run does only the pages left', st.res2 === true && st.size === 9 && st.rest <= 9 - st.kept + 1, JSON.stringify(st));
+  const rb = await p.evaluate(async () => {                       // a rebuild during a scan: the page being measured is dropped, not cached under the new numbers
+    SYS.stop(); SYS.byPage.clear(); SYS.gen = null;
+    const orig = window.peScan; let release; const gate = new Promise(r => release = r);
+    window.peScan = async (...a) => { await gate; return orig(...a); };
+    const job = sysDetectAll({}); await new Promise(r => setTimeout(r, 50));
+    S.pdf.gen = (S.pdf.gen || 0) + 1; sysFresh(); release(); window.peScan = orig;
+    const res = await job; return { res, size: SYS.byPage.size, job: SYS.job };
+  });
+  ok('a rebuild during a scan drops the page being measured', rb.res === false && rb.size === 0 && rb.job === null, JSON.stringify(rb));
   ok('no page errors', errs.length === 0, errs.join('; '));
   await b.close();
 })();
