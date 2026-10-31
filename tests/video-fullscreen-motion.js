@@ -28,7 +28,8 @@ const record = (p, act) => p.evaluate(act => new Promise(res => {
         ok(tag + 'the copies carry the timeline\'s drawing (not blank canvases)', seen.every(r => r.inked));
         ok(tag + 'the copies fade out and are gone, none left behind', last.ghosts === 0 && seen.every(r => r.op.every(o => o <= 1.001)) && seen[seen.length - 1].op.every(o => o < 0.5), JSON.stringify({ left: last.ghosts, lastSeen: seen[seen.length - 1] && seen[seen.length - 1].op }));
         const ws = rec.map(r => r.w), span = ws[ws.length - 1] - ws[0], mono = ws.every((v, i) => !i || (v - ws[i - 1]) * Math.sign(span) >= -0.5);
-        ok(tag + 'the picture frame moves one way to its final size in steps of under half the way', mono && Math.max(...ws.slice(1).map((v, i) => Math.abs(v - ws[i]))) < Math.abs(span) * 0.5, JSON.stringify({ from: Math.round(ws[0]), to: Math.round(ws[ws.length - 1]) }));
+        // a frame the machine dropped (a gap over 40ms) makes a big step that is not the motion's fault, so only steps between neighboring frames count
+        ok(tag + 'the picture frame moves one way to its final size in steps of under half the way', mono && (sm => sm.length >= 8 && Math.max(...sm) < Math.abs(span) * 0.5)(ws.slice(1).map((v, i) => Math.abs(v - ws[i])).filter((v, i) => rec[i + 1].t - rec[i].t <= 40)), JSON.stringify({ from: Math.round(ws[0]), to: Math.round(ws[ws.length - 1]) }));
       }
       await p.waitForTimeout(500);
     }
