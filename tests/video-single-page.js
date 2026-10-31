@@ -30,7 +30,7 @@ const K = '__keyframes';
 
   // the choice
   ok('Page layout starts as Spread', await S(s => s.set.pageLayout) === 'spread' && await p.evaluate(() => document.querySelector('input[name=pageLayout][value=spread]').checked));
-  ok('the choice has Spread and Single page', await p.evaluate(() => [...document.querySelectorAll('input[name=pageLayout]')].map(r => r.parentElement.textContent.trim()).join('|')) === 'Spread|Single page');
+  ok('the choice has Spread, Single page, and System', await p.evaluate(() => [...document.querySelectorAll('input[name=pageLayout]')].map(r => r.parentElement.textContent.trim()).join('|')) === 'Spread|Single page|System');
   const spreadSpreads = await S(s => s.spreads.map(x => x.join(',')));
   ok('a three-page score is two spreads in Spread (the first page alone)', spreadSpreads.join('|') === '-1,0|1,2', spreadSpreads.join('|'));
 

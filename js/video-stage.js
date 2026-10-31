@@ -257,7 +257,7 @@ class Renderer {
   }
   resize(W, H) { this.canvas.width = W; this.canvas.height = H; this.W = W; this.H = H; }
   layout() {
-    const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H, one = singleOn();
+    const m = S.set.margin / 100, pa = S.pdf ? S.pdf.aspect : 0.77, W = this.W, H = this.H, one = soloOn();
     let pw = Math.floor(Math.min(W * (1 - 2 * m) / (one ? 1 : 2), H * (1 - 2 * m) * pa));
     pw = Math.max(8, pw);
     const ph = Math.max(8, Math.floor(pw / pa));
@@ -524,7 +524,7 @@ class Renderer {
         const p = 0.5 - 0.5 * Math.cos(Math.PI * st.flip);
         /* Peel (a single page): the sheet lifts and curls from its free edge, then is drawn off to the left, carrying its shadow, so the next page
            is already in place beneath it and nothing has to melt away; it has left the frame by the time the turn ends */
-        const peel = singleOn(), pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
+        const peel = soloOn(), pu = clamp((p - 0.2) / 0.8, 0, 1), shift = peel ? (lay.cx + 0.12 * lay.pw) * pu * pu : 0;
         this.buildCurl(lay, p, shift);
         /* The turning page's free edge decides how much of each half is covered. A half that was empty only gets a
            shadow once the turned page has reached it, and a half that is emptying loses its shadow as the page lifts. */

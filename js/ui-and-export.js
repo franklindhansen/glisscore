@@ -144,9 +144,9 @@ function updateButtons() {
    the same cell), so its width never depends on where the playhead is: a longer label used to wrap to a second row while scrubbing, and the preview above it grew and
    shrank. When the window is narrow the label gets shorter before it ever wraps ("34 / 100 · pp. 66–67", then "pp. 66–67"); fitInfo picks the longest that fits. */
 function infoParts(i, n) {
-  const sp = S.spreads[i], one = singleOn();
+  const sp = S.spreads[i], one = soloOn();
   const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
-  if (one) return [['p', 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits ? [['s', ' · '], ['t', 'credits']] : [])];
+  if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits ? [['s', ' · '], ['t', 'credits']] : [])];
   return [['p', 'Spread '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', pg]];
 }
 function setInfo(el, parts) {
@@ -164,9 +164,9 @@ function updateInfo() {
   const now = $('#spreadNow'), max = $('#spreadMax');
   if (!n) { now.textContent = ''; max.textContent = ''; updateInfo.sp = null; return; }
   setInfo(now, infoParts(frameState(S.time).spread, n));
-  if (updateInfo.sp !== S.spreads || updateInfo.single !== singleOn()) {          // the score or the layout changed: find the longest label of each kind
-    updateInfo.sp = S.spreads; updateInfo.single = singleOn();
-    $('#spreadInfo .si').dataset.l = updateInfo.single ? 'single' : 'spread';
+  if (updateInfo.sp !== S.spreads || updateInfo.layout !== S.set.pageLayout) {          // the score or the layout changed: find the longest label of each kind
+    updateInfo.sp = S.spreads; updateInfo.layout = S.set.pageLayout;
+    $('#spreadInfo .si').dataset.l = soloOn() ? 'single' : 'spread';
     const best = {}, len = p => p.reduce((a, [, t]) => a + t.length, 0);
     S.spreads.forEach((sp, i) => { const p = infoParts(i, n), k = sp.credits ? 'c' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp' : 'p'; if (!best[k] || len(p) > len(best[k])) best[k] = p; });
     max.textContent = '';
@@ -446,7 +446,7 @@ function groupSummary(k) {
     if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
     return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
-  if (k === 'layout') { const fa = singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null; return [j(fa, 'Margin ' + pc(s.margin)), j(fa, pc(s.margin))]; }
+  if (k === 'layout') { const fa = sysOn() ? 'System' : singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null; return [j(fa, 'Margin ' + pc(s.margin)), j(fa, pc(s.margin))]; }
   if (k === 'colors') { const iv = s.invert ? 'Invert colors' : null; return [j(bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(bg(), iv, s.invert ? 'Ink ' + ink() : null), j(bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
   if (k === 'fades') return [fd(false), fd(true)];

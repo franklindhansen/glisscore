@@ -5,7 +5,7 @@
 /* the pages the video uses (left-out pages do not count) */
 const pageTotal = () => S.pdf ? S.pdf.keep.length : 0;
 /* a two-page score is one spread (page 1 left, page 2 right), so First page alone cannot apply; the saved choice comes back for other page counts */
-const firstAloneOn = () => !!S.set.firstAlone && pageTotal() !== 2 && !singleOn();
+const firstAloneOn = () => !!S.set.firstAlone && pageTotal() !== 2 && !soloOn();
 function syncFirstAlone() {
   const two = pageTotal() === 2, el = $('#firstAlone');
   el.checked = firstAloneOn(); el.disabled = two; el.closest('.field').classList.toggle('dim', two);
@@ -13,7 +13,7 @@ function syncFirstAlone() {
 function baseSpreads() {
   const pages = S.pdf ? S.pdf.keep : [], n = pages.length, out = [];
   if (!n) return out;
-  if (singleOn()) return pages.map(p => [-1, p]);          // each page sits in the right-hand slot, which the layout centers
+  if (soloOn()) return pages.map(p => [-1, p]);          // each page sits in the right-hand slot, which the layout centers
   if (firstAloneOn()) {
     out.push([-1, pages[0]]);
     for (let i = 1; i < n; i += 2) out.push([pages[i], i + 1 < n ? pages[i + 1] : -1]);
@@ -28,7 +28,7 @@ function buildSpreads() {
   const out = baseSpreads();
   if (!out.length || !creditsActive()) return out;
   if (creditsAtStart()) { out[0] = Object.assign([CARD, out[0][1]], { startCredits: true }); return out; }       // the credits sit on the empty left of the opening spread; the first turn covers them
-  if (singleOn()) { out.push(Object.assign([-1, CARD], { credits: true })); return out; }       // the credits are their own centered card after the last page
+  if (soloOn()) { out.push(Object.assign([-1, CARD], { credits: true })); return out; }       // the credits are their own centered card after the last page
   const last = out[out.length - 1];
   if (last[1] === -1) {
     if (S.set.creditsWithLast !== false) { out[out.length - 1] = Object.assign([last[0], CARD], { inlineCredits: true }); return out; }
@@ -37,7 +37,7 @@ function buildSpreads() {
   out.push(Object.assign([BLANK, CARD], { credits: true }));                     // two pages: the last one folds closed, revealing the credits
   return out;
 }
-const spreadsText = () => singleOn() ? 'one page at a time' : peN(S.spreads.length, 'spread', 'spreads');
+const spreadsText = () => sysOn() ? 'one system at a time' : singleOn() ? 'one page at a time' : peN(S.spreads.length, 'spread', 'spreads');
 function rebuildSpreads(forceSpace, noHistory) {
   const before = S.spreads.length, old = { turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice() };
   syncFirstAlone(); creditsAtFix();
@@ -51,8 +51,8 @@ function rebuildSpreads(forceSpace, noHistory) {
 }
 /* Page layout: the choice, and what only makes sense in a spread (First page alone and the center fold shading fold away in Single page) */
 function syncPageLayout(glide) {
-  const one = singleOn();
-  document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === (one ? 'single' : 'spread'); });
+  const one = soloOn();
+  document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === S.set.pageLayout; });
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
   $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; applyTransitionUI();
 }
@@ -79,7 +79,7 @@ function syncCredits() {
   normalizeTurns(); ensureCreditsEnd(); afterStructureChange(); onTurnsChanged(); onTrimChanged();
 }
 /* Why Start cannot be used now (null when it can, or when no score is open): the layout, then the page count, then First page alone */
-const startWhy = () => !S.pdf ? null : singleOn() ? 'layout' : pageTotal() === 2 ? 'pages' : !S.set.firstAlone ? 'first' : null;
+const startWhy = () => !S.pdf ? null : soloOn() ? 'layout' : pageTotal() === 2 ? 'pages' : !S.set.firstAlone ? 'first' : null;
 const START_WHY = { layout: 'Requires <span class="hb">Spread</span> layout.', pages: 'Requires 3 or more pages.', first: 'Requires <span class="hb sw">First page alone</span>.' };
 const START_TOAST = { layout: 'Spread layout', pages: '3 or more pages', first: 'First page alone' };
 /* Start was chosen and the score can no longer carry it: the credits go to the end (inside the History step of the change that caused it) */

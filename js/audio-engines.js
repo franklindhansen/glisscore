@@ -557,8 +557,10 @@ const turnNoun = () => S.set.transition === 'slide' ? 'Slide' : S.set.transition
 const flipDur = () => S.set.transition === 'cut' ? 0 : +S.set[lenKey()];            // a straight cut has no animation time
 const shOn = () => S.set.shadowsOn !== false;                                     // the Shadows switch
 const singleOn = () => S.set.pageLayout === 'single';                    // Page layout: one centered page per turn, not a spread
-const gutterAmt = () => shOn() && !singleOn() ? S.set.gutter / 100 : 0;          // a single page has no center fold
-const dividerAmt = () => shOn() && !singleOn() ? S.set.divider / 100 : 0;
+const sysOn = () => S.set.pageLayout === 'system';                       // Page layout: one system per turn
+const soloOn = () => singleOn() || sysOn();                              // either way one centered sheet per turn, never a spread
+const gutterAmt = () => shOn() && !soloOn() ? S.set.gutter / 100 : 0;          // a single page has no center fold
+const dividerAmt = () => shOn() && !soloOn() ? S.set.divider / 100 : 0;
 const turnGap = () => Math.max(flipDur(), 0.1);                                   // least time between two page changes
 const turnMin = () => S.vStart + (S.set.transition === 'cut' ? turnGap() : refOffset());   // earliest time the first handle can sit
 const refOffset = (ref = S.set.ref, D = flipDur()) => ref === 'start' ? 0 : ref === 'middle' ? D / 2 : D;
