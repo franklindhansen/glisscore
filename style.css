@@ -120,6 +120,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ----- Score preview stage ----- */
 .stage-wrap{position:relative;background:var(--stage);border-radius:var(--r-card);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;border:1px solid var(--line)}
 #stage{display:block;flex:none;object-fit:contain}
+/* System: the selector (a page with the video frame on it) and the divider beside the preview */
+.sys-sel{position:absolute;z-index:2;overflow:hidden;background:var(--stage);display:flex;align-items:center;justify-content:center}
+.sys-sel[hidden],.sys-div[hidden]{display:none}
+#selCv{display:block;flex:none;touch-action:none}
+.sys-sel.zoomed{cursor:grab;touch-action:none}
+.sys-div{position:absolute;z-index:3;width:7px;background:var(--stage);cursor:col-resize;touch-action:none}
+.sys-div::before{content:"";position:absolute;left:3px;top:0;bottom:0;width:1px;background:var(--line);transition:background-color .2s var(--ease-color),box-shadow .2s var(--ease-color)}
+.sys-div:hover::before,.sys-div:focus-visible::before,.sys-div.drag::before{background:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.sys-div:focus-visible{outline:none}
+.stage-wrap.sys-stack .sys-div{width:auto;height:7px;cursor:row-resize}
+.stage-wrap.sys-stack .sys-div::before{left:0;right:0;top:3px;bottom:auto;width:auto;height:1px}
 
 /* ----- Intro / empty state text and buttons ----- */
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--stage)}
@@ -412,19 +423,25 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 
 /* ==================== 10. FULL-SCREEN MODE ==================== */
 /* ----- Full-screen button ----- */
-.stage-strip{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
-.stage-strip[hidden]{display:none}
-.stage-strip button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
-.stage-strip button:not(:disabled):active{transform:scale(.97)}
+.stage-strip,.sys-bar,.sys-nav{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
+.stage-strip[hidden],.sys-bar[hidden],.sys-nav[hidden]{display:none}
+.stage-strip button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.stage-strip button:not(:disabled):active,.sys-bar button:not(:disabled):active,.sys-nav button:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active{transform:none}}
-.stage-strip button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
-.stage-strip button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
-.stage-strip button:disabled{color:var(--muted);opacity:.5;cursor:default}
-.stage-strip svg{width:14px;height:14px}
+.stage-strip button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
+.stage-strip button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
+.stage-strip button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:.5;cursor:default}
+.stage-strip svg,.sys-bar svg,.sys-nav svg{width:14px;height:14px}
+.sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.sys-bar{right:calc(var(--fsm,10px) + var(--sw,150px) + 6px)}          /* beside the zoom strip */
+.stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
+.sys-nav{right:auto;left:var(--fsm,10px)}
+.sys-bar[hidden],.sys-nav[hidden]{display:none}
+.sys-nav .sys-pg{padding:0 6px;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}
 .stage-div{flex:none;width:1px;height:14px;margin:0 3px;background:var(--line)}
 .stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
 .stage-wrap.zoomed{touch-action:none}
-@media (prefers-reduced-transparency:reduce){.stage-strip{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
+@media (prefers-reduced-transparency:reduce){.stage-strip,.sys-bar,.sys-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
 .fs-only{display:none!important}
 :root{--tl-h:262px}
 html.fs-lock,html.fs-lock body{overflow:hidden}
@@ -480,6 +497,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .app.fs{--fs-gap:8px}
   .app.fs .timeline{border-radius:var(--r-lg)}
   .stage-wrap{height:min(62vw,420px)}
+  .stage-wrap.sys-split{height:min(110vw,640px)}      /* System stacks the selector above the preview, so the stage gets more height */
   .stage-wrap:has(>.empty:not([hidden])){height:auto;min-height:min(62vw,420px)}      /* the intro sets its own height, so a phone's narrow screen never clips its top or bottom */
   .stage-wrap:has(>.empty:not([hidden]))>#stage{display:none}
   .stage-wrap>.empty:not([hidden]){position:relative;inset:auto;flex:none;width:100%}

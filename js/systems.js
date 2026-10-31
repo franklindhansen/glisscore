@@ -177,7 +177,7 @@ async function sysDetectPage(idx) {
     if (!m || tok !== SYS.token) return null;
     r = { systems: m.systems, tilt, staves: m.staves };
   }
-  SYS.byPage.set(idx, r); return r;
+  SYS.byPage.set(idx, r); stageDirty = true; return r;
 }
 /* every active page, the one named in `first` before the rest; onProgress(done, total) after each page. Resolves with whether it finished. */
 function sysDetectAll(opt = {}) {

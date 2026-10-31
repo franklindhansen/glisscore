@@ -323,7 +323,7 @@ function initUiExtras() {
   hint.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const t = e.target.closest('.term'); if (t) { setGlow(t.dataset.glow); glowTimer = setTimeout(() => setGlow(null), 2400); } });
   $('#btnAudioStop').addEventListener('click', () => { loadSeq++; setBusy(''); toast(tx('app.stopped')); });          // the card has no loading chip above it, so it carries its own way to stop
   $('#chips').addEventListener('click', e => { if (e.target.closest('[data-pages]')) { openPdfEditor(); return; } if (e.target.closest('[data-audio]')) { openAudioEditor(); return; } const cn = e.target.closest('[data-cancel]'); if (cn) { if (cn.dataset.cancel === 'pdf') loadToken++; else loadSeq++; setBusy(''); toast(tx('app.stopped')); return; } const b = e.target.closest('[data-remove]'); if (!b) return; if (b.dataset.remove === 'pdf') removePdf(); else removeAudio(); });          // the X works while a file is still loading too
-  $('#btnFull').addEventListener('click', toggleFull); szBind(); szApply(false);
+  $('#btnFull').addEventListener('click', toggleFull); szBind(); splitBind(); selBind(); szApply(false);
   $('#btnExitFull').addEventListener('click', exitFull);
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
@@ -429,7 +429,7 @@ function boot() {
     if (!$('#diagDlg').hidden) { if (e.key === 'Escape') setDiagOpen(false); return; }
     if (expOpen()) { if (e.key === 'Escape' && !$('#expCancel').hidden) cancelExport(); return; }
     if (!S.pdf) return;                                  // nothing to play, tap or move yet
-    if (!e.ctrlKey && !e.metaKey && !e.altKey && ['+', '=', '-', '_', '0'].includes(e.key) && !(tg.closest && tg.closest('input, select, textarea'))) { e.preventDefault(); if (e.key === '0') szReset(true); else szAt(SZ.z * (e.key === '-' || e.key === '_' ? 1 / 1.6 : 1.6), null, null, true); return; }
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && ['+', '=', '-', '_', '0'].includes(e.key) && !(tg.closest && tg.closest('input, select, textarea'))) { e.preventDefault(); if (e.key === '0') szReset(true, szT()); else szAt(szT().z * (e.key === '-' || e.key === '_' ? 1 / 1.6 : 1.6), null, null, true, szT()); return; }
     if (e.code === 'Space') { e.preventDefault(); Transport.toggle(); }
     else if (e.key === 't' || e.key === 'T') { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); tapTurn(); } }
     else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && S.pdf) { e.preventDefault(); toggleFull(); }

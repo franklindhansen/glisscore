@@ -567,14 +567,15 @@ function layoutStage() {
   if (fsGliding) return;          // the frame is moving by transform, so its rectangle is not where it lays out: the picture is fitted once, as the glide begins and as it ends
   const wrap = $('#stageWrap'), r = wrap.getBoundingClientRect();
   if (r.width < 10 || r.height < 10) return;
+  const g = splitSync();          // System: the selector takes its share of the stage and the picture fits in what is left
   const ar = ASPECTS[S.set.aspect] || 16 / 9;
-  const fit = h => { let w = r.width - 2, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
+  const fit = h => { let w = r.width - 2 - g.pl, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
   const fz = clamp(Math.floor(r.height - 6), 22, 32), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
   if (SZ.ar !== S.set.aspect) { if (SZ.ar != null && SZ.z !== 1) szReset(false); SZ.ar = S.set.aspect; }          // a new page size starts at Fit
   const sw = $('#stageStrip').offsetWidth || 150;
-  wrap.style.setProperty('--fs', fz + 'px'); wrap.style.setProperty('--fsm', fm + 'px');
-  let [cw, ch] = fit(r.height - 2), room = 0;
-  if (!$('#stageStrip').hidden && !$('.app').classList.contains('fs') && (r.width - cw) / 2 < sw + fm && (r.height - ch) / 2 < need && r.height > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - room); }          // the zoom and full screen strip sits in the corner: where the picture would reach it, the picture gives it a strip of its own below
+  wrap.style.setProperty('--fs', fz + 'px'); wrap.style.setProperty('--fsm', fm + 'px'); wrap.style.setProperty('--sw', sw + 'px');
+  let [cw, ch] = fit(r.height - 2 - g.pt), room = 0;
+  if (!$('#stageStrip').hidden && !$('.app').classList.contains('fs') && (r.width - g.pl - cw) / 2 < sw + fm && (r.height - g.pt - ch) / 2 < need && r.height - g.pt > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - g.pt - room); }          // the zoom and full screen strip sits in the corner: where the picture would reach it, the picture gives it a row below
   wrap.style.paddingBottom = room ? room + 'px' : '';
   stageCanvas.style.width = cw + 'px'; stageCanvas.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -582,44 +583,49 @@ function layoutStage() {
   const mx = Math.max(W, H); if (mx > 2200) { W = Math.round(W * 2200 / mx); H = Math.round(H * 2200 / mx); }
   if (W !== stageCanvas.width || H !== stageCanvas.height) { previewR.resize(W, H); }
   stageDirty = true; if (SZ.z !== 1) { szClamp(); szApply(false); }
+  if (g.show) { if (SZS.z !== 1) { szClamp(SZS); szApply(false, SZS); } selSync(); }
 }
 /* ---- zoom and fit for the stage: view only (never saved, exported, or a History step), a transform on the picture ---- */
-const SZ = { z: 1, x: 0, y: 0, ar: null }, SZ_MAX = 4;
-function szClamp() {
-  const cv = stageCanvas, w = $('#stageWrap'), mx = Math.max(0, (cv.offsetWidth * SZ.z - w.clientWidth) / 2 + 60), my = Math.max(0, (cv.offsetHeight * SZ.z - w.clientHeight) / 2 + 60);
-  SZ.x = clamp(SZ.x, -mx, mx); SZ.y = clamp(SZ.y, -my, my); if (SZ.z <= 1.001) { SZ.z = 1; SZ.x = 0; SZ.y = 0; }
+const SZ = { z: 1, x: 0, y: 0, ar: null }, SZS = { z: 1, x: 0, y: 0 }, SZ_MAX = 4;          // the preview's view and, in System, the selector's
+const szView = st => st === SZS ? { cv: $('#selCv'), box: $('#sysSel'), cls: $('#sysSel') } : { cv: stageCanvas, box: $('#stageWrap'), cls: $('#stageWrap') };
+const szT = () => SPLIT.shown ? SZS : SZ;          // the one the zoom buttons and keys move: the selector while it shows, else the preview
+function szClamp(st = SZ) {
+  const { cv, box } = szView(st), mx = Math.max(0, (cv.offsetWidth * st.z - box.clientWidth) / 2 + 60), my = Math.max(0, (cv.offsetHeight * st.z - box.clientHeight) / 2 + 60);
+  st.x = clamp(st.x, -mx, mx); st.y = clamp(st.y, -my, my); if (st.z <= 1.001) { st.z = 1; st.x = 0; st.y = 0; }
 }
-function szApply(smooth) {
-  const cv = stageCanvas; cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
-  cv.style.transform = SZ.z === 1 ? '' : 'translate(' + SZ.x.toFixed(1) + 'px,' + SZ.y.toFixed(1) + 'px) scale(' + SZ.z.toFixed(3) + ')'; $('#stageWrap').classList.toggle('zoomed', SZ.z > 1);
-  $('#szOut').disabled = $('#szFit').disabled = SZ.z <= 1; $('#szIn').disabled = SZ.z >= SZ_MAX;
+function szButtons() { const t = szT(); $('#szOut').disabled = $('#szFit').disabled = t.z <= 1; $('#szIn').disabled = t.z >= SZ_MAX; }
+function szApply(smooth, st = SZ) {
+  const { cv, cls } = szView(st); cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
+  cv.style.transform = st.z === 1 ? '' : 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(3) + ')'; cls.classList.toggle('zoomed', st.z > 1);
+  szButtons();
 }
-function szAt(nz, cx, cy, smooth) {          // the point under (cx, cy) stays where it is
-  const cv = stageCanvas, r = $('#stageWrap').getBoundingClientRect(); nz = clamp(nz, 1, SZ_MAX);
+function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy) stays where it is
+  const { cv, box } = szView(st), r = box.getBoundingClientRect(); nz = clamp(nz, 1, SZ_MAX);
   const mx = r.left + cv.offsetLeft + cv.offsetWidth / 2, my = r.top + cv.offsetTop + cv.offsetHeight / 2; if (cx == null) { cx = mx; cy = my; }
-  const ox = cx - mx, oy = cy - my, px = (ox - SZ.x) / SZ.z, py = (oy - SZ.y) / SZ.z;
-  SZ.x = ox - nz * px; SZ.y = oy - nz * py; SZ.z = nz; szClamp(); szApply(smooth);
+  const ox = cx - mx, oy = cy - my, px = (ox - st.x) / st.z, py = (oy - st.y) / st.z;
+  st.x = ox - nz * px; st.y = oy - nz * py; st.z = nz; szClamp(st); szApply(smooth, st);
 }
-function szReset(smooth) { SZ.z = 1; SZ.x = SZ.y = 0; szApply(smooth); }
+function szReset(smooth, st = SZ) { st.z = 1; st.x = st.y = 0; szApply(smooth, st); }
 function szBind() {
   const wrap = $('#stageWrap'), ptr = new Map(); let pan = null, pinch = null, gz = 1;
-  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty');
-  $('#szIn').addEventListener('click', () => szAt(SZ.z * 1.6, null, null, true)); $('#szOut').addEventListener('click', () => szAt(SZ.z / 1.6, null, null, true)); $('#szFit').addEventListener('click', () => szReset(true));
+  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty, #sysDiv, .sys-nav');
+  const at = e => e.target.closest('#sysSel') ? SZS : SZ;          // the picture under the pointer
+  $('#szIn').addEventListener('click', () => szAt(szT().z * 1.6, null, null, true, szT())); $('#szOut').addEventListener('click', () => szAt(szT().z / 1.6, null, null, true, szT())); $('#szFit').addEventListener('click', () => szReset(true, szT()));
   wrap.addEventListener('wheel', e => {
-    if (!live(e)) return;
-    if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation(); szAt(SZ.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false); }          // a pinch over the picture zooms the picture only; the timeline has its own
-    else if (SZ.z > 1) { e.preventDefault(); SZ.x -= e.deltaX; SZ.y -= e.deltaY; szClamp(); szApply(false); }
+    if (!live(e)) return; const v = at(e);
+    if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation(); szAt(v.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false, v); }          // a pinch over the picture zooms the picture only; the timeline has its own
+    else if (v.z > 1) { e.preventDefault(); v.x -= e.deltaX; v.y -= e.deltaY; szClamp(v); szApply(false, v); }
   }, { passive: false });
-  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); gz = SZ.z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); szAt(gz * e.scale, e.clientX, e.clientY, false); });          // Safari's pinch
+  wrap.addEventListener('gesturestart', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); gz = at(e).z; }); wrap.addEventListener('gesturechange', e => { if (!live(e)) return; e.preventDefault(); e.stopPropagation(); szAt(gz * e.scale, e.clientX, e.clientY, false, at(e)); });          // Safari's pinch
   wrap.addEventListener('pointerdown', e => {
-    if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
-    if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: SZ.z }; pan = null; wrap.setPointerCapture(e.pointerId); }
-    else if (SZ.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: SZ.x, oy: SZ.y }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
+    if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]); const v = at(e);
+    if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: v.z, v }; pan = null; wrap.setPointerCapture(e.pointerId); }
+    else if (v.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: v.x, oy: v.y, v }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
   });
   wrap.addEventListener('pointermove', e => {
     if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
-    if (pinch && ptr.size >= 2) { const [a, b] = [...ptr.values()]; szAt(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, false); }
-    else if (pan) { SZ.x = pan.ox + e.clientX - pan.x; SZ.y = pan.oy + e.clientY - pan.y; szClamp(); szApply(false); }
+    if (pinch && ptr.size >= 2) { const [a, b] = [...ptr.values()]; szAt(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, false, pinch.v); }
+    else if (pan) { const v = pan.v; v.x = pan.ox + e.clientX - pan.x; v.y = pan.oy + e.clientY - pan.y; szClamp(v); szApply(false, v); }
   });
   const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (!ptr.size) { pan = null; wrap.classList.remove('panning'); } };
   wrap.addEventListener('pointerup', up); wrap.addEventListener('pointercancel', up);
@@ -637,6 +643,7 @@ function drawStage() {
   if (!Transport.playing && fadeLookAt !== S.time) st.fade = 1;      // the paused preview shows the full picture, except where you scrubbed to: there it shows the fade under the playhead
   previewR.render(st);
   if (st.spread !== lastSpreadShown) { lastSpreadShown = st.spread; prefetchAround(); updateInfo(); }
+  if (SPLIT.shown) selSync();          // System: the selector follows the playhead
 }
 
 /* ====================================================================
