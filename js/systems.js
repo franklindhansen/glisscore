@@ -218,10 +218,10 @@ function sysSync() {
   SYS.rev++; stageDirty = true; if (sysOn() && S.pdf.keep.length) sysKick();
   if (named.length && !HB.quiet) { SYS.noted = true; toast(tx('sys.redone', { page: named.sort((a, b) => a - b).join(', ') })); }          // noted: the caller's own toast would only replace this one
 }
-/* The hand-marked pages for the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right, ox?, oy?]]}] */
+/* The hand-marked pages for the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]]}] */
 const sysToList = () => [...SYS.hand].filter(i => SYS.byPage.has(i) && S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
   const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000;
-  return { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(b => { const e = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; if (b.ox || b.oy) e.push(q(b.ox || 0), q(b.oy || 0)); return e; }) };
+  return { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(b => { const e = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; return e; }) };
 });
 /* only values this site understands; null when nothing usable */
 function sysListClean(list, n) {
@@ -229,7 +229,7 @@ function sysListClean(list, n) {
   for (const e of list) {
     if (!e || !Number.isInteger(e.p) || e.p < 1 || e.p > n || !Array.isArray(e.s) || e.s.length > 100) continue;
     const t = Number.isFinite(e.t) ? clamp(e.t, -15, 15) : 0, s = [];
-    for (const b of e.s) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; const o = { top: b[0], bottom: b[1], left: b[2], right: b[3] }; if (Number.isFinite(b[4]) && Math.abs(b[4]) <= 2) o.ox = b[4]; if (Number.isFinite(b[5]) && Math.abs(b[5]) <= 2) o.oy = b[5]; s.push(o); }
+    for (const b of e.s) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; const o = { top: b[0], bottom: b[1], left: b[2], right: b[3] }; s.push(o); }
     out.push({ p: e.p, t, s });
   }
   return out.length ? out : null;
@@ -332,16 +332,10 @@ function sysCommit(idx, list) {
 async function sysMark(idx, a, b, keep) {
   const top = clamp(Math.min(a, b), 0, 1), bottom = clamp(Math.max(a, b), 0, 1); if (bottom - top < 0.01) return null;
   const [left, right] = await sysEdges(idx, top, bottom), r = await sysDetectPage(idx), old = r ? r.systems : [];          // a page not found yet is found first, so its own systems are not lost
-  const box = { top, bottom, left, right }; if (keep && keep.ox) box.ox = keep.ox; if (keep && keep.oy) box.oy = keep.oy;
+  const box = { top, bottom, left, right };
   sysCommit(idx, old.filter(s => s !== keep && (s.bottom <= top || s.top >= bottom)).concat(box)); return box;
 }
 function sysRemove(idx, box) { const r = SYS.byPage.get(idx); if (r && r.systems.includes(box)) sysCommit(idx, r.systems.filter(s => s !== box)); }
-/* the frame's offset from the system's own centering, kept inside what still holds the whole system */
-function sysPad(idx, box, ox, oy, W, H) {
-  const f = sysFit(sysKey(idx, SYS.byPage.get(idx).systems.indexOf(box)), W, H), pa = S.pdf.aspect;
-  const mx = Math.max(0, (W / f.s - (box.right - box.left) * pa) / 2), my = Math.max(0, (H / f.s - (box.bottom - box.top)) / 2);
-  return [clamp(ox, -mx, mx), clamp(oy, -my, my)];
-}
 /* Detect this page again: the page shown returns to its automatic result, one History step */
 async function sysRedetect(idx) {
   pushHistory(); SYS.hand.delete(idx); SYS.byPage.delete(idx); SYS.rev++; stageDirty = true;
@@ -358,7 +352,7 @@ function sysFit(key, W, H) {
   const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
   const box = list[Math.min(sysNo(key), list.length - 1)];
   const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), H * (1 - 2 * ty) / Math.max(1e-6, box.bottom - box.top));
-  return { box, s, ox: box.ox || 0, oy: box.oy || 0, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
+  return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
 /* the paper: the median color of what is not ink inside the box */
 function sysPaper(cv) {
@@ -378,7 +372,7 @@ async function sysSheet(key, W, H) {
   await page.render({ canvasContext: sx, viewport: vp, transform: [1, 0, 0, 1, -box.left * vp.width, -box.top * vp.height], background: '#ffffff' }).promise;
   try { page.cleanup(); } catch (e) {}
   const paper = sysPaper(src), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2 - f.ox * f.s), y = Math.round((H - f.dh) / 2 - f.oy * f.s), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
+  const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2), y = Math.round((H - f.dh) / 2), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
   c.fillStyle = col(1); c.fillRect(0, 0, W, H); c.drawImage(src, x, y);
   const F = Math.min(SYS_FEATHER, f.dw >> 2, f.dh >> 2);          // each edge fades into the paper around it, so an uneven scan shows no hard seam
   [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {

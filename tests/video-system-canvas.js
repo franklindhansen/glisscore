@@ -29,8 +29,9 @@ function staffPage(doc, n) {
   ok('Spread and Single page show no selector or presets', g.hidden && await p.evaluate(() => document.querySelector('#sysPresets').hidden));
   await pick('pageLayout', 'system'); await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(1500);
   g = await geo();
-  ok('System splits the stage, half and half', !g.hidden && near(g.sel[0], (g.wrap[0] - 2) / 2) && near(g.sel[1], g.wrap[1] - 2), JSON.stringify(g));
-  ok('the preview sits right of the divider and inside the stage', g.st[0] >= g.div[0] + g.div[2] - 1 && g.st[0] + g.st[2] <= g.wrap[0] && g.pressed[1] === 'true', JSON.stringify(g));
+  ok('System splits the stage with the preview wide (selector 0.3)', !g.hidden && near(g.sel[0], 0.3 * (g.wrap[0] - 2), 4) && near(g.sel[1], g.wrap[1] - 2), JSON.stringify(g));
+  ok('the preview sits right of the divider and inside the stage', g.st[0] >= g.div[0] + g.div[2] - 1 && g.st[0] + g.st[2] <= g.wrap[0] && g.pressed[2] === 'true', JSON.stringify(g));
+  ok('there is no Edit systems button', await p.evaluate(() => !document.querySelector('#spMark')));
   const undoBefore = await hist();
   const dv = await p.evaluate(() => { const r = document.querySelector('#sysDiv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
   await p.mouse.move(dv[0], dv[1]); await p.mouse.down(); await p.mouse.move(dv[0] + 150, dv[1], { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(400);
@@ -38,7 +39,7 @@ function staffPage(doc, n) {
   ok('the divider drags', g2.sel[0] > g.sel[0] + 120, JSON.stringify([g.sel[0], g2.sel[0]]));
   await p.mouse.dblclick(...(await p.evaluate(() => { const r = document.querySelector('#sysDiv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }))); await p.waitForTimeout(900);
   const g3 = await geo();
-  ok('a double-click glides it back to half and half', near(g3.sel[0], g.sel[0], 3), JSON.stringify([g.sel[0], g3.sel[0]]));
+  ok('a double-click glides it back to half and half', near(g3.sel[0], (g3.wrap[0] - 2) / 2, 3), JSON.stringify([g.sel[0], g3.sel[0]]));
   ok('the split is not a History step', (await hist()) === undoBefore);
   for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await p.click('#' + id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f, near(g.sel[0], f * (g.wrap[0] - 2), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
   await p.click('#spOnly'); await p.waitForTimeout(800); g = await geo();
@@ -69,14 +70,31 @@ function staffPage(doc, n) {
   });
   if (process.env.SHOTS) { await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/stage.png' }); await p.locator('#selCv').screenshot({ path: process.env.SHOTS + '/sel.png' }); }
   ok('the frame has the video\'s shape', Math.abs(fr.aspect - fr.want) < 1e-6, JSON.stringify(fr));
-  ok('a neighbor inside the frame is masked, and the selected music is shown', fr.inFrame && fr.mask < 6 && fr.ink > 60, JSON.stringify(fr));
+  ok('a neighbor inside the frame is glass, and the selected music is shown', fr.inFrame && fr.mask < 64 && fr.ink > 150, JSON.stringify(fr));
+  // the Preview frame: rigid, the page is sized once, and every system's frame fits the pane
+  const sizes = [];
+  for (const [pg, no] of [[0, 0], [0, 2], [1, 0], [3, 0]]) {
+    const key = await p.evaluate(([pg, no]) => { const r = SYS.byPage.get(pg); const k = sysKey(pg, Math.min(no, r.systems.length - 1)); Transport.seek(selTimeOf(k)); return k; }, [pg, no]); await p.waitForTimeout(500);
+    sizes.push(await p.evaluate(() => { const g = SEL.geo, m = 1; return { u: g.u, fits: (g.ox + g.fx * g.u) >= -m && (g.oy + g.fy * g.u) >= -m && (g.ox + (g.fx + g.fw) * g.u) <= g.w + m && (g.oy + (g.fy + g.fh) * g.u) <= g.h + m }; }));
+  }
+  ok('the page keeps one size from system to system', sizes.every(q => Math.abs(q.u - sizes[0].u) < 1e-6), JSON.stringify(sizes));
+  ok('the whole Preview frame is inside the pane for the top and bottom systems', sizes.every(q => q.fits), JSON.stringify(sizes));
+  const edge = await p.evaluate(() => { const g = SEL.geo, cv = document.querySelector('#selCv'), r = cv.getBoundingClientRect(), k = r.width / cv.width; return { x: r.left + (g.ox + (g.fx + g.fw / 2) * g.u) * k, y: r.top + (g.oy + g.fy * g.u) * k, h: S.history.length, box: JSON.stringify(g.box) }; });
+  await p.mouse.move(edge.x, edge.y); await p.mouse.down(); await p.mouse.move(edge.x, edge.y + 12, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(300);
+  ok('the frame edge is not a handle', await p.evaluate(e => S.history.length === e.h && JSON.stringify(SEL.geo.box) === e.box && !('oy' in SEL.geo.box), edge));
+  ok('the cursor over the frame edge is not a resize', await p.evaluate(() => document.querySelector('#selCv').style.cursor !== 'ew-resize'));
+  await p.evaluate(() => Transport.seek(S.vStart)); await p.waitForTimeout(500);
   // zoom and pan in the selector
   await p.click('#szIn'); await p.waitForTimeout(500);
   let z = await p.evaluate(() => [SZS.z, SZ.z, document.querySelector('#szFit').disabled]);
   ok('Zoom works in the selector and leaves the preview alone', z[0] > 1 && z[1] === 1 && z[2] === false, JSON.stringify(z));
   const c = await p.evaluate(() => { const r = document.querySelector('#selCv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
-  await p.mouse.move(c[0], c[1]); await p.mouse.down(); await p.mouse.move(c[0] + 60, c[1] + 20, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(100);
-  ok('dragging pans the selector', await p.evaluate(() => SZS.x > 30 && SZS.y > 5), JSON.stringify(await p.evaluate(() => [SZS.x, SZS.y])));
+  if (process.env.SHOTS) await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/zoomed.png' });
+  await p.mouse.move(c[0], c[1]); await p.mouse.wheel(-60, -20); await p.waitForTimeout(100);          // a drag marks now, so a zoomed page pans by scrolling
+  ok('scrolling pans the selector', await p.evaluate(() => SZS.x > 30 && SZS.y > 5), JSON.stringify(await p.evaluate(() => [SZS.x, SZS.y])));
+  await p.mouse.move(c[0], c[1]); await p.keyboard.down('Space'); await p.mouse.down(); await p.mouse.move(c[0] + 40, c[1] + 10, { steps: 5 }); await p.mouse.up(); await p.keyboard.up('Space'); await p.waitForTimeout(100);
+  const sp = await p.evaluate(() => [SZS.x, SZS.y, SEL.mark.space, Transport.playing === true]);
+  ok('Space-drag pans the selector, marks nothing, and does not play', sp[0] > 60 && !sp[2] && !sp[3] && await p.evaluate(() => SYS.byPage.get(0).systems.length) === 3, JSON.stringify(sp));
   ok('a pan does not move the playhead', await p.evaluate(() => sysPage(SEL.key) === 0 && sysNo(SEL.key) === 0));
   await p.click('#szFit'); await p.waitForTimeout(500);
   ok('Fit puts the selector back', await p.evaluate(() => SZS.z === 1 && SZS.x === 0));

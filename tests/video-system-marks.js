@@ -39,8 +39,7 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const click = async pt => { await p.mouse.move(...pt); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(150); };
   const before = await sys(), h0 = await steps();
   ok('three systems are found first', before.length === 3, JSON.stringify(before));
-  await p.click('#spMark'); await p.waitForTimeout(200);
-  ok('Mark systems turns on', await p.evaluate(() => SEL.mark.on && document.querySelector('#spMark').getAttribute('aria-pressed') === 'true'));
+  ok('marking is on without a button', await p.evaluate(() => !document.querySelector('#spMark')));
   await drag(await at(0.03), await at(0.085));
   let s = await sys();
   ok('press-drag marks a region the finder skipped', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
@@ -70,13 +69,6 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   ok('Delete removes the selected system', (await sys()).length === n - 1);
   await p.click('#bUndo'); await p.waitForTimeout(400);
   ok('and undo restores it', (await sys()).length === n);
-  // padding by dragging a frame edge
-  const f0 = await p.evaluate(() => { const g = SEL.geo; return [g.fx, g.fy, g.fw, g.fh, g.pa]; });
-  const hp = await steps(), fx = (f0[0] + f0[2] / 2) / f0[4]; await drag(await at(f0[1], fx), await at(f0[1] + 0.02, fx));
-  const moved = await p.evaluate(() => SEL.geo.box.oy || 0);
-  ok('dragging a frame edge moves the padding, as one step', moved > 0.01 && await steps() === hp + 1, String(moved));
-  await p.dblclick('#selCv', { position: await p.evaluate(() => { const cv = document.querySelector('#selCv'), g = SEL.geo, r = cv.getBoundingClientRect(), k = r.width / cv.width; return { x: (g.ox + (g.fx + g.fw / 2) * g.u) * k, y: (g.oy + g.fy * g.u) * k }; }) }); await p.waitForTimeout(400);
-  ok('a double-click on the edge resets it', await p.evaluate(() => !SEL.geo.box.oy));
   // Detect this page again
   const h1 = await steps(); await p.click('#spAgain'); await p.waitForTimeout(1500);
   s = await sys(); ok('Detect this page again returns to three systems', s.length === 3 && s[0][0] > 0.1, JSON.stringify(s));

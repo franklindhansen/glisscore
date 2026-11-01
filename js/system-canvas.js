@@ -5,7 +5,7 @@
    ==================================================================== */
 const DIV_W = 7;                                       // the divider's width
 const SPLIT_PRESETS = { spSel: 0.7, spEq: 0.5, spPrev: 0.3, spOnly: 0 };          // the selector's share of the stage: wide, equal, narrow, hidden
-const SPLIT = { f: 0.5, shown: false, stack: false, glide: 0, raf: 0 };          // view only: never saved, never a History step
+const SPLIT = { f: 0.3, shown: false, stack: false, glide: 0, raf: 0 };          // view only: never saved, never a History step
 const splitOn = () => sysOn() && !!S.pdf && !$('.app').classList.contains('fs');
 
 /* Lays out the selector, the divider, and the presets for the stage's size; the preview fits in what is left (pl: room on the left, pt: room above).
@@ -67,7 +67,7 @@ function splitBind() {
 }
 
 /* ---------- the selector ---------- */
-const SEL = { mark: { on: false, y0: null, pg: -1, hover: null, draft: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
+const SEL = { mark: { space: false, over: false, y0: null, pg: -1, hover: null, draft: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
 /* the system the playhead is on: a credits card shows the nearest system instead */
 function selCurrent() {
   const n = S.spreads.length; if (!n) return null;
@@ -124,36 +124,44 @@ function selPaper(box) {
   c.getContext('2d').drawImage(b, sx, sy, sw, sh, 0, 0, c.width, c.height);
   SEL.paper = sysPaper(c); SEL.paperKey = k; return SEL.paper;
 }
-/* The page with the video drawn on it: inside the frame is exactly what the sheet shows (the selected system, paper everywhere else, including past the
-   page's edge); outside it the page is dimmed, so the padding is visible. The world is the page and the frame together, fitted to the pane. */
+/* A system's Preview frame (in page heights) and the world it needs: the page and the frame together */
+function selWorld(key, W, H) {
+  const f = sysFit(key, W, H), box = f.box, pa = S.pdf.aspect, fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa - fw / 2, fy = (box.top + box.bottom) / 2 - fh / 2;
+  return { f, box, fw, fh, fx, fy, x0: Math.min(0, fx), x1: Math.max(pa, fx + fw), y0: Math.min(0, fy), y1: Math.max(1, fy + fh) };
+}
+/* One scale for the whole score, so the page never changes size from one system to the next: the page and the frame fit the pane, with a margin m, for every system. */
+function selScale(key, w, h, m, W, H) {
+  let u = Infinity;
+  new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); (r && r.systems.length ? r.systems : [null]).forEach((_, n) => { const q = selWorld(sysKey(i, n), W, H); u = Math.min(u, (w - 2 * m) / (q.x1 - q.x0), (h - 2 * m) / (q.y1 - q.y0)); }); });
+  const q = selWorld(key, W, H); return Math.max(1, Math.min(u, (w - 2 * m) / (q.x1 - q.x0), (h - 2 * m) / (q.y1 - q.y0)));
+}
+/* The page with the video drawn on it: the Selection is the music alone, bright and outlined; the Padding and everything else inside the Preview frame, neighbors included,
+   is frosted glass; outside the frame the page is dimmed. The page and the frame together are centered in the pane. */
 function selPaint() {
   const cv = $('#selCv'), key = SEL.key; if (key == null || !S.pdf) return;
   const k = Math.min(3, 2 * Math.max(1, window.devicePixelRatio || 1)), w = Math.max(2, Math.round(cv.clientWidth * k)), h = Math.max(2, Math.round(cv.clientHeight * k));
   if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
-  const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), f = sysFit(key, W, H), box = f.box;
-  const fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa + f.ox - fw / 2, fy = (box.top + box.bottom) / 2 + f.oy - fh / 2;          // the frame, in page heights
-  const x0 = Math.min(0, fx), x1 = Math.max(pa, fx + fw), y0 = Math.min(0, fy), y1 = Math.max(1, fy + fh), m = 14 * k;
-  const u = Math.max(1, Math.min((w - 2 * m) / (x1 - x0), (h - 2 * m) / (y1 - y0))), ox = (w - u * (x1 - x0)) / 2 - u * x0, oy = (h - u * (y1 - y0)) / 2 - u * y0;
+  const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), { box, fw, fh, fx, fy, x0, x1, y0, y1 } = selWorld(key, W, H);
+  const u = selScale(key, w, h, 14 * k, W, H), ox = (w - u * (x1 - x0)) / 2 - u * x0, oy = (h - u * (y1 - y0)) / 2 - u * y0;
   const X = x => ox + x * u, Y = y => oy + y * u;
   SEL.geo = { u, ox, oy, idx, pa, w, h, fx, fy, fw, fh, box, W, H, k };
   selNeed(idx, Math.ceil(u / 200) * 200);
   g.clearRect(0, 0, w, h);
-  const ready = SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0);
+  const ready = SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0), style = getComputedStyle(document.documentElement);
   g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u);
   if (ready) g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u);
   g.fillStyle = 'rgba(8,10,16,.5)'; g.fillRect(X(0), Y(0), pa * u, u);
-  const paper = ready ? selPaper(box) : [255, 255, 255];
-  g.fillStyle = 'rgb(' + paper.join(',') + ')'; g.fillRect(X(fx), Y(fy), fw * u, fh * u);
   const bx = X(box.left * pa), by = Y(box.top), bw = (box.right - box.left) * pa * u, bh = (box.bottom - box.top) * u;
+  g.save(); g.beginPath(); g.rect(X(fx), Y(fy), fw * u, fh * u); g.rect(bx, by, bw, bh); g.clip('evenodd');          // the glass: the frame without the Selection
+  if ('filter' in g && ready) { g.filter = 'blur(' + 22 * k + 'px) saturate(1.5)'; g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); g.filter = 'none'; }
+  g.fillStyle = style.getPropertyValue('--glass-bg').trim() || 'rgba(255,255,255,.14)'; g.fillRect(0, 0, w, h); g.restore();
+  g.fillStyle = '#fff'; g.fillRect(bx, by, bw, bh);
   if (ready) g.drawImage(SEL.bmp, box.left * SEL.bmp.width, box.top * SEL.bmp.height, (box.right - box.left) * SEL.bmp.width, (box.bottom - box.top) * SEL.bmp.height, bx, by, bw, bh);
-  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
-  g.save(); g.beginPath(); g.rect(0, 0, w, h); g.rect(X(fx), Y(fy), fw * u, fh * u); g.clip('evenodd');          // the other systems are outlined outside the frame only: inside it they are masked, as in the video
-  g.lineWidth = Math.max(1, k * 0.75); g.strokeStyle = accent; g.globalAlpha = 0.55;
-  list.forEach(s => { if (s !== box) g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u); });
-  g.restore(); g.strokeStyle = accent; g.lineWidth = Math.max(1.5, k * 1.25); g.strokeRect(X(fx), Y(fy), fw * u, fh * u);
-  if (SEL.mark.on) selMarkPaint(g, list, box, X, Y, accent);
+  const accent = style.getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
+  g.strokeStyle = accent; g.lineWidth = Math.max(1.5, k * 1.25); g.strokeRect(X(fx), Y(fy), fw * u, fh * u);
+  selMarkPaint(g, list, box, X, Y, accent);
 }
-/* Marking: every system's top and bottom are handles (the left and right edges never are), the selected one has an × on its corner, and the pending or dragged mark is dashed */
+/* Marking, always on while System is: every system's top and bottom are handles (the left and right edges never are), the selected one has an × on its corner, and the pending or dragged mark is dashed */
 function selMarkPaint(g, list, box, X, Y, accent) {
   const { u, pa, k } = SEL.geo, M = SEL.mark, lw = Math.max(1, k * 0.75);
   g.save(); g.strokeStyle = accent; g.lineWidth = lw;
@@ -195,53 +203,44 @@ function selPt(e) {
   const cv = $('#selCv'), geo = SEL.geo, b = cv.getBoundingClientRect(), sx = cv.width / b.width, px = (e.clientX - b.left) * sx, py = (e.clientY - b.top) * sx;
   return { x: (px - geo.ox) / geo.u, y: (py - geo.oy) / geo.u, px, py, tol: 6 * sx / geo.u };
 }
-/* what is under the pointer: the ×, a system's top or bottom edge, a frame guide edge, the inside of a system, or empty page */
+/* what is under the pointer: the ×, a system's top or bottom edge, the inside of a system, or empty page */
 function selHit(e) {
   const geo = SEL.geo; if (!geo || SEL.key == null) return { t: 'new' };
-  const p = selPt(e), r = SYS.byPage.get(geo.idx), list = r ? r.systems : [], { fx, fy, fw, fh, box } = geo, xc = selXPos();
+  const p = selPt(e), r = SYS.byPage.get(geo.idx), list = r ? r.systems : [], { box } = geo, xc = selXPos();
   if (list.includes(box) && Math.hypot(p.px - xc[0], p.py - xc[1]) <= xc[2] + 3) return { t: 'del', box, p };
   if (SEL.mark.y0 != null) return { t: 'second', p };
   let best = null, bd = p.tol;
   list.forEach(s => { if (p.x < -p.tol || p.x > geo.pa + p.tol) return; [['top', s.top], ['bottom', s.bottom]].forEach(([n, v]) => { const d = Math.abs(p.y - v); if (d <= bd) { bd = d; best = { t: n, box: s, p }; } }); });
   if (best) return best;
-  if (box && p.y >= fy - p.tol && p.y <= fy + fh + p.tol && p.x >= fx - p.tol && p.x <= fx + fw + p.tol) {
-    const d = { fl: Math.abs(p.x - fx), fr: Math.abs(p.x - fx - fw), ft: Math.abs(p.y - fy), fb: Math.abs(p.y - fy - fh) }, n = Object.keys(d).sort((a, b) => d[a] - d[b])[0];
-    if (d[n] <= p.tol) return { t: n, box, p };
-  }
   const inside = list.find(s => p.y >= s.top && p.y <= s.bottom && p.x >= s.left * geo.pa && p.x <= s.right * geo.pa); if (inside) return { t: 'move', box: inside, p };
   return { t: 'new', p };
 }
-const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', fl: 'ew-resize', fr: 'ew-resize', ft: 'ns-resize', fb: 'ns-resize', move: 'move', new: 'crosshair', second: 'crosshair' };
+const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', move: 'move', new: 'crosshair', second: 'crosshair' };
 let selPaintQ = 0; const selPaintSoon = () => { cancelAnimationFrame(selPaintQ); selPaintQ = requestAnimationFrame(selPaint); };
-function selMarkMode(on) {
-  SEL.mark.on = on; SEL.mark.y0 = SEL.mark.hover = SEL.mark.draft = null; $('#spMark').setAttribute('aria-pressed', on ? 'true' : 'false'); $('#sysSel').classList.toggle('marking', on);
-  $('#selCv').style.cursor = ''; if (SPLIT.shown) selPaintSoon();
-}
 function selMarkBind() {
   const pane = $('#sysSel'), cv = $('#selCv'), M = SEL.mark; let G = null;
-  $('#spMark').addEventListener('click', () => selMarkMode(!M.on));
   $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.y0 = M.draft = null; sysRedetect(SEL.geo.idx); } });
+  /* a zoomed page pans by dragging while Space is held over it (a plain drag marks); Space then does not play */
+  const spaceSet = on => { M.space = on; pane.classList.toggle('pan-ready', on); };
+  pane.addEventListener('pointerenter', () => { M.over = true; }); pane.addEventListener('pointerleave', () => { M.over = false; });
+  document.addEventListener('keyup', e => { if (e.code === 'Space' && M.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
   pane.addEventListener('pointerdown', e => {
-    if (!M.on || e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null) return;
+    if (M.space) return;
+    if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null) return;
     e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
-    const h = selHit(e); G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, ox: h.box && h.box.ox || 0, oy: h.box && h.box.oy || 0, started: false });
+    const h = selHit(e); G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx });
   });
   cv.addEventListener('pointermove', e => {
-    if (!M.on || !SEL.geo) return;
+    if (!SEL.geo) return;
     const p = selPt(e);
     if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; if (M.y0 != null) { M.hover = clamp(p.y, 0, 1); selPaintSoon(); } return; }
     if (!G.moved && Math.hypot(e.clientX - G.sx, e.clientY - G.sy) < 4) return; G.moved = true;
-    const y = clamp(p.y, 0, 1), t = G.t, geo = SEL.geo;
+    const y = clamp(p.y, 0, 1), t = G.t;
     if (t === 'new') M.draft = [G.p.y, y];
     else if (t === 'top') M.draft = [y, G.box.bottom];
     else if (t === 'bottom') M.draft = [G.box.top, y];
     else if (t === 'move') { const dy = clamp(y - G.p.y, -G.box.top, 1 - G.box.bottom); M.draft = [G.box.top + dy, G.box.bottom + dy]; }
     else if (t === 'second') M.hover = y;
-    else if (t[0] === 'f' && SYS.byPage.get(geo.idx) && SYS.byPage.get(geo.idx).systems.includes(G.box)) {                                      // a frame guide edge: the frame's padding around the system on that side
-      if (!G.started) { G.started = true; pushHistory(); sysHandRec(geo.idx); }
-      const [nx, ny] = sysPad(geo.idx, G.box, G.ox + (t === 'fl' || t === 'fr' ? p.x - G.p.x : 0), G.oy + (t === 'ft' || t === 'fb' ? p.y - G.p.y : 0), geo.W, geo.H);
-      if (nx) G.box.ox = nx; else delete G.box.ox; if (ny) G.box.oy = ny; else delete G.box.oy;
-    }
     selPaintSoon();
   });
   const end = async e => {
@@ -249,7 +248,6 @@ function selMarkBind() {
     const geo = SEL.geo, d = M.draft; M.draft = null;
     if (e.type === 'pointercancel' || !geo) { selPaintSoon(); return; }
     const t = g.t, idx = g.pg; if (idx !== geo.idx) { selPaintSoon(); return; }          // the page changed under the gesture
-    if (t[0] === 'f') { if (g.started) { SYS.rev++; stageDirty = true; } selPaintSoon(); return; }
     if (t === 'del' && !g.moved) { M.y0 = M.hover = null; sysRemove(idx, g.box); return; }
     if (t === 'second') { const y0 = M.y0; M.y0 = M.hover = null; selPaintSoon(); sysMark(idx, y0, clamp(selPt(e).y, 0, 1)); return; }
     if (g.moved && d) { if (t === 'new') M.y0 = null; await sysMark(idx, d[0], d[1], t === 'new' ? null : g.box); selPaintSoon(); return; }
@@ -257,13 +255,9 @@ function selMarkBind() {
     selClick(e);                                                  // a click on a system or its edge: the playhead goes there
   };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
-  cv.addEventListener('dblclick', e => {
-    if (!M.on || !SEL.geo) return; const h = selHit(e), geo = SEL.geo, b = h.box; if (!b || h.t[0] !== 'f' || !(SYS.byPage.get(geo.idx) || { systems: [] }).systems.includes(b) || !(h.t === 'fl' || h.t === 'fr' ? b.ox : b.oy)) return;
-    pushHistory(); if (h.t === 'fl' || h.t === 'fr') delete b.ox; else delete b.oy;
-    sysHandRec(geo.idx); SYS.rev++; stageDirty = true; selPaintSoon();
-  });
   document.addEventListener('keydown', e => {
-    if (!M.on || !SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
+    if (e.code === 'Space' && SPLIT.shown && M.over && SZS.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); return; }
+    if (!SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
     if (e.key === 'Escape' && (M.y0 != null || M.draft)) { M.y0 = M.draft = M.hover = null; selPaintSoon(); e.stopPropagation(); }
     else if ((e.key === 'Delete' || e.key === 'Backspace') && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
   }, true);

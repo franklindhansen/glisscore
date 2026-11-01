@@ -125,6 +125,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .sys-sel[hidden],.sys-div[hidden]{display:none}
 #selCv{display:block;flex:none;touch-action:none}
 .sys-sel.zoomed{cursor:grab;touch-action:none}
+.sys-sel.pan-ready #selCv{cursor:grab!important}
 .sys-div{position:absolute;z-index:3;width:7px;background:var(--stage);cursor:col-resize;touch-action:none}
 .sys-div::before{content:"";position:absolute;left:3px;top:0;bottom:0;width:1px;background:var(--line);transition:background-color .2s var(--ease-color),box-shadow .2s var(--ease-color)}
 .sys-div:hover::before,.sys-div:focus-visible::before,.sys-div.drag::before{background:var(--accent);box-shadow:0 0 0 1px var(--accent)}
