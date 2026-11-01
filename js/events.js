@@ -33,7 +33,7 @@ function removePdf() {
   S.manualDur = Math.max(S.manualDur || 0, vEnd());
   try { S.pdf.doc.destroy(); } catch (e) {}
   loadToken++;                                                   // stops thumbnail generation
-  S.pdf = null; pdfCachesReset(); S.pendingPages = null; S.pendingWm = null; S.pendingSize = null; S.spreads = []; S.turns = []; S.ph = []; S.thumbs = []; S.time = S.vStart; S.history = []; S.redo = []; updateHistoryButtons();
+  S.pdf = null; pdfCachesReset(); S.pendingPages = null; S.pendingWm = null; S.pendingSize = null; S.pendingSys = null; S.spreads = []; S.turns = []; S.ph = []; S.thumbs = []; S.time = S.vStart; S.history = []; S.redo = []; updateHistoryButtons();
   if (previewR) previewR.clearTextures();
   $('#empty').hidden = false;
   setChips(); layoutTimeline(); TL.staticDirty = true; stageDirty = true; updateButtons(); updateInfo(); updateTimeUI(true); updateHint();

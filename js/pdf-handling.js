@@ -650,6 +650,7 @@ function setRecipe(r) {
   if (!S.pdf.keep.length) { c.slots.forEach(s => { if (s) s.x = false; }); S.pdf.keep = recipeKeep(c); }
   if (typeof previewR !== 'undefined' && previewR) previewR.clearTextures();
   if (resized && S.thumbs && S.thumbs.length) { S.thumbs = new Array(S.pdf.n).fill(null); makeThumbs(loadToken); TL.staticDirty = true; stageDirty = true; }          // pictures are drawn again at the new page shape
+  sysSync();          // a page edited since its systems were found is found again
 }
 /* Page sizes (in inches). A document is resized as a whole; the target keeps the document's own orientation. */
 const RZ_PRESETS = [{ k: 'letter', n: 'Letter', w: 8.5, h: 11 }, { k: 'concert', n: 'Concert', w: 9, h: 12 }, { k: 'tabloid', n: 'Tabloid', w: 11, h: 17 }, { k: '12x18', n: '12 × 18', w: 12, h: 18 }, { k: 'a4', n: 'A4', w: 8.27, h: 11.69 }, { k: 'a3', n: 'A3', w: 11.69, h: 16.54 }];
@@ -907,6 +908,7 @@ async function loadPdf(file) {
     else if (S.pendingOmit) { setOmit(S.pendingOmit); }
     S.pendingOmit = null;
     if (S.pendingSize) { const q = recipeOf(); q.size = { w: S.pendingSize.w, h: S.pendingSize.h }; q.each = !!S.pendingSize.each; setRecipe(q); S.pendingSize = null; }
+    if (S.pendingSys) { sysFromList(S.pendingSys); S.pendingSys = null; }
     closePdfEditor();
     S.thumbs = new Array(doc.numPages).fill(null);
     S.history = []; S.redo = []; updateHistoryButtons();

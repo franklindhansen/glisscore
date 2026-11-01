@@ -737,10 +737,10 @@ function peApply() {
   const was = Transport.playing, at = Transport.now();          // if the video was playing, it carries on from the same moment
   Transport.pause();
   pushHistory(); const base = S.history.length;                  // one step in the main Undo: the pages, and the turns as they were
-  setRecipe(d); S.time = was ? clamp(at, S.vStart, vEnd()) : S.vStart; rebuildSpreads(false);
+  SYS.noted = false; setRecipe(d); S.time = was ? clamp(at, S.vStart, vEnd()) : S.vStart; rebuildSpreads(false);
   if (S.history.length > base) S.history.length = base;
   setChips(); updateTimeUI(true); TL.staticDirty = true; stageDirty = true;
-  toast(tx('pdf.invideo', { pages: peN(S.pdf.keep.length), spreads: spreadsText() }));
+  if (!SYS.noted) toast(tx('pdf.invideo', { pages: peN(S.pdf.keep.length), spreads: spreadsText() }));          // marks cleared on a page matter more than the count
   if (was) Transport.play();
 }
 const peSvg = {

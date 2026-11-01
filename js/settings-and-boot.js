@@ -39,7 +39,7 @@ function buildExport(kind) {
   }
   if (kind !== 'settings') {
     o.firstAlone = !!S.set.firstAlone;
-    if (S.pdf) { const r = recipeOf(); if (recipeIsSimple(r)) { const left = []; r.order.forEach(id => { if (r.slots[id].x) left.push(id); }); if (left.length) o.omit = left; } else o.pages = recipeToList(r); }
+    if (S.pdf) { const r = recipeOf(); if (recipeIsSimple(r)) { const left = []; r.order.forEach(id => { if (r.slots[id].x) left.push(id); }); if (left.length) o.omit = left; } else o.pages = recipeToList(r); const sy = sysToList(); if (sy.length) o.systems = sy; }
     else if (S.pendingPages) o.pages = S.pendingPages;
     else if (S.pendingOmit && S.pendingOmit.size) o.omit = Array.from(S.pendingOmit).sort((a, b) => a - b);
     { const z = S.pdf ? S.pdf.size : S.pendingSize; if (z) { o.resize = { w: z.w, h: z.h }; if (S.pdf ? S.pdf.each : z.each) o.resize.each = true; } }
@@ -88,7 +88,8 @@ async function importSettings(file) {
     const wmIn = data.watermark && typeof data.watermark === 'object' ? data.watermark : null;
     const rzIn = data.resize && data.resize.w >= 2 && data.resize.w <= 60 && data.resize.h >= 2 && data.resize.h <= 60 ? { w: +data.resize.w, h: +data.resize.h, each: !!data.resize.each } : null;
     if (S.pdf) { const r = list && recipeFromList(list, S.pdf.n, wmIn); if (r) setRecipe(r); else { setOmit(omit); if (wmIn) { const q = recipeOf(); q.wm = wmFromJson(wmIn); setRecipe(q); } } if (rzIn) { const q = recipeOf(); q.size = { w: rzIn.w, h: rzIn.h }; q.each = rzIn.each; setRecipe(q); } }
-    else { S.pendingPages = list && list.length ? list : null; S.pendingWm = wmIn; S.pendingSize = rzIn; S.pendingOmit = !S.pendingPages && omit.size ? omit : null; }
+    { const sy = sysListClean(data.systems, S.pdf ? S.pdf.slots.length : 500); if (S.pdf) sysFromList(sy); else S.pendingSys = sy; }
+    if (!S.pdf) { S.pendingPages = list && list.length ? list : null; S.pendingWm = wmIn; S.pendingSize = rzIn; S.pendingOmit = !S.pendingPages && omit.size ? omit : null; }
     S.vStart = Number.isFinite(data.start) ? data.start : 0; S.vEndSet = Number.isFinite(data.end) ? data.end : null;
     if (vEnd() - S.vStart < 1) { S.vStart = 0; S.vEndSet = null; }
     S.creditsEnd = Number.isFinite(data.creditsEnd) ? data.creditsEnd : null;
