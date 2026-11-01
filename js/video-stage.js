@@ -91,7 +91,7 @@ function tapTurn() {
 const GLSL = {
   quadVS: `attribute vec2 a_pos; attribute vec2 a_uv; uniform vec2 u_res; varying vec2 v_uv;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,0.0,1.0); v_uv=a_uv; }`,
-  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; varying vec2 v_uv;
+  quadFS: `precision highp float; uniform sampler2D u_tex; uniform sampler2D u_shadow; uniform float u_side; uniform float u_gutter; uniform float u_useShadow; uniform float u_div; uniform float u_pw; uniform float u_rows; uniform float u_fade; uniform vec3 u_bg; uniform float u_inv; uniform vec3 u_ink; uniform float u_alpha; varying vec2 v_uv;
     float crease(float d){ return pow(1.0-smoothstep(0.0,0.09,d),1.5); }
     float divider(float d){ float px=d*u_pw; float lw=max(1.0,u_pw/900.0); float line=1.0-smoothstep(lw*0.6,lw*1.6,px); float halo=1.0-smoothstep(0.0,lw*7.0,px); return line*0.5+halo*halo*0.22; }
     void main(){ vec3 col=texture2D(u_tex,v_uv).rgb;
@@ -103,7 +103,7 @@ const GLSL = {
       float n=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);
       col=col*m; if(m<0.999) col+=(n-0.5)/255.0;
       col=mix(u_bg,col,u_fade);
-      gl_FragColor=vec4(col,texture2D(u_tex,v_uv).a); }`,
+      gl_FragColor=vec4(col,texture2D(u_tex,v_uv).a*u_alpha); }`,
   curlVS: `attribute vec2 a_pos; attribute float a_depth; attribute vec2 a_uv; attribute vec3 a_shade; uniform vec2 u_res;
     varying vec2 v_uv; varying vec3 v_shade;
     void main(){ vec2 c=a_pos/u_res*2.0-1.0; gl_Position=vec4(c.x,-c.y,a_depth,1.0); v_uv=a_uv; v_shade=a_shade; }`,
@@ -247,7 +247,7 @@ class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
     this.setTexParams();
     this.scoreFade = 1; this.bgRgb = [0, 0, 0]; this.inkRgb = [0.99, 0.99, 0.99];
-    this.tex = new Map(); this.pending = new Map(); this.sizeKey = ''; this.lay = null; this.onUpdate = null; this.W = canvas.width; this.H = canvas.height;
+    this.tex = new Map(); this.pending = new Map(); this.ph = new Map(); this.notReady = new Map(); this.fx = new Map(); this.framePages = []; this.sizeKey = ''; this.lay = null; this.onUpdate = null; this.W = canvas.width; this.H = canvas.height;
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   }
   setTexParams() {
@@ -267,7 +267,7 @@ class Renderer {
     return { pw, ph, x0, y0, cx: x0 + pw, cy: y0 + ph / 2, xs: one ? x0 + pw : x0 };      // xs: where the left-most page starts
   }
   clearTextures() {
-    const gl = this.gl; this.tex.forEach(e => gl.deleteTexture(e.t)); this.tex.clear(); this.pending.clear(); this.sizeKey = '';
+    const gl = this.gl; this.tex.forEach(e => gl.deleteTexture(e.t)); this.tex.clear(); this.ph.forEach(e => gl.deleteTexture(e.t)); this.ph.clear(); this.fx.clear(); this.pending.clear(); this.sizeKey = '';
   }
   checkSize(lay) {
     const key = lay.pw + 'x' + lay.ph + (sysOn() ? 's' + [S.set.margin, S.set.tbMargin, SYS.byPage.size, SYS.gen, SYS.rev].join() : '');          // a sheet depends on the margins and on what was found
@@ -281,7 +281,19 @@ class Renderer {
     const e = this.tex.get(idx);
     if (e) { this.tex.delete(idx); this.tex.set(idx, e); return e.t; }
     this.request(idx);
-    return this.white;
+    if (!this.notReady.has(idx)) this.notReady.set(idx, performance.now());
+    return this.placeholder(idx);
+  }
+  /* A page whose picture is still being made: its thumbnail, softened, on dim paper (the paper alone before there is a thumbnail). Never a bare white sheet. */
+  placeholder(idx) {
+    const gl = this.gl, lay = this.lay || this.layout(), thumb = S.pdf ? slotThumb(idx) : null, e = this.ph.get(idx);
+    if (e && e.thumb === thumb) return e.t;
+    const cv = softPage(thumb, Math.max(8, Math.round(lay.pw / 4)), Math.max(8, Math.round(lay.ph / 4)));
+    const t = e ? e.t : gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv); this.setTexParams();
+    this.ph.set(idx, { t, thumb });
+    while (this.ph.size > this.cap + 4) { const k = this.ph.keys().next().value; gl.deleteTexture(this.ph.get(k).t); this.ph.delete(k); }
+    return t;
   }
   request(idx) {
     if (this.pending.has(idx)) return this.pending.get(idx);
@@ -294,6 +306,7 @@ class Renderer {
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
       this.setTexParams();
       this.tex.set(idx, { t });
+      if (this.notReady.has(idx)) { this.notReady.delete(idx); this.fx.set(idx, performance.now()); }          // it was shown unfinished: the sharp picture fades in over it
       while (this.tex.size > this.cap) { const k = this.tex.keys().next().value; gl.deleteTexture(this.tex.get(k).t); this.tex.delete(k); }
       if (this.onUpdate) this.onUpdate();
     }).catch(e => { this.pending.delete(idx); console.warn('page render failed', idx, e); });
@@ -310,21 +323,22 @@ class Renderer {
     list.forEach(i => { if (i >= 0 && !this.tex.has(i) && !this.pending.has(i)) this.request(i); });
   }
   attribs(n) { const gl = this.gl; for (let i = 0; i < 4; i++) { if (i < n) gl.enableVertexAttribArray(i); else gl.disableVertexAttribArray(i); } }
-  drawQuad(tex, x, y, w, h, side, flat) {
+  drawQuad(tex, x, y, w, h, side, flat, alpha = 1) {
     const gl = this.gl, P = this.pQuad;
     const v = new Float32Array([x, y, 0, 0, x + w, y, 1, 0, x, y + h, 0, 1, x + w, y, 1, 0, x + w, y + h, 1, 1, x, y + h, 0, 1]);
     gl.useProgram(P); gl.uniform2f(P.u.u_res, this.W, this.H); gl.uniform1f(P.u.u_side, side); gl.uniform1f(P.u.u_gutter, flat ? 0 : gutterAmt());
     gl.uniform1f(P.u.u_useShadow, this.useShadow ? 1 : 0); gl.uniform1f(P.u.u_div, flat ? 0 : dividerAmt()); gl.uniform1f(P.u.u_pw, this.lay.pw); gl.uniform1f(P.u.u_rows, this.M + 1);
-    gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
+    gl.uniform1f(P.u.u_alpha, alpha); gl.uniform1f(P.u.u_fade, this.scoreFade); gl.uniform3f(P.u.u_bg, this.bgRgb[0], this.bgRgb[1], this.bgRgb[2]);
     gl.uniform1f(P.u.u_inv, !flat && S.set.invert ? 1 : 0); gl.uniform3f(P.u.u_ink, this.inkRgb[0], this.inkRgb[1], this.inkRgb[2]);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.shadowTex); gl.uniform1i(P.u.u_shadow, 1);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(P.u.u_tex, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.qbo); gl.bufferData(gl.ARRAY_BUFFER, v, gl.DYNAMIC_DRAW);
     this.attribs(2);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
-    if (flat) { gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); }     // loose text: only its letters are drawn
+    const blend = flat || alpha < 1;
+    if (blend) { gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); }     // loose text: only its letters are drawn; a picture arriving: it fades over the unfinished one
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    if (flat) gl.disable(gl.BLEND);
+    if (blend) gl.disable(gl.BLEND);
   }
   /* the credits text, drawn once into a page-sized picture and reused until the wording, size or background changes */
   cardTexture() {
@@ -473,7 +487,7 @@ class Renderer {
     gl.disable(gl.BLEND);
   }
   render(st) {
-    const gl = this.gl, lay = this.layout(); this.lay = lay; this.checkSize(lay);
+    const gl = this.gl, lay = this.layout(); this.lay = lay; this.checkSize(lay); this.framePages = [];
     gl.viewport(0, 0, this.W, this.H);
     const bg = hexToRgb(S.set.bg); gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const sp = S.spreads[st.spread]; if (!sp) return;
@@ -483,12 +497,20 @@ class Renderer {
     const mode = S.set.transition, slide = !!nx && mode === 'slide';
     const credA = creditsAlpha(st.t);        // 1 normally; fades to 0 at the credits' end marker
     const sw = i => !isSheet(i) ? 0 : i === BLANK ? credA : 1;      // how much shadow a page casts: none for empty space, and the blank sheet beside the credits fades with them
+    const shown = new Set();
     const drawPage = (idx, x, side) => {
       const t = this.tex_(idx); if (!t) return;
       const k = idx === CARD || idx === BLANK ? credA : 1;      // the credits text, and the blank sheet beside it, fade away together
       if (k <= 0.002) return;
       const base = this.scoreFade; this.scoreFade = base * k;
-      this.drawQuad(t, x, lay.y0, lay.pw, lay.ph, side, idx === CARD);
+      let a = 1;
+      if (idx >= 0) {
+        shown.add(idx);
+        this.framePages.push({ idx, x, y: lay.y0, w: lay.pw, h: lay.ph, wait: !this.tex.has(idx) });
+        const f0 = this.fx.get(idx);
+        if (f0 != null) { const p = (performance.now() - f0) / pageFadeMs(); if (p >= 1) this.fx.delete(idx); else { a = p; this.drawQuad(this.placeholder(idx), x, lay.y0, lay.pw, lay.ph, side, false); } }
+      }
+      this.drawQuad(t, x, lay.y0, lay.pw, lay.ph, side, idx === CARD, a);
       this.scoreFade = base;
     };
     /* one half of the score: its x-range, and how strongly it casts a shadow (0 when nothing is there) */
@@ -542,6 +564,7 @@ class Renderer {
       }
     }
     if (!scoreOnly) this.drawFade(1 - fade);
+    this.notReady.forEach((_, k) => { if (!shown.has(k)) this.notReady.delete(k); }); this.fx.forEach((_, k) => { if (!shown.has(k)) this.fx.delete(k); });          // only a page seen unfinished, and still in view, fades in
   }
   destroy() { try { if (this.cardTex) this.gl.deleteTexture(this.cardTex); this.clearTextures(); const e = this.gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (e) {} }
 }
@@ -550,6 +573,20 @@ class Renderer {
    Stage (preview)
    ==================================================================== */
 let previewR = null, stageDirty = true;
+const PAGE_WAIT_PAPER = '#d9d6cf', PAGE_FADE_MS = 260, PAGE_LABEL_MS = 350;          // dim paper for a page with no picture yet; the sharp picture's fade; how long a page waits before it says why
+const pageFadeMs = () => reducedMotion() ? 80 : PAGE_FADE_MS;
+/* a page's thumbnail, softened, on dim paper: what a page shows until its own picture is made */
+function softPage(thumb, w, h) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const c = cv.getContext('2d'); c.fillStyle = PAGE_WAIT_PAPER; c.fillRect(0, 0, w, h);
+  if (thumb) {
+    const k = Math.min(w / thumb.width, h / thumb.height), tw = thumb.width * k, th = thumb.height * k;
+    if ('filter' in c) c.filter = 'blur(' + Math.max(1, Math.round(w / 70)) + 'px)';
+    c.drawImage(thumb, (w - tw) / 2, (h - th) / 2, tw, th); c.filter = 'none';
+    c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(0, 0, w, h);
+  }
+  return cv;
+}
 const stageCanvas = $('#stage');
 let fsGliding = false;          // full screen is gliding the picture by transform (see fsGlide)
 function outputSize() {
@@ -597,6 +634,7 @@ function szButtons() { const t = szT(); $('#szOut').disabled = $('#szFit').disab
 function szApply(smooth, st = SZ) {
   const { cv, cls } = szView(st); cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
   cv.style.transform = st.z === 1 ? '' : 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(3) + ')'; cls.classList.toggle('zoomed', st.z > 1);
+  const wl = $(st === SZS ? '#selWaits' : '#stageWaits'); if (wl) pgWaitHost(wl, cv);          // the labels over the pages move with the picture
   szButtons();
 }
 function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy) stays where it is
@@ -642,6 +680,7 @@ function drawStage() {
   const st = frameState(S.time);
   if (!Transport.playing && fadeLookAt !== S.time) st.fade = 1;      // the paused preview shows the full picture, except where you scrubbed to: there it shows the fade under the playhead
   previewR.render(st);
+  pageWaitSync(); if (previewR.fx.size) stageDirty = true;
   if (st.spread !== lastSpreadShown) { lastSpreadShown = st.spread; prefetchAround(); updateInfo(); }
   if (SPLIT.shown) selSync();          // System: the selector follows the playhead
 }

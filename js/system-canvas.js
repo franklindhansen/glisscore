@@ -147,19 +147,35 @@ function selPaint() {
   SEL.geo = { u, ox, oy, idx, pa, w, h, fx, fy, fw, fh, box, W, H, k };
   selNeed(idx, Math.ceil(u / 200) * 200);
   g.clearRect(0, 0, w, h);
-  const ready = SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0), style = getComputedStyle(document.documentElement);
-  g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u);
-  if (ready) g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u);
+  const found = SYS.byPage.has(idx), ready = found && SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0), style = getComputedStyle(document.documentElement);
+  if (ready) { g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u); g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); }
+  else g.drawImage(selSoft(idx), X(0), Y(0), pa * u, u);          // not made or not found yet: the page's softened thumbnail, never a white sheet
   g.fillStyle = 'rgba(8,10,16,.5)'; g.fillRect(X(0), Y(0), pa * u, u);
   const bx = X(box.left * pa), by = Y(box.top), bw = (box.right - box.left) * pa * u, bh = (box.bottom - box.top) * u;
   g.save(); g.beginPath(); g.rect(X(fx), Y(fy), fw * u, fh * u); g.rect(bx, by, bw, bh); g.clip('evenodd');          // the glass: the frame without the Selection
   if ('filter' in g && ready) { g.filter = 'blur(' + 22 * k + 'px) saturate(1.5)'; g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); g.filter = 'none'; }
   g.fillStyle = style.getPropertyValue('--glass-bg').trim() || 'rgba(255,255,255,.14)'; g.fillRect(0, 0, w, h); g.restore();
-  g.fillStyle = '#fff'; g.fillRect(bx, by, bw, bh);
+  if (ready) { g.fillStyle = '#fff'; g.fillRect(bx, by, bw, bh); }
   if (ready) g.drawImage(SEL.bmp, box.left * SEL.bmp.width, box.top * SEL.bmp.height, (box.right - box.left) * SEL.bmp.width, (box.bottom - box.top) * SEL.bmp.height, bx, by, bw, bh);
   const accent = style.getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
   g.strokeStyle = accent; g.lineWidth = Math.max(1.5, k * 1.25); g.strokeRect(X(fx), Y(fy), fw * u, fh * u);
   selMarkPaint(g, list, box, X, Y, accent);
+  selWaitSync(idx, found, ready, X(0) / k, Y(0) / k, pa * u / k, u / k);
+}
+/* the page's thumbnail, softened, kept for the page shown */
+function selSoft(idx) {
+  const t = slotThumb(idx);
+  if (!SEL.soft || SEL.soft.idx !== idx || SEL.soft.t !== t) SEL.soft = { idx, t, cv: softPage(t, 160, Math.round(160 / S.pdf.aspect)) };
+  return SEL.soft.cv;
+}
+/* the same look as the preview: the sweep and, after a moment, a label until the page is made and its systems are found; a found page with none says so */
+function selWaitSync(idx, found, ready, x, y, w, h) {
+  const host = $('#selWaits'), n = pageNo(idx), r = SYS.byPage.get(idx), items = [], box = { id: idx, x, y, w, h };
+  pgWaitHost(host, $('#selCv'));
+  if (!found) items.push(Object.assign(box, { sweep: true, text: tx('sys.pageFinding', { n }) }));
+  else if (!ready) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) }));
+  else if (r && !r.systems.length) items.push(Object.assign(box, { sweep: false, now: true, text: tx('sys.pageNone', { n }) }));
+  pgWaitSet(host, items);
 }
 /* Marking, always on while System is: every system's top and bottom are handles (the left and right edges never are), the selected one has an × on its corner, and the pending or dragged mark is dashed */
 function selMarkPaint(g, list, box, X, Y, accent) {

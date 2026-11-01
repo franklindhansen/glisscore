@@ -97,6 +97,39 @@ function sweepStop(host) {
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return end();
   host.addEventListener('animationiteration', end); host._sweepT = setTimeout(end, SWEEP_MS + 300);          // the timer only matters in a hidden tab, where animations stop
 }
+/* A page with no picture yet says so: the shared sweep along its foot and, after a moment, a label. `host` is a layer laid over a canvas; each item is a box in the canvas's own pixels.
+   An item stays one element for as long as it is listed, so its label's delay counts from when the page began to wait. */
+function pgWaitHost(host, cv) {
+  const o = [cv.offsetLeft, cv.offsetTop, cv.offsetWidth, cv.offsetHeight].map(v => v + 'px').concat(cv.style.transform || '', cv.style.transition || '');
+  if (host._geo === o.join()) return; host._geo = o.join();
+  host.style.left = o[0]; host.style.top = o[1]; host.style.width = o[2]; host.style.height = o[3]; host.style.transform = o[4]; host.style.transition = o[5];
+}
+function pgWaitSet(host, items) {
+  const have = host._pw || (host._pw = new Map()), ids = new Set(items.map(i => i.id));
+  have.forEach((el, id) => { if (ids.has(id)) return; have.delete(id); clearTimeout(el._lt); el.classList.add('out'); setTimeout(() => el.remove(), 260); });
+  items.forEach(it => {
+    let el = have.get(it.id);
+    if (!el) {
+      el = document.createElement('div'); el.className = 'pg-wait'; el.innerHTML = '<span class="pg-wait-l"></span>'; host.appendChild(el); have.set(it.id, el);
+      el._lt = setTimeout(() => el.classList.add('show'), it.now ? 0 : PAGE_LABEL_MS);
+    }
+    el.style.left = it.x.toFixed(1) + 'px'; el.style.top = it.y.toFixed(1) + 'px'; el.style.width = it.w.toFixed(1) + 'px'; el.style.height = it.h.toFixed(1) + 'px';
+    if (it.sweep) sweepStart(el); else sweepStop(el);
+    setDots(el.firstChild, it.text); el.dataset.page = it.id;
+  });
+}
+/* the preview's pages: one that is still being made, and in System one that has no systems */
+function pageWaitSync() {
+  const r = previewR, host = $('#stageWaits'); if (!r || !host) return;
+  const k = stageCanvas.clientWidth / r.W, sys = sysOn(), items = [];
+  pgWaitHost(host, stageCanvas);
+  r.framePages.forEach(w => {
+    const n = pageNo(w.idx), box = { id: w.idx, x: w.x * k, y: w.y * k, w: w.w * k, h: w.h * k };
+    if (w.wait) items.push(Object.assign(box, { sweep: true, text: tx(sys ? 'sys.pageFinding' : 'stage.rendering', { n }) }));
+    else if (sys) { const f = SYS.byPage.get(sysPage(w.idx)); if (f && !f.systems.length) items.push(Object.assign(box, { sweep: false, now: true, text: tx('sys.pageNone', { n }) })); }
+  });
+  pgWaitSet(host, items);
+}
 let busyMsg = '';
 let busyKind = '', busyName = '', busyFrac = null;
 let busySweepT0 = 0;          // when the chip's bar began to sweep: the chip is rebuilt on each change, and the new bar picks the sweep up where it was

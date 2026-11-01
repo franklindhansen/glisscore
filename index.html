@@ -123,8 +123,10 @@
       <!-- ----- Work Preview Stage (canvas + full-screen button) ----- -->
       <div class="stage-wrap" id="stageWrap">
         <canvas id="stage" aria-label="Score preview"></canvas>
+        <div class="pg-waits" id="stageWaits" aria-hidden="true"></div>
         <div class="sys-sel" id="sysSel" hidden>
           <canvas id="selCv" aria-label="The page with the video frame drawn on it"></canvas>
+          <div class="pg-waits" id="selWaits" aria-hidden="true"></div>
           <div class="sys-nav" role="group" aria-label="Page"><button type="button" id="selPrev" aria-label="Previous page" title="Previous page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><span class="sys-pg" id="selPg"></span><button type="button" id="selNext" aria-label="Next page" title="Next page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></div>
         </div>
         <div class="sys-div" id="sysDiv" role="separator" aria-orientation="vertical" aria-label="Selector and preview" title="Drag to resize. Double-click for half and half." tabindex="0" hidden></div>

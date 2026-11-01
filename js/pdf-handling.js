@@ -939,7 +939,7 @@ async function makeThumbs(token) {
       if (S.thumbs[i]) continue;
       try {
         S.thumbs[i] = await renderPdfPage(doc, i, Math.round(H * S.pdf.aspect), H);
-        TL.staticDirty = true; peThumbReady(i);
+        TL.staticDirty = true; stageDirty = true; peThumbReady(i);
       } catch (e) { /* skip */ }
       await yieldNow();
     }
