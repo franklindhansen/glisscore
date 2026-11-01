@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.17
+
+Finding systems now shows its progress, can be stopped, and warns about tilted pages and two-page scans.
+
 ## 1.1.16
 
 The System layout now lets you mark systems by hand, resize, move, and delete them, adjust the padding around each one, and detect a page again.
