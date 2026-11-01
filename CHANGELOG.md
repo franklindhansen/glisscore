@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.19
+
+The selector now shows the music bright with the padding as frosted glass, marking is always on, and the preview frame stays fixed.
+
 ## 1.1.18
 
 Marked systems now stay with their page: an edited page is found again and says so, and marks are saved with your settings.
