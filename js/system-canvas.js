@@ -57,7 +57,7 @@ function splitBind() {
 }
 
 /* ---------- the selector ---------- */
-const SEL = { key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
+const SEL = { mark: { on: false, y0: null, pg: -1, hover: null, draft: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
 /* the system the playhead is on: a credits card shows the nearest system instead */
 function selCurrent() {
   const n = S.spreads.length; if (!n) return null;
@@ -82,10 +82,10 @@ function selJump(key) { const t = selTimeOf(key); if (t != null) Transport.seek(
 function selSync(force) {
   if (!SPLIT.shown || !S.pdf) return;
   const key = selCurrent(), cv = $('#selCv'); if (key == null) return;
-  const sig = [key, cv.clientWidth, cv.clientHeight, S.set.margin, S.set.tbMargin, S.set.aspect, S.set.res, SYS.byPage.size, SYS.gen, S.pdf.gen || 0].join();
+  const sig = [key, cv.clientWidth, cv.clientHeight, S.set.margin, S.set.tbMargin, S.set.aspect, S.set.res, SYS.byPage.size, SYS.gen, SYS.rev, S.pdf.gen || 0].join();
   if (!force && sig === SEL.sig) return;
   if (sysPage(key) !== sysPage(SEL.key == null ? -1 : SEL.key) && SZS.z !== 1) szReset(false, SZS);          // a new page starts at Fit
-  SEL.sig = sig; SEL.key = key;
+  SEL.sig = sig; SEL.key = key; if (SEL.mark.y0 != null && SEL.mark.pg !== sysPage(key)) SEL.mark.y0 = SEL.mark.hover = SEL.mark.draft = null;
   const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(key));
   $('#selPg').textContent = 'Page ' + pageNo(key); $('#selPrev').disabled = i <= 0; $('#selNext').disabled = i < 0 || i >= pages.length - 1;
   selPaint();
@@ -121,11 +121,11 @@ function selPaint() {
   const k = Math.min(3, 2 * Math.max(1, window.devicePixelRatio || 1)), w = Math.max(2, Math.round(cv.clientWidth * k)), h = Math.max(2, Math.round(cv.clientHeight * k));
   if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
   const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), f = sysFit(key, W, H), box = f.box;
-  const fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa - fw / 2, fy = (box.top + box.bottom) / 2 - fh / 2;          // the frame, in page heights
+  const fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa + f.ox - fw / 2, fy = (box.top + box.bottom) / 2 + f.oy - fh / 2;          // the frame, in page heights
   const x0 = Math.min(0, fx), x1 = Math.max(pa, fx + fw), y0 = Math.min(0, fy), y1 = Math.max(1, fy + fh), m = 14 * k;
   const u = Math.max(1, Math.min((w - 2 * m) / (x1 - x0), (h - 2 * m) / (y1 - y0))), ox = (w - u * (x1 - x0)) / 2 - u * x0, oy = (h - u * (y1 - y0)) / 2 - u * y0;
   const X = x => ox + x * u, Y = y => oy + y * u;
-  SEL.geo = { u, ox, oy, idx, pa, w, h };
+  SEL.geo = { u, ox, oy, idx, pa, w, h, fx, fy, fw, fh, box, W, H, k };
   selNeed(idx, Math.ceil(u / 200) * 200);
   g.clearRect(0, 0, w, h);
   const ready = SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0);
@@ -141,6 +141,24 @@ function selPaint() {
   g.lineWidth = Math.max(1, k * 0.75); g.strokeStyle = accent; g.globalAlpha = 0.55;
   list.forEach(s => { if (s !== box) g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u); });
   g.restore(); g.strokeStyle = accent; g.lineWidth = Math.max(1.5, k * 1.25); g.strokeRect(X(fx), Y(fy), fw * u, fh * u);
+  if (SEL.mark.on) selMarkPaint(g, list, box, X, Y, accent);
+}
+/* Marking: every system's top and bottom are handles (the left and right edges never are), the selected one has an × on its corner, and the pending or dragged mark is dashed */
+function selMarkPaint(g, list, box, X, Y, accent) {
+  const { u, pa, k } = SEL.geo, M = SEL.mark, lw = Math.max(1, k * 0.75);
+  g.save(); g.strokeStyle = accent; g.lineWidth = lw;
+  list.forEach(s => { g.globalAlpha = s === box ? 0.95 : 0.4; g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u); });
+  g.globalAlpha = 1; g.setLineDash([6 * k, 4 * k]); g.lineWidth = lw * 1.6;
+  const d = M.draft || (M.y0 != null && M.hover != null ? [M.y0, M.hover] : null);
+  if (d) { const t = Math.min(d[0], d[1]), b = Math.max(d[0], d[1]); g.fillStyle = accent; g.globalAlpha = 0.14; g.fillRect(X(0), Y(t), pa * u, (b - t) * u); g.globalAlpha = 1; g.strokeRect(X(0) + 0.5, Y(t) + 0.5, pa * u, (b - t) * u); }
+  else if (M.y0 != null) { g.beginPath(); g.moveTo(X(0), Y(M.y0)); g.lineTo(X(pa), Y(M.y0)); g.stroke(); }
+  g.restore();
+  if (list.includes(box) && !SEL.mark.draft) { const c = selXPos(); g.save(); g.fillStyle = accent; g.beginPath(); g.arc(c[0], c[1], c[2], 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = Math.max(1.5, k * 1.25); g.lineCap = 'round'; const q = c[2] * 0.4; g.beginPath(); g.moveTo(c[0] - q, c[1] - q); g.lineTo(c[0] + q, c[1] + q); g.moveTo(c[0] + q, c[1] - q); g.lineTo(c[0] - q, c[1] + q); g.stroke(); g.restore(); }
+}
+/* where the × sits (canvas dots: x, y, radius): on the selected system's top right corner, kept inside the pane */
+function selXPos() {
+  const { u, ox, oy, pa, box, k, w } = SEL.geo, r = 8 * k;
+  return [Math.min(w - r - 2, ox + box.right * pa * u), Math.max(r + 2, oy + box.top * u), r];
 }
 /* a click on a system (not the end of a pan) moves the playhead to it */
 function selClick(e) {
@@ -158,4 +176,85 @@ function selBind() {
   wrap.addEventListener('pointercancel', () => { down = null; });
   const step = d => { const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(SEL.key)), to = pages[i + d]; if (to) selJump(to.key); };
   $('#selPrev').addEventListener('click', () => step(-1)); $('#selNext').addEventListener('click', () => step(1));
+}
+
+
+/* ---------- marking by hand ---------- */
+/* a pointer in page units (x across in page heights, y down in page fractions), with what a few screen pixels are in them */
+function selPt(e) {
+  const cv = $('#selCv'), geo = SEL.geo, b = cv.getBoundingClientRect(), sx = cv.width / b.width, px = (e.clientX - b.left) * sx, py = (e.clientY - b.top) * sx;
+  return { x: (px - geo.ox) / geo.u, y: (py - geo.oy) / geo.u, px, py, tol: 6 * sx / geo.u };
+}
+/* what is under the pointer: the ×, a system's top or bottom edge, a frame guide edge, the inside of a system, or empty page */
+function selHit(e) {
+  const geo = SEL.geo; if (!geo || SEL.key == null) return { t: 'new' };
+  const p = selPt(e), r = SYS.byPage.get(geo.idx), list = r ? r.systems : [], { fx, fy, fw, fh, box } = geo, xc = selXPos();
+  if (list.includes(box) && Math.hypot(p.px - xc[0], p.py - xc[1]) <= xc[2] + 3) return { t: 'del', box, p };
+  if (SEL.mark.y0 != null) return { t: 'second', p };
+  let best = null, bd = p.tol;
+  list.forEach(s => { if (p.x < -p.tol || p.x > geo.pa + p.tol) return; [['top', s.top], ['bottom', s.bottom]].forEach(([n, v]) => { const d = Math.abs(p.y - v); if (d <= bd) { bd = d; best = { t: n, box: s, p }; } }); });
+  if (best) return best;
+  if (box && p.y >= fy - p.tol && p.y <= fy + fh + p.tol && p.x >= fx - p.tol && p.x <= fx + fw + p.tol) {
+    const d = { fl: Math.abs(p.x - fx), fr: Math.abs(p.x - fx - fw), ft: Math.abs(p.y - fy), fb: Math.abs(p.y - fy - fh) }, n = Object.keys(d).sort((a, b) => d[a] - d[b])[0];
+    if (d[n] <= p.tol) return { t: n, box, p };
+  }
+  const inside = list.find(s => p.y >= s.top && p.y <= s.bottom && p.x >= s.left * geo.pa && p.x <= s.right * geo.pa); if (inside) return { t: 'move', box: inside, p };
+  return { t: 'new', p };
+}
+const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', fl: 'ew-resize', fr: 'ew-resize', ft: 'ns-resize', fb: 'ns-resize', move: 'move', new: 'crosshair', second: 'crosshair' };
+let selPaintQ = 0; const selPaintSoon = () => { cancelAnimationFrame(selPaintQ); selPaintQ = requestAnimationFrame(selPaint); };
+function selMarkMode(on) {
+  SEL.mark.on = on; SEL.mark.y0 = SEL.mark.hover = SEL.mark.draft = null; $('#spMark').setAttribute('aria-pressed', on ? 'true' : 'false'); $('#sysSel').classList.toggle('marking', on);
+  $('#selCv').style.cursor = ''; if (SPLIT.shown) selPaintSoon();
+}
+function selMarkBind() {
+  const pane = $('#sysSel'), cv = $('#selCv'), M = SEL.mark; let G = null;
+  $('#spMark').addEventListener('click', () => selMarkMode(!M.on));
+  $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.y0 = M.draft = null; sysRedetect(SEL.geo.idx); } });
+  pane.addEventListener('pointerdown', e => {
+    if (!M.on || e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null) return;
+    e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
+    const h = selHit(e); G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, ox: h.box && h.box.ox || 0, oy: h.box && h.box.oy || 0, started: false });
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!M.on || !SEL.geo) return;
+    const p = selPt(e);
+    if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; if (M.y0 != null) { M.hover = clamp(p.y, 0, 1); selPaintSoon(); } return; }
+    if (!G.moved && Math.hypot(e.clientX - G.sx, e.clientY - G.sy) < 4) return; G.moved = true;
+    const y = clamp(p.y, 0, 1), t = G.t, geo = SEL.geo;
+    if (t === 'new') M.draft = [G.p.y, y];
+    else if (t === 'top') M.draft = [y, G.box.bottom];
+    else if (t === 'bottom') M.draft = [G.box.top, y];
+    else if (t === 'move') { const dy = clamp(y - G.p.y, -G.box.top, 1 - G.box.bottom); M.draft = [G.box.top + dy, G.box.bottom + dy]; }
+    else if (t === 'second') M.hover = y;
+    else if (t[0] === 'f' && SYS.byPage.get(geo.idx) && SYS.byPage.get(geo.idx).systems.includes(G.box)) {                                      // a frame guide edge: the frame's padding around the system on that side
+      if (!G.started) { G.started = true; pushHistory(); sysHandRec(geo.idx); }
+      const [nx, ny] = sysPad(geo.idx, G.box, G.ox + (t === 'fl' || t === 'fr' ? p.x - G.p.x : 0), G.oy + (t === 'ft' || t === 'fb' ? p.y - G.p.y : 0), geo.W, geo.H);
+      if (nx) G.box.ox = nx; else delete G.box.ox; if (ny) G.box.oy = ny; else delete G.box.oy;
+    }
+    selPaintSoon();
+  });
+  const end = async e => {
+    if (!G || e.pointerId !== G.id) return; const g = G; G = null;
+    const geo = SEL.geo, d = M.draft; M.draft = null;
+    if (e.type === 'pointercancel' || !geo) { selPaintSoon(); return; }
+    const t = g.t, idx = g.pg; if (idx !== geo.idx) { selPaintSoon(); return; }          // the page changed under the gesture
+    if (t[0] === 'f') { if (g.started) { SYS.rev++; stageDirty = true; } selPaintSoon(); return; }
+    if (t === 'del' && !g.moved) { M.y0 = M.hover = null; sysRemove(idx, g.box); return; }
+    if (t === 'second') { const y0 = M.y0; M.y0 = M.hover = null; selPaintSoon(); sysMark(idx, y0, clamp(selPt(e).y, 0, 1)); return; }
+    if (g.moved && d) { if (t === 'new') M.y0 = null; await sysMark(idx, d[0], d[1], t === 'new' ? null : g.box); selPaintSoon(); return; }
+    if (t === 'new') { M.y0 = clamp(g.p.y, 0, 1); M.hover = M.y0; M.pg = idx; selPaintSoon(); return; }          // the first click of a click-click mark
+    selClick(e);                                                  // a click on a system or its edge: the playhead goes there
+  };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  cv.addEventListener('dblclick', e => {
+    if (!M.on || !SEL.geo) return; const h = selHit(e), geo = SEL.geo, b = h.box; if (!b || h.t[0] !== 'f' || !(SYS.byPage.get(geo.idx) || { systems: [] }).systems.includes(b) || !(h.t === 'fl' || h.t === 'fr' ? b.ox : b.oy)) return;
+    pushHistory(); if (h.t === 'fl' || h.t === 'fr') delete b.ox; else delete b.oy;
+    sysHandRec(geo.idx); SYS.rev++; stageDirty = true; selPaintSoon();
+  });
+  document.addEventListener('keydown', e => {
+    if (!M.on || !SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
+    if (e.key === 'Escape' && (M.y0 != null || M.draft)) { M.y0 = M.draft = M.hover = null; selPaintSoon(); e.stopPropagation(); }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
+  }, true);
 }

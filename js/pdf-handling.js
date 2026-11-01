@@ -231,7 +231,7 @@ document.addEventListener('keydown', e => { if (e.repeat) return; if (e.target.m
 document.addEventListener('pointerup', () => { if (HB.open) setTimeout(hsClose, 0); });
 document.addEventListener('change', () => { if (HB.open) setTimeout(hsClose, 0); });
 const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap() });
+const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap(), sys: S.pdf ? sysSnap() : null });
 function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
 function applySnapIn(h) {
   let struct = false;
@@ -240,7 +240,8 @@ function applySnapIn(h) {
   if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
   if (struct && !layChanged && S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; }
-  reconcileTurns(); if ((layChanged || struct) && S.pdf) afterStructureChange(); }
+  const sysCh = !!h.sys && !!S.pdf && sysRestore(h.sys); if (sysCh && !layChanged && !struct && sysOn()) S.spreads = buildSpreads();          // the hand marks come back too
+  reconcileTurns(); if ((layChanged || struct || sysCh) && S.pdf) afterStructureChange(); }
 function updateHistoryButtons() { if (!HB.open && !HB.quiet) HB.base = lightSnap(); const u = $('#bUndo'), r = $('#bRedo'); if (u) u.disabled = S.history.length === 0; if (r) r.disabled = S.redo.length === 0; try { MAIN_HIST.refresh(); } catch (e) {} }
 /* History: a list of the steps taken, newest on top; pick one to go back (or forward) to it. The PDF Editor and the main view use this, the way the Audio Editor does.
    c: btn, pop, list, foot, sum, sub, no, go (ids), first (name of step 0), states() oldest to newest with the current one inside, cur() the index of the current one, label(a, b) the name of the step from a to b, apply(t) goes to step t, can() true when there is any history */
@@ -306,6 +307,7 @@ function peStepLabel(a, b) {
 function mainStepLabel(a, b) {
   const parts = [];
   if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
+  if (a.sys && b.sys && JSON.stringify(a.sys) !== JSON.stringify(b.sys)) parts.push('Systems');
   if (a.set && b.set) parts.push(...setStepNames(a.set, b.set));
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');

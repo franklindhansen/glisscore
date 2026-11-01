@@ -270,7 +270,7 @@ class Renderer {
     const gl = this.gl; this.tex.forEach(e => gl.deleteTexture(e.t)); this.tex.clear(); this.pending.clear(); this.sizeKey = '';
   }
   checkSize(lay) {
-    const key = lay.pw + 'x' + lay.ph + (sysOn() ? 's' + [S.set.margin, S.set.tbMargin, SYS.byPage.size, SYS.gen].join() : '');          // a sheet depends on the margins and on what was found
+    const key = lay.pw + 'x' + lay.ph + (sysOn() ? 's' + [S.set.margin, S.set.tbMargin, SYS.byPage.size, SYS.gen, SYS.rev].join() : '');          // a sheet depends on the margins and on what was found
     if (key !== this.sizeKey) { this.clearTextures(); this.sizeKey = key; }
   }
   tex_(idx) {

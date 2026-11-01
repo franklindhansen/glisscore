@@ -144,7 +144,7 @@ function sysSettle() {
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
+  byPage: new Map(), scan: new Map(), hand: new Set(), rev: 0, gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
   worker() {
     if (this.w) return this.w;
     const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
@@ -163,7 +163,7 @@ const SYS = {
   }
 };
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */
-function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.gen = g; } }
+function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear(); SYS.rev++; SYS.gen = g; } }
 /* one page: its systems as fractions of the page ({ systems, tilt, staves }), found once and kept */
 async function sysDetectPage(idx) {
   sysFresh();
@@ -198,6 +198,76 @@ function sysDetectAll(opt = {}) {
   return job;
 }
 
+/* ---------- marking by hand: the page's systems as the person set them, kept with the page like a Dim region ---------- */
+/* the hand-marked pages (page -> systems), as one part of a History step */
+const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPage.get(i); if (r) o[i] = r.systems.map(q => Object.assign({}, q)); }); return o; };
+/* Goes back to a snapshot's marks; true when anything changed. A page that is not marked there returns to what was found (or is found again). */
+function sysRestore(m) {
+  sysFresh(); if (JSON.stringify(m) === JSON.stringify(sysSnap())) return false;
+  [...SYS.hand].forEach(i => {
+    if (m[i]) return; SYS.hand.delete(i); const r = SYS.byPage.get(i);
+    if (r && r.auto) { r.systems = r.auto; delete r.auto; } else SYS.byPage.delete(i);
+  });
+  Object.keys(m).forEach(k => {
+    sysHandRec(+k).systems = m[k].map(q => Object.assign({}, q));
+  });
+  SYS.rev++; stageDirty = true; return true;
+}
+/* the first and last real stretch of ink inside a band (fractions of the page): the same rule as the finder, so a mark sits on its ink the same way */
+async function sysEdges(idx, top, bottom) {
+  const { w, h, ink: px } = await sysLevel(idx);
+  const y0 = Math.max(1, Math.round(top * h)), y1 = Math.min(h - 2, Math.round(bottom * h)); let left = -1, right = -1, r = 0;
+  for (let x = 1; x < w - 1; x++) {
+    let c = 0; for (let y = y0; y <= y1; y++) { const i = y * w + x; if (px[i] && (px[i - 1] || px[i + 1] || px[i - w] || px[i + w])) c++; }
+    if (c >= 3) { r++; if (r >= 5) { if (left < 0) left = x - 4; right = x; } } else r = 0;
+  }
+  return left < 0 ? [0, 1] : [left / w, (right + 1) / w];
+}
+/* a page's ink, taken level by the tilt the finder found (as the finder sees it, so marks and found systems share one frame), kept for the last few pages marked */
+async function sysLevel(idx) {
+  sysFresh(); const hit = SYS.scan.get(idx); if (hit) { SYS.scan.delete(idx); SYS.scan.set(idx, hit); return hit; }
+  const gen = SYS.gen, sc = await peScan(S.pdf.slots[idx].src, SYS_W, null, 0.85, false), r = SYS.byPage.get(idx), deg = r ? r.tilt || 0 : 0;
+  let out = sc;
+  if (Math.abs(deg) > 0.05) {
+    const { w, h, ink } = sc, lv = new Uint8Array(w * h), a = deg * Math.PI / 180, c = Math.cos(a), sn = Math.sin(a), cx = w / 2, cy = h / 2;
+    for (let Y = 0; Y < h; Y++) for (let X = 0; X < w; X++) { const xx = X - cx, yy = Y - cy, sx = Math.round(xx * c - yy * sn + cx), sy = Math.round(xx * sn + yy * c + cy); if (sx >= 0 && sx < w && sy >= 0 && sy < h && ink[sy * w + sx]) lv[Y * w + X] = 1; }
+    out = { w, h, ink: lv };
+  }
+  if (gen === SYS.gen) { SYS.scan.set(idx, out); if (SYS.scan.size > 3) SYS.scan.delete(SYS.scan.keys().next().value); }
+  return out;
+}
+/* the page's record, with what was found kept aside so a reset or an undo can return to it */
+function sysHandRec(idx) {
+  const r = SYS.byPage.get(idx) || { systems: [], tilt: 0, staves: 0 };
+  if (!SYS.hand.has(idx) && !r.auto) r.auto = r.systems;
+  SYS.byPage.set(idx, r); SYS.hand.add(idx); return r;
+}
+/* one hand edit of a page's systems: a History step, then the timeline follows */
+function sysCommit(idx, list) {
+  pushHistory();
+  const r = sysHandRec(idx);
+  r.systems = list.slice().sort((a, b) => a.top - b.top); SYS.rev++; stageDirty = true; sysSettle();
+}
+/* a mark from top to bottom (page fractions) replaces every system it overlaps; `keep` is the system being moved or resized, which it also replaces */
+async function sysMark(idx, a, b, keep) {
+  const top = clamp(Math.min(a, b), 0, 1), bottom = clamp(Math.max(a, b), 0, 1); if (bottom - top < 0.01) return null;
+  const [left, right] = await sysEdges(idx, top, bottom), r = await sysDetectPage(idx), old = r ? r.systems : [];          // a page not found yet is found first, so its own systems are not lost
+  const box = { top, bottom, left, right }; if (keep && keep.ox) box.ox = keep.ox; if (keep && keep.oy) box.oy = keep.oy;
+  sysCommit(idx, old.filter(s => s !== keep && (s.bottom <= top || s.top >= bottom)).concat(box)); return box;
+}
+function sysRemove(idx, box) { const r = SYS.byPage.get(idx); if (r && r.systems.includes(box)) sysCommit(idx, r.systems.filter(s => s !== box)); }
+/* the frame's offset from the system's own centering, kept inside what still holds the whole system */
+function sysPad(idx, box, ox, oy, W, H) {
+  const f = sysFit(sysKey(idx, SYS.byPage.get(idx).systems.indexOf(box)), W, H), pa = S.pdf.aspect;
+  const mx = Math.max(0, (W / f.s - (box.right - box.left) * pa) / 2), my = Math.max(0, (H / f.s - (box.bottom - box.top)) / 2);
+  return [clamp(ox, -mx, mx), clamp(oy, -my, my)];
+}
+/* Detect this page again: the page shown returns to its automatic result, one History step */
+async function sysRedetect(idx) {
+  pushHistory(); SYS.hand.delete(idx); SYS.byPage.delete(idx); SYS.rev++; stageDirty = true;
+  const r = await sysDetectPage(idx); SYS.rev++; if (r) sysSettle();
+}
+
 /* ---------- the sheet: one system alone on a full-frame sheet of the page's own paper ---------- */
 const SYS_FEATHER = 3;          // dots over which the join between the page and the plain paper around it is softened
 /* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
@@ -208,7 +278,7 @@ function sysFit(key, W, H) {
   const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
   const box = list[Math.min(sysNo(key), list.length - 1)];
   const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), H * (1 - 2 * ty) / Math.max(1e-6, box.bottom - box.top));
-  return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
+  return { box, s, ox: box.ox || 0, oy: box.oy || 0, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
 /* the paper: the median color of what is not ink inside the box */
 function sysPaper(cv) {
@@ -228,7 +298,7 @@ async function sysSheet(key, W, H) {
   await page.render({ canvasContext: sx, viewport: vp, transform: [1, 0, 0, 1, -box.left * vp.width, -box.top * vp.height], background: '#ffffff' }).promise;
   try { page.cleanup(); } catch (e) {}
   const paper = sysPaper(src), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-  const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2), y = Math.round((H - f.dh) / 2), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
+  const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2 - f.ox * f.s), y = Math.round((H - f.dh) / 2 - f.oy * f.s), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
   c.fillStyle = col(1); c.fillRect(0, 0, W, H); c.drawImage(src, x, y);
   const F = Math.min(SYS_FEATHER, f.dw >> 2, f.dh >> 2);          // each edge fades into the paper around it, so an uneven scan shows no hard seam
   [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {
