@@ -18,7 +18,7 @@ const cases = [
   const m = await open(0), d = await open(1); let n = 0;
   for (const [name, args] of cases) {
     const nm = 'm' + (n++) + '.mp3', f = path.join(tmp, nm); sh(`ffmpeg -v error -y ${args} ${f}`);
-    for (const p of [m, d]) { await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('.busybar'), nm, { timeout: 90000 }); await p.waitForTimeout(300); }
+    for (const p of [m, d]) { await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 90000 }); await p.waitForTimeout(300); }
     const mem = await m.evaluate(() => { const b = S.audio.buffer, x = b.getChannelData(0), y = b.numberOfChannels > 1 ? b.getChannelData(1) : x; return { sr: b.sampleRate, ch: b.numberOfChannels, len: b.length, a: Array.from(x.subarray(30000, 31000)), pk: Math.max(...x.subarray(0, 4000).map(Math.abs)) }; });
     const dsk = await d.evaluate(async () => { if (!S.audio.disk) return { disk: false }; const m = DISK.meta, r = await DISK.read(30000, 1000), r0 = await DISK.read(0, 4000); return { disk: true, sr: m.sr, ch: m.ch, len: m.frames, a: Array.from(r.chans[0]), pk: Math.max(...r0.chans[0].map(Math.abs)) }; });
     let worst = 0; if (dsk.disk) for (let i = 0; i < 1000; i++) worst = Math.max(worst, Math.abs(mem.a[i] - dsk.a[i]));
@@ -28,7 +28,7 @@ const cases = [
   // odd files: a tag after the last frame, and a file cut short
   { const whole = fs.readFileSync(path.join(tmp, 'm0.mp3')); const v = { 'with an ID3v1 tag after the last frame': Buffer.concat([whole, Buffer.from('TAG' + 'x'.repeat(125))]), 'cut short in the middle of a frame': whole.subarray(0, whole.length - 5003) };
     for (const [name, buf] of Object.entries(v)) { const nm = 'odd' + (n++) + '.mp3'; fs.writeFileSync(path.join(tmp, nm), buf);
-      await d.setInputFiles('#audioIn', path.join(tmp, nm)); await d.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('.busybar'), nm, { timeout: 90000 }); await d.waitForTimeout(300);
+      await d.setInputFiles('#audioIn', path.join(tmp, nm)); await d.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 90000 }); await d.waitForTimeout(300);
       const r = await d.evaluate(() => ({ disk: !!S.audio.disk, len: S.audio.disk ? DISK.meta.frames : S.audio.buffer.length, dur: S.audio.duration })); ok(name + ': it opens (' + (r.disk ? 'on the store' : 'in memory') + ') with about the right length', r.dur > 13 && r.dur < 14.1, JSON.stringify(r)); } }
   ok('no errors', errs.length === 0, errs.join(' | ')); await br.close();
 })();

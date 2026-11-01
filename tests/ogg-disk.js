@@ -19,7 +19,7 @@ const cases = [
   for (const [name, nm, args, rate] of cases) {
     const f = path.join(tmp, nm), raw = path.join(tmp, 't.raw'); sh(`ffmpeg -v error -y -f lavfi -i "${src}" ${args} ${f}`); sh(`ffmpeg -v error -y -i ${f} -f f32le -c:a pcm_f32le ${raw}`);
     const info = JSON.parse(sh(`ffprobe -v error -show_entries stream=sample_rate,channels -of json ${f}`)).streams[0], buf = fs.readFileSync(raw), ref = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4);
-    await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('.busybar'), nm, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(300);
+    await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(300);
     const got = await p.evaluate(async () => { if (!S.audio || !S.audio.disk) return { disk: false }; const m = DISK.meta, r = await DISK.read(0, m.frames); return { disk: true, sr: m.sr, ch: m.ch, frames: m.frames, x: Array.from({ length: m.ch }, (_, c) => Array.from(r.chans[c])) }; });
     let rms = 0, err = 0, lag = 0;
     if (got.disk) { const n = got.frames, ch = got.ch; for (let i = 0; i < n; i++) for (let c = 0; c < ch; c++) { const a = got.x[c][i], b = ref[i * ch + c]; rms += b * b; err += (a - b) * (a - b); } }

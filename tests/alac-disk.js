@@ -28,7 +28,7 @@ const cases = [
     const nm = 'c' + (n++) + '.m4a', f = path.join(tmp, nm), raw = path.join(tmp, 't.raw');
     sh(`ffmpeg -v error -y ${args} ${f}`); sh(`ffmpeg -v error -y -i ${f} -f s32le -c:a pcm_s32le ${raw}`);
     const info = JSON.parse(sh(`ffprobe -v error -show_entries stream=sample_rate,channels -of json ${f}`)).streams[0], buf = fs.readFileSync(raw); let h = 0; for (let i = 0; i + 3 < buf.length; i += 4) h = (Math.imul(h, 31) + buf.readInt32LE(i)) | 0;
-    await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('.busybar'), nm, { timeout: 90000 }).catch(() => {}); await p.waitForTimeout(300);
+    await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 90000 }).catch(() => {}); await p.waitForTimeout(300);
     const got = await p.evaluate(async () => { if (!S.audio || !S.audio.disk) return { disk: false, mem: !!(S.audio && S.audio.buffer) }; let h = 0, k = 0; const m = DISK.meta; for (let at = 0; at < m.frames; at += 65536) { const r = await DISK.read(at, Math.min(65536, m.frames - at)), len = r.chans[0].length; for (let i = 0; i < len; i++) for (let c = 0; c < m.ch; c++) { h = (Math.imul(h, 31) + Math.round(r.chans[c][i] * 2147483648)) | 0; } k += len; } return { disk: true, sr: m.sr, ch: m.ch, frames: m.frames, h, name: S.audio.name }; });
     ok(name + ': every sample is the one ffmpeg decodes', got.disk && got.sr === +info.sample_rate && got.ch === +info.channels && got.frames * got.ch * 4 === buf.length && got.h === h, JSON.stringify(got) + ' expected ' + info.sample_rate + 'Hz ' + info.channels + 'ch ' + buf.length / 4 / info.channels + ' frames');
   }
