@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.18
+
+Marked systems now stay with their page: an edited page is found again and says so, and marks are saved with your settings.
+
 ## 1.1.17
 
 Finding systems now shows its progress, can be stopped, and warns about tilted pages and two-page scans.
