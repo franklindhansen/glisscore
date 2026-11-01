@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.16
+
+The System layout now lets you mark systems by hand, resize, move, and delete them, adjust the padding around each one, and detect a page again.
+
 ## 1.1.15
 
 Every scrolling area, including How it works, the history lists, and the font lists, now has the same thin scrollbar.
