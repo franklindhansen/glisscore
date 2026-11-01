@@ -26,7 +26,7 @@
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
   --fade:#b0389c; --turn:#d97706; --turn-soft:rgba(251,185,40,.34); --play:#d6333f; --cred:#12907c; --cred-soft:rgba(18,144,124,.20);
   --stage:#dfe3ea; --block:#ffffff; --wave:#7c8bf0; --danger:#c4283a;
-  --turn-ink:#bf6500; --ok-ink:#1f9a5b;
+  --turn-ink:#bf6500; --turn-sys:#bf6500; --ok-ink:#1f9a5b;
   --shadow:0 1px 2px rgba(20,24,40,.08),0 8px 24px rgba(20,24,40,.08);
   --glass-bg:linear-gradient(180deg,rgba(255,255,255,.76),rgba(244,246,252,.64)); --glass-edge:rgba(255,255,255,.7);
   --glass-shadow:0 6px 18px -10px rgba(10,14,30,.26),inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(255,255,255,.35);
@@ -37,7 +37,7 @@
   :root:not([data-theme="light"]){
     --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
     --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --ok-ink:#2fb872;
+    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#d97706; --ok-ink:#2fb872;
     --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
     --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
@@ -49,7 +49,7 @@
 :root[data-theme="dark"]{
   --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
   --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --ok-ink:#2fb872;
+  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#d97706; --ok-ink:#2fb872;
   --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
   --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);

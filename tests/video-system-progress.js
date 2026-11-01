@@ -31,10 +31,19 @@ function staffPage(doc, n, o = {}) {
   ok('the status line reads Finding systems… N of 4 with a bar', s.run && /^Finding systems… \d of 4$/.test(s.text) && parseInt(s.bar) > 0, JSON.stringify(s));
   ok('Export video is greyed with a reason', s.exp && /found/.test(s.hint), s.hint);
   ok('the page under the playhead is found first', s.found.length > 0 && s.found[0] === 2, JSON.stringify(s.found));
+  const wp = await p.evaluate(() => ({ on: WIPE.on, front: WIPE.front, own: [...WIPE.own.keys()], p0: wipeProg(0), p2: wipeProg(2) }));
+  ok('the wipe waits at the first page not loaded, and the page loaded ahead wipes on its own', wp.on && wp.front === 0 && wp.own.includes(2) && wp.p0 === 0 && wp.p2 > 0, JSON.stringify(wp));
   await p.click('#sysStop'); await p.waitForTimeout(500);
   s = await st();
   ok('Stop returns to the previous layout and ends the worker', s.lay === 'spread' && !s.prog && !s.w && !s.run, JSON.stringify(s));
   ok('Export video is back, and the finished pages are kept', !s.exp && s.found.length >= 1 && s.found.length < 4, JSON.stringify(s));
+
+  await p.emulateMedia({ reducedMotion: 'reduce' }); await load();
+  await p.evaluate(() => { const o = SYS.run; SYS.run = function (m) { const t = SYS.token; return new Promise(r => setTimeout(r, 700)).then(() => t === SYS.token ? o.call(SYS, m) : null); }; });
+  await pick('system'); await p.waitForFunction(() => SYS.byPage.size >= 1, null, { timeout: 30000 });
+  const rm = await p.evaluate(() => { const f = [...SYS.byPage.keys()][0]; return { on: WIPE.on, loaded: wipeProg(f), other: wipeProg([0, 1, 2, 3].find(q => !SYS.byPage.has(q))), pop: sysPop(f, 5) }; });
+  ok('reduced motion shows each page clear as it loads, with no wipe', !rm.on && rm.loaded === 1 && rm.other === 0 && rm.pop === 1, JSON.stringify(rm));
+  await p.emulateMedia({ reducedMotion: 'no-preference' });
 
   await load();
   await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.warn, null, { timeout: 60000 }); await p.waitForTimeout(300);
@@ -42,6 +51,8 @@ function staffPage(doc, n, o = {}) {
   ok('a tilted page gets a reason line with Level these pages', w.tilt && w.tt === '1 page is tilted.', JSON.stringify(w));
   ok('a two-page scan points to Split spreads', w.wide && /Split spreads/.test(w.wt), w.wt);
   ok('Export video is available once done', !w.exp && !w.run);
+  await p.waitForFunction(() => !WIPE.on, null, { timeout: 20000 });
+  ok('the wipe ends with every block clear and every handle in', await p.evaluate(() => sysBlocks().filter(q => q.page != null).every(q => wipeProg(q.page) === 1 && sysPop(q.page, 3) === 1)));
   const g = await p.evaluate(() => (window.uiGuard && uiGuard.report ? uiGuard.report() : []));
   ok('uiGuard reports nothing', !g.length, JSON.stringify(g));
   const before = await p.evaluate(() => ({ h: S.history.length }));

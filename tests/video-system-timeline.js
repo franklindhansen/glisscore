@@ -4,6 +4,8 @@ const { chromium } = require('playwright-core');
 const { PDFDocument } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 const PW = 595, PH = 842;
+const lum = h => { const v = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(x => x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
 function staffPage(doc, n) {
   const page = doc.addPage([PW, PH]);
   for (let k = 0; k < n; k++) {
@@ -30,6 +32,30 @@ function staffPage(doc, n) {
   ok('System gives one entry per system and one for the end credits', s.lay === 'system' && s.n === 10 && s.card[9] === 'e', JSON.stringify(s));
   ok('the turn count follows the systems', s.t === 9, String(s.t));
   ok('entries run in reading order', JSON.stringify(s.keys.slice(0, 9).map(k => [k % 100000, Math.floor(k / 100000)])) === JSON.stringify([[0,0],[0,1],[0,2],[1,0],[1,1],[2,0],[3,0],[3,1],[3,2]].map(a => [a[0], a[1]])), JSON.stringify(s.keys));
+  const blk = await p.evaluate(() => sysBlocks().map(q => ({ page: q.page, n: q.n, w: q.b - q.a })));
+  ok('the timeline holds one block per page, then one for the credits', blk.length === 5 && JSON.stringify(blk.slice(0, 4).map(q => q.n)) === '[3,2,1,3]' && blk[4].page === null && blk[4].n === 1, JSON.stringify(blk));
+  ok('a block is as wide as its number of systems', Math.abs(blk[1].w / blk[2].w - 2) < 0.15, JSON.stringify(blk.map(q => q.w)));
+  const kinds = await p.evaluate(() => S.turns.map((_, i) => sysTurnInfo(i).inner));
+  ok('the turns inside a page are system turns, the others page turns, and none follows the last system', kinds.filter(Boolean).length === 5 && kinds.length === 9 && kinds.slice(-1)[0] === false && await p.evaluate(() => sysTurnInfo(S.turns.length) === null), JSON.stringify(kinds));
+  ok('the skinny handle can be grabbed as easily as the page handle', await p.evaluate(() => { const i = sysTurnInfo(0).inner ? 0 : -1, x = t2x(shownTurn(i)), y = TL.trackY + TL.trackH / 2; return i === 0 && hitTurn({ x: x + 6, y }) === 0 && hitTurn({ x: x - 6, y }) === 0; }));
+  ok('every page and system is drawn, with the playhead in a cell, without errors', await p.evaluate(() => { S.time = (S.spreads.length ? spreadBounds(1)[0] + 0.1 : 0); TL.staticDirty = true; drawTimeline(); return true; }) && errs.length === 0, errs.join('; '));
+  const css = require('fs').readFileSync(__dirname + '/../style.css', 'utf8');
+  ok('--turn-sys is in all three theme blocks', (css.match(/--turn-sys:/g) || []).length === 3 && css.includes('--turn-sys:#bf6500') && (css.match(/--turn-sys:#d97706/g) || []).length === 2);
+  ok('the page and system handles pass 3:1 against the block in both themes', [['#d97706', '#ffffff'], ['#bf6500', '#ffffff'], ['#f59e3b', '#252b37'], ['#d97706', '#252b37']].every(([f, g]) => contrast(f, g) >= 3), [contrast('#d97706', '#ffffff'), contrast('#bf6500', '#ffffff'), contrast('#f59e3b', '#252b37'), contrast('#d97706', '#252b37')].map(v => v.toFixed(2)).join(' '));
+  const keep = await p.evaluate(async () => {
+    const R = window.__keyframes.previewR; S.time = S.vStart; drawStage(); await R.ensure([S.spreads[0][1]]);
+    const idx = S.spreads[0][1], before = R.tex.get(idx) && R.tex.get(idx).t; if (!before) return { none: true };
+    S.set.margin = S.set.margin + 2; R.checkSize(R.layout());
+    return { same: R.tex_(idx) === before, gone: !R.tex.has(idx), notReady: R.notReady.has(idx) };
+  });
+  ok('moving the margin keeps showing the old sheet until the new one arrives', keep.same && keep.gone && keep.notReady, JSON.stringify(keep));
+  const live = await p.evaluate(async () => {
+    const R = window.__keyframes.previewR, idx = S.spreads[0][1], o = window.sysSheet; let calls = 0, now = 0, max = 0; window.sysSheet = (...a) => { calls++; max = Math.max(max, ++now); return o(...a).finally(() => now--); };
+    for (let i = 0; i < 8; i++) { S.set.margin = 3 + i % 4; R.prefetch([idx]); R.checkSize(R.layout()); await new Promise(r => setTimeout(r, 15)); }
+    S.set.margin = 6; await R.ensure([idx]); window.sysSheet = o;
+    return { has: R.tex.has(idx), key: R.sizeKey.includes(',6,'), max };
+  });
+  ok('dragging the margin keeps up with one render at a time per page, and ends on the final margin', live.has && live.key && live.max === 1, JSON.stringify(live));
   ok('turns are spaced evenly and the hand edit is said', await p.evaluate(() => { const g = S.turns.slice(1, -1).map((t, i) => t - S.turns[i]); return Math.max(...g) - Math.min(...g) < 0.05 && !S.turnsEdited; }) && /turns/i.test(await toast()), await toast());
   await p.evaluate(() => document.querySelector('#bUndo').click()); await p.waitForTimeout(600);
   s = await st();
@@ -51,6 +77,14 @@ function staffPage(doc, n) {
   await p.setInputFiles('#pdfIn', { name: 'one.pdf', mimeType: 'application/pdf', buffer: ob }); await p.waitForFunction(() => S.pdf && S.pdf.keep.length === 1, null, { timeout: 60000 }); await p.waitForTimeout(800);
   await p.evaluate(() => { S.set.creditsOn = true; S.credits.title = 'Piece'; S.credits.titleEdited = true; S.set.creditsAt = 'start'; }); await pick('pageLayout', 'system'); await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(1200); s = await st();
   ok('Start works with one system', s.at === 'start' && s.n === 2 && s.t === 1 && s.card === 's.', JSON.stringify(s));
+  // a cover
+  const cov = await PDFDocument.create(); cov.addPage([PW, PH]); staffPage(cov, 1); staffPage(cov, 1); const cb = Buffer.from(await cov.save());
+  await p.evaluate(() => { S.set.creditsOn = false; }); await p.setInputFiles('#pdfIn', { name: 'cover.pdf', mimeType: 'application/pdf', buffer: cb });
+  await p.waitForFunction(() => S.pdf && S.pdf.keep.length === 3, null, { timeout: 60000 }); await p.waitForTimeout(800);
+  await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(1500);
+  const cv = await p.evaluate(() => sysBlocks().map(q => ({ n: q.n, w: q.b - q.a })));
+  ok('a page with no systems is a short block, about 0.4 of a one-system block', cv.length === 3 && cv[0].n === 1 && cv[0].w / cv[1].w > 0.3 && cv[0].w / cv[1].w < 0.5, JSON.stringify(cv));
+  ok('the next page keeps a full block and the turns stay in order', await p.evaluate(() => S.turns.every((t, i) => !i || t > S.turns[i - 1]) && S.turns.length === 2));
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

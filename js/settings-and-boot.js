@@ -456,6 +456,7 @@ function boot() {
     if (TL.glow) TL.overlayDirty = true;
     { const nowT = performance.now(), dt = Math.min(0.033, (nowT - (tick.last || nowT)) / 1000 || 0.016); tick.last = nowT; if (hsStep(dt)) TL.overlayDirty = true; if (glideStep(dt)) TL.overlayDirty = true; if (edgeStep(dt)) TL.overlayDirty = true; if (trimStep(dt)) { TL.overlayDirty = true; if (TL.intro || (TL.trimD && Math.abs(TL.trimD.vs) + Math.abs(TL.trimD.ve) > 1e-4)) TL.staticDirty = true; } }
     if (rvActive()) TL.staticDirty = true;
+    if (sysWipeStep()) TL.staticDirty = true;
     if (TL.staticDirty || TL.overlayDirty) { try { drawTimeline(); } catch (e) { console.error(e); } }
   })();
 }

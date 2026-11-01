@@ -133,6 +133,7 @@ function sysKick() {
   if (!S.pdf) return; sysFresh();
   const pages = [...new Set(S.pdf.keep)], left = pages.filter(i => !SYS.byPage.has(i)).length;
   if (!left) { if (SYS.prog) sysProg(null); sysWarn(); return; }
+  sysWipeStart();
   if (SYS.prog && SYS.job) return;
   sysProg({ done: pages.length - left, total: pages.length });
   const head = selCurrent();          // the page under the playhead is found first
@@ -177,15 +178,16 @@ async function sysLevelPages() {
 function sysStopRun() { SYS.stop(); setPageLayout(SYS.prev && SYS.prev !== 'system' ? SYS.prev : 'spread'); }
 function sysSettle() {
   if (!sysOn() || !S.pdf) return;
-  const before = spreadSig(); S.spreads = buildSpreads();
-  if (spreadSig() === before) return;
+  const none = S.pdf.keep.filter(i => { const r = SYS.byPage.get(i); return r && !r.systems.length; }).join(), before = spreadSig() + '#' + SYS.none;          // a page found to have no systems is a short block, so the turns are spaced again
+  S.spreads = buildSpreads(); SYS.none = none;
+  if (spreadSig() + '#' + none === before) return;
   if (S.turnsEdited) reconcileTurns(); else autoSpace(false);
   afterStructureChange(); onTurnsChanged();
 }
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
+  byPage: new Map(), none: '', scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
   worker() {
     if (this.w) return this.w;
     const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
@@ -199,7 +201,7 @@ const SYS = {
     return new Promise(res => { const id = ++this.n; this.pend.set(id, res); w.postMessage({ id, ink: m.ink, w: m.w, h: m.h, deg: m.deg, reg: m.reg }, [m.ink.buffer]); });
   },
   stop() {                                              // leaving the layout: the worker ends at once, and the pages already found stay
-    this.token++; if (this.w) { this.w.terminate(); this.w = null; }
+    WIPE.on = false; this.token++; if (this.w) { this.w.terminate(); this.w = null; }
     this.pend.forEach(f => f(null)); this.pend.clear(); this.job = null; if (this.prog) sysProg(null);
   }
 };
