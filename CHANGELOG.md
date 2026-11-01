@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.21
+
+General improvements and polish.
+
 ## 1.1.20
 
 A page that is still being made now shows a softened preview with a sweep and a label, instead of a blank white sheet.
