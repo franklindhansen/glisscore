@@ -118,3 +118,7 @@ FLAC is decoded by our own decoder inside the store's worker (`importFlac`, writ
     NODE_PATH=$HOME/keyframes-tests/node_modules node tests/mp3-disk.js
 
 Both need ffmpeg. The FLAC check encodes 15 kinds of file (16 and 24-bit, mono and stereo, every channel mode, block sizes from 192 to 4608, silence, 8 to 96kHz) and every sample must be the one ffmpeg decodes. The MP3 check compares rate, channels, length and samples with the browser's one-shot decoder for six kinds of file, plus a tag after the last frame and a file cut short.
+
+## Running in a sandbox
+
+`run-all.sh` serves the app on a local port, so it needs local port binding (`sandbox.network.allowLocalBinding: true`) or the sandbox off; without it every check fails at startup. On macOS, `sed -i` needs an empty suffix (`sed -i '' ...`).
