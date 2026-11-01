@@ -224,6 +224,15 @@
             <label><input type="radio" name="pageLayout" value="system"><span>System</span></label>
           </div>
         </div>
+        <div class="field sys-note" id="sysNote" hidden>
+          <div class="sys-run" id="sysRun" hidden>
+            <span class="sys-run-t" id="sysRunT" role="status"></span>
+            <button class="btn small" id="sysStop" type="button">Stop</button>
+            <span class="busybar sys-bar" aria-hidden="true"><b id="sysBarFill"></b></span>
+          </div>
+          <p class="hint sys-why" id="sysTilt" hidden><span id="sysTiltT"></span> <button class="btn small" id="sysLevel" type="button">Level these pages</button></p>
+          <p class="hint sys-why" id="sysWide" hidden></p>
+        </div>
         <div class="field sub" id="firstAloneField">
           <div class="check-row">
             <label class="check" for="firstAlone">First page alone</label>

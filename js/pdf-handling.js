@@ -58,12 +58,15 @@ function syncPageLayout(glide) {
   document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === S.set.pageLayout; });
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
   $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; $('#tbMarginField').hidden = !sysOn(); applyTransitionUI();
+  if (!sysOn() && (SYS.prog || SYS.job)) SYS.stop();          // leaving System ends the finding at once
+  if (sysOn() && S.pdf && !SYS.prog) sysWarn(); else sysUI();
 }
 /* changing it is one History step; the turns are spaced evenly again for the new number of pages, and it says so when they had been placed by hand */
 function setPageLayout(v) {
   if (S.set.pageLayout === v) return;
   const hadEdits = S.turnsEdited && S.turns.length > 0;
   if (S.pdf) pushHistory();
+  if (v === 'system') SYS.prev = S.set.pageLayout;
   S.set.pageLayout = v; saveSettings(); syncPageLayout(true);
   if (!S.pdf) return;
   S.time = S.vStart; rebuildSpreads(true, true); onTurnsChanged();

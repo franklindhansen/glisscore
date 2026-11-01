@@ -790,6 +790,17 @@ const rvLead = p => Math.min(1, 1.35 * rvFront(p));          // how far along th
 const rvGrow = (p, u) => clamp((1.35 * rvFront(p) - u) / 0.35, 0, 1);      // each block or slice of waveform grows just after the sweep passes it
 function rvProgress(k) { const t0 = TL.rv && TL.rv[k]; if (t0 == null) return 1; const p = (performance.now() - t0) / REVEAL[k]; if (p >= 1) { TL.rv[k] = null; return 1; } return p; }
 function rvActive() { return !!TL.rv && Object.keys(TL.rv).some(k => TL.rv[k] != null); }
+/* the shared sweep on the blocks of pages the System layout has not found yet */
+function drawSysSweep(c) {
+  if (!sysBusy()) return; TL.overlayDirty = true;
+  const { C, vw, trackY, trackH } = TL, ph = (performance.now() % SWEEP_MS) / SWEEP_MS, k = ph * ph * (3 - 2 * ph), reduce = reducedMotion();
+  S.spreads.forEach((sp, i) => {
+    const key = sp[1] >= 0 ? sp[1] : sp[0]; if (key < 0 || SYS.byPage.has(sysPage(key))) return;
+    const [a, b] = spreadBounds(i), x0 = t2x(a) + 1, x1 = t2x(b) - 1; if (x1 < 0 || x0 > vw || x1 - x0 < 4) return;
+    const w = x1 - x0, bw = reduce ? w : w * 0.4, x = reduce ? x0 : x0 + (-0.4 + 1.4 * k) * w;
+    c.save(); roundRect(c, x0, trackY, w, trackH, 7); c.clip(); c.globalAlpha = reduce ? 0.5 : 1; c.fillStyle = C.accent; c.fillRect(x, trackY + trackH - 3, bw, 3); c.restore();
+  });
+}
 function drawBlocks(c) {
   const { C, vw, trackY, trackH } = TL, n = S.spreads.length, pa = S.pdf ? S.pdf.aspect : .77;
   const th = Math.max(18, trackH - 48), tw = th * pa, bp = rvProgress('blocks');      // smaller pictures, with the page numbers and times stacked underneath them
@@ -1035,7 +1046,7 @@ function drawTimeline() {
   if (TL.staticDirty) { drawTimelineStatic(); TL.staticDirty = false; }
   const c = TL.ctx, C = TL.C; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, c.canvas.width, c.canvas.height); c.drawImage(TL.sc, 0, 0);       // clear first: in full screen the layer is see-through, and old frames would pile up
   c.setTransform(TL.dpr, 0, 0, TL.dpr, 0, 0);
-  drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
+  drawSysSweep(c); drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
   if (TL.box) { c.save(); c.globalAlpha = .12; c.fillStyle = C.accent; c.fillRect(TL.box.a, TL.trackY - 6, TL.box.z - TL.box.a, TL.trackH + 12); c.globalAlpha = .8; c.strokeStyle = C.accent; c.lineWidth = 1; c.strokeRect(TL.box.a + .5, TL.trackY - 5.5, TL.box.z - TL.box.a, TL.trackH + 11); c.restore(); }        // the selection box
   const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 160);
   if (TL.glow === 'ruler') {

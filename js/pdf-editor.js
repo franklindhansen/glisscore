@@ -700,10 +700,15 @@ function peCleanBind() {
 /* Re-kilter remembers the pages it has looked at (leveled, or found level) as they stand now, so its button greys out when there is nothing left for it to do */
 const peSkewKey = sl => sl.src + '|' + (sl.skew || 0) + '|' + (sl.vskew || 0) + '|' + (sl.warp || 0) + '|' + (S.pdf.gen || 0);
 PE.skewSeen = new Map();
+/* what Re-kilter gives one page: [skew, vskew, warp, the crop that follows (null when it stays)]; the System layout levels its tilted pages with the same rule */
+async function peLevelOne(sl) {
+  const sc = await peScan(sl.src, 760, null), reg = peInkBox(sc, 0.01), f = peFit(sc, reg), lvl = f.gain < 0.02 || (Math.abs(f.a) < 0.15 && Math.abs(f.k) < 0.004), a = lvl ? 0 : f.a, k = lvl ? 0 : (Math.abs(f.k) < 0.004 ? 0 : f.k), l = peLean(sc, a, reg), v = Math.abs(a - l.deg) < 0.1 ? 0 : -(l.deg - a), same = sl.skew === -a && sl.vskew === v && sl.warp === k;
+  return [-a, v, k, same ? null : await peFollow(sl, { skew: -a, vskew: v, warp: k })];
+}
 async function peSkewGo() {
   const d = PE.d, ids = peTargets(); if (!ids.length) return;
   const res = new Map();
-  const ok = await peEach(ids, '#peSkewGo', async id => { const sc = await peScan(d.slots[id].src, 760, null), reg = peInkBox(sc, 0.01), f = peFit(sc, reg), lvl = f.gain < 0.02 || (Math.abs(f.a) < 0.15 && Math.abs(f.k) < 0.004), a = lvl ? 0 : f.a, k = lvl ? 0 : (Math.abs(f.k) < 0.004 ? 0 : f.k), l = peLean(sc, a, reg), v = Math.abs(a - l.deg) < 0.1 ? 0 : -(l.deg - a), sl = d.slots[id], same = sl.skew === -a && sl.vskew === v && sl.warp === k; res.set(id, [-a, v, k, same ? null : await peFollow(sl, { skew: -a, vskew: v, warp: k })]); });
+  const ok = await peEach(ids, '#peSkewGo', async id => { res.set(id, await peLevelOne(d.slots[id])); });
   if (!ok) return;
   if (!ids.some(id => { const [v, lv, wk, crop] = res.get(id), sl = d.slots[id]; return v !== (sl.skew || 0) || lv !== (sl.vskew || 0) || wk !== (sl.warp || 0) || (crop && String(crop) !== String(sl.crop || '')); })) { ids.forEach(id => PE.skewSeen.set(id, peSkewKey(d.slots[id]))); peSay('#peSkewStatus', tx('pe.skew.none')); peActs(); return; }          // nothing to level, so no step is added
   pePush(); let n = 0; ids.forEach(id => { const [v, lv, wk, crop] = res.get(id), sl = d.slots[id]; sl.skew = v; sl.vskew = lv; sl.warp = wk; if (crop) sl.crop = crop; if (v || lv || wk) n++; });

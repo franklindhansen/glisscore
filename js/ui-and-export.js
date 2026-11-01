@@ -129,12 +129,17 @@ function updateFileButtons() {
   if (pdf && aud) updateFileButtons.t = setTimeout(() => { if (S.pdf && S.audio) $('#fileStatus').hidden = true; }, 1100);     // the last check gets a moment before the line slides away
   else $('#fileStatus').hidden = false;
 }
+/* Export video: greyed with a reason line while the System layout is still finding systems */
+function syncExport() {
+  const has = !!S.pdf, wait = sysBusy();
+  $('#btnExport').disabled = !has || wait;
+  $('#exportHint').textContent = !has ? '' : wait ? tx('sys.export') : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
+}
 function updateButtons() {
   const has = !!S.pdf;
   updateFileButtons();
-  $('#btnExport').disabled = !has; $('#btnThumb').disabled = !has;
+  syncExport(); $('#btnThumb').disabled = !has;
   if (typeof syncFadeLens === 'function') syncFadeLens();             // an automatic fade length follows the video's length
-  $('#exportHint').textContent = !has ? '' : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
   $('#bSpace').disabled = S.spreads.length < 2; $('#bFit').disabled = $('#zoom').disabled = !has;
   $('#bTap').disabled = S.spreads.length < 2; $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
   ['bStart', 'bPlay'].forEach(id => $('#' + id).disabled = !has);

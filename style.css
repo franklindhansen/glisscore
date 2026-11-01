@@ -2327,6 +2327,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 
 /* a button's name inside a sentence: the name sits in a small button, spelled as on the button; a switch's name carries a tiny switch */
+.sys-run{display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px 10px}
+.sys-run-t{font-size:12.5px;color:var(--muted)}
+.sys-run .sys-bar{grid-column:1/-1;width:100%}
+.sys-why{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
+.sys-note>*+*{margin-top:8px}
 .hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;line-height:1.35;white-space:nowrap;vertical-align:baseline}
 .hb.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
