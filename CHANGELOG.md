@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.20
+
+A page that is still being made now shows a softened preview with a sweep and a label, instead of a blank white sheet.
+
 ## 1.1.19
 
 The selector now shows the music bright with the padding as frosted glass, marking is always on, and the preview frame stays fixed.
