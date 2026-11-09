@@ -27,8 +27,31 @@ function splitSync() {
     cv.style.width = pw + 'px'; cv.style.height = ph + 'px';
   } else if (was) { szReset(false, SZS); }
   Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).setAttribute('aria-pressed', on && Math.abs(SPLIT_PRESETS[id] - (show ? SPLIT.f : 0)) < 0.02 ? 'true' : 'false'));
+  presetCurrent(show ? SPLIT.f : 0);
   szButtons();
   return { show, stack, pl, pt };
+}
+/* the preset strip shows the preset nearest the current split as one icon; the four choices unfold from it */
+function presetCurrent(f) {
+  const ids = Object.keys(SPLIT_PRESETS), id = ids.reduce((a, b) => Math.abs(SPLIT_PRESETS[b] - f) < Math.abs(SPLIT_PRESETS[a] - f) ? b : a), b = $('#' + id), cur = $('#spCur');
+  cur.querySelector('svg').innerHTML = b.querySelector('svg').innerHTML;
+  const n = b.getAttribute('aria-label'); cur.setAttribute('aria-label', 'Selector and preview size: ' + n); cur.title = 'Selector and preview size: ' + n;
+}
+function presetBind() {
+  const box = $('#sysPresets'), cur = $('#spCur'); let t = 0, mouse = false;
+  const open = on => { clearTimeout(t); box.classList.toggle('open', on); cur.setAttribute('aria-expanded', on ? 'true' : 'false'); };
+  box.addEventListener('pointerenter', e => { mouse = e.pointerType === 'mouse'; if (mouse) open(true); });
+  box.addEventListener('pointerleave', () => { if (box.classList.contains('open')) { clearTimeout(t); t = setTimeout(() => open(false), 150); } });
+  const glyphs = () => [...box.querySelectorAll('#spFly button')];
+  cur.addEventListener('click', e => {
+    if (mouse && e.detail && box.classList.contains('open') && cur.matches(':hover')) return;
+    const on = !box.classList.contains('open'); open(on);
+    if (on && !e.detail) (glyphs().find(b => b.getAttribute('aria-pressed') === 'true') || glyphs()[0]).focus();          // opened from the keyboard: focus moves in, and the arrows step along
+  });
+  $('#spFly').addEventListener('keydown', e => { const k = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0, g = glyphs(), i = g.indexOf(document.activeElement); if (k && i >= 0) { e.preventDefault(); g[(i + k + g.length) % g.length].focus(); } });          // a tap or a key opens; a second one closes
+  box.addEventListener('keydown', e => { if (e.key === 'Escape' && box.classList.contains('open')) { e.preventDefault(); e.stopPropagation(); open(false); cur.focus(); } });
+  box.addEventListener('focusout', e => { if (box.classList.contains('open') && !box.contains(e.relatedTarget)) open(false); });
+  Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).addEventListener('click', () => { open(false); cur.focus(); }));
 }
 function splitSet(f) { SPLIT.f = f; layoutStage(); }
 /* the divider glides to a share the way a slider glides to its default: the same ease, and a longer way takes longer */
@@ -64,6 +87,7 @@ function splitBind() {
     else if (k === 'Enter') { e.preventDefault(); splitGlide(0.5); }
   });
   Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).addEventListener('click', () => splitGlide(SPLIT_PRESETS[id])));
+  presetBind();
 }
 
 /* ---------- the selector ---------- */

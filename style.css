@@ -434,8 +434,16 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 .stage-strip button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:.5;cursor:default}
 .stage-strip svg,.sys-bar svg,.sys-nav svg{width:14px;height:14px}
 .sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
-.sys-bar{right:calc(var(--fsm,10px) + var(--sw,150px) + 6px)}          /* beside the zoom strip */
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
+/* the preset strip: one vertical glass strip at the top right (the current preset, a divider, Detect this page again); hovering or tapping the preset icon unfolds the four presets sideways from it */
+.sys-tools{position:absolute;top:var(--fsm,10px);right:var(--fsm,10px);z-index:6}
+.sys-tools[hidden]{display:none}
+.sys-tools .sp-col{position:static;flex-direction:column;height:auto;width:auto}
+.sys-tools .sp-col button{height:calc(var(--fs,32px) - 6px)}
+.sys-tools .sp-col .stage-div{width:14px;height:1px;margin:3px 0}
+.sys-tools .sp-fly{position:absolute;top:0;right:calc(100% + 6px);bottom:auto;overflow:hidden;max-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:max-width .18s var(--ease-out),opacity .18s var(--ease-out),visibility 0s .18s}
+.sys-tools.open .sp-fly{max-width:140px;opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+@media (prefers-reduced-motion:reduce){.sys-tools .sp-fly{transition:none}}
 .sys-nav{right:auto;left:var(--fsm,10px)}
 .sys-bar[hidden],.sys-nav[hidden]{display:none}
 .sys-nav .sys-pg{padding:0 6px;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}

@@ -33,6 +33,7 @@ function staffPage(doc, n) {
   ok('the preview sits right of the divider and inside the stage', g.st[0] >= g.div[0] + g.div[2] - 1 && g.st[0] + g.st[2] <= g.wrap[0] && g.pressed[2] === 'true', JSON.stringify(g));
   ok('there is no Edit systems button', await p.evaluate(() => !document.querySelector('#spMark')));
   const undoBefore = await hist();
+  const preset = async id => { await p.hover('#spCur'); await p.waitForTimeout(260); await p.click('#' + id); await p.waitForTimeout(100); };
   const dv = await p.evaluate(() => { const r = document.querySelector('#sysDiv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
   await p.mouse.move(dv[0], dv[1]); await p.mouse.down(); await p.mouse.move(dv[0] + 150, dv[1], { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(400);
   const g2 = await geo();
@@ -41,10 +42,25 @@ function staffPage(doc, n) {
   const g3 = await geo();
   ok('a double-click glides it back to half and half', near(g3.sel[0], (g3.wrap[0] - 2) / 2, 3), JSON.stringify([g.sel[0], g3.sel[0]]));
   ok('the split is not a History step', (await hist()) === undoBefore);
-  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await p.click('#' + id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f, near(g.sel[0], f * (g.wrap[0] - 2), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
-  await p.click('#spOnly'); await p.waitForTimeout(800); g = await geo();
+  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await preset(id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f, near(g.sel[0], f * (g.wrap[0] - 2), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
+  await preset('spOnly'); await p.waitForTimeout(800); g = await geo();
   ok('Preview only hides the selector and gives the preview the stage', g.hidden && g.dh && g.st[2] > 700, JSON.stringify(g));
-  await p.click('#spEq'); await p.waitForTimeout(800);
+  await preset('spEq'); await p.waitForTimeout(800);
+  const spGeo = () => p.evaluate(() => { const r = e => document.querySelector(e).getBoundingClientRect(), st = r('#sysPresets'), z = r('#stageStrip'), w = r('#stageWrap'), fly = getComputedStyle(document.querySelector('#spFly')), cur = document.querySelector('#spCur'); return { top: st.top - w.top, right: w.right - st.right, bottom: z.bottom, stBottom: st.bottom, zTop: z.top, vis: fly.visibility, op: +fly.opacity, exp: cur.getAttribute('aria-expanded'), open: document.querySelector('#sysPresets').classList.contains('open'), label: cur.getAttribute('aria-label') }; });
+  await p.mouse.move(5, 5); await p.waitForTimeout(400);
+  let s0 = await spGeo();
+  ok('the preset strip sits at the top right, above the zoom strip', s0.top < 20 && s0.right < 20 && s0.stBottom < s0.zTop, JSON.stringify(s0));
+  ok('the four presets are folded into one icon until hovered', s0.vis === 'hidden' && !s0.open && s0.exp === 'false', JSON.stringify(s0));
+  await p.hover('#spCur'); await p.waitForTimeout(400); s0 = await spGeo();
+  ok('hovering the icon unfolds the presets', s0.vis === 'visible' && s0.op === 1 && s0.exp === 'true', JSON.stringify(s0));
+  await p.keyboard.press('Escape'); await p.waitForTimeout(400); s0 = await spGeo();
+  ok('Escape folds them', !s0.open && s0.vis === 'hidden', JSON.stringify(s0));
+  await p.mouse.move(5, 5); await p.waitForTimeout(300);
+  await p.focus('#spCur'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
+  ok('the icon opens from the keyboard', (await spGeo()).open);
+  await p.keyboard.press('ArrowLeft'); await p.keyboard.press('Enter'); await p.waitForTimeout(900); s0 = await spGeo();
+  ok('choosing a preset folds the strip and the icon names it', !s0.open && /Selector wide/.test(s0.label), JSON.stringify(s0));
+  await preset('spEq'); await p.waitForTimeout(800);
   // linked both ways
   const at = i => p.evaluate(i => { const t = i === 0 ? S.vStart : S.turns[i - 1] - refOffset() + flipDur() + 0.01; Transport.seek(t); return t; }, i);
   await at(4); await p.waitForTimeout(500);
@@ -105,7 +121,7 @@ function staffPage(doc, n) {
   ok('a narrow window stacks the halves, selector above', near(g.sel[0], g.wrap[0] - 2) && near(g.sel[1], (g.wrap[1] - 2) / 2) && g.selY < 3 && g.st[1] >= g.div[1] + g.div[3] - 1, JSON.stringify(g));
   ok('the divider turns and the glyphs rotate', g.div[3] === 7 && g.div[2] > 300 && await p.evaluate(() => getComputedStyle(document.querySelector('#sysPresets svg')).transform !== 'none'), JSON.stringify(g.div));
   ok('nothing is cut off at phone width', await p.evaluate(() => { const w = document.querySelector('#stageWrap').getBoundingClientRect(), bad = [...document.querySelectorAll('#stageStrip, .sys-nav, #stage')].filter(e => { const r = e.getBoundingClientRect(); return r.right > w.right + 1 || r.left < w.left - 1 || r.bottom > w.bottom + 1; }); return !bad.length && document.documentElement.scrollWidth <= innerWidth; }));
-  await p.click('#spOnly'); await p.waitForTimeout(800);
+  await preset('spOnly'); await p.waitForTimeout(800);
   ok('Preview only fills the phone stage', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#stage').offsetHeight > 300));
   await pick('pageLayout', 'single'); await p.waitForTimeout(600);
   ok('leaving System takes the split away', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#sysPresets').hidden && document.querySelector('#stageWrap').style.paddingTop === ''));
