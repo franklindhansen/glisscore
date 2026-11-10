@@ -2456,16 +2456,17 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .about .ver:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 @keyframes verGliss{from{background-position:100% 0}to{background-position:0 0}}
 @media (prefers-reduced-motion:no-preference){.about .ver:hover{animation:verGliss .9s var(--ease-out)}}
-/* a page whose picture is still being made (preview and selector): the shared sweep along its foot and, after a moment, a label; the layer sits over the canvas and never takes a click */
+/* a page whose picture is still being made (preview and selector): after a moment, the wait pill centered on it; the layer sits over the canvas and never takes a click */
 .pg-waits{position:absolute;pointer-events:none;z-index:1}
-.pg-wait{position:absolute;overflow:hidden;--sweep-h:3px;transition:opacity .26s var(--ease-ui,ease)}
+.pg-wait{position:absolute;display:flex;align-items:center;justify-content:center;transition:opacity .26s var(--ease-ui,ease)}          /* centered by layout, never by a transform, so the text stays crisp; the pill may pass a narrow page's edges */
 .pg-wait.out{opacity:0}
-/* the one wait pill: a dark scrim with white text (the same in light and dark, it sits over a page picture), and, on the System pill, a bar along its foot (a fill once a share is known, the shared sweep before) */
-.wait-pill,.pg-wait-l{padding:4px 10px;border-radius:99px;background:rgba(14,17,40,.72);color:#fff;font:600 12px "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
-.pg-wait-l{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:88%;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s var(--ease-ui,ease)}
-.wait-pill{position:relative;display:inline-flex;align-items:center;overflow:hidden}
+/* the one wait pill: dark, nearly solid, with white text (the same in light and dark, and over any picture) and a bar along its foot (a fill once a share is known, the shared sweep while it is not) */
+.wait-pill{position:relative;display:inline-flex;align-items:center;flex:none;overflow:hidden;padding:4px 10px;border-radius:99px;background:rgba(14,17,40,.92);color:#fff;font:600 12px "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
 .wait-pill .wait-bar{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:rgba(255,255,255,.2)}
 .wait-bar b{display:block;height:100%;background:color-mix(in srgb,var(--accent) 55%,#fff);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s var(--ease-out);will-change:transform}          /* a scaled layer, so the fill glides on the compositor even while the page is busy drawing */
+.wait-bar.sweeping::after{background:color-mix(in srgb,var(--accent) 55%,#fff)}          /* the sweep in the fill's own color */
+.pg-wait-t{display:inline-block;text-align:center}
+.pg-wait-l{opacity:0;transition:opacity .2s var(--ease-ui,ease)}
 .pg-wait.show .pg-wait-l{opacity:1}
 @media (prefers-reduced-motion:reduce){.pg-wait,.pg-wait-l{transition-duration:.08s}}
 .sys-find #sysFindT{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-block;text-align:center}          /* "Processing 100%" fits, so the pill never changes width as the number grows */

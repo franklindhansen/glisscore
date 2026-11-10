@@ -188,7 +188,7 @@ function selWaitSync(idx, found, ready, x, y, w, h) {
   const host = $('#selWaits'), n = pageNo(idx), r = SYS.byPage.get(idx), items = [], box = { id: idx, x, y, w, h };
   pgWaitHost(host, $('#selCv'));
   if (!found) { /* the pill over the stage says it; the softened page shows */ }
-  else if (!ready) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) }));
+  else if (!ready) items.push(Object.assign(box, { text: tx('stage.rendering', { n }), short: tx('stage.rendering.short') }));
   pgWaitSet(host, items);
 }
 /* Marking, always on while System is: every system's top and bottom are handles (the left and right edges never are). Each one wears its reading-order number on its top left

@@ -303,11 +303,12 @@ class Renderer {
   /* A page whose picture is still being made: its thumbnail, softened, on dim paper (the paper alone before there is a thumbnail). Never a bare white sheet. */
   placeholder(idx) {
     const gl = this.gl, lay = this.lay || this.layout(), thumb = S.pdf ? slotThumb(idx) : null, e = this.ph.get(idx);
-    if (e && (e.stale || e.thumb === thumb)) return e.t;
-    const cv = softPage(thumb, Math.max(8, Math.round(lay.pw / 4)), Math.max(8, Math.round(lay.ph / 4)));
+    const fit = thumb && sysOn() && idx >= 0 ? sysFit(idx, lay.pw, lay.ph) : null, b = fit && fit.box, sig = fit ? [b.left, b.top, b.right, b.bottom, fit.dw, fit.dh].join() : '';          // in System the soft picture is the system itself, placed as the sharp one will be, so it sharpens in place
+    if (e && (e.stale || (e.thumb === thumb && e.sig === sig))) return e.t;
+    const cv = softPage(thumb, Math.max(8, Math.round(lay.pw / 4)), Math.max(8, Math.round(lay.ph / 4)), fit && { box: b, w: fit.dw / 4, h: fit.dh / 4 });
     const t = e ? e.t : gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv); this.setTexParams();
-    this.ph.set(idx, { t, thumb });
+    this.ph.set(idx, { t, thumb, sig });
     while (this.ph.size > this.cap + 4) { const k = this.ph.keys().next().value; gl.deleteTexture(this.ph.get(k).t); this.ph.delete(k); }
     return t;
   }
@@ -604,14 +605,16 @@ class Renderer {
 let previewR = null, stageDirty = true;
 const PAGE_WAIT_PAPER = '#d9d6cf', PAGE_FADE_MS = 260, PAGE_LABEL_MS = 350;          // dim paper for a page with no picture yet; the sharp picture's fade; how long a page waits before it says why
 const pageFadeMs = () => reducedMotion() ? 80 : PAGE_FADE_MS;
-/* a page's thumbnail, softened, on dim paper: what a page shows until its own picture is made */
-function softPage(thumb, w, h) {
+/* a page's thumbnail, softened, on dim paper: what a page shows until its own picture is made. With `part` (System) it is one part of the page, at the size and place its sharp picture will have, on the page's own paper. */
+function softPage(thumb, w, h, part) {
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
-  const c = cv.getContext('2d'); c.fillStyle = PAGE_WAIT_PAPER; c.fillRect(0, 0, w, h);
+  const c = cv.getContext('2d'); c.fillStyle = thumb && part ? '#fff' : PAGE_WAIT_PAPER; c.fillRect(0, 0, w, h);
   if (thumb) {
     const k = Math.min(w / thumb.width, h / thumb.height), tw = thumb.width * k, th = thumb.height * k;
     if ('filter' in c) c.filter = 'blur(' + Math.max(1, Math.round(w / 70)) + 'px)';
-    c.drawImage(thumb, (w - tw) / 2, (h - th) / 2, tw, th); c.filter = 'none';
+    if (part) { const b = part.box; c.drawImage(thumb, b.left * thumb.width, b.top * thumb.height, (b.right - b.left) * thumb.width, (b.bottom - b.top) * thumb.height, (w - part.w) / 2, (h - part.h) / 2, part.w, part.h); }
+    else c.drawImage(thumb, (w - tw) / 2, (h - th) / 2, tw, th);
+    c.filter = 'none';
     c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(0, 0, w, h);
   }
   return cv;

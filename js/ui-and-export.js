@@ -97,8 +97,9 @@ function sweepStop(host) {
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return end();
   host.addEventListener('animationiteration', end); host._sweepT = setTimeout(end, SWEEP_MS + 300);          // the timer only matters in a hidden tab, where animations stop
 }
-/* A page with no picture yet says so: the shared sweep along its foot and, after a moment, a label. `host` is a layer laid over a canvas; each item is a box in the canvas's own pixels.
-   An item stays one element for as long as it is listed, so its label's delay counts from when the page began to wait. */
+/* A page with no picture yet says so with the wait pill, after a moment: the label with the shared sweep along the pill's foot. `host` is a layer laid over a canvas; each item is a box in the canvas's own pixels.
+   An item stays one element for as long as it is listed, so its pill's delay counts from when the page began to wait. The pill is centered on its page by layout, on whole pixels, and may pass a narrow page's edges;
+   a page too narrow for the page number gets the short wording. */
 function pgWaitHost(host, cv) {
   const o = [cv.offsetLeft, cv.offsetTop, cv.offsetWidth, cv.offsetHeight].map(v => v + 'px').concat(cv.style.transform || '', cv.style.transition || '');
   if (host._geo === o.join()) return; host._geo = o.join();
@@ -110,12 +111,17 @@ function pgWaitSet(host, items) {
   items.forEach(it => {
     let el = have.get(it.id);
     if (!el) {
-      el = document.createElement('div'); el.className = 'pg-wait'; el.innerHTML = '<span class="pg-wait-l"></span>'; host.appendChild(el); have.set(it.id, el);
-      el._lt = setTimeout(() => el.classList.add('show'), it.now ? 0 : PAGE_LABEL_MS);
+      el = document.createElement('div'); el.className = 'pg-wait'; el.innerHTML = '<span class="wait-pill pg-wait-l"><span class="pg-wait-t"></span><i class="wait-bar"></i></span>'; host.appendChild(el); have.set(it.id, el);
+      el._lt = setTimeout(() => { el.classList.add('show'); sweepStart(el.firstChild.lastChild); }, it.now ? 0 : PAGE_LABEL_MS);          // the sweep starts with the pill, at its left edge
     }
-    el.style.left = it.x.toFixed(1) + 'px'; el.style.top = it.y.toFixed(1) + 'px'; el.style.width = it.w.toFixed(1) + 'px'; el.style.height = it.h.toFixed(1) + 'px';
-    if (it.sweep) sweepStart(el); else sweepStop(el);
-    setDots(el.firstChild, it.text); el.dataset.page = it.id;
+    const x = Math.round(it.x), y = Math.round(it.y), w = 2 * Math.round(it.w / 2), h = 2 * Math.round(it.h / 2), geo = [x, y, w, h].join();          // whole pixels and even sizes, so the pill's text stays crisp
+    if (el._geo !== geo) { el._geo = geo; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.width = w + 'px'; el.style.height = h + 'px'; }
+    const key = it.text + '|' + (it.short || '') + '|' + w;
+    if (el._key !== key) {
+      el._key = key; const t = el.firstChild.firstChild; t.style.minWidth = ''; t.textContent = it.text; if (it.short && el.firstChild.offsetWidth > w - 8) t.textContent = it.short;
+      t.style.minWidth = 2 * Math.ceil(t.getBoundingClientRect().width / 2) + 'px';          // an even width, so the pill centers on a whole pixel
+    }
+    el.dataset.page = it.id;
   });
 }
 /* the preview's pages: one that is still being made, and in System one that has no systems */
@@ -125,7 +131,7 @@ function pageWaitSync() {
   pgWaitHost(host, stageCanvas);
   r.framePages.forEach(w => {
     const n = pageNo(w.idx), box = { id: w.idx, x: w.x * k, y: w.y * k, w: w.w * k, h: w.h * k };
-    if (w.wait) { if (!sysBusy()) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) })); }          // while systems are found the pill over the stage says it
+    if (w.wait) { if (!sysBusy()) items.push(Object.assign(box, { text: tx('stage.rendering', { n }), short: tx('stage.rendering.short') })); }          // while systems are found the pill over the stage says it
   });
   pgWaitSet(host, items);
 }

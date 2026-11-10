@@ -1,4 +1,4 @@
-// Video, a page not ready: in Spread, Single page, and System a page whose picture is still being made shows its softened thumbnail (or dim paper) with the shared sweep, never a white sheet; the label comes after 350ms;
+// Video, a page not ready: in Spread, Single page, and System a page whose picture is still being made shows its softened thumbnail (or dim paper), never a white sheet; the wait pill, with the shared sweep along its foot, comes after 350ms;
 // each page of a spread has its own state; the sharp picture fades in only for a page that was shown unready; the selector shows the same look until systems are found.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-page-not-ready.js
 const { chromium } = require('playwright-core');
@@ -21,7 +21,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const layout = (p, v) => p.evaluate(v => { const r = document.querySelector('input[name=pageLayout][value=' + v + ']'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }, v);
   const waits = p => p.evaluate(() => [...document.querySelectorAll('#stageWaits .pg-wait:not(.out)')].map(e => {
     const c = document.querySelector('#stage').getBoundingClientRect(), r = e.getBoundingClientRect(), l = e.firstChild, ls = getComputedStyle(l);
-    return { page: e.dataset.page, text: l.textContent, shown: e.classList.contains('show') && +ls.opacity > 0.5, sweeping: e.classList.contains('sweeping'), cx: (r.left + r.width / 2 - c.left) / c.width };
+    const q = l.getBoundingClientRect();
+    return { page: e.dataset.page, text: l.textContent, shown: e.classList.contains('show') && +ls.opacity > 0.5, sweeping: l.lastChild.classList.contains('sweeping'), cx: (r.left + r.width / 2 - c.left) / c.width, pill: [q.left, q.top, q.width, q.height], mid: Math.abs(q.left + q.width / 2 - r.left - r.width / 2), tf: ls.transform };
   }));
   const centerPx = (p, which = 1) => p.evaluate(which => {
     const r = window.__keyframes.previewR, gl = r.gl, lay = r.lay, x = Math.round((which ? lay.cx + lay.pw / 2 : lay.x0 + lay.pw / 2)), y = Math.round(lay.y0 + lay.ph / 2), px = new Uint8Array(4);
@@ -37,11 +38,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const sp = await p.evaluate(([n]) => { const K = window.__keyframes, { S, Transport, previewR: r } = K; const s = S.spreads[n]; window.__block.clear(); [s[1]].forEach(i => i >= 0 && window.__block.add(i)); r.clearTextures(); Transport.seek(S.turns[n - 1] + 1.3); return s.slice(); }, [n]);
     await p.waitForTimeout(150);
     let w = await waits(p), px = await centerPx(p);
-    ok(lay + ': a page being made shows the sweep over its softened picture, not white', w.length === 1 && w[0].sweeping && notWhite(px), JSON.stringify([w, px]));
-    ok(lay + ': no label yet at 150ms', w.length === 1 && !w[0].shown, JSON.stringify(w));
+    ok(lay + ': a page being made shows its softened picture, not white', w.length === 1 && notWhite(px), JSON.stringify([w, px]));
+    ok(lay + ': no pill or sweep yet at 150ms', w.length === 1 && !w[0].shown && !w[0].sweeping, JSON.stringify(w));
     await p.waitForTimeout(400); w = await waits(p);
-    const want = /^Rendering p\. \d+\.\.\.$/;
-    ok(lay + ': the label shows after about 350ms', w.length === 1 && w[0].shown && want.test(w[0].text), JSON.stringify(w));
+    const want = /^Rendering p\. \d+…$/;
+    ok(lay + ': the pill shows after about 350ms, with the sweep along its foot', w.length === 1 && w[0].shown && w[0].sweeping && want.test(w[0].text), JSON.stringify(w));
+    ok(lay + ': the pill is centered on its page by layout, on whole pixels', w.length === 1 && w[0].tf === 'none' && w[0].mid < 0.51 && w[0].pill.every(v => Math.abs(v - Math.round(v)) < 0.01), JSON.stringify(w));
     if (lay === 'spread') {
       ok('spread: the label sits centered on its own (right-hand) page', w[0].cx > 0.5 && w[0].cx < 0.8, String(w[0].cx));
       ok('spread: the loaded neighbor stays sharp, with no label of its own', await p.evaluate(i => window.__keyframes.previewR.tex.has(i), sp[0]), JSON.stringify(sp));
@@ -68,11 +70,21 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok('spread: both unfinished pages have their own label, each centered on its own page', w.length === 2 && w.every(x => x.shown) && w.some(x => x.cx < 0.5) && w.some(x => x.cx > 0.5) && w[0].page !== w[1].page, JSON.stringify(w));
     await p.close(); }
 
+  // a page too narrow for the page number gets the short wording, and the pill may pass its edges
+  { const p = await open(); await layout(p, 'spread'); await p.waitForTimeout(600);
+    const r = await p.evaluate(() => {
+      const host = document.querySelector('#stageWaits'), mk = w => { pgWaitSet(host, [{ id: 'probe', x: 40, y: 40, w, h: 120, text: tx('stage.rendering', { n: 12 }), short: tx('stage.rendering.short'), now: true }]); const e = host.querySelector('.pg-wait[data-page=probe]'), q = e.firstChild.getBoundingClientRect(), b = e.getBoundingClientRect(); return { t: e.firstChild.textContent, mid: Math.abs(q.left + q.width / 2 - b.left - b.width / 2), over: q.width > b.width }; };
+      const out = [mk(300), mk(90), mk(40)]; pgWaitSet(host, []); return out;
+    });
+    ok('a wide page names its page; a narrow one gets the short wording', r[0].t === 'Rendering p. 12…' && r[1].t === 'Rendering…' && r[2].t === 'Rendering…', JSON.stringify(r));
+    ok('the pill stays centered when it is wider than its page', r[2].over && r[2].mid < 0.51, JSON.stringify(r));
+    await p.close(); }
+
   // reduced motion holds the sweep still and shortens the fade
   { const p = await open({ reduced: true }); await layout(p, 'spread'); await p.waitForTimeout(600);
     await p.evaluate(() => { const { S, Transport, previewR: r } = window.__keyframes, s = S.spreads[Math.min(2, S.spreads.length - 1)]; window.__block.add(s[1]); r.clearTextures(); Transport.seek(S.turns[Math.min(2, S.spreads.length - 1) - 1] + 1.3); });
-    await p.waitForTimeout(200);
-    const anim = await p.evaluate(() => { const e = document.querySelector('#stageWaits .pg-wait.sweeping'); return e ? getComputedStyle(e, '::after').animationName : 'missing'; });
+    await p.waitForTimeout(500);
+    const anim = await p.evaluate(() => { const e = document.querySelector('#stageWaits .pg-wait .wait-bar.sweeping'); return e ? getComputedStyle(e, '::after').animationName : 'missing'; });
     ok('reduced motion: the sweep holds still', anim === 'none', anim);
     await p.evaluate(() => window.__release()); const t0 = Date.now();
     await p.waitForFunction(() => window.__keyframes.previewR.fx.size > 0, null, { polling: 'raf', timeout: 5000 });
