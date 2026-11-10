@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+System keeps your turns, systems, and preview steady as you edit, and gains a Letterbox switch. Loading pages show one clear pill in every layout.
+
 ## 1.2.1
 
 The "How it works" dropdowns open faster with a soft settle, and their arrow no longer jumps when you hover over it.
