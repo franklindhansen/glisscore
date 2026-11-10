@@ -125,7 +125,7 @@ function pageWaitSync() {
   pgWaitHost(host, stageCanvas);
   r.framePages.forEach(w => {
     const n = pageNo(w.idx), box = { id: w.idx, x: w.x * k, y: w.y * k, w: w.w * k, h: w.h * k };
-    if (w.wait) items.push(Object.assign(box, { sweep: true, text: tx(sys ? 'sys.pageFinding' : 'stage.rendering', { n }) }));
+    if (w.wait) { if (!sysBusy()) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) })); }          // while systems are found the pill over the stage says it
     else if (sys) { const f = SYS.byPage.get(sysPage(w.idx)); if (f && !f.systems.length) items.push(Object.assign(box, { sweep: false, now: true, text: tx('sys.pageNone', { n }) })); }
   });
   pgWaitSet(host, items);
@@ -168,14 +168,20 @@ function syncExport() {
   $('#btnExport').disabled = !has || wait;
   $('#exportHint').textContent = !has ? '' : wait ? tx('sys.export') : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
 }
+/* while systems are found there is no timeline to act on: Play, Add page turn, Space turns evenly, and Turns to end are greyed */
+function syncSysBusy() {
+  const w = sysBusy();
+  $('#bPlay').disabled = !S.pdf || w; $('#bSpace').disabled = S.spreads.length < 2 || w; $('#bTap').disabled = S.spreads.length < 2 || w;
+  if (typeof syncToEnd === 'function') syncToEnd();
+}
 function updateButtons() {
   const has = !!S.pdf;
   updateFileButtons();
   syncExport(); $('#btnThumb').disabled = !has;
   if (typeof syncFadeLens === 'function') syncFadeLens();             // an automatic fade length follows the video's length
-  $('#bSpace').disabled = S.spreads.length < 2; $('#bFit').disabled = $('#zoom').disabled = !has;
-  $('#bTap').disabled = S.spreads.length < 2; $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
-  ['bStart', 'bPlay'].forEach(id => $('#' + id).disabled = !has);
+  $('#bFit').disabled = $('#zoom').disabled = !has; syncSysBusy();
+  $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
+  $('#bStart').disabled = !has;
   $('#tTot').textContent = fmt(duration());
 }
 /* The spread label ("Spread 50 / 100 · pp. 98–99") stays on the right of the row. It sits in a box as wide as the longest label this score can show (kept invisibly in

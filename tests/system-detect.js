@@ -98,14 +98,14 @@ const trio = (extra = {}) => ({ texts: [['Piano Trio', 220, 60, 28]], systems: [
     const again = scans.length; const res2 = await sysDetectAll({ onProgress: () => {} });
     window.peScan = orig; return { res, seen, scans, again, res2, after: scans.length, size: SYS.byPage.size };
   });
-  ok('every page is found, and the named page goes first', run1.res === true && run1.size === 9 && run1.scans[0] === 4 && run1.seen[1][2] === 4, JSON.stringify(run1.seen));
+  ok('every page is found, and the named page goes first', run1.res === true && run1.size === 9 && run1.scans[0] === 4, JSON.stringify(run1.seen));
   ok('progress counts up to the page total', run1.seen[run1.seen.length - 1][0] === 9 && run1.seen[run1.seen.length - 1][1] === 9);
   ok('a second run finds the work done and draws nothing', run1.res2 === true && run1.after === run1.again);
   // Stop: the worker ends at once, the pages found stay, and only the rest is done on the next run
   const st = await p.evaluate(async () => {
     SYS.byPage.clear(); let stopped = false; const scans = []; const orig = window.peScan; window.peScan = function (i, ...r) { scans.push(i); return orig.call(this, i, ...r); };
     const job = sysDetectAll({ first: 0, onProgress: (d) => { if (d === 2 && !stopped) { stopped = true; SYS.stop(); } } });
-    const res = await job; const kept = SYS.byPage.size, worker = SYS.w; const n1 = scans.length;
+    const res = await job; const kept = SYS.byPage.size, worker = SYS.ws.some(Boolean); const n1 = scans.length;
     const res2 = await sysDetectAll({}); window.peScan = orig; return { res, kept, worker: !!worker, res2, rest: scans.length - n1, size: SYS.byPage.size };
   });
   ok('Stop ends the run, and the worker with it', st.res === false && st.worker === false, JSON.stringify(st));
@@ -120,6 +120,17 @@ const trio = (extra = {}) => ({ texts: [['Piano Trio', 220, 60, 28]], systems: [
     const res = await job; return { res, size: SYS.byPage.size, job: SYS.job };
   });
   ok('a rebuild during a scan drops the page being measured', rb.res === false && rb.size === 0 && rb.job === null, JSON.stringify(rb));
+  const par = await p.evaluate(async () => {                      // one worker and three give the same systems
+    const out = {};
+    for (const n of [1, 3]) { SYS.stop(); SYS.byPage.clear(); SYS.lanes = () => n; await sysDetectAll({}); out[n] = JSON.stringify([...SYS.byPage.entries()].sort((a, b) => a[0] - b[0]).map(([k, r]) => [k, r.systems, r.tilt])); }
+    return { same: out[1] === out[3], len: out[1].length };
+  });
+  ok('one worker and three find the same systems', par.same && par.len > 20, JSON.stringify(par));
+  const fb = await p.evaluate(async () => {                       // a worker that cannot start: the page measures instead
+    SYS.stop(); SYS.byPage.clear(); SYS.lanes = () => 2; const O = window.Worker; window.Worker = function () { throw new Error('no worker'); };
+    const res = await sysDetectAll({}); window.Worker = O; return { res, size: SYS.byPage.size };
+  });
+  ok('with no worker the page finds them itself', fb.res === true && fb.size === 9, JSON.stringify(fb));
   ok('no page errors', errs.length === 0, errs.join('; '));
   await b.close();
 })();

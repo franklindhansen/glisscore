@@ -40,7 +40,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok(lay + ': a page being made shows the sweep over its softened picture, not white', w.length === 1 && w[0].sweeping && notWhite(px), JSON.stringify([w, px]));
     ok(lay + ': no label yet at 150ms', w.length === 1 && !w[0].shown, JSON.stringify(w));
     await p.waitForTimeout(400); w = await waits(p);
-    const want = lay === 'system' ? /^Finding systems on p\. \d+\.\.\.$/ : /^Rendering p\. \d+\.\.\.$/;
+    const want = /^Rendering p\. \d+\.\.\.$/;
     ok(lay + ': the label shows after about 350ms', w.length === 1 && w[0].shown && want.test(w[0].text), JSON.stringify(w));
     if (lay === 'spread') {
       ok('spread: the label sits centered on its own (right-hand) page', w[0].cx > 0.5 && w[0].cx < 0.8, String(w[0].cx));
@@ -89,9 +89,9 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const sel = await p.evaluate(() => {
       const key = selCurrent(), idx = sysPage(key); SYS.byPage.delete(idx); SYS.rev++; selSync(true);
       const e = document.querySelector('#selWaits .pg-wait:not(.out)'), cv = document.querySelector('#selCv'), g = cv.getContext('2d'), geo = SEL.geo, px = g.getImageData(Math.round(geo.ox + geo.pa * geo.u / 2), Math.round(geo.oy + geo.u / 2), 1, 1).data;
-      return e ? { sweeping: e.classList.contains('sweeping'), text: e.firstChild.textContent, px: [px[0], px[1], px[2]] } : null;
+      return { label: !!e, px: [px[0], px[1], px[2]] };
     });
-    ok('the selector shows the sweep and "Finding systems" over a softened page until systems are found', !!sel && sel.sweeping && /^Finding systems on p\. \d+\.\.\.$/.test(sel.text) && notWhite(sel.px), JSON.stringify(sel));
+    ok('the selector shows a softened page with no label of its own until systems are found', !sel.label && notWhite(sel.px), JSON.stringify(sel));
     await p.waitForTimeout(500);
     await p.close(); }
 

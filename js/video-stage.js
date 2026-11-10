@@ -54,7 +54,7 @@ const Transport = {
     if (o.gain) { try { const ct = o.gain.context.currentTime, g = o.gain.gain; g.cancelScheduledValues(ct); g.setValueAtTime(g.value, ct); g.linearRampToValueAtTime(0, ct + 0.01); } catch (e) {} setTimeout(cut, 40); } else cut();
     this.playing = false; updatePlayIcon(); stageDirty = true; TL.overlayDirty = true;
   },
-  toggle() { this.playing ? this.pause() : this.play(); },
+  toggle() { if (typeof sysBusy === 'function' && sysBusy()) return; this.playing ? this.pause() : this.play(); },
   seek(t) {
     t = clamp(t, S.vStart, vEnd());
     if (this.playing) { this.pause(); S.time = t; this.play(); } else S.time = t;
@@ -68,7 +68,7 @@ function updatePlayIcon() {
 
 /* Tap-to-set: press T at the moment a page should turn */
 function tapTurn() {
-  if (!S.spreads.length || S.spreads.length < 2) return;
+  if (!S.spreads.length || S.spreads.length < 2 || sysBusy()) return;
   const t = Transport.now();
   const st = frameState(t);
   const i = st.spread;
@@ -858,70 +858,13 @@ function sysTurnInfo(i) {
   const pa = a[1] >= 0 ? sysPage(a[1]) : null, pb = b[1] >= 0 ? sysPage(b[1]) : null;
   return { page: pa, k: pa == null ? 0 : sysNo(a[1]), inner: pa != null && pa === pb };
 }
-/* One wipe front clears every loaded thumbnail left to right at a steady pace. It waits at the first page that has not loaded; a page that loads ahead of it wipes on its own and the front hops over it.
-   The front counts in pages (3.4 is 40% into the fourth), so it holds its place when the blocks change width. */
-const WIPE = { on: false, front: 0, t: 0, prog: new Map(), own: new Map(), done: new Map(), speed: 3, ownMs: 450, edge: 10, popMs: 220, popGap: 45 };
-const sysPages = () => S.pdf ? [...new Set(S.pdf.keep)] : [];
-const sysLoaded = page => SYS.byPage.has(page);
-function sysWipeStart() {
-  if (WIPE.on || !sysOn() || !S.pdf || reducedMotion()) return;          // with reduced motion each page is clear as it loads
-  const P = sysPages(), f = P.findIndex(p => !sysLoaded(p));
-  Object.assign(WIPE, { on: true, front: f < 0 ? P.length : f, t: performance.now() }); WIPE.prog.clear(); WIPE.own.clear(); WIPE.done.clear();
-  P.forEach(p => { if (sysLoaded(p)) { WIPE.prog.set(p, 1); WIPE.done.set(p, -1e9); } });
-}
-/* true while something moves, so the timeline is drawn again */
-function sysWipeStep() {
-  const W = WIPE; if (!W.on) return false;
-  if (!sysOn() || !S.pdf) { W.on = false; return true; }
-  const now = performance.now(), dt = Math.min(0.05, (now - W.t) / 1000), P = sysPages(); W.t = now;
-  const f = P.findIndex(p => !sysLoaded(p)), wait = f < 0 ? P.length : f;
-  if (W.front < wait) W.front = Math.min(wait, W.front + W.speed * dt);
-  for (let i = Math.floor(W.front); i < P.length; i++) { const o = W.own.get(P[i]); if (o != null && sysLoaded(P[i]) && now - o >= W.ownMs) W.front = i + 1; else break; }
-  let more = W.front < wait;
-  P.forEach((p, i) => {
-    if (W.done.has(p)) return;
-    if (!sysLoaded(p)) { W.own.delete(p); return; }
-    if (W.own.get(p) == null && i > Math.floor(W.front)) W.own.set(p, now);          // loaded ahead of the front
-    const o = W.own.get(p), pr = Math.max(clamp(W.front - i, 0, 1), o == null ? 0 : rvFront(clamp((now - o) / W.ownMs, 0, 1)));
-    if (o != null && pr < 1) more = true;
-    W.prog.set(p, Math.max(W.prog.get(p) || 0, pr)); if (pr >= 1) W.done.set(p, now);
-  });
-  if (P.every(p => W.done.has(p))) {
-    const last = Math.max(...P.map(p => W.done.get(p)), 0), tail = W.popMs + W.popGap * Math.max(0, ...sysBlocks().map(q => q.n)) + 60;
-    if (now - last > tail) { W.on = false; return true; }
-    more = true;
-  }
-  return more;
-}
-/* how clear a page's thumbnail is (0 to 1) */
-function wipeProg(page) {
-  if (!sysLoaded(page)) return sysBusy() ? 0 : 1;
-  return WIPE.on ? (WIPE.prog.get(page) || 0) : 1;
-}
-/* how far a handle has popped in once its block is clear (k is its place in the block, for the stagger) */
-function sysPop(page, k) {
-  if (page == null) return 1;
-  if (!WIPE.on) return sysLoaded(page) || !sysBusy() ? 1 : 0;
-  const d = WIPE.done.get(page); return d == null ? 0 : rvFront(clamp((performance.now() - d - k * WIPE.popGap) / WIPE.popMs, 0, 1));
-}
-/* the thumbnail, faded; the clear part (to the left of the front, with a soft edge) is drawn sharp over it */
-function drawWipedThumb(c, img, x, y, w, h, fx) {
-  const paint = (g, dx, dy) => { if (img) g.drawImage(img, dx, dy, w, h); else { g.fillStyle = PAGE_WAIT_PAPER; g.fillRect(dx, dy, w, h); } }, E = WIPE.edge, cw = fx - x;
-  if (cw >= w + E) { paint(c, x, y); return; }
-  c.save(); c.globalAlpha = .3; paint(c, x, y); c.restore();
-  if (cw <= 0) return;
-  const sc = WIPE.sc || (WIPE.sc = document.createElement('canvas')), dpr = TL.dpr || 1; const pw = Math.ceil(w * dpr), ph = Math.ceil(h * dpr); if (sc.width !== pw) sc.width = pw; if (sc.height !== ph) sc.height = ph;          // resizing clears it, so only when the size changes
-  const g = sc.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, w, h); paint(g, 0, 0);
-  const gr = g.createLinearGradient(cw - E, 0, cw, 0); gr.addColorStop(0, '#000'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-  g.globalCompositeOperation = 'destination-in'; g.fillStyle = gr; g.fillRect(0, 0, w, h);
-  c.drawImage(sc, x, y, w, h);
-}
 function drawSysBlocks(c) {
+  if (sysBusy()) return;          // while systems are found the page lane is empty; the blocks come in once, together
   const { C, vw, trackY, trackH } = TL, pa = S.pdf ? S.pdf.aspect : .77, th = Math.max(18, trackH - 48), tw = th * pa, bp = rvProgress('blocks'), last = S.spreads.length - 1;
   const at = (t, a, b, i) => t >= a && (t < b || (i === last && t <= b));
   sysBlocks().forEach(q => {
     const x0 = t2x(q.a), x1 = t2x(q.b); if (x1 < -4 || x0 > vw + 4) return;
-    const pr = q.page == null ? 1 : wipeProg(q.page), r = q.page == null ? null : SYS.byPage.get(q.page), cells = r && r.systems.length ? q.n : 0, card = q.page == null;
+    const r = q.page == null ? null : SYS.byPage.get(q.page), cells = r && r.systems.length ? q.n : 0, card = q.page == null;
     c.save();
     if (bp < 1) { const k = rvGrow(bp, clamp((q.a - S.vStart) / Math.max(1e-6, vEnd() - S.vStart), 0, 1)), e = 1 - Math.pow(1 - k, 3); c.globalAlpha = e; c.translate(0, (1 - e) * 8); }
     roundRect(c, x0 + 1, trackY, Math.max(2, x1 - x0 - 2), trackH, 7); c.fillStyle = C.block; c.fill(); c.strokeStyle = card ? C.cred : C.line; c.stroke(); c.clip();
@@ -933,28 +876,15 @@ function drawSysBlocks(c) {
     }
     const tx = Math.max(x0 + 7, 7), y = trackY + 5;
     if (!card) {
-      drawWipedThumb(c, slotThumb(q.page), tx, y, tw, th, tx - 7 + pr * Math.max(x1 - x0, tw + 7 + WIPE.edge + 1));
+      const img = slotThumb(q.page); if (img) c.drawImage(img, tx, y, tw, th); else { c.fillStyle = PAGE_WAIT_PAPER; c.fillRect(tx, y, tw, th); }
       c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(tx + .5, y + .5, tw - 1, th - 1);
     }
-    const lbl = card ? 'Credits' : 'p. ' + pageNo(q.page), lit = card ? 1 : clamp((pr - .9) / .1, 0, 1);
+    const lbl = card ? 'Credits' : 'p. ' + pageNo(q.page);
     c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top';
-    c.fillStyle = C.muted; c.fillText(lbl, tx + 1, y + th + 6);
-    if (lit > 0) { c.save(); c.globalAlpha *= lit; c.fillStyle = C.ink; c.fillText(lbl, tx + 1, y + th + 6); c.restore(); }          // the label brightens once the thumbnail is clear
+    c.fillStyle = C.ink; c.fillText(lbl, tx + 1, y + th + 6);
     c.fillStyle = C.muted; c.font = '11px "Hanken Grotesk",system-ui,sans-serif';
     c.fillText(fmt(q.a - S.vStart) + ' – ' + fmt(q.b - S.vStart), tx + 1, y + th + 21);
     c.restore();
-  });
-}
-/* the shared sweep on the blocks that are not clear yet */
-function drawSysSweep(c) {
-  if (!sysOn() || !(sysBusy() || WIPE.on) || sysPages().every(p => wipeProg(p) >= 1)) return;
-  const { C, vw, trackY, trackH } = TL, ph = (performance.now() % SWEEP_MS) / SWEEP_MS, k = ph * ph * (3 - 2 * ph), reduce = reducedMotion();
-  sysBlocks().forEach(q => {
-    if (q.page == null || wipeProg(q.page) >= 1) return;
-    TL.overlayDirty = true;
-    const x0 = t2x(q.a) + 1, x1 = t2x(q.b) - 1; if (x1 < 0 || x0 > vw || x1 - x0 < 4) return;
-    const w = x1 - x0, bw = reduce ? w : w * 0.4, x = reduce ? x0 : x0 + (-0.4 + 1.4 * k) * w;
-    c.save(); roundRect(c, x0, trackY, w, trackH, 7); c.clip(); c.globalAlpha = reduce ? 0.5 : 1; c.fillStyle = C.accent; c.fillRect(x, trackY + trackH - 3, bw, 3); c.restore();
   });
 }
 function drawBlocks(c) {
@@ -1041,8 +971,8 @@ function drawHandles(c) {
   for (let i = 0; i < S.turns.length; i++) {
     const t = shownTurn(i), x = t2x(t), bx0 = t2x(t - off), bx1 = t2x(t - off + D), ph = !!S.ph[i];
     if (bx1 < -20 || bx0 > vw + 20) continue;
-    const isCr = hasCreditsSpread() && i === S.turns.length - 1, info = sysTurnInfo(i), sysT = !!(info && info.inner && !isCr), pop = info ? sysPop(info.page, info.k) : 1;
-    if (pop <= 0) continue;
+    const isCr = hasCreditsSpread() && i === S.turns.length - 1, info = sysTurnInfo(i), sysT = !!(info && info.inner && !isCr), pop = 1;
+    if (sysBusy()) continue;          // no handles until the systems are found
     const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a darker orange
     const grabbed = !!(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i), sc = hsGet('t' + i, grabbed ? 1.16 : TL.hover === i ? 1.07 : 1), pw_ = (sysT ? 3 : 13) * sc * (.6 + .4 * pop), ph_ = (sysT ? 14 : 28) * sc * (.6 + .4 * pop), rd = sysT ? 1.5 * sc : 6, cy = trackY + trackH / 2;
     if (ph) {                                   // not placed yet: dashed
@@ -1205,7 +1135,7 @@ function drawTimeline() {
   if (TL.staticDirty) { drawTimelineStatic(); TL.staticDirty = false; }
   const c = TL.ctx, C = TL.C; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, c.canvas.width, c.canvas.height); c.drawImage(TL.sc, 0, 0);       // clear first: in full screen the layer is see-through, and old frames would pile up
   c.setTransform(TL.dpr, 0, 0, TL.dpr, 0, 0);
-  drawSysSweep(c); drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
+  drawFadeLines(c); drawHandles(c); drawCreditsEnd(c); drawTrimHandles(c);        // the markers are drawn here (not in the cached layer), so their spring can run cheaply every frame
   if (TL.box) { c.save(); c.globalAlpha = .12; c.fillStyle = C.accent; c.fillRect(TL.box.a, TL.trackY - 6, TL.box.z - TL.box.a, TL.trackH + 12); c.globalAlpha = .8; c.strokeStyle = C.accent; c.lineWidth = 1; c.strokeRect(TL.box.a + .5, TL.trackY - 5.5, TL.box.z - TL.box.a, TL.trackH + 11); c.restore(); }        // the selection box
   const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 160);
   if (TL.glow === 'ruler') {

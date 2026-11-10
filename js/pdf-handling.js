@@ -40,7 +40,6 @@ function buildSpreads() {
   out.push(Object.assign([BLANK, CARD], { credits: true }));                     // two pages: the last one folds closed, revealing the credits
   return out;
 }
-const spreadsText = () => sysOn() ? 'one system at a time' : singleOn() ? 'one page at a time' : peN(S.spreads.length, 'spread', 'spreads');
 function rebuildSpreads(forceSpace, noHistory) {
   const before = S.spreads.length, old = { turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice() };
   syncFirstAlone(); creditsAtFix();
@@ -187,7 +186,7 @@ function turnsToEnd() {
 }
 function syncToEnd() {
   const b = $('#bToEnd'); if (!b) return;
-  const none = !toEndIdx().length; b.disabled = none;
+  const none = !toEndIdx().length; b.disabled = none || sysBusy();
   const t = none ? tx('vid.toend.none') : 'Move every turn after the playhead to the end'; if (b.title !== t) b.title = t;
 }
 function fixPh() { while (S.ph.length < S.turns.length) S.ph.push(false); S.ph.length = S.turns.length; }
@@ -923,7 +922,7 @@ async function loadPdf(file) {
     leaveEmpty();
     zoomFit();
     stageDirty = true;
-    toast(tx('pdf.loaded', { pages: peN(doc.numPages), spreads: spreadsText() }));
+    { const msg = tx('pdf.loaded', { pages: peN(doc.numPages) }); if (sysBusy()) SYS.loadedMsg = msg; else toast(msg); }          // in System it waits for the finding to end
     S.savedTurns = adoptPriorTurns(prior) ? null : prior;
     makeThumbs(token);
   } catch (e) {

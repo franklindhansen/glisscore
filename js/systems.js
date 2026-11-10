@@ -133,17 +133,21 @@ function sysKick() {
   if (!S.pdf) return; sysFresh();
   const pages = [...new Set(S.pdf.keep)], left = pages.filter(i => !SYS.byPage.has(i)).length;
   if (!left) { if (SYS.prog) sysProg(null); sysWarn(); return; }
-  sysWipeStart();
   if (SYS.prog && SYS.job) return;
   sysProg({ done: pages.length - left, total: pages.length });
   const head = selCurrent();          // the page under the playhead is found first
-  sysDetectAll({ first: head == null ? null : sysPage(head), onProgress: (done, total) => sysProg({ done, total }) }).then(done => { if (done) { sysProg(null); sysSettle(); sysWarn(); } });
+  sysDetectAll({ first: head == null ? null : sysPage(head), onProgress: (done, total) => sysProg({ done, total }) }).then(done => {
+    if (!done) return;
+    sysProg(null); sysSettle(); rvStart('blocks'); sysWarn();          // the timeline appears once, with the same rise-in as the other layouts
+    if (SYS.loadedMsg) { toast(SYS.loadedMsg); SYS.loadedMsg = null; }
+  });
 }
 /* the run, said in the System group and on the timeline and Export video */
 function sysProg(p) { SYS.prog = p; sysUI(); }
 const sysBusy = () => sysOn() && !!SYS.prog;
 function sysUI() {
   if (typeof syncExport === 'function') syncExport();
+  if (typeof syncSysBusy === 'function') syncSysBusy();
   if (typeof sysStatusUI === 'function') sysStatusUI();
   stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true;
 }
@@ -174,8 +178,6 @@ async function sysLevelPages() {
     S.time = was ? clamp(at, S.vStart, vEnd()) : S.time; setChips(); updateTimeUI(true); if (was) Transport.play();
   } finally { SYS.leveling = false; sysWarn(); }
 }
-/* Stop: the work ends and the layout goes back to the one before */
-function sysStopRun() { SYS.stop(); setPageLayout(SYS.prev && SYS.prev !== 'system' ? SYS.prev : 'spread'); }
 function sysSettle() {
   if (!sysOn() || !S.pdf) return;
   const none = S.pdf.keep.filter(i => { const r = SYS.byPage.get(i); return r && !r.systems.length; }).join(), before = spreadSig() + '#' + SYS.none;          // a page found to have no systems is a short block, so the turns are spaced again
@@ -187,22 +189,28 @@ function sysSettle() {
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), none: '', scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, w: null, n: 0, pend: new Map(),
-  worker() {
-    if (this.w) return this.w;
+  byPage: new Map(), none: '', scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
+  /* one to three workers, by what the browser reports about the computer; the page's own thread when none can start */
+  lanes() { return clamp(Math.round((navigator.hardwareConcurrency || 2) / 3), 1, 3); },
+  worker(k) {
+    if (this.ws[k]) return this.ws[k];
     const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
-    const w = this.w = new Worker(url); URL.revokeObjectURL(url);
-    w.onmessage = e => { const f = this.pend.get(e.data.id); if (f) { this.pend.delete(e.data.id); f(e.data.r); } };
-    w.onerror = () => { this.pend.forEach(f => f(null)); this.pend.clear(); this.w = null; };
+    const w = this.ws[k] = new Worker(url); URL.revokeObjectURL(url);
+    w.onmessage = e => { const f = this.pend.get(e.data.id); if (f) { this.pend.delete(e.data.id); f.res(e.data.r); } };
+    w.onerror = () => {                                 // a worker that fails: its pages are measured here instead, and it is not used again
+      this.ws[k] = null; this.bad[k] = true;
+      [...this.pend].filter(([, f]) => f.k === k).forEach(([id, f]) => { this.pend.delete(id); f.res(sysDetectCore(f.m.ink, f.m.w, f.m.h, f.m.deg, f.m.reg)); });
+    };
     return w;
   },
-  run(m) {                                              // the answer, or null when it was stopped or the worker failed
-    let w; try { w = this.worker(); } catch (e) { return Promise.resolve(sysDetectCore(m.ink, m.w, m.h, m.deg, m.reg)); }
-    return new Promise(res => { const id = ++this.n; this.pend.set(id, res); w.postMessage({ id, ink: m.ink, w: m.w, h: m.h, deg: m.deg, reg: m.reg }, [m.ink.buffer]); });
+  run(m, k = 0) {                                       // the answer, or null when it was stopped
+    let w; try { w = this.bad[k] ? null : this.worker(k); } catch (e) { w = null; this.bad[k] = true; }
+    if (!w) return Promise.resolve(sysDetectCore(m.ink, m.w, m.h, m.deg, m.reg));
+    return new Promise(res => { const id = ++this.n; this.pend.set(id, { res, k, m }); w.postMessage({ id, ink: m.ink, w: m.w, h: m.h, deg: m.deg, reg: m.reg }); });
   },
-  stop() {                                              // leaving the layout: the worker ends at once, and the pages already found stay
-    WIPE.on = false; this.token++; if (this.w) { this.w.terminate(); this.w = null; }
-    this.pend.forEach(f => f(null)); this.pend.clear(); this.job = null; if (this.prog) sysProg(null);
+  stop() {                                              // leaving the layout: the workers end at once, and the pages already found stay
+    this.token++; this.ws.forEach(w => w && w.terminate()); this.ws = []; this.bad = [];
+    this.pend.forEach(f => f.res(null)); this.pend.clear(); this.job = null; this.loadedMsg = null; if (this.prog) sysProg(null);
   }
 };
 /* what a page's systems depend on: the edits that change its picture (Crop, Re-kilter, tilt correction, turning) */
@@ -245,7 +253,7 @@ function sysFromList(list) {
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */
 function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear(); SYS.leveled.clear(); SYS.warn = null; SYS.rev++; SYS.gen = g; } sysSync(); }
 /* one page: its systems as fractions of the page ({ systems, tilt, staves }), found once and kept */
-async function sysDetectPage(idx) {
+async function sysDetectPage(idx, lane) {
   sysFresh();
   const hit = SYS.byPage.get(idx); if (hit) return hit;
   const tok = SYS.token, geo = sysGeo(S.pdf.slots[idx]), sc = await peScan(S.pdf.slots[idx].src, SYS_W, null, 0.85, false);
@@ -253,7 +261,7 @@ async function sysDetectPage(idx) {
   const reg = peInkBox(sc, 0), t = reg ? peTilt(sc) : { deg: 0, gain: 0 }, tilt = t.gain > 0.03 ? t.deg : 0;
   let r = { systems: [], tilt, staves: 0, geo };
   if (reg) {
-    const regPx = [reg[0] * sc.w, reg[1] * sc.h, reg[2] * sc.w, reg[3] * sc.h], m = await SYS.run({ ink: sc.ink, w: sc.w, h: sc.h, deg: tilt, reg: regPx, token: tok });
+    const regPx = [reg[0] * sc.w, reg[1] * sc.h, reg[2] * sc.w, reg[3] * sc.h], m = await SYS.run({ ink: sc.ink, w: sc.w, h: sc.h, deg: tilt, reg: regPx, token: tok }, lane || 0);
     if (!m || tok !== SYS.token) return null;
     r = { systems: m.systems, tilt, staves: m.staves, geo };
   }
@@ -267,13 +275,16 @@ function sysDetectAll(opt = {}) {
   const keep = S.pdf ? S.pdf.keep.slice() : [], pages = [...new Set(keep)], order = opt.first != null && pages.includes(opt.first) ? [opt.first, ...pages.filter(k => k !== opt.first)] : pages, tok = SYS.token;
   const job = SYS.job = (async () => {
     let done = order.filter(i => SYS.byPage.has(i)).length; if (opt.onProgress) opt.onProgress(done, order.length);
-    for (const i of order) {
-      if (tok !== SYS.token) return false;
-      if (SYS.byPage.has(i)) continue;
-      const r = await sysDetectPage(i); if (!r || tok !== SYS.token) return false;
-      done++; if (opt.onProgress) opt.onProgress(done, order.length, i);
-    }
-    return true;
+    const queue = order.filter(i => !SYS.byPage.has(i)); let ok = true;
+    await Promise.all(Array.from({ length: Math.min(SYS.lanes(), queue.length) }, async (_, lane) => {          // each worker takes the next page as it frees up
+      while (ok && queue.length) {
+        if (tok !== SYS.token) { ok = false; return; }
+        const i = queue.shift(); if (SYS.byPage.has(i)) continue;
+        const r = await sysDetectPage(i, lane); if (!r || tok !== SYS.token) { ok = false; return; }
+        done++; if (opt.onProgress) opt.onProgress(done, order.length, i);
+      }
+    }));
+    return ok && tok === SYS.token;
   })();
   job.then(() => { if (SYS.job === job) SYS.job = null; });
   return job;
