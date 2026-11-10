@@ -2324,10 +2324,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .how-d{margin-top:8px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2)}
 .how-d>summary{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;border-radius:inherit}
 .how-d>summary::-webkit-details-marker{display:none}
-.how-d>summary::before{content:'';flex:none;width:7px;height:7px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(-45deg);transition:transform .3s var(--ease-ui)}
+.how-d>summary::before{content:'';flex:none;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(-45deg);transition:transform .3s var(--ease-ui),border-color .2s var(--ease-color)}
 .how-d[open]>summary::before{transform:rotate(45deg)}
 .how-d[data-closing="1"]>summary::before{transform:rotate(-45deg)}
 .how-d>summary:hover{background:var(--accent-soft)}
+.how-d>summary:hover::before{border-color:var(--ink)}
 .how-d>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .how-in{box-sizing:border-box;padding:2px 14px 14px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}}
@@ -2408,9 +2409,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .about-g+.about-g{margin-top:12px}
 .about-g p{line-height:1.55}
 /* small delights, none of them an icon: the answers settle in one after another when the window opens, a dropdown's lines follow it down as it opens, and its arrow leans toward where it will go */
-@keyframes howIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes howIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:no-preference){
-  .how-d[open]:not([data-closing="1"])>.how-in>*{animation:howIn .42s var(--ease-out) backwards;animation-delay:calc(60ms + min(var(--k,0)*26ms,340ms))}
+  .how-d[open]:not([data-closing="1"])>.how-in>*{animation:howIn .32s var(--spring-hover) backwards;animation-delay:calc(20ms + min(var(--k,0)*16ms,96ms))}
   .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(1){--k:1}
   .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(2){--k:2}
   .how-d[open]:not([data-closing="1"])>.how-in>:nth-child(3){--k:3}
@@ -2439,9 +2440,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #howDlg:not([hidden]) .how-body>section:nth-child(6){--i:5}
 }
 
-.how-d>summary::before{transition:transform .3s var(--ease-ui),translate .25s var(--ease-ui)}
-.how-d:not([open])>summary:hover::before{translate:2px 0}
-.how-d[open]:not([data-closing="1"])>summary:hover::before{translate:0 2px}
 /* About: the version, hovered, gets one soft sweep of light across it, a glissando for the eye, and its words come up to full ink */
 .about .ver{background:linear-gradient(105deg,transparent 35%,var(--accent-soft) 50%,transparent 65%) 100% 0/250% 100% no-repeat;transition:color .25s var(--ease-ui),border-color .25s var(--ease-ui)}
 .about .ver:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}

@@ -193,7 +193,7 @@ function initMenu() {
     const full = body.scrollHeight + (parseFloat(cs.borderTopWidth) || 0), from = opening && now > 0 && body._glide ? now : opening ? 0 : now, to = opening ? full : 0;
     const k = h => ({ height: h + 'px', paddingTop: h ? cs.paddingTop : '0px', paddingBottom: h ? cs.paddingBottom : '0px', opacity: h ? 1 : 0 });
     body.style.overflow = 'hidden';
-    const a = body._glide = body.animate([k(from), k(to)], { duration: 450, easing: EASE_OUT });
+    const a = body._glide = body.animate([k(from), k(to)], { duration: 320, easing: EASE_OUT });
     a.onfinish = () => { body._glide = null; body.style.overflow = ''; if (!opening) { d.open = false; d.dataset.closing = ''; } };
     a.oncancel = () => { body.style.overflow = ''; };
   });
