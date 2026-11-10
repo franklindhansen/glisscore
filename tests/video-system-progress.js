@@ -26,7 +26,7 @@ function staffPage(doc, n, o = {}) {
   await p.evaluate(() => { const o = SYS.run; SYS.lanes = () => 1; SYS.run = function (m, k) { const t = SYS.token; return new Promise(r => setTimeout(r, 700)).then(() => t === SYS.token ? o.call(SYS, m, k) : null); }; });
   await pick('system'); await p.waitForTimeout(200);
   await p.evaluate(() => { SYS.stop(); SYS.byPage.clear(); const i = S.spreads.findIndex(sp => sysPage(sp[1]) === 2), [a, z] = spreadBounds(i); S.time = (a + z) / 2; sysKick(); });          // the playhead sits on page 3
-  await p.waitForTimeout(1200);
+  await p.waitForFunction(() => SYS.byPage.size >= 1 && SYS.prog, null, { timeout: 20000 });
   let s = await st();
   ok('one pill reads Finding systems… N of 4 with a filling bar', s.pill && /^Finding systems… \d of 4$/.test(s.text) && parseInt(s.bar) > 0, JSON.stringify(s));
   ok('the pill sits centered over the whole stage', s.cx < 2 && s.cy < 2, JSON.stringify([s.cx, s.cy]));

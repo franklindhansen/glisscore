@@ -205,7 +205,7 @@ function normalizeTurns() {
   }
 }
 /* History for the settings: every setting that alters the video's result is part of a step. The audio ones (and the EQ and Imager) belong to the Audio Editor's steps, the page layout has its own field, and where you are in the app is never a step. */
-const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'fx'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsAt', 'creditsWithLast'];
+const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'fx', 'sysSplit'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsAt', 'creditsWithLast'];
 const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!HS_OWN.includes(k) && !AE_SET.includes(k)) o[k] = S.set[k]; }); return o; };
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],

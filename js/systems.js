@@ -247,7 +247,7 @@ function sysListClean(list, n) {
 /* put saved marks on the pages, which must already be in the saved order */
 function sysFromList(list) {
   sysFresh(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear();
-  (list || []).forEach(e => { const i = e.p - 1, sl = S.pdf.slots[i]; if (!sl) return; SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [] }); SYS.hand.add(i); });
+  (list || []).forEach(e => { const i = e.p - 1, sl = S.pdf.slots[i]; if (!sl) return; SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [], full: !e.s.length }); SYS.hand.add(i); });
   SYS.rev++; stageDirty = true; if (sysOn()) sysKick();
 }
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */
@@ -259,11 +259,11 @@ async function sysDetectPage(idx, lane) {
   const tok = SYS.token, geo = sysGeo(S.pdf.slots[idx]), sc = await peScan(S.pdf.slots[idx].src, SYS_W, null, 0.85, false);
   if (tok !== SYS.token) return null;
   const reg = peInkBox(sc, 0), t = reg ? peTilt(sc) : { deg: 0, gain: 0 }, tilt = t.gain > 0.03 ? t.deg : 0;
-  let r = { systems: [], tilt, staves: 0, geo };
+  let r = { systems: [], tilt, staves: 0, geo, full: true };
   if (reg) {
     const regPx = [reg[0] * sc.w, reg[1] * sc.h, reg[2] * sc.w, reg[3] * sc.h], m = await SYS.run({ ink: sc.ink, w: sc.w, h: sc.h, deg: tilt, reg: regPx, token: tok }, lane || 0);
     if (!m || tok !== SYS.token) return null;
-    r = { systems: m.systems, tilt, staves: m.staves, geo };
+    r = { systems: m.systems, tilt, staves: m.staves, geo, full: !m.systems.length };
   }
   if (SYS.byPage.has(idx)) return SYS.byPage.get(idx);          // marked or restored while it was being found: that stays
   SYS.byPage.set(idx, r); stageDirty = true; return r;
@@ -292,17 +292,17 @@ function sysDetectAll(opt = {}) {
 
 /* ---------- marking by hand: the page's systems as the person set them, kept with the page like a Dim region ---------- */
 /* the hand-marked pages (page -> systems), as one part of a History step */
-const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPage.get(i); if (r) o[i] = { systems: r.systems.map(q => Object.assign({}, q)), tilt: r.tilt || 0, geo: r.geo }; }); return o; };
+const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPage.get(i); if (r) o[i] = { systems: r.systems.map(q => Object.assign({}, q)), tilt: r.tilt || 0, geo: r.geo, full: !!r.full, held: (r.held || []).map(q => Object.assign({}, q)) }; }); return o; };
 /* Goes back to a snapshot's marks; true when anything changed. A page that is not marked there returns to what was found (or is found again). */
 function sysRestore(m) {
   sysFresh(); if (JSON.stringify(m) === JSON.stringify(sysSnap())) return false;
   [...SYS.hand].forEach(i => {
     if (m[i]) return; SYS.hand.delete(i); const r = SYS.byPage.get(i);
-    if (r && r.auto) { r.systems = r.auto; delete r.auto; } else SYS.byPage.delete(i);
+    if (r && r.auto) { r.systems = r.auto; delete r.auto; r.full = !r.systems.length; r.held = []; } else SYS.byPage.delete(i);
   });
   Object.keys(m).forEach(k => {
     const fresh = !SYS.byPage.has(+k), r = sysHandRec(+k); if (fresh) delete r.auto;          // a page that was cleared has no found result to go back to; it is found again
-    r.systems = m[k].systems.map(q => Object.assign({}, q)); r.tilt = m[k].tilt; r.geo = m[k].geo;
+    r.systems = m[k].systems.map(q => Object.assign({}, q)); r.tilt = m[k].tilt; r.geo = m[k].geo; r.full = !!m[k].full; r.held = (m[k].held || []).map(q => Object.assign({}, q));
   });
   SYS.rev++; stageDirty = true; return true;
 }
@@ -331,7 +331,7 @@ async function sysLevel(idx) {
 }
 /* the page's record, with what was found kept aside so a reset or an undo can return to it */
 function sysHandRec(idx) {
-  const r = SYS.byPage.get(idx) || { systems: [], tilt: 0, staves: 0, geo: sysGeo(S.pdf.slots[idx]) };
+  const r = SYS.byPage.get(idx) || { systems: [], tilt: 0, staves: 0, geo: sysGeo(S.pdf.slots[idx]), full: true };
   if (!SYS.hand.has(idx) && !r.auto) r.auto = r.systems;
   SYS.byPage.set(idx, r); SYS.hand.add(idx); return r;
 }
@@ -339,7 +339,14 @@ function sysHandRec(idx) {
 function sysCommit(idx, list) {
   pushHistory();
   const r = sysHandRec(idx);
-  r.systems = list.slice().sort((a, b) => a.top - b.top); SYS.rev++; stageDirty = true; sysSettle();
+  r.systems = list.slice().sort((a, b) => a.top - b.top); r.full = !r.systems.length; r.held = []; SYS.rev++; stageDirty = true; sysSettle();          // a page left with none is a full page
+}
+/* Systems | Full page: a full page is shown whole, as one stop; the systems found (or marked) wait aside and come back with Systems. One History step. */
+function sysSetFull(idx, full) {
+  const r = SYS.byPage.get(idx); if (!r || !!r.full === full) return;
+  pushHistory(); sysHandRec(idx);
+  if (full) { r.held = r.systems; r.systems = []; r.full = true; } else { r.systems = r.held || []; r.held = []; r.full = false; }
+  SYS.rev++; stageDirty = true; sysSettle();
 }
 /* a mark from top to bottom (page fractions) replaces every system it overlaps; `keep` is the system being moved or resized, which it also replaces */
 async function sysMark(idx, a, b, keep) {

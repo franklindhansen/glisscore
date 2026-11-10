@@ -110,7 +110,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .btn.primary:hover{filter:brightness(1.06)}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
-.btn.small{padding:4px 9px;min-height:var(--h-s);font-size:13px;border-radius:var(--r-sm)}
+.btn.small{padding:4px 9px;min-height:var(--h-s);font-size:13px}
 
 /* ==================== 5. WORK AREA (STAGE & TRANSPORT) ==================== */
 /* ----- Layout: stage column + side panel ----- */
@@ -446,6 +446,9 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 @media (prefers-reduced-motion:reduce){.sys-tools .sp-fly{transition:none}}
 .sys-nav{right:auto;left:var(--fsm,10px)}
 .sys-bar[hidden],.sys-nav[hidden]{display:none}
+.sys-nav{max-width:calc(100% - 2 * var(--fsm,10px))}
+.sys-nav .seg{flex:none;height:calc(var(--fs,32px) - 6px)}
+.sys-nav .seg label{display:grid;place-items:center;padding:0 10px;font-size:12.5px;font-weight:600}
 .sys-nav .sys-pg{padding:0 6px;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}
 .stage-div{flex:none;width:1px;height:14px;margin:0 3px;background:var(--line)}
 .stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
@@ -2222,7 +2225,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .ae-bar .ae-view{min-height:28px;font-size:13px}          /* as tall as the buttons beside it */
 #audioDlg .ae-bar .ae-view label{display:flex;align-items:center;justify-content:center;padding:0 11px;height:100%;box-sizing:border-box}
 #audioDlg .ae-bar .ae-view span{padding:0}
-#audioDlg .ae-bar .ae-fullbtn{width:28px;height:28px;border-radius:var(--r-sm)}
+#audioDlg .ae-bar .ae-fullbtn{width:28px;height:28px}
 #audioDlg .ae-bar .ae-fullbtn svg{width:15px;height:15px}
 #audioDlg .ed-head .btn[aria-pressed=true],#pdfDlg .ed-head .btn[aria-pressed=true],#audioDlg .ae-bar .btn[aria-pressed=true]{background:var(--accent-soft)}
 /* the fade curve picker: five choices share the card at any width; the columns size to their words and split what is left, and the type steps down when the card is narrow */

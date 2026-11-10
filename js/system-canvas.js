@@ -5,7 +5,9 @@
    ==================================================================== */
 const DIV_W = 7;                                       // the divider's width
 const SPLIT_PRESETS = { spSel: 0.7, spEq: 0.5, spPrev: 0.3, spOnly: 0 };          // the selector's share of the stage: wide, equal, narrow, hidden
-const SPLIT = { f: 0.3, shown: false, stack: false, glide: 0, raf: 0 };          // view only: never saved, never a History step
+/* the split is saved with the settings (the last one set comes back), and is never a History step */
+let splitSaveT = 0;
+const SPLIT = { get f() { const v = S.set && S.set.sysSplit; return Number.isFinite(v) ? v : 0.5; }, set f(v) { S.set.sysSplit = Math.round(v * 1000) / 1000; clearTimeout(splitSaveT); splitSaveT = setTimeout(saveSettings, 300); }, shown: false, stack: false, glide: 0, raf: 0 };
 const splitOn = () => sysOn() && !!S.pdf && !$('.app').classList.contains('fs');
 
 /* Lays out the selector, the divider, and the presets for the stage's size; the preview fits in what is left (pl: room on the left, pt: room above).
@@ -35,7 +37,7 @@ function splitSync() {
 function presetCurrent(f) {
   const ids = Object.keys(SPLIT_PRESETS), id = ids.reduce((a, b) => Math.abs(SPLIT_PRESETS[b] - f) < Math.abs(SPLIT_PRESETS[a] - f) ? b : a), b = $('#' + id), cur = $('#spCur');
   cur.querySelector('svg').innerHTML = b.querySelector('svg').innerHTML;
-  const n = b.getAttribute('aria-label'); cur.setAttribute('aria-label', 'Selector and preview size: ' + n); cur.title = 'Selector and preview size: ' + n;
+  const n = b.getAttribute('aria-label'); cur.setAttribute('aria-label', 'View: ' + n); cur.title = 'View: ' + n;
 }
 function presetBind() {
   const box = $('#sysPresets'), cur = $('#spCur'); let t = 0, mouse = false;
@@ -122,6 +124,7 @@ function selSync(force) {
   if (sysPage(key) !== sysPage(SEL.key == null ? -1 : SEL.key) && SZS.z !== 1) szReset(false, SZS);          // a new page starts at Fit
   SEL.sig = sig; SEL.key = key; if (SEL.mark.y0 != null && SEL.mark.pg !== sysPage(key)) SEL.mark.y0 = SEL.mark.hover = SEL.mark.draft = null;
   const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(key));
+  const rec = SYS.byPage.get(sysPage(key)); document.querySelectorAll('input[name=selMode]').forEach(r => { r.checked = r.value === (rec && rec.full ? 'full' : 'systems'); r.disabled = !rec; }); { const sg = $('#selMode'); if (sg._place) sg._place(false); }
   $('#selPg').textContent = 'Page ' + pageNo(key); $('#selPrev').disabled = i <= 0; $('#selNext').disabled = i < 0 || i >= pages.length - 1;
   selPaint();
 }
@@ -140,50 +143,20 @@ function selNeed(idx, hpx) {
     SEL.bmp = c; SEL.bmpIdx = idx; SEL.bmpH = hpx; SEL.bmpGen = gen; SEL.paper = null; SEL.want = ''; selPaint();
   })().catch(() => { if (SEL.want === want) SEL.want = ''; });
 }
-/* the paper of the selected system, as the sheet takes it from the same stretch of page */
-function selPaper(box) {
-  const b = SEL.bmp, k = [SEL.bmpIdx, SEL.bmpH, box.top, box.bottom, box.left, box.right].join();
-  if (SEL.paper && SEL.paperKey === k) return SEL.paper;
-  const sx = box.left * b.width, sy = box.top * b.height, sw = Math.max(2, (box.right - box.left) * b.width), sh = Math.max(2, (box.bottom - box.top) * b.height), q = Math.min(1, 300 / sw);
-  const c = document.createElement('canvas'); c.width = Math.max(2, Math.round(sw * q)); c.height = Math.max(2, Math.round(sh * q));
-  c.getContext('2d').drawImage(b, sx, sy, sw, sh, 0, 0, c.width, c.height);
-  SEL.paper = sysPaper(c); SEL.paperKey = k; return SEL.paper;
-}
-/* A system's Preview frame (in page heights) and the world it needs: the page and the frame together */
-function selWorld(key, W, H) {
-  const f = sysFit(key, W, H), box = f.box, pa = S.pdf.aspect, fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa - fw / 2, fy = (box.top + box.bottom) / 2 - fh / 2;
-  return { f, box, fw, fh, fx, fy, x0: Math.min(0, fx), x1: Math.max(pa, fx + fw), y0: Math.min(0, fy), y1: Math.max(1, fy + fh) };
-}
-/* One scale for the whole score, so the page never changes size from one system to the next: the page and the frame fit the pane, with a margin m, for every system. */
-function selScale(key, w, h, m, W, H) {
-  let u = Infinity;
-  new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); (r && r.systems.length ? r.systems : [null]).forEach((_, n) => { const q = selWorld(sysKey(i, n), W, H); u = Math.min(u, (w - 2 * m) / (q.x1 - q.x0), (h - 2 * m) / (q.y1 - q.y0)); }); });
-  const q = selWorld(key, W, H); return Math.max(1, Math.min(u, (w - 2 * m) / (q.x1 - q.x0), (h - 2 * m) / (q.y1 - q.y0)));
-}
-/* The page with the video drawn on it: the Selection is the music alone, bright and outlined; the Padding and everything else inside the Preview frame, neighbors included,
-   is frosted glass; outside the frame the page is dimmed. The page and the frame together are centered in the pane. */
+/* The page, plain: it fits the pane with a small margin, the same size for every page. Each Selection is outlined (the current one bright, the others faint) and numbered in reading order. */
 function selPaint() {
   const cv = $('#selCv'), key = SEL.key; if (key == null || !S.pdf) return;
   const k = Math.min(3, 2 * Math.max(1, window.devicePixelRatio || 1)), w = Math.max(2, Math.round(cv.clientWidth * k)), h = Math.max(2, Math.round(cv.clientHeight * k));
   if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
-  const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), { box, fw, fh, fx, fy, x0, x1, y0, y1 } = selWorld(key, W, H);
-  const u = selScale(key, w, h, 14 * k, W, H), ox = (w - u * (x1 - x0)) / 2 - u * x0, oy = (h - u * (y1 - y0)) / 2 - u * y0;
-  const X = x => ox + x * u, Y = y => oy + y * u;
-  SEL.geo = { u, ox, oy, idx, pa, w, h, fx, fy, fw, fh, box, W, H, k };
+  const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), box = sysFit(key, W, H).box;
+  const m = 14 * k, u = Math.max(1, Math.min((w - 2 * m) / pa, h - 2 * m)), ox = (w - u * pa) / 2, oy = (h - u) / 2, X = x => ox + x * u, Y = y => oy + y * u;
+  SEL.geo = { u, ox, oy, idx, pa, w, h, box, k };
   selNeed(idx, Math.ceil(u / 200) * 200);
   g.clearRect(0, 0, w, h);
-  const found = SYS.byPage.has(idx), ready = found && SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0), style = getComputedStyle(document.documentElement);
+  const found = SYS.byPage.has(idx), ready = found && SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0);
   if (ready) { g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u); g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); }
   else g.drawImage(selSoft(idx), X(0), Y(0), pa * u, u);          // not made or not found yet: the page's softened thumbnail, never a white sheet
-  g.fillStyle = 'rgba(8,10,16,.5)'; g.fillRect(X(0), Y(0), pa * u, u);
-  const bx = X(box.left * pa), by = Y(box.top), bw = (box.right - box.left) * pa * u, bh = (box.bottom - box.top) * u;
-  g.save(); g.beginPath(); g.rect(X(fx), Y(fy), fw * u, fh * u); g.rect(bx, by, bw, bh); g.clip('evenodd');          // the glass: the frame without the Selection
-  if ('filter' in g && ready) { g.filter = 'blur(' + 22 * k + 'px) saturate(1.5)'; g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); g.filter = 'none'; }
-  g.fillStyle = style.getPropertyValue('--glass-bg').trim() || 'rgba(255,255,255,.14)'; g.fillRect(0, 0, w, h); g.restore();
-  if (ready) { g.fillStyle = '#fff'; g.fillRect(bx, by, bw, bh); }
-  if (ready) g.drawImage(SEL.bmp, box.left * SEL.bmp.width, box.top * SEL.bmp.height, (box.right - box.left) * SEL.bmp.width, (box.bottom - box.top) * SEL.bmp.height, bx, by, bw, bh);
-  const accent = style.getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
-  g.strokeStyle = accent; g.lineWidth = Math.max(1.5, k * 1.25); g.strokeRect(X(fx), Y(fy), fw * u, fh * u);
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
   selMarkPaint(g, list, box, X, Y, accent);
   selWaitSync(idx, found, ready, X(0) / k, Y(0) / k, pa * u / k, u / k);
 }
@@ -193,20 +166,25 @@ function selSoft(idx) {
   if (!SEL.soft || SEL.soft.idx !== idx || SEL.soft.t !== t) SEL.soft = { idx, t, cv: softPage(t, 160, Math.round(160 / S.pdf.aspect)) };
   return SEL.soft.cv;
 }
-/* the same look as the preview: the sweep and, after a moment, a label until the page is made and its systems are found; a found page with none says so */
+/* the same look as the preview: the sweep and, after a moment, a label until the page is made */
 function selWaitSync(idx, found, ready, x, y, w, h) {
   const host = $('#selWaits'), n = pageNo(idx), r = SYS.byPage.get(idx), items = [], box = { id: idx, x, y, w, h };
   pgWaitHost(host, $('#selCv'));
   if (!found) { /* the pill over the stage says it; the softened page shows */ }
   else if (!ready) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) }));
-  else if (r && !r.systems.length) items.push(Object.assign(box, { sweep: false, now: true, text: tx('sys.pageNone', { n }) }));
   pgWaitSet(host, items);
 }
 /* Marking, always on while System is: every system's top and bottom are handles (the left and right edges never are), the selected one has an × on its corner, and the pending or dragged mark is dashed */
 function selMarkPaint(g, list, box, X, Y, accent) {
   const { u, pa, k } = SEL.geo, M = SEL.mark, lw = Math.max(1, k * 0.75);
   g.save(); g.strokeStyle = accent; g.lineWidth = lw;
-  list.forEach(s => { g.globalAlpha = s === box ? 0.95 : 0.4; g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u); });
+  list.forEach((s, n) => {
+    const cur = s === box; g.globalAlpha = cur ? 0.95 : 0.4; g.lineWidth = cur ? lw * 1.4 : lw; g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u);
+    const t = String(n + 1), fs = 11 * k; g.font = '600 ' + fs + 'px "Hanken Grotesk",system-ui,sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'center';          // the reading-order number
+    const bw = Math.max(fs * 1.5, g.measureText(t).width + fs * .7), bh = fs * 1.45, by = Y(s.top) + 3 * k, bx = X(s.left * pa) - bw - 4 * k >= X(0) ? X(s.left * pa) - bw - 4 * k : X(s.left * pa) + 4 * k;          // in the margin beside the system when there is room
+    g.fillStyle = accent; g.beginPath(); g.roundRect ? g.roundRect(bx, by, bw, bh, bh / 2) : g.rect(bx, by, bw, bh); g.fill(); g.fillStyle = '#fff'; g.fillText(t, bx + bw / 2, by + bh / 2 + k * .5);
+  });
+  g.lineWidth = lw; g.textAlign = 'start'; g.textBaseline = 'alphabetic';
   g.globalAlpha = 1; g.setLineDash([6 * k, 4 * k]); g.lineWidth = lw * 1.6;
   const d = M.draft || (M.y0 != null && M.hover != null ? [M.y0, M.hover] : null);
   if (d) { const t = Math.min(d[0], d[1]), b = Math.max(d[0], d[1]); g.fillStyle = accent; g.globalAlpha = 0.14; g.fillRect(X(0), Y(t), pa * u, (b - t) * u); g.globalAlpha = 1; g.strokeRect(X(0) + 0.5, Y(t) + 0.5, pa * u, (b - t) * u); }
@@ -234,6 +212,7 @@ function selBind() {
   wrap.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 4) selClick(e); down = null; });          // a pan that captured the pointer still ends here
   wrap.addEventListener('pointercancel', () => { down = null; });
   const step = d => { const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(SEL.key)), to = pages[i + d]; if (to) selJump(to.key); };
+  document.querySelectorAll('input[name=selMode]').forEach(r => r.addEventListener('change', () => { if (r.checked && SEL.geo) sysSetFull(SEL.geo.idx, r.value === 'full'); const sg = $('#selMode'); if (sg._place) sg._place(true); }));
   $('#selPrev').addEventListener('click', () => step(-1)); $('#selNext').addEventListener('click', () => step(1));
 }
 

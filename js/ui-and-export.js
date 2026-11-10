@@ -126,7 +126,6 @@ function pageWaitSync() {
   r.framePages.forEach(w => {
     const n = pageNo(w.idx), box = { id: w.idx, x: w.x * k, y: w.y * k, w: w.w * k, h: w.h * k };
     if (w.wait) { if (!sysBusy()) items.push(Object.assign(box, { sweep: true, text: tx('stage.rendering', { n }) })); }          // while systems are found the pill over the stage says it
-    else if (sys) { const f = SYS.byPage.get(sysPage(w.idx)); if (f && !f.systems.length) items.push(Object.assign(box, { sweep: false, now: true, text: tx('sys.pageNone', { n }) })); }
   });
   pgWaitSet(host, items);
 }

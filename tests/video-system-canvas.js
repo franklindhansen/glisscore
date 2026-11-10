@@ -29,8 +29,8 @@ function staffPage(doc, n) {
   ok('Spread and Single page show no selector or presets', g.hidden && await p.evaluate(() => document.querySelector('#sysPresets').hidden));
   await pick('pageLayout', 'system'); await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(1500);
   g = await geo();
-  ok('System splits the stage with the preview wide (selector 0.3)', !g.hidden && near(g.sel[0], 0.3 * (g.wrap[0] - 2), 4) && near(g.sel[1], g.wrap[1] - 2), JSON.stringify(g));
-  ok('the preview sits right of the divider and inside the stage', g.st[0] >= g.div[0] + g.div[2] - 1 && g.st[0] + g.st[2] <= g.wrap[0] && g.pressed[2] === 'true', JSON.stringify(g));
+  ok('System splits the stage half and half (selector 0.5)', !g.hidden && near(g.sel[0], 0.5 * (g.wrap[0] - 2), 4) && near(g.sel[1], g.wrap[1] - 2), JSON.stringify(g));
+  ok('the preview sits right of the divider and inside the stage', g.st[0] >= g.div[0] + g.div[2] - 1 && g.st[0] + g.st[2] <= g.wrap[0] && g.pressed[1] === 'true', JSON.stringify(g));
   ok('there is no Edit systems button', await p.evaluate(() => !document.querySelector('#spMark')));
   const undoBefore = await hist();
   const preset = async id => { await p.hover('#spCur'); await p.waitForTimeout(260); await p.click('#' + id); await p.waitForTimeout(100); };
@@ -59,7 +59,7 @@ function staffPage(doc, n) {
   await p.focus('#spCur'); await p.keyboard.press('Enter'); await p.waitForTimeout(300);
   ok('the icon opens from the keyboard', (await spGeo()).open);
   await p.keyboard.press('ArrowLeft'); await p.keyboard.press('Enter'); await p.waitForTimeout(900); s0 = await spGeo();
-  ok('choosing a preset folds the strip and the icon names it', !s0.open && /Selector wide/.test(s0.label), JSON.stringify(s0));
+  ok('choosing a preset folds the strip and the icon names it', !s0.open && /^View: Selector focus$/.test(s0.label), JSON.stringify(s0));
   await preset('spEq'); await p.waitForTimeout(800);
   // linked both ways
   const at = i => p.evaluate(i => { const t = i === 0 ? S.vStart : S.turns[i - 1] - refOffset() + flipDur() + 0.01; Transport.seek(t); return t; }, i);
@@ -75,30 +75,48 @@ function staffPage(doc, n) {
   ok('Next page moves to the next page', await p.evaluate(() => sysPage(SEL.key) === 2 && document.querySelector('#selPg').textContent === 'Page 3'));
   await p.click('#selPrev'); await p.click('#selPrev'); await p.waitForTimeout(500);
   ok('Previous page stops at the first, with the button greyed', await p.evaluate(() => sysPage(SEL.key) === 0 && document.querySelector('#selPrev').disabled));
-  // the frame guide: the neighbors inside the frame are masked, the music inside is shown
-  await p.evaluate(() => { Transport.seek(S.vStart); const a = document.querySelector('#aspect'); a.value = '9:16'; a.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(900);          // a tall frame reaches the neighbors
-  const fr = await p.evaluate(() => {
-    const cv = document.querySelector('#selCv'), geo = SEL.geo, { W, H } = outputSize(), f = sysFit(SEL.key, W, H), pa = geo.pa, box = f.box, nb = SYS.byPage.get(geo.idx).systems[1];
-    const fw = W / f.s, fh = H / f.s, fx = (box.left + box.right) / 2 * pa - fw / 2, fy = (box.top + box.bottom) / 2 - fh / 2, px = (x, y) => Array.from(cv.getContext('2d').getImageData(Math.round(geo.ox + x * geo.u), Math.round(geo.oy + y * geo.u), 1, 1).data);
-    const rowSpread = (y0, y1) => { const v = []; for (let y = y0; y < y1; y += 0.004) for (let x = box.left * pa + 0.02; x < box.right * pa - 0.02; x += 0.01) v.push(px(x, y)[0]); return Math.max(...v) - Math.min(...v); };
-    const ys = (nb.top + nb.bottom) / 2, inFrame = nb.top > fy && nb.bottom < fy + fh;
-    return { inFrame, aspect: fw / fh, want: W / H, mask: rowSpread(nb.top, nb.bottom), ink: rowSpread(box.top, box.bottom), pastEdge: fx < 0 ? px(fx / 2, 0.5).join() : 'none' };
+  // the page is plain: no Preview frame, no glass, no dimming
+  await p.evaluate(() => { Transport.seek(S.vStart); }); await p.waitForTimeout(700);
+  const pl = await p.evaluate(() => {
+    const cv = document.querySelector('#selCv'), geo = SEL.geo, pa = geo.pa, ctx = cv.getContext('2d'), px = (x, y) => Array.from(ctx.getImageData(Math.round(geo.ox + x * geo.u), Math.round(geo.oy + y * geo.u), 1, 1).data), r = SYS.byPage.get(geo.idx).systems, nb = r[1];
+    const rowSpread = (y0, y1) => { const v = []; for (let y = y0; y < y1; y += 0.004) for (let x = nb.left * pa + 0.02; x < nb.right * pa - 0.02; x += 0.01) v.push(px(x, y)[0]); return Math.max(...v) - Math.min(...v); };
+    const corner = px(0.02 * pa, 0.01), inner = px(pa - 0.02 * pa, 0.99);
+    return { corner, inner, ink: rowSpread(nb.top, nb.bottom), fits: geo.ox >= 0 && geo.oy >= 0 && geo.ox + pa * geo.u <= geo.w + 1 && geo.oy + geo.u <= geo.h + 1, margin: Math.min(geo.ox, geo.oy) > 6 };
   });
-  if (process.env.SHOTS) { await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/stage.png' }); await p.locator('#selCv').screenshot({ path: process.env.SHOTS + '/sel.png' }); }
-  ok('the frame has the video\'s shape', Math.abs(fr.aspect - fr.want) < 1e-6, JSON.stringify(fr));
-  ok('a neighbor inside the frame is glass, and the selected music is shown', fr.inFrame && fr.mask < 64 && fr.ink > 150, JSON.stringify(fr));
-  // the Preview frame: rigid, the page is sized once, and every system's frame fits the pane
+  if (process.env.SHOTS) { await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/stage.png' }); }
+  ok('the page is plain: white paper, a neighbor system as sharp as the current one, nothing dimmed', pl.corner[0] > 240 && pl.inner[0] > 240 && pl.ink > 150, JSON.stringify(pl));
+  ok('the page fits its pane with a small margin', pl.fits && pl.margin, JSON.stringify(pl));
   const sizes = [];
   for (const [pg, no] of [[0, 0], [0, 2], [1, 0], [3, 0]]) {
-    const key = await p.evaluate(([pg, no]) => { const r = SYS.byPage.get(pg); const k = sysKey(pg, Math.min(no, r.systems.length - 1)); Transport.seek(selTimeOf(k)); return k; }, [pg, no]); await p.waitForTimeout(500);
-    sizes.push(await p.evaluate(() => { const g = SEL.geo, m = 1; return { u: g.u, fits: (g.ox + g.fx * g.u) >= -m && (g.oy + g.fy * g.u) >= -m && (g.ox + (g.fx + g.fw) * g.u) <= g.w + m && (g.oy + (g.fy + g.fh) * g.u) <= g.h + m }; }));
+    await p.evaluate(([pg, no]) => { const r = SYS.byPage.get(pg); Transport.seek(selTimeOf(sysKey(pg, Math.min(no, r.systems.length - 1)))); }, [pg, no]); await p.waitForTimeout(500);
+    sizes.push(await p.evaluate(() => { const g = SEL.geo; return { u: g.u, ox: g.ox, oy: g.oy }; }));
   }
-  ok('the page keeps one size from system to system', sizes.every(q => Math.abs(q.u - sizes[0].u) < 1e-6), JSON.stringify(sizes));
-  ok('the whole Preview frame is inside the pane for the top and bottom systems', sizes.every(q => q.fits), JSON.stringify(sizes));
-  const edge = await p.evaluate(() => { const g = SEL.geo, cv = document.querySelector('#selCv'), r = cv.getBoundingClientRect(), k = r.width / cv.width; return { x: r.left + (g.ox + (g.fx + g.fw / 2) * g.u) * k, y: r.top + (g.oy + g.fy * g.u) * k, h: S.history.length, box: JSON.stringify(g.box) }; });
-  await p.mouse.move(edge.x, edge.y); await p.mouse.down(); await p.mouse.move(edge.x, edge.y + 12, { steps: 4 }); await p.mouse.up(); await p.waitForTimeout(300);
-  ok('the frame edge is not a handle', await p.evaluate(e => S.history.length === e.h && JSON.stringify(SEL.geo.box) === e.box && !('oy' in SEL.geo.box), edge));
-  ok('the cursor over the frame edge is not a resize', await p.evaluate(() => document.querySelector('#selCv').style.cursor !== 'ew-resize'));
+  ok('the page keeps one size and place from system to system', sizes.every(q => Math.abs(q.u - sizes[0].u) < 1e-6 && Math.abs(q.ox - sizes[0].ox) < 1e-6), JSON.stringify(sizes));
+  // Systems | Full page
+  await p.evaluate(() => Transport.seek(S.vStart)); await p.waitForTimeout(500);
+  const strip = await p.evaluate(() => ({ seg: [...document.querySelectorAll('#selMode label')].map(l => l.textContent), checked: document.querySelector('input[name=selMode]:checked').value, again: document.querySelector('#spAgain').textContent, inStrip: !!document.querySelector('.sys-nav #selMode') && !!document.querySelector('.sys-nav #spAgain') && !document.querySelector('.sys-tools #spAgain') }));
+  ok('the selector strip holds Systems | Full page and Detect again', strip.seg.join() === 'Systems,Full page' && strip.checked === 'systems' && strip.again === 'Detect again' && strip.inStrip, JSON.stringify(strip));
+  const h0 = await p.evaluate(() => ({ h: S.history.length, n: S.spreads.length }));
+  await p.click('#selMode label:has(input[value=full])'); await p.waitForTimeout(500);
+  const f1 = await p.evaluate(() => ({ h: S.history.length, n: S.spreads.length, full: SYS.byPage.get(0).full, label: document.querySelector('#spreadNow').textContent, list: SEL.geo.box && SYS.byPage.get(0).systems.length }));
+  ok('Full page makes the page one stop and one History step', f1.n === h0.n - 2 && f1.h === h0.h + 1 && f1.full && /^Page 1 \/ 4$/.test(f1.label) && f1.list === 0, JSON.stringify([h0, f1]));
+  await p.click('#selMode label:has(input[value=systems])'); await p.waitForTimeout(500);
+  const f2 = await p.evaluate(() => ({ n: S.spreads.length, full: SYS.byPage.get(0).full, sys: SYS.byPage.get(0).systems.length }));
+  ok('Systems brings back what was found', f2.n === h0.n && !f2.full && f2.sys === 3, JSON.stringify(f2));
+  await p.click('#selMode label:has(input[value=full])'); await p.waitForTimeout(300); await p.click('#bUndo'); await p.waitForTimeout(500);
+  ok('Undo goes back to Systems', await p.evaluate(() => !SYS.byPage.get(0).full && SYS.byPage.get(0).systems.length === 3 && S.spreads.length === 9));
+  ok('the split is saved with the settings', await p.evaluate(() => typeof S.set.sysSplit === 'number' && JSON.parse(localStorage.getItem('glisscore.settings')).sysSplit === S.set.sysSplit));
+  const nf = await p.evaluate(async () => {                       // a page where nothing is found starts on Full page; Systems lets the user mark by hand; leaving it with none returns to Full page
+    const o = SYS.run; SYS.run = async () => ({ systems: [], staves: 0, d: 0 }); await sysRedetect(1); SYS.run = o;
+    const out = { start: !!SYS.byPage.get(1).full };
+    sysSetFull(1, false); out.sys = !SYS.byPage.get(1).full && SYS.byPage.get(1).systems.length === 0;
+    await sysMark(1, 0.2, 0.4); out.marked = !SYS.byPage.get(1).full && SYS.byPage.get(1).systems.length === 1;
+    sysRemove(1, SYS.byPage.get(1).systems[0]); out.back = !!SYS.byPage.get(1).full && SYS.byPage.get(1).systems.length === 0;
+    return out;
+  });
+  ok('a page with nothing found starts on Full page, can be marked by hand, and returns to Full page when left with none', nf.start && nf.sys && nf.marked && nf.back, JSON.stringify(nf));
+  { const gd = await p.evaluate(() => (window.uiGuard && uiGuard.report ? uiGuard.report() : [])); ok('uiGuard reports nothing', !gd.length, JSON.stringify(gd)); }
+  ok('the system-less wording is gone', await p.evaluate(() => !MSG.text['sys.pageNone'] && !MSG.text['sys.pageFinding']));
   await p.evaluate(() => Transport.seek(S.vStart)); await p.waitForTimeout(500);
   // zoom and pan in the selector
   await p.click('#szIn'); await p.waitForTimeout(500);
@@ -122,7 +140,7 @@ function staffPage(doc, n) {
   ok('the divider turns and the glyphs rotate', g.div[3] === 7 && g.div[2] > 300 && await p.evaluate(() => getComputedStyle(document.querySelector('#sysPresets svg')).transform !== 'none'), JSON.stringify(g.div));
   ok('nothing is cut off at phone width', await p.evaluate(() => { const w = document.querySelector('#stageWrap').getBoundingClientRect(), bad = [...document.querySelectorAll('#stageStrip, .sys-nav, #stage')].filter(e => { const r = e.getBoundingClientRect(); return r.right > w.right + 1 || r.left < w.left - 1 || r.bottom > w.bottom + 1; }); return !bad.length && document.documentElement.scrollWidth <= innerWidth; }));
   await preset('spOnly'); await p.waitForTimeout(800);
-  ok('Preview only fills the phone stage', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#stage').offsetHeight > 300));
+  ok('Preview only fills the phone stage', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#stage').offsetWidth > 350));
   await pick('pageLayout', 'single'); await p.waitForTimeout(600);
   ok('leaving System takes the split away', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#sysPresets').hidden && document.querySelector('#stageWrap').style.paddingTop === ''));
   ok('no page errors', errs.length === 0, errs.join(' | '));

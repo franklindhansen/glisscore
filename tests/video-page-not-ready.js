@@ -80,12 +80,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok('reduced motion: the fade is short', Date.now() - t0 < 250, String(Date.now() - t0));
     await p.close(); }
 
-  // System: a finished page with no systems says so; the selector shows the same look until systems are found
+  // System: the selector shows a softened page, with no label of its own, until systems are found
   { const p = await open(); await layout(p, 'system'); await p.waitForTimeout(600); await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(600);
-    await p.evaluate(() => { const { S } = window.__keyframes, key = selCurrent(), idx = sysPage(key); SYS.byPage.set(idx, { systems: [], tilt: 0, staves: 0, geo: sysGeo(S.pdf.slots[idx]) }); SYS.rev++; stageDirty = true; selSync(true); });
-    await p.waitForTimeout(300);
-    const none = await p.evaluate(() => ({ stage: [...document.querySelectorAll('#stageWaits .pg-wait:not(.out)')].map(e => e.firstChild.textContent), sel: [...document.querySelectorAll('#selWaits .pg-wait:not(.out)')].map(e => e.firstChild.textContent) }));
-    ok('System: a finished page with no systems says so, in the preview and the selector', none.stage.some(t => /^No systems on p\. \d+$/.test(t)) && none.sel.some(t => /^No systems on p\. \d+$/.test(t)), JSON.stringify(none));
     const sel = await p.evaluate(() => {
       const key = selCurrent(), idx = sysPage(key); SYS.byPage.delete(idx); SYS.rev++; selSync(true);
       const e = document.querySelector('#selWaits .pg-wait:not(.out)'), cv = document.querySelector('#selCv'), g = cv.getContext('2d'), geo = SEL.geo, px = g.getImageData(Math.round(geo.ox + geo.pa * geo.u / 2), Math.round(geo.oy + geo.u / 2), 1, 1).data;
