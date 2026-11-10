@@ -19,14 +19,14 @@
 /* ==================== 1. THEME & VARIABLES ==================== */
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
-  --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:29px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
+  --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:30px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
   --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
   --fade:#b0389c; --turn:#d97706; --turn-soft:rgba(251,185,40,.34); --play:#d6333f; --cred:#12907c; --cred-soft:rgba(18,144,124,.20);
   --stage:#dfe3ea; --block:#ffffff; --wave:#7c8bf0; --danger:#c4283a;
-  --turn-ink:#bf6500; --turn-sys:#bf6500; --ok-ink:#1f9a5b;
+  --turn-ink:#bf6500; --turn-sys:#8690a6; --turn-sys-soft:rgba(112,124,150,.16); --ok-ink:#1f9a5b;
   --shadow:0 1px 2px rgba(20,24,40,.08),0 8px 24px rgba(20,24,40,.08);
   --glass-bg:linear-gradient(180deg,rgba(255,255,255,.76),rgba(244,246,252,.64)); --glass-edge:rgba(255,255,255,.7);
   --glass-shadow:0 6px 18px -10px rgba(10,14,30,.26),inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(255,255,255,.35);
@@ -37,7 +37,7 @@
   :root:not([data-theme="light"]){
     --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
     --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#d97706; --ok-ink:#2fb872;
+    --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
     --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
     --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
@@ -49,7 +49,7 @@
 :root[data-theme="dark"]{
   --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
   --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
-  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#d97706; --ok-ink:#2fb872;
+  --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
   --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
   --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
@@ -68,6 +68,9 @@ input[type=range]{touch-action:pan-y}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);
   font:14px/1.45 'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
+:root{--lh:1.45}
+/* every line box is a whole number of pixels, so a control or a stack of text never lands on half a pixel (where the text would sit up to a pixel off its box). Set --lh, never line-height, for a factor; a fixed px line-height is fine. */
+html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 
 /* ----- App grid: header / work area / timeline ----- */
 .app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
@@ -78,7 +81,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ----- Logo / site name ----- */
 .brand{display:flex;align-items:center;gap:10px;margin-right:6px}
-.brand h1{font:500 22px/1 'Newsreader',Georgia,serif;font-style:italic;letter-spacing:.2px}
+.brand h1{font:500 22px 'Newsreader',Georgia,serif;line-height:round(1em,1px);--lh:1;font-style:italic;letter-spacing:.2px}
 
 /* ----- File chips (loaded PDF / audio names) ----- */
 .chips{display:flex;gap:8px;flex:0 1 auto;min-width:0;flex-wrap:nowrap;padding-right:4px}
@@ -86,7 +89,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .chips{margin-right:auto}
 .brand h1 .home{color:inherit;text-decoration:none}
 .title-pill{flex:0 1 var(--tw,136px);min-width:90px;max-width:300px;display:block;transition:flex-basis .2s var(--ease-out)}          /* --tw is the width of the text (never less than the placeholder), set by titleFit */
-.title-pill input{width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:500 15px/1.2 inherit;font-family:inherit;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color)}
+.title-pill input{width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);height:var(--h-m);font:500 15px inherit;line-height:round(1.2em,1px);--lh:1.2;font-family:inherit;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color)}
 .title-pill input:hover{border-color:var(--line)}
 .title-pill input:focus{border-color:var(--accent);background:var(--panel2)}
 .title-pill input::placeholder{color:var(--muted)}
@@ -100,7 +103,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ==================== 4. BUTTONS ==================== */
 /* ----- Standard button: size, padding, colors ----- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:7px 13px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;line-height:1.2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:7px 13px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;--lh:1.2}
 .btn:not(.small){min-height:var(--h-m)}          /* a full-size button is one --h-m tall whatever its text; .btn.small sizes itself */
 .btn:hover{border-color:var(--muted)}
 .btn:focus-visible,.icon-btn:focus-visible,input:focus-visible,select:focus-visible,.seg label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
@@ -136,12 +139,12 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ----- Intro / empty state text and buttons ----- */
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--stage)}
 .empty[hidden]{display:none}
-.empty h1{font:500 clamp(24px,3.2vw,38px)/1.1 'Newsreader',Georgia,serif;margin:0;white-space:nowrap}
-.empty h2{font:500 clamp(24px,3.2vw,38px)/1.1 'Newsreader',Georgia,serif;margin:0;white-space:nowrap}
+.empty h1{font:500 clamp(24px,3.2vw,38px) 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1;margin:0;white-space:nowrap}
+.empty h2{font:500 clamp(24px,3.2vw,38px) 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1;margin:0;white-space:nowrap}
 @media (max-width:520px){.empty h2{white-space:normal}}
 .empty p{margin:0;color:var(--muted);max-width:46ch;text-wrap:balance}
 .empty .empty-intro{max-width:none;white-space:nowrap}
-.empty .empty-intro{line-height:1.6}
+.empty .empty-intro{--lh:1.6}
 .empty .empty-intro .drop{display:block}
 @media (max-width:700px){.empty .empty-intro{white-space:normal}.empty .empty-intro span{display:block}}
 .empty ol{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:8px;text-align:left;counter-reset:s}
@@ -170,7 +173,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:8px}
-kbd{font:inherit;font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
 /* ----- Panel container and groups ----- */
@@ -211,13 +214,13 @@ input[type=range]::-moz-range-progress{height:4px;border-radius:99px;background:
 input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:2px solid var(--panel);background:var(--accent);box-shadow:0 0 0 1px var(--accent),0 1px 3px rgba(0,0,0,.3)}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 select,input[type=text],textarea.autogrow{width:100%;padding:7px 9px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}
-textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:1.35;min-height:34px}
+textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
 input.bad{border-color:var(--danger)}
 /* style row under a credits line: optional font box, then Bold and Italic */
 .line-style{display:flex;align-items:center;gap:6px}
 .line-style .combo{flex:1;min-width:0}
 .line-style .line-font{padding:5px 28px 5px 8px;font-size:13px}
-.fmt-btn{flex:none;display:grid;place-items:center;width:var(--h-s);height:var(--h-s);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit}
+.fmt-btn{flex:none;display:grid;place-items:center;width:var(--h-s);height:var(--h-s);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;line-height:round(calc(var(--lh) * 1em),1px)}
 .fmt-btn:hover{border-color:var(--muted)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .line-row{display:flex;gap:6px;align-items:flex-start}
@@ -253,7 +256,7 @@ input.bad{border-color:var(--danger)}
 .seg input:checked+span{color:var(--ink)}
 .seg label:has(input:checked){color:var(--ink)}
 .seg label.dim{opacity:.45}
-.field label.check{justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
+.field label.check{min-height:20px;justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
 .colorrow{display:flex;gap:8px;align-items:center}
 .sub{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
 .group[data-sum="shadows"] .sub,#firstAloneField,#inkField,.line-style.sub{margin-left:8px}        /* a setting that belongs to the one above it (First page alone, Ink color) and the Shadows sliders share one small indent, so the controls keep most of the panel's width */
@@ -265,7 +268,7 @@ input.bad{border-color:var(--danger)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .sub>.field:last-child{margin-bottom:0}
 /* small notes under a control: tucked to the right and quieter, so they stay out of the way of the labels */
-.group .hint{margin:0;font-size:11px;line-height:1.35;text-align:left;text-wrap:pretty}
+.group .hint{margin:0;font-size:11px;--lh:1.35;text-align:left;text-wrap:pretty}
 #exportHint{margin-top:4px!important}
 .group .hint.err,.group .hint.warn{text-align:left;font-size:12.5px}
 #shadowReset{margin-top:14px}
@@ -325,7 +328,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .info-i:hover,.info-i:focus-visible,.info-i[aria-expanded="true"]{color:var(--accent);background:var(--accent-soft);transform:scale(1.1)}
 .info-i:not(:disabled):active{transform:scale(.92);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 @media (prefers-reduced-motion:reduce){.info-i:not(:disabled):active{transform:none}}
-.tip{position:absolute;left:0;top:calc(100% + 6px);width:max-content;max-width:100%;z-index:30;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.4;box-shadow:var(--shadow);
+.tip{position:absolute;left:0;top:calc(100% + 6px);width:max-content;max-width:100%;z-index:30;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;--lh:1.4;box-shadow:var(--shadow);
   visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
 .tip::before{content:'';position:absolute;left:0;right:0;top:-7px;height:7px}      /* a bridge, so the pointer can cross the gap from the (i) */
 .info-i:hover+.tip,.info-i:focus-visible+.tip,.tip.open,.tip:hover{visibility:visible;opacity:1;transform:none;transition-delay:0s}
@@ -347,7 +350,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tl-bar h2{margin:0;font-size:14px;font-weight:600}
 /* the timeline help text lives in an (i) button, like the other info buttons, on every screen size */
 .tl-info{display:block;margin-right:auto}
-.tl-bar .hint{position:absolute;left:16px;top:calc(100% + 2px);width:max-content;max-width:min(560px,calc(100% - 32px));z-index:30;flex:none;min-width:0;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.4;box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
+.tl-bar .hint{position:absolute;left:16px;top:calc(100% + 2px);width:max-content;max-width:min(560px,calc(100% - 32px));z-index:30;flex:none;min-width:0;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;--lh:1.4;box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
 .tl-bar .hint::before{content:'';position:absolute;left:0;right:0;top:-21px;height:21px}
 .tl-bar .hint.warn::before{display:none}
 .tl-info .info-i:hover+.hint,.tl-info .info-i:focus-visible+.hint,.tl-bar .hint.open,.tl-bar .hint:hover{visibility:visible;opacity:1;transform:none;transition-delay:0s}
@@ -375,12 +378,12 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 .exp-overlay>.dlg{margin:auto;max-width:100%}      /* auto margins centre a short window and let a tall one start at the top and scroll, so nothing is ever cut off */
 .exp-overlay[hidden]{display:none}
 .dlg.wide{width:min(780px,94vw)}
-#diagLog{width:100%;height:min(46vh,380px);font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px;resize:none}
+#diagLog{width:100%;height:min(46vh,380px);font:12px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:round(1.45em,1px);--lh:1.45;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px;resize:none}
 
 /* ----- Dialog box, buttons row, progress bar ----- */
 .dlg .row{flex-wrap:wrap}
 .dlg{width:min(480px,92vw);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:20px 22px;display:grid;gap:14px}
-.dlg h2{margin:0;font:500 24px/1.1 'Newsreader',Georgia,serif}
+.dlg h2{margin:0;font:500 24px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
 .dlg p{margin:0;color:var(--muted)}
 .bar{height:10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--accent)}
@@ -411,7 +414,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 .chip .chip-icon:hover .ic,.chip .chip-icon:focus-visible .ic{opacity:0}
 .chip .chip-icon:hover .x,.chip .chip-icon:focus-visible .x{display:grid}
 /* the score chip's name opens the page picker */
-.chip-main{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.chip-main{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
 .chip:has(.chip-main:hover){border-color:var(--muted)}
 .chip-main:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
 
@@ -424,15 +427,15 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 
 /* ==================== 10. FULL-SCREEN MODE ==================== */
 /* ----- Full-screen button ----- */
-.stage-strip,.sys-bar,.sys-nav{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
-.stage-strip[hidden],.sys-bar[hidden],.sys-nav[hidden]{display:none}
-.stage-strip button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
-.stage-strip button:not(:disabled):active,.sys-bar button:not(:disabled):active,.sys-nav button:not(:disabled):active{transform:scale(.97)}
-@media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active{transform:none}}
-.stage-strip button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
-.stage-strip button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
-.stage-strip button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:.5;cursor:default}
-.stage-strip svg,.sys-bar svg,.sys-nav svg{width:14px;height:14px}
+.stage-strip,.sys-zoom,.sys-bar,.sys-nav{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
+.stage-strip[hidden],.sys-zoom[hidden],.sys-bar[hidden],.sys-nav[hidden]{display:none}
+.stage-strip button,.sys-zoom button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active,.sys-bar button:not(:disabled):active,.sys-nav button:not(:disabled):active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active{transform:none}}
+.stage-strip button.txt,.sys-zoom button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
+.stage-strip button:not(:disabled):hover,.sys-zoom button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-zoom button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
+.stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:.5;cursor:default}
+.stage-strip svg,.sys-zoom svg,.sys-bar svg,.sys-nav svg{width:14px;height:14px}
 .sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
 /* the preset strip: one vertical glass strip at the top right (the current preset, a divider, Detect this page again); hovering or tapping the preset icon unfolds the four presets sideways from it */
@@ -440,20 +443,28 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 .sys-tools[hidden]{display:none}
 .sys-tools .sp-col{position:static;flex-direction:column;height:auto;width:auto}
 .sys-tools .sp-col button{height:calc(var(--fs,32px) - 6px)}
+.sys-tools .sys-bar button{flex:none;width:32px}
+.sys-tools .sys-bar svg{width:16px;height:16px}
 .sys-tools .sp-col .stage-div{width:14px;height:1px;margin:3px 0}
 .sys-tools .sp-fly{position:absolute;top:0;right:calc(100% + 6px);bottom:auto;overflow:hidden;max-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:max-width .18s var(--ease-out),opacity .18s var(--ease-out),visibility 0s .18s}
-.sys-tools.open .sp-fly{max-width:140px;opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
+.sys-tools.open .sp-fly{max-width:160px;opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.sys-tools .sp-fly{transition:none}}
 .sys-nav{right:auto;left:var(--fsm,10px)}
+.sys-sel.tight .sys-nav .sys-pg{padding:0 3px}
+.sys-sel.tight .sys-nav .seg label{padding:0 6px}
+.sys-sel.tight .sys-zoom button.txt{padding:0 6px}
+.sys-sel.tight .sys-nav,.sys-sel.tight .sys-zoom{gap:1px}          /* both strips shrink together when the selector is narrow, so they always share one row */
 .sys-bar[hidden],.sys-nav[hidden]{display:none}
 .sys-nav{max-width:calc(100% - 2 * var(--fsm,10px))}
 .sys-nav .seg{flex:none;height:calc(var(--fs,32px) - 6px)}
-.sys-nav .seg label{display:grid;place-items:center;padding:0 10px;font-size:12.5px;font-weight:600}
-.sys-nav .sys-pg{padding:0 6px;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}
+.sys-nav .seg label{display:grid;place-items:center;padding:0 9px}
+.sys-nav .seg label span{display:grid;place-items:center}
+.sys-nav button,.sys-nav .seg{flex:none}
+.sys-nav .sys-pg{display:grid;align-items:center;height:100%;padding:0 6px;box-sizing:border-box;--lh:1;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}          /* the label fills the strip's height and centers its figures between the edges, like the buttons beside it */
 .stage-div{flex:none;width:1px;height:14px;margin:0 3px;background:var(--line)}
 .stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
 .stage-wrap.zoomed{touch-action:none}
-@media (prefers-reduced-transparency:reduce){.stage-strip,.sys-bar,.sys-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
+@media (prefers-reduced-transparency:reduce){.stage-strip,.sys-zoom,.sys-bar,.sys-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
 .fs-only{display:none!important}
 :root{--tl-h:262px}
 html.fs-lock,html.fs-lock body{overflow:hidden}
@@ -612,7 +623,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 
 /* ==================== 14. HEADINGS, STATUS & SMOOTH STATES ==================== */
 /* group headings are real buttons (so the keyboard can reach them); a switched-off group cannot be folded */
-.fold-btn{display:flex;align-items:center;gap:7px;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:left}
+.fold-btn{display:flex;align-items:center;gap:7px;padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer;text-align:left}
 .fold-btn::before{content:'';flex:none;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg) translate(-1px,-1px);transition:transform .3s var(--spring-hover),opacity .25s var(--ease-color),border-color .2s var(--ease-color)}
 .group.collapsed .fold-btn::before{transform:rotate(-45deg)}
 .fold-btn:hover::before{border-color:var(--ink)}
@@ -647,7 +658,7 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 .keys[hidden]{display:none}
 .keys dt{white-space:nowrap}
 .keys dd{margin:0;color:var(--muted);white-space:nowrap;justify-self:end;text-align:right}
-.keys kbd{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--panel2);font:600 11.5px/1.5 inherit;text-align:center;color:var(--ink)}
+.keys kbd{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--panel2);font:600 11.5px inherit;line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}
 
 /* the segmented control's glider */
 .seg-pill{position:absolute;top:2px;bottom:2px;left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
@@ -795,7 +806,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .rz-now .norm-to.on{max-width:14em}
 .rz-unit{color:var(--muted);font-weight:400}
 .rz-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.rz-opt{display:grid;gap:1px;justify-items:start;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;transition:transform .3s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),box-shadow .3s var(--ease-ui)}
+.rz-opt{display:grid;gap:1px;justify-items:start;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);transition:transform .3s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),box-shadow .3s var(--ease-ui)}
 .rz-opt b{font-size:13px;font-weight:600}
 .rz-opt small{font-size:11px;color:var(--muted);min-height:1.2em}
 @media (hover:hover){.rz-opt:hover{border-color:var(--muted);transform:translateY(-1px)}}
@@ -823,7 +834,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .how-lead{font-size:14px;color:var(--ink)}
 .how-body{display:grid;gap:14px;align-content:start;overflow:auto;scrollbar-gutter:stable;padding-right:6px;min-height:0}
 .how-body h3{margin:0 0 3px;font-size:13.5px;font-weight:600}
-.how-body p{font-size:13.5px;line-height:1.5}
+.how-body p{font-size:13.5px;--lh:1.5}
 
 /* ----- Phones and small tablets only (the desktop layout above is untouched) ----- */
 @media (max-width:960px){
@@ -907,7 +918,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about a:hover{text-decoration-thickness:2px}
 .about .row{margin-top:10px;align-items:flex-end}
 /* the version: a quiet round outline with no fill, no hover and the plain cursor, so it reads as a label and not a button */
-.about .ver{width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;line-height:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
+.about .ver{width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
 .about .ver[hidden]{display:none}
 /* in the page window the spare height goes above the version, so it stays with the links beneath it; the usual paragraph gap sits above it */
 .dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:-21px}
@@ -945,7 +956,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .empty{justify-content:center}
 .empty-fit{flex:none;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;transform:scale(var(--is,1));transform-origin:center}
 .empty-fit>*{flex:none}
-@media (max-height:760px) and (min-width:701px){.empty h1.empty-logo{display:none}.start-card p{display:none}.sc-ic{width:36px;height:36px}.empty-fit{gap:10px}.empty .empty-intro{line-height:1.4}}
+@media (max-height:760px) and (min-width:701px){.empty h1.empty-logo{display:none}.start-card p{display:none}.sc-ic{width:36px;height:36px}.empty-fit{gap:10px}.empty .empty-intro{--lh:1.4}}
 .empty-fit>h2{animation-delay:.12s}
 .empty-fit>.starts{animation:none}
 .empty-fit>.empty-intro{animation-delay:.6s}
@@ -961,8 +972,8 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .sc-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--r-lg);background:var(--accent-soft);color:var(--accent);margin-bottom:4px;transition:transform .5s var(--spring-hover)}
 .sc-ic svg{width:25px;height:25px}
 @media (hover:hover) and (pointer:fine){.start-card:hover .sc-ic{transform:scale(1.1) rotate(-4deg)}}
-.start-card h3{margin:0;max-width:100%;font:600 16px/1.2 'Hanken Grotesk',system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.start-card p{margin:0 0 8px;font-size:13px;line-height:1.45;color:var(--muted);text-wrap:balance}
+.start-card h3{margin:0;max-width:100%;font:600 16px 'Hanken Grotesk',system-ui,sans-serif;line-height:round(1.2em,1px);--lh:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.start-card p{margin:0 0 8px;font-size:13px;--lh:1.45;color:var(--muted);text-wrap:balance}
 .start-card .row{margin-top:auto}
 .empty .empty-intro{font-size:13px;margin-bottom:0}
 @keyframes empty-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -980,7 +991,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .status .st{border:1px solid var(--line);border-radius:999px;background:var(--panel2);transition:color .3s var(--ease-color),border-color .3s var(--ease-color),background-color .3s var(--ease-color)}
 .status .st.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
 .status{border-bottom:0;padding-bottom:6px}.status .st{padding:3px 9px 3px 7px;font-size:12.5px}
-.vq-note{margin:0;font-size:11px;line-height:1.35;text-align:left;color:var(--muted)}
+.vq-note{margin:0;font-size:11px;--lh:1.35;text-align:left;color:var(--muted)}
 /* the two file checks share the row evenly */
 .status{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .status .st{justify-content:center;white-space:nowrap}
@@ -994,7 +1005,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .ae-rail{display:flex;flex-direction:column}
 .ae-rail-h{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .ae-procs{display:flex;flex-direction:column;gap:4px;position:relative}
-.ae-tool{display:flex;align-items:center;flex:1;min-width:0;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.ae-tool{display:flex;align-items:center;flex:1;min-width:0;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .ae-tool:not(:disabled):active{transform:scale(.98)}
 @media (prefers-reduced-motion:reduce){.ae-tool:not(:disabled):active{transform:none}}
 .ae-proc{display:flex;align-items:center;gap:4px;border-radius:var(--r-ctl)}
@@ -1100,7 +1111,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-panes{display:flex;flex-direction:column}
 .lv-grid{display:grid}
 .lv-meter{grid-column:1/-1}
-.lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
+.lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
 .lv-head{position:relative;display:flex;align-items:center;gap:8px;margin:0 0 14px}
 .lv-head h4{margin:0}
 .lv-head .switch{margin-left:auto}
@@ -1127,7 +1138,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .eq-match .field.dim{opacity:.45}
 @media (max-width:760px){
   .ae-rail{display:block;padding:0}
-  .ae-rail-cur{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .ae-rail-cur{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
   .ae-rail-cur span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
   .ae-rail-cur b{font-weight:600}
   .ae-rail-cur output{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1162,7 +1173,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-badge{margin-right:6px}
 /* slider labels that are also buttons */
 .sl-ends{margin-top:4px}
-.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .sl-end:hover,.sl-end:focus-visible{color:var(--accent);background:var(--accent-soft)}
 .sl-end:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.sl-end:not(:disabled):active{transform:none}}
@@ -1238,7 +1249,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-hum{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
 .nr-hum{position:relative}
 .nr-hum-l{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;cursor:pointer}
-.nr-hum-l small{font-size:12px;line-height:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
+.nr-hum-l small{font-size:12px;--lh:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
 .nr-hum-l small:empty{display:none}
 .nr-hum.on small,.nr-hum.busy small{color:var(--accent)}
 .nr-hum.none small{color:var(--turn-ink)}
@@ -1457,7 +1468,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sp-dot{flex:none;width:9px;height:9px;border-radius:50%}
 .sp-dot.heal{background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.7)}
 .sp-dot.cut{background:#fb923c;box-shadow:0 0 8px rgba(251,146,60,.7)}
-.sp-t{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.sp-t{display:flex;flex-direction:column;min-width:0;flex:1;--lh:1.25}
 .sp-t b{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-t small{font-size:11.5px;color:var(--muted)}
 .sp-item em{font-style:normal;font-size:12px;color:var(--muted)}
@@ -1485,7 +1496,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 :root[data-theme="dark"] #audioDlg.afull .ed-head::before,:root[data-theme="dark"] #audioDlg.afull .ae-bar::before,:root[data-theme="dark"] #audioDlg.afull .ae-main::before{opacity:.25}
 
 /* Imager: the toggle sits on the same line as its words, on the right like every other toggle */
-.im-low .check{display:flex;align-items:center;gap:12px;font-size:14px;line-height:1;margin:0}
+.im-low .check{display:flex;align-items:center;gap:12px;font-size:14px;--lh:1;margin:0}
 .im-low .check .switch{flex:none;margin:0}
 /* the rail's headings stay clear of the wires that run down the lights */
 .ae-rail-h{margin-left:36px}
@@ -1577,14 +1588,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .tag-grid .c2{grid-column:span 2}.tag-grid .c3{grid-column:span 3}.tag-grid .c4{grid-column:span 4}.tag-grid .c6{grid-column:1/-1}
 .tag-grid .field{min-width:0;margin:0}
 .tag-grid .field label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tag-grid .check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);cursor:pointer;min-width:0;line-height:1.25}
+.tag-grid .check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);cursor:pointer;min-width:0;--lh:1.25}
 @media (max-width:420px){.tag-grid .c3{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.fa,.fa-in{transition:none}}
 /* ----- Imager balance: say what the sound is like now, and mark on the slider where it becomes even ----- */
 
 /* ----- a button that is greyed out but still tells you why (hover, focus or click) ----- */
 .btn.soft{position:relative;cursor:default;color:color-mix(in srgb,currentColor 45%,transparent);background:color-mix(in srgb,var(--panel2) 45%,transparent);border-color:color-mix(in srgb,var(--line) 45%,transparent)}
-.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:400;line-height:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
+.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:400;--lh:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .btn.soft:hover::after,.btn.soft:focus-visible::after,.btn.soft.say::after{opacity:1;transform:none}
 .btn.soft:not([data-why])::after,.btn.soft[data-why=""]::after{display:none}
 @media (prefers-reduced-motion:reduce){.btn.soft::after{transition:none}}
@@ -1609,7 +1620,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-loud .lv-trow input{height:var(--h-l);box-sizing:border-box}
 #aeNormCard .lv-loud .lv-trow{height:var(--h-l);margin:0;padding:0;align-items:center}
 .lv-trow{margin-top:10px}
-.lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:8px 0 0;min-height:17px;font-size:12px;line-height:1.35;color:var(--muted);transition:color .3s var(--ease-color)}
+.lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:8px 0 0;min-height:17px;font-size:12px;--lh:1.35;color:var(--muted);transition:color .3s var(--ease-color)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
 @keyframes note-pulse{from{opacity:.45}to{opacity:1}}
 .lv-note.warn{color:var(--warn,#b7791f)}
@@ -1639,7 +1650,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
 :root{--ae-body:clamp(318px,calc(100dvh - 442px),412px)}          /* the tool window's height: as tall as the screen allows, never needing a scroll bar */
 .dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
-.dlg.editor.ae .ed-lead,.dlg.editor.pe .ed-lead{margin:-4px 0 0;line-height:1.2}
+.dlg.editor.ae .ed-lead,.dlg.editor.pe .ed-lead{margin:-4px 0 0;--lh:1.2}
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:9px;height:22px;margin:2px 0;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-end i{flex:none;width:16px;height:16px;margin-left:3px;border:2px solid var(--accent);border-radius:50%;background:var(--panel2);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -1649,8 +1660,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-top{position:relative;flex:none;height:56px;overflow:clip}
 .ae-win .ae-phead,.ae-phead{position:absolute;inset:0;margin:0;min-height:0;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .ae-pt{min-width:0;display:grid;gap:2px}
-.ae-win .ae-phead h3{margin:0;font-size:16px;font-weight:600;line-height:1.25}
-.ae-sub{margin:0;font-size:13px;line-height:1.3;color:var(--muted)}
+.ae-win .ae-phead h3{margin:0;font-size:16px;font-weight:600;--lh:1.25}
+.ae-sub{margin:0;font-size:13px;--lh:1.3;color:var(--muted)}
 .ae-rule{display:block;flex:none;height:1px;background:var(--line)}
 .ae-rule.ghost{position:absolute;left:0;right:0;pointer-events:none}
 .ae-pbody{position:relative;flex:none;height:var(--ae-body);min-height:0;overflow:hidden;padding:0}
@@ -1789,12 +1800,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg{display:grid;gap:14px;padding:20px 22px;box-sizing:border-box;position:absolute;left:0;top:0;width:100%}
 .pg-sub{gap:10px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow:auto;visibility:hidden}
 .pg-main{visibility:visible}
-.pg-back{display:flex;align-items:center;gap:8px;justify-self:start;margin:0 0 0 -4px;padding:2px 8px 2px 2px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;cursor:pointer}
+.pg-back{display:flex;align-items:center;gap:8px;justify-self:start;margin:0 0 0 -4px;padding:2px 8px 2px 2px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
 .pg-back h2{margin:0;pointer-events:none}
 .pg-back i{width:10px;height:10px;margin-left:6px;border-left:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .3s var(--ease-out),border-color .2s var(--ease-color)}
 .pg-back:hover i{transform:rotate(45deg) translate(-2px,2px);border-color:var(--ink)}
 .pg-back:focus-visible,.go-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.go-row{display:flex;align-items:center;gap:8px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-card);background:none;color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
+.go-row{display:flex;align-items:center;gap:8px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-card);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:14px;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 .go-row span{flex:1}
 .go-row em{font-style:normal;font-size:13px;color:var(--muted)}
 .go-row i{width:7px;height:7px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .3s var(--ease-out),border-color .2s var(--ease-color)}
@@ -1808,7 +1819,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .hist{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(360px,92vw);display:grid;gap:8px;padding:14px 14px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);box-shadow:0 1px 2px rgba(16,20,40,.06),0 12px 32px rgba(16,20,40,.16)}
 .hist[hidden]{display:none}
 .hist-top{display:grid;gap:2px}
-.hist-top h3{margin:0;font:500 18px/1.1 'Newsreader',Georgia,serif}
+.hist-top h3{margin:0;font:500 18px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
 .hist-sub{font-size:12px;color:var(--muted)}
 .hist-list{position:relative;list-style:none;margin:0;padding:0;max-height:min(46vh,380px);overflow:auto;display:block}
 .hs-row{position:relative;padding-left:22px}
@@ -1816,7 +1827,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .hs-row:first-child::before{top:17px}.hs-row:last-of-type::before{bottom:calc(100% - 17px)}
 .hs-main{position:relative;display:flex;align-items:center;gap:8px;min-height:34px}
 .hs-dot{position:absolute;left:-21px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--panel);border:2px solid var(--muted);box-sizing:border-box;transition:background-color .25s var(--ease-color),border-color .25s var(--ease-color),transform .3s var(--ease-out)}
-.hs-btn{flex:1;min-width:0;display:block;padding:6px 8px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-size:13px;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),color .25s var(--ease-color)}
+.hs-btn{flex:1;min-width:0;display:block;padding:6px 8px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:13px;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),color .25s var(--ease-color)}
 .hs-btn:hover{background:var(--hover,rgba(127,127,127,.1))}
 .hs-btn:focus-visible,.hs-more:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .hs-n{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .25s var(--ease-color)}
@@ -1869,7 +1880,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-rail-in{position:relative;display:flex;flex-direction:column;gap:2px}
 .pe-rail-h{margin:12px 0 4px 10px;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .pe-sel+.pe-rail-h{margin-top:4px}
-.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:var(--h-l);padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:var(--h-l);padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tab svg{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);transition:color .2s var(--ease-color)}
 @media (hover:hover){.pe-tab:not(.on):hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}}
 .pe-tab.on,.pe-tab.on svg{color:var(--accent)}
@@ -1894,9 +1905,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-body.sliding{overflow:clip}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
-.pe-pt h3{margin:0;font-size:16px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-pt h3{margin:0;font-size:16px;font-weight:600;--lh:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-sub.warn{color:var(--turn-ink)}
-.pe-sub{margin:1px 0 0;font-size:13px;line-height:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-sub{margin:1px 0 0;font-size:13px;--lh:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
 .pe-status{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .pe-status:empty{display:none}
@@ -1925,7 +1936,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-acts .btn.primary,.pe-steps .btn.primary{min-width:126px}          /* wide enough for "Processing 100%", so the button never changes size or pushes Revert */
 #peCropNote{margin-top:12px}
 /* a plain line that says what a tool found or how it works */
-.pe .pe-notice{display:flex;align-items:flex-start;gap:9px;margin:12px 0 0;transition:opacity .3s var(--ease-ui);padding:7px 12px;border-radius:var(--r-card);background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font-size:13px;line-height:1.4}
+.pe .pe-notice{display:flex;align-items:flex-start;gap:9px;margin:12px 0 0;transition:opacity .3s var(--ease-ui);padding:7px 12px;border-radius:var(--r-card);background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font-size:13px;--lh:1.4}
 .pe .pe-notice svg{flex:none;width:17px;height:17px;margin-top:.5px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pe .pe-notice.off{opacity:0;pointer-events:none}
 .pe .pe-notice.warn{background:color-mix(in srgb,var(--turn) 14%,transparent)}
@@ -2078,11 +2089,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-crop-box .h{scale:calc(1/var(--z,1))}
 .pe-wipe::after{content:'';position:absolute;left:50%;top:var(--ky,50%);transition:top var(--kt,0s) cubic-bezier(.22,1,.36,1);width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 7-5 5 5 5M15 7l5 5-5 5'/%3E%3C/svg%3E") center/16px no-repeat;box-shadow:0 1px 5px rgba(0,0,0,.3)}
 .pe-wipe:focus-visible{outline:none}.pe-wipe:focus-visible::after{outline:2px solid #fff;outline-offset:1px}
-.pe-side{position:absolute;z-index:3;left:0;top:0;padding:2px 9px;border-radius:999px;background:rgba(10,14,30,.66);color:#fff;font-size:11.5px;font-weight:600;line-height:1.5;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui);will-change:transform,opacity}
+.pe-side{position:absolute;z-index:3;left:0;top:0;padding:2px 9px;border-radius:999px;background:rgba(10,14,30,.66);color:#fff;font-size:11.5px;font-weight:600;--lh:1.5;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui);will-change:transform,opacity}
 .pe-side.on{opacity:1}
 .pe-stage:has(.pe-crop-pg.loading) .pe-side,.pe-stage:has(.pe-crop-pg.loading) .pe-hint{opacity:0}
 /* what the page needs before its large view says anything: a quiet line at the top, so it is plain why the page looks unchanged */
-.pe-hint{position:absolute;z-index:3;left:50%;top:14px;max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:5px 12px;border-radius:999px;background:rgba(10,14,30,.72);color:#fff;font-size:12.5px;font-weight:600;line-height:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.pe-hint{position:absolute;z-index:3;left:50%;top:14px;max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:5px 12px;border-radius:999px;background:rgba(10,14,30,.72);color:#fff;font-size:12.5px;font-weight:600;--lh:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
 .pe-hint.on{opacity:1;transform:translate(-50%,0)}
 .pe-glass button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
 /* a change on the open page: the old picture dims at once, and the new one sweeps in from the left behind a bright edge */
@@ -2116,7 +2127,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-nav .icon-btn svg{width:17px;height:17px}
 
 /* the status bar: how many pages, and Select all / Deselect all as plain text buttons */
-.pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:6px 12px 6px 20px;border-top:1px solid var(--line)}
+.pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:7px 12px 6px 20px;border-top:1px solid var(--line)}
 .pe-count{margin-right:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
@@ -2133,7 +2144,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .pe-rail{padding:5px}
   .pe-rail-in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
   .pe-rail-h{display:none}
-  .pe-tab{flex-direction:column;justify-content:center;gap:4px;min-height:54px;padding:7px 4px;font-size:12.5px;text-align:center;white-space:normal;line-height:1.2}
+  .pe-tab{flex-direction:column;justify-content:center;gap:4px;min-height:54px;padding:7px 4px;font-size:12.5px;text-align:center;white-space:normal;--lh:1.2}
   .pe-tab svg{width:19px;height:19px}
 }
 @media (max-width:760px){
@@ -2166,7 +2177,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .pe-grid-wrap,.pe-stage{flex:none;height:max(340px,calc(100dvh - 330px))}
 }
 
-.pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;line-height:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
+.pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;--lh:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
 .pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
@@ -2239,7 +2250,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .chip-main .pp-box.stack{position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;height:18px}
 .chip-main .pp-box.stack small{font-size:10px;line-height:9px;color:var(--muted);text-decoration:none}
 .chip-main .pp-box.stack .pp:first-child{font-weight:600;letter-spacing:.04em}
-.chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:12px;line-height:1}
+.chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:12px;--lh:1}
 .chip[data-k=audio] .chip-name{max-width:9em}
 /* the Open audio button while the sound is read: it fills as it goes and says how far */
 .btn.loading{font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;overflow:hidden;color:var(--accent-ink);cursor:progress;opacity:1;background:linear-gradient(90deg,var(--accent) var(--p,0%),color-mix(in srgb,var(--accent) 48%,var(--panel2)) var(--p,0%));background-origin:border-box;background-repeat:no-repeat;transition:background .45s var(--ease-out)}
@@ -2260,7 +2271,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeEmChip{width:fit-content}
 @media (min-width:761px){#aePaneEmu:not([hidden]){display:flex;flex-direction:column;height:100%}#aePaneEmu .em-grid{flex:1 1 auto;min-height:0}}
 .em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:var(--h-s)}
-.em-say{min-width:0;font-size:12.5px;line-height:1.35;color:var(--muted)}
+.em-say{min-width:0;font-size:12.5px;--lh:1.35;color:var(--muted)}
 .em-view{display:flex;flex-direction:column;min-width:0}
 .em-view .mt-head{margin-bottom:8px}
 .em-key{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--muted)}
@@ -2270,7 +2281,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
 .em-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:0 12px;font-size:13px;color:var(--muted);text-align:center}
 .em-empty[hidden]{display:none}
-.em-note{margin:8px 0 0;font-size:12px;line-height:1.4;color:var(--muted)}
+.em-note{margin:8px 0 0;font-size:12px;--lh:1.4;color:var(--muted)}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
 .ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
 @media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
@@ -2287,7 +2298,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-bar[hidden]{display:block;visibility:hidden}
 .em-bar i{display:block;height:100%;border-radius:2px;background:var(--accent);transform-origin:left;transform:scaleX(.02);transition:transform .25s var(--ease-ui)}
 .em-key i.c{margin-left:8px;background:var(--accent)}
-.lv-sum small{display:block;margin-top:2px;min-height:1.3em;font-size:11.5px;line-height:1.3;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lv-sum small{display:block;margin-top:2px;min-height:1.3em;font-size:11.5px;--lh:1.3;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.em-bar i{transition:none}}
 .em-view .lv-sum b,.em-view .lv-sum small{white-space:normal;overflow:visible;text-overflow:clip}
 
@@ -2335,19 +2346,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
 /* the note that says a page turn is holding a trim handle: sits on the waveform, below the ruler, and fades away */
-.ae-stop{position:absolute;left:50%;top:32px;transform:translate(-50%,-4px);margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;line-height:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.ae-stop{position:absolute;left:50%;top:32px;transform:translate(-50%,-4px);margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;--lh:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
 .ae-stop.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 
 /* a button's name inside a sentence: the name sits in a small button, spelled as on the button; a switch's name carries a tiny switch */
 /* the one pill over the stage while systems are found: the shared chip and bar, centered over the selector and the preview together */
-.sys-find{position:absolute;left:50%;top:50%;z-index:7;transform:translate(-50%,-50%);flex-direction:row;background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow);pointer-events:none;opacity:0;visibility:hidden;transition:opacity .26s var(--ease-ui,ease),visibility 0s .26s}
+.sys-find-box{position:absolute;inset:0;z-index:7;display:grid;place-items:center;pointer-events:none}          /* centered by layout, never by a transform, so the text stays crisp */
+.sys-find{opacity:0;visibility:hidden;transition:opacity .26s var(--ease-ui,ease),visibility 0s .26s}
 .sys-find.on{opacity:1;visibility:visible;transition-delay:0s}
-@media (prefers-reduced-motion:reduce){.sys-find{transition-duration:.08s}}
-@media (prefers-reduced-transparency:reduce){.sys-find{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
+@media (prefers-reduced-motion:reduce){.sys-find,.wait-bar b{transition-duration:.08s}}
 .sys-why{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
 .sys-note>*+*{margin-top:8px}
-.hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;line-height:1.35;white-space:nowrap;vertical-align:baseline}
+.hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;--lh:1.35;white-space:nowrap;vertical-align:baseline}
 .hb.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
 .hb.sw{padding:0;border-color:transparent;background:none;font-weight:600}
@@ -2402,12 +2413,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .tl-scroll.gliding{overflow-x:hidden}
 
 /* ----- Info windows (About, How it works, Import/Export, Keyboard shortcuts, Diagnostics): one voice for the subtitle, one for the section labels ----- */
-.dlg.page>.hint,.how-lead{margin:-8px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted);text-wrap:pretty}      /* the subtitle sits tight under the title, the same in every window */
+.dlg.page>.hint,.how-lead{margin:-8px 0 0;font-size:13.5px;--lh:1.45;color:var(--muted);text-wrap:pretty}      /* the subtitle sits tight under the title, the same in every window */
 .dlg.page p{text-wrap:pretty}
 /* About: three short groups (who made it, how to help, how to reach out): close inside a group, more room between groups */
 .about-g{display:grid;gap:12px}
 .about-g+.about-g{margin-top:12px}
-.about-g p{line-height:1.55}
+.about-g p{--lh:1.55}
 /* small delights, none of them an icon: the answers settle in one after another when the window opens, a dropdown's lines follow it down as it opens, and its arrow leans toward where it will go */
 @keyframes howIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:no-preference){
@@ -2449,6 +2460,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg-waits{position:absolute;pointer-events:none;z-index:1}
 .pg-wait{position:absolute;overflow:hidden;--sweep-h:3px;transition:opacity .26s var(--ease-ui,ease)}
 .pg-wait.out{opacity:0}
-.pg-wait-l{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:88%;padding:4px 10px;border-radius:99px;background:rgba(14,17,40,.72);color:#fff;font:600 12px/1.3 "Hanken Grotesk",system-ui,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s var(--ease-ui,ease)}
+/* the one wait pill: a dark scrim with white text (the same in light and dark, it sits over a page picture), and, on the System pill, a bar along its foot (a fill once a share is known, the shared sweep before) */
+.wait-pill,.pg-wait-l{padding:4px 10px;border-radius:99px;background:rgba(14,17,40,.72);color:#fff;font:600 12px "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
+.pg-wait-l{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:88%;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s var(--ease-ui,ease)}
+.wait-pill{position:relative;display:inline-flex;align-items:center;overflow:hidden}
+.wait-pill .wait-bar{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:rgba(255,255,255,.2)}
+.wait-bar b{display:block;height:100%;background:color-mix(in srgb,var(--accent) 55%,#fff);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s var(--ease-out);will-change:transform}          /* a scaled layer, so the fill glides on the compositor even while the page is busy drawing */
 .pg-wait.show .pg-wait-l{opacity:1}
 @media (prefers-reduced-motion:reduce){.pg-wait,.pg-wait-l{transition-duration:.08s}}
+.sys-find #sysFindT{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-block;text-align:center}          /* "Processing 100%" fits, so the pill never changes width as the number grows */

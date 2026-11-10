@@ -1,6 +1,6 @@
 // Development only: loaded by index.html on localhost and never uploaded (it is not in deploy.sh's list).
 /* UI guard (localhost only): reports a button that breaks the design language. A button is one of the control heights (--h-xs, --h-s, --h-m, --h-l), never taller than one line of its own text,
-   keeps its width while it shows progress, and is no wider than its text unless a minimum width holds it on purpose. Reports are page errors, so every check that watches for them sees them. */
+   keeps its width while it shows progress, is a whole number of pixels tall, and is no wider than its text unless a minimum width holds it on purpose. Reports are page errors, so every check that watches for them sees them. */
 window.uiGuard = (() => {
   const seen = new Set(), name = b => b.id ? '#' + b.id : (b.textContent || b.getAttribute('aria-label') || b.className).trim().slice(0, 24);
   function scan() {
@@ -16,6 +16,10 @@ window.uiGuard = (() => {
         const r = document.createRange(); r.selectNodeContents(b); const inner = r.getBoundingClientRect().width / ((b.getBoundingClientRect().width / w) || 1), extra = (w - inner) / 2 - pad('Left');
         if (inner > 0 && extra > 4 && cs.flexGrow === '0' && b.parentElement && getComputedStyle(b.parentElement).display !== 'grid') out.push([b, 'inset', name(b) + ' has ' + Math.round(extra) + 'px more space beside its text than its padding allows']);
       }
+    });
+    document.querySelectorAll('.btn, .btn-group, .chip, .seg label, .pe-tab, .ae-tool, select').forEach(b => {          // a control is a whole number of pixels tall: on a half pixel its text sits up to a pixel off center (a line height is a whole number too: set --lh, not line-height)
+      if (!b.offsetParent || getComputedStyle(b).visibility === 'hidden') return; const h = parseFloat(getComputedStyle(b).height);
+      if (h > 0 && Math.abs(h - Math.round(h)) > 0.03) out.push([b, 'pixel', name(b) + ' is ' + h.toFixed(2) + 'px tall: a control is a whole number of pixels, or its text sits off center']);
     });
     return out;
   }

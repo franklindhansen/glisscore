@@ -36,9 +36,9 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
     previewR.clearTextures(); S.time = showAt(i, k);
     const st = frameState(S.time); st.fade = 1; await previewR.ensure(pagesFor(st)); previewR.fx.clear(); previewR.render(st);
     const gl = previewR.gl, W = previewR.W, H = previewR.H, px = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
-    const at = (x, y) => { const o = ((H - 1 - y) * W + x) * 4; return [px[o], px[o + 1], px[o + 2]]; }, paper = at(2, 2);
+    const at = (x, y) => { const o = ((H - 1 - y) * W + x) * 4; return [px[o], px[o + 1], px[o + 2]]; }, band = S.set.letterbox ? Math.floor(Math.min(H, W / 2.39)) : H, yA = (H - band) >> 1, paper = at(2, yA + 2);          // with the Letterbox on, the black bars are left out
     let x0 = W, y0 = H, x1 = -1, y1 = -1;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const c = at(x, y); if (Math.abs(c[0] - paper[0]) + Math.abs(c[1] - paper[1]) + Math.abs(c[2] - paper[2]) > 90) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+    for (let y = yA; y < yA + band; y++) for (let x = 0; x < W; x++) { const c = at(x, y); if (Math.abs(c[0] - paper[0]) + Math.abs(c[1] - paper[1]) + Math.abs(c[2] - paper[2]) > 90) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
     const corners = [at(2, 2), at(W - 3, 2), at(2, H - 3), at(W - 3, H - 3)];
     return { W, H, paper, corners, bb: [x0, y0, x1 + 1, y1 + 1], spread: st.spread, hasSys: (SYS.byPage.get(i) || { systems: [] }).systems.length };
   }, [i, k]);
@@ -59,19 +59,15 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   ok('a short last system is centered with equal padding', Math.abs(ps.l - ps.r) <= 3 && Math.abs(ps.t - ps.b) <= 6, JSON.stringify(ps));
   ok('it keeps the score\'s one scale: narrower than the wide systems', (s.bb[2] - s.bb[0]) < 0.6 * w0, (s.bb[2] - s.bb[0]) + ' vs ' + w0);
   ok('the white page gives a white sheet', s.paper.every(v => v >= 250), JSON.stringify(s.paper));
-  // Top and bottom margin: it never changes the scale, and shrinks only a system that no longer fits
+  // Letterbox: it never changes the scale, and shrinks only a system that no longer fits the band
   const set = (k, v) => p.evaluate(([k, v]) => { S.set[k] = v; }, [k, v]);
-  ok('the default is 6% and the setting is accepted by import', await p.evaluate(() => DEFAULTS.tbMargin === 6 && IO_RANGES.tbMargin[1] >= 20));
-  const w6 = (await look(1, 0)).bb, t6 = await look(2, 0); await set('tbMargin', 12); const w12 = (await look(1, 0)).bb, t12 = await look(2, 0);
-  ok('a larger Top and bottom margin leaves the scale alone', Math.abs((w6[2] - w6[0]) - (w12[2] - w12[0])) <= 2 && (w12[3] - w12[1]) === (w6[3] - w6[1]), (w6[2] - w6[0]) + ' vs ' + (w12[2] - w12[0]));
-  ok('a tall system shrinks alone to the room left', Math.abs((t6.bb[3] - t6.bb[1]) - t6.H * 0.88) <= t6.H * 0.03 && Math.abs((t12.bb[3] - t12.bb[1]) - t12.H * 0.76) <= t12.H * 0.03, (t6.bb[3] - t6.bb[1]) + ' / ' + (t12.bb[3] - t12.bb[1]) + ' of ' + t6.H);
-  ok('the tall system is narrower than the score\'s one scale gives', (t6.bb[2] - t6.bb[0]) < 0.9 * w0 && (t12.bb[2] - t12.bb[0]) < (t6.bb[2] - t6.bb[0]), (t6.bb[2] - t6.bb[0]) + ' vs ' + w0);
-  ok('the tall system is still centered', Math.abs(pad(t12).t - pad(t12).b) <= 6 && Math.abs(pad(t12).l - pad(t12).r) <= 3);
-  await set('tbMargin', 6);
-  const sl = await p.evaluate(() => { const r = document.querySelector('#tbMargin'), f = document.querySelector('#tbMarginField'); r.value = 10; r.dispatchEvent(new Event('input', { bubbles: true })); const o = { shown: !f.hidden, v: S.set.tbMargin, out: document.querySelector('#tbMarginOut').textContent, lab: f.querySelector('label').textContent }; r.value = 6; r.dispatchEvent(new Event('input', { bubbles: true })); return o; });
-  ok('the Top and bottom margin slider shows in System and moves the setting', sl.shown && sl.v === 10 && sl.out === '10%' && /^Top and bottom margin/.test(sl.lab), JSON.stringify(sl));
-  await p.evaluate(() => document.querySelector('#tbMargin').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))); await p.waitForTimeout(900);
-  ok('a double-click glides it back to 6%', await p.evaluate(() => { const r = document.querySelector('#tbMargin'); r.value = 15; r.dispatchEvent(new Event('input', { bubbles: true })); r.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); return new Promise(res => setTimeout(() => res(+r.value === 6 && S.set.tbMargin === 6), 1500)); }));
+  ok('Letterbox is off by default and an old tbMargin is ignored on import', await p.evaluate(() => DEFAULTS.letterbox === false && !('tbMargin' in DEFAULTS) && !('tbMargin' in cleanSettings({ tbMargin: 12 }))));
+  const w0b = (await look(1, 0)).bb, t0 = await look(2, 0); await set('letterbox', true); const wl = (await look(1, 0)).bb, tl = await look(2, 0); await set('letterbox', false);
+  ok('Letterbox leaves the score scale alone', Math.abs((w0b[2] - w0b[0]) - (wl[2] - wl[0])) <= 2 && (wl[3] - wl[1]) === (w0b[3] - w0b[1]), (w0b[2] - w0b[0]) + ' vs ' + (wl[2] - wl[0]));
+  ok('a tall system shrinks alone to the 2.39:1 band', (tl.bb[3] - tl.bb[1]) <= tl.W / 2.39 * 0.88 + 2 && (tl.bb[3] - tl.bb[1]) < (t0.bb[3] - t0.bb[1]) && (tl.bb[2] - tl.bb[0]) < (t0.bb[2] - t0.bb[0]), (tl.bb[3] - tl.bb[1]) + ' vs ' + (t0.bb[3] - t0.bb[1]) + ' of ' + t0.H);
+  ok('the tall system is still centered', Math.abs(pad(tl).t - pad(tl).b) <= 6 && Math.abs(pad(tl).l - pad(tl).r) <= 3);
+  const sl = await p.evaluate(() => { const r = document.querySelector('#letterbox'), f = document.querySelector('#letterboxField'); const o = { shown: !f.hidden, off: !r.checked, lab: f.querySelector('label').textContent }; r.click(); o.on = S.set.letterbox === true; r.click(); o.back = S.set.letterbox === false; return o; });
+  ok('the Letterbox switch shows in System and moves the setting', sl.shown && sl.off && sl.on && sl.back && sl.lab === 'Letterbox', JSON.stringify(sl));
   // Invert colors and Ink color apply on top
   await set('invert', true); const inv = await look(0, 0); await set('invert', false);
   ok('Invert colors turns the paper dark', inv.paper.every(v => v < 60), JSON.stringify(inv.paper));

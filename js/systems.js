@@ -128,6 +128,8 @@ const sysPage = key => key >= 0 ? key % SYS_STRIDE : key;
 const sysNo = key => key >= 0 ? Math.floor(key / SYS_STRIDE) : 0;
 /* the entries one page gives in System: one per system found, or the whole page when none was (or it is not found yet) */
 function sysEntries(page) { const r = SYS.byPage.get(page), n = r && r.systems.length ? r.systems.length : 1; return Array.from({ length: n }, (_, k) => sysKey(page, k)); }
+/* the same, as the Selections themselves (null for a page shown whole) */
+function sysBoxes(page) { const r = SYS.byPage.get(page); return r && r.systems.length ? r.systems : [null]; }
 /* the pages not yet measured are found in the background; the timeline follows when they are all in */
 function sysKick() {
   if (!S.pdf) return; sysFresh();
@@ -189,13 +191,57 @@ async function sysLevelPages() {
     S.time = was ? clamp(at, S.vStart, vEnd()) : S.time; setChips(); updateTimeUI(true); if (was) Transport.play();
   } finally { SYS.leveling = false; sysWarn(); }
 }
+/* The stops changed (a system marked or removed, Full page, a page found again): the timeline follows.
+   With no turn placed by hand the video is spaced evenly again. Otherwise only the changed pages' own turns change (sysRetime). The playhead stays on its system. */
 function sysSettle() {
   if (!sysOn() || !S.pdf) return;
-  const before = spreadSig();
+  const old = S.spreads, before = spreadSig(), turns = S.turns.slice(), ph = S.ph.slice(), at = old.length ? clamp(frameState(S.time).spread, 0, old.length - 1) : -1;
   S.spreads = buildSpreads();
   if (spreadSig() === before) return;
-  if (S.turnsEdited) reconcileTurns(); else autoSpace(false);
+  if (!S.turnsEdited || turns.length !== Math.max(0, old.length - 1)) autoSpace(false); else sysRetime(old, turns, ph);
+  if (at >= 0 && S.spreads.length && !Transport.playing) {
+    const A = sysRuns(old), B = sysRuns(S.spreads), ra = A.find(q => at >= q.i0 && at <= q.i1), rb = ra && B.find(q => q.id === ra.id);
+    if (rb) {
+      let j = -1; const bx = old[at].b; if (bx) for (let k = rb.i0; k <= rb.i1; k++) if (S.spreads[k].b === bx) j = k;
+      if (j < 0) j = Math.min(rb.i1, rb.i0 + (at - ra.i0));
+      if (frameState(S.time).spread !== j) { S.time = j === 0 ? S.vStart : Math.min(vEnd(), S.turns[j - 1] - refOffset() + flipDur() + 0.001); updateTimeUI(true); }
+    }
+  }
   afterStructureChange(); onTurnsChanged();
+}
+/* the stops grouped by page, in order: { id, i0, i1 }. A page used twice gets two ids; a credits card is its own group. */
+function sysRuns(sp) {
+  const out = [], seen = {};
+  sp.forEach((e, i) => {
+    const pg = e[1] >= 0 ? sysPage(e[1]) : 'c' + (e.startCredits ? 's' : 'e'), last = out[out.length - 1];
+    if (last && last.pg === pg && e[1] >= 0) { last.i1 = i; return; }
+    seen[pg] = (seen[pg] || 0) + 1; out.push({ pg, id: pg + '#' + seen[pg], i0: i, i1: i });
+  });
+  return out;
+}
+/* Turns placed by hand stay with their systems. Each page's block keeps its start; a system that stays keeps its turn; new stops share the time of the stop they split, evenly.
+   old, turns, ph: the stops and their turns before the change. */
+function sysRetime(old, turns, ph) {
+  const start = i => i === 0 ? -Infinity : turns[i - 1], A = new Map(sysRuns(old).map(q => [q.id, q])), n = S.spreads.length, ns = new Array(n).fill(null), np = new Array(n).fill(false);
+  sysRuns(S.spreads).forEach(r => {
+    const o = A.get(r.id); if (!o) return; let last = -Infinity;
+    for (let j = r.i0; j <= r.i1; j++) {
+      let from = -1; const bx = S.spreads[j].b; if (bx) for (let k = o.i0; k <= o.i1; k++) if (old[k].b === bx) from = k;
+      if (j === r.i0) from = o.i0;          // the block starts where it did
+      else if (from >= 0 && !(start(from) > last)) from = -1;
+      if (from >= 0) { ns[j] = start(from); np[j] = from > 0 && !!ph[from - 1]; last = ns[j]; }
+    }
+  });
+  if (n) ns[0] = -Infinity;
+  const lo = S.vStart + refOffset(), hi = vEnd();
+  for (let j = 1; j < n; j++) {
+    if (ns[j] != null) continue;
+    let z = j; while (z < n && ns[z] == null) z++;
+    const a = Math.max(lo, ns[j - 1]), b = z < n ? ns[z] : hi, m = z - j;
+    for (let q = 0; q < m; q++) ns[j + q] = a + (b - a) * (q + 1) / (m + 1);
+    j = z;
+  }
+  S.turns = ns.slice(1); S.ph = np.slice(1); normalizeTurns(); S.turnsEdited = true;
 }
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
@@ -349,7 +395,7 @@ async function sysLevel(idx) {
 /* the page's record, with what was found kept aside so a reset or an undo can return to it */
 function sysHandRec(idx) {
   const r = SYS.byPage.get(idx) || { systems: [], tilt: 0, staves: 0, geo: sysGeo(S.pdf.slots[idx]), full: true };
-  if (!SYS.hand.has(idx) && !r.auto) r.auto = r.systems;
+  if (!SYS.hand.has(idx) && !r.auto) r.auto = r.systems.map(q => Object.assign({}, q));          // a copy: a hand edit moves the Selections themselves
   SYS.byPage.set(idx, r); SYS.hand.add(idx); return r;
 }
 /* one hand edit of a page's systems: a History step, then the timeline follows */
@@ -365,30 +411,62 @@ function sysSetFull(idx, full) {
   if (full) { r.held = r.systems; r.systems = []; r.full = true; } else { r.systems = r.held || []; r.held = []; r.full = false; }
   SYS.rev++; stageDirty = true; sysSettle();
 }
-/* a mark from top to bottom (page fractions) replaces every system it overlaps; `keep` is the system being moved or resized, which it also replaces */
-async function sysMark(idx, a, b, keep) {
-  const top = clamp(Math.min(a, b), 0, 1), bottom = clamp(Math.max(a, b), 0, 1); if (bottom - top < 0.01) return null;
-  const [left, right] = await sysEdges(idx, top, bottom), r = await sysDetectPage(idx), old = r ? r.systems : [];          // a page not found yet is found first, so its own systems are not lost
-  const box = { top, bottom, left, right };
-  sysCommit(idx, old.filter(s => s !== keep && (s.bottom <= top || s.top >= bottom)).concat(box)); return box;
+/* Moving a Selection never removes another: its neighbors give way by the rule the timeline's handles follow. From where they stood when the drag began (base),
+   a neighbor's facing edge is pushed along; at the least height the whole neighbor slides and pushes the next; the page's top and bottom stop everything.
+   kind: 'top' or 'bottom' (that edge of base[i] goes to a), 'move' (base[i] moves by a), 'new' (a new one from a to b, placed among the others by where it began).
+   Returns { boxes, out, cur }: the Selections in order (null for a new one), each one's [top, bottom], and which one is being moved. */
+const SYS_MINH = 0.015;
+function sysPush(base, kind, i, a, b) {
+  const M = SYS_MINH, boxes = base.slice();
+  if (kind === 'new') { i = base.filter(s => (s.top + s.bottom) / 2 < a).length; boxes.splice(i, 0, null); }
+  const n = boxes.length, lo = i * M, hi = 1 - (n - 1 - i) * M, me = boxes[i], out = boxes.map(s => s ? [s.top, s.bottom] : [a, a]);
+  let t, bt;
+  if (kind === 'top') { bt = me.bottom; t = clamp(a, Math.min(lo, bt - M), bt - M); }
+  else if (kind === 'bottom') { t = me.top; bt = clamp(a, t + M, Math.max(hi, t + M)); }
+  else if (kind === 'move') { const dy = clamp(a, Math.min(0, lo - me.top), Math.max(0, hi - me.bottom)); t = me.top + dy; bt = me.bottom + dy; }
+  else { t = clamp(Math.min(a, b), lo, Math.max(lo, hi)); bt = clamp(Math.max(a, b), t, Math.max(t, hi)); }
+  out[i] = [t, bt];
+  for (let j = i + 1; j < n; j++) { const s = boxes[j], tt = Math.max(s.top, out[j - 1][1]); out[j] = [tt, Math.max(s.bottom, tt + M)]; }
+  for (let j = i - 1; j >= 0; j--) { const s = boxes[j], bb = Math.min(s.bottom, out[j + 1][0]); out[j] = [Math.min(s.top, bb - M), bb]; }
+  return { boxes, out, cur: i };
+}
+/* puts a page's Selections where a drag left them (boxes and out as sysPush gives them): one History step. A Selection that moved keeps being itself, so its turn stays with it. */
+async function sysPlace(idx, boxes, out) {
+  const moved = boxes.map((s, k) => !s || Math.abs(s.top - out[k][0]) > 1e-5 || Math.abs(s.bottom - out[k][1]) > 1e-5);
+  if (!moved.some(Boolean)) return false;
+  await sysDetectPage(idx);          // a page not found yet is found first, so its own systems are not lost
+  const edges = []; for (let k = 0; k < out.length; k++) edges.push(moved[k] ? await sysEdges(idx, out[k][0], out[k][1]) : null);
+  const r0 = SYS.byPage.get(idx); if (boxes.some(s => s && !(r0 && r0.systems.includes(s)))) return false;          // the page changed under the drag
+  pushHistory(); const r = sysHandRec(idx);
+  r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }; return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
+  r.full = !r.systems.length; r.held = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+}
+/* a mark from top to bottom (page fractions), among the others */
+async function sysMark(idx, a, b) {
+  const r = SYS.byPage.get(idx), p = sysPush(r ? r.systems : [], 'new', 0, clamp(a, 0, 1), clamp(b, 0, 1));
+  if (p.out[p.cur][1] - p.out[p.cur][0] < SYS_MINH) return null;
+  return await sysPlace(idx, p.boxes, p.out) ? SYS.byPage.get(idx).systems.find(s => Math.abs(s.top - p.out[p.cur][0]) < 1e-9) : null;
 }
 function sysRemove(idx, box) { const r = SYS.byPage.get(idx); if (r && r.systems.includes(box)) sysCommit(idx, r.systems.filter(s => s !== box)); }
 /* Detect this page again: the page shown returns to its automatic result, one History step */
 async function sysRedetect(idx) {
+  const was = SYS.byPage.get(idx), sig = r => r ? JSON.stringify([r.systems.map(q => [q.top, q.bottom, q.left, q.right].map(v => Math.round(v * 1e4))), !!r.full]) : '', s0 = sig(was), hand = SYS.hand.has(idx), rb = S.redo.slice();
   pushHistory(); SYS.hand.delete(idx); SYS.byPage.delete(idx); SYS.rev++; stageDirty = true;
-  const r = await sysDetectPage(idx); SYS.rev++; if (r) sysSettle();
+  const r = await sysDetectPage(idx); SYS.rev++;
+  if (r && !hand && sig(r) === s0) { SYS.byPage.set(idx, was); S.history.pop(); S.redo = rb; updateHistoryButtons(); stageDirty = true; return; }          // nothing changed: no History step, and the page keeps its Selections as they were
+  if (r) sysSettle();
 }
 
 /* ---------- the sheet: one system alone on a full-frame sheet of the page's own paper ---------- */
 const SYS_FEATHER = 3;          // dots over which the join between the page and the plain paper around it is softened
 /* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
-   left by the Top and bottom margin shrinks alone. A page with no system is fitted whole. */
+   left in the frame (the Letterbox band, when it is on), with a 6% inner room, shrinks alone. A page with no system is fitted whole. */
 function sysFit(key, W, H) {
-  const idx = sysPage(key), pa = S.pdf.aspect, mx = S.set.margin / 100, ty = (S.set.tbMargin || 0) / 100, whole = { top: 0, bottom: 1, left: 0, right: 1 };
+  const idx = sysPage(key), pa = S.pdf.aspect, mx = S.set.margin / 100, band = S.set.letterbox ? Math.min(H, W / 2.39) : H, whole = { top: 0, bottom: 1, left: 0, right: 1 };
   let wide = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
   const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
   const box = list[Math.min(sysNo(key), list.length - 1)];
-  const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), H * (1 - 2 * ty) / Math.max(1e-6, box.bottom - box.top));
+  const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), band * 0.88 / Math.max(1e-6, box.bottom - box.top));
   return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
 /* the paper: the median color of what is not ink inside the box */

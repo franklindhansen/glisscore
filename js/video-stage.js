@@ -276,8 +276,17 @@ class Renderer {
     this.tex.clear(); this.fx.clear();          // sheets still being made carry on: each lands as the page's shown sheet and the next one is made at the margins of the moment
   }
   checkSize(lay) {
-    const geo = lay.pw + 'x' + lay.ph, key = geo + (sysOn() ? 's' + [S.set.margin, S.set.tbMargin, SYS.byPage.size, SYS.gen, SYS.rev].join() : '');          // a sheet depends on the margins and on what was found
-    if (key !== this.sizeKey) { if (sysOn() && this.sizeKey.startsWith(geo + 's')) this.keepStale(); else this.clearTextures(); this.sizeKey = key; this.geo = geo; }
+    const geo = lay.pw + 'x' + lay.ph, key = geo + (sysOn() ? 's' + [S.set.margin, S.set.letterbox, SYS.byPage.size, SYS.gen, SYS.rev].join() : '');          // a sheet depends on the margins and on what was found
+    if (key !== this.sizeKey) {
+      const sys = sysOn(), o = this.geo.split('x').map(Number), now = typeof performance !== 'undefined' ? performance.now() : 0;
+      if (sys && this.sizeKey.startsWith(geo + 's')) this.keepStale();
+      else if (sys === this.wasSys && o[1] > 0 && Math.abs(o[0] / o[1] - lay.pw / lay.ph) < 0.01 && (this.tex.size || this.ph.size)) {
+        /* only the size changed (the split, the window, full screen): each page keeps its picture, scaled, and the sharp one is made once the size has rested, so nothing flashes */
+        this.keepStale(); this.pending.clear(); this.hold = now + 140;
+        clearTimeout(this.holdT); this.holdT = setTimeout(() => { if (this.onUpdate) this.onUpdate(); }, 160);
+      } else this.clearTextures();
+      this.sizeKey = key; this.geo = geo; this.wasSys = sys;
+    }
   }
   tex_(idx) {
     if (idx === -1) return null;
@@ -286,6 +295,7 @@ class Renderer {
     if (idx < 0) return null;
     const e = this.tex.get(idx);
     if (e) { this.tex.delete(idx); this.tex.set(idx, e); return e.t; }
+    const st = this.ph.get(idx); if (st && st.stale && this.hold && performance.now() < this.hold) return st.t;          // the size is still moving: the old picture, scaled
     this.request(idx);
     if (!this.notReady.has(idx)) this.notReady.set(idx, performance.now());
     return this.placeholder(idx);
@@ -306,7 +316,7 @@ class Renderer {
     const key = this.sizeKey, lay = this.lay, gl = this.gl;
     const geo = this.geo, p = (sysOn() && idx >= 0 ? sysSheet(idx, lay.pw, lay.ph) : this.src.render(idx, lay.pw, lay.ph)).then(cv => {
       if (this.pending.get(idx) === p) this.pending.delete(idx);
-      if (key !== this.sizeKey && !(sysOn() && geo === this.geo)) return;
+      if (key !== this.sizeKey && !(sysOn() && geo === this.geo)) { if (this.onUpdate) this.onUpdate(); return; }          // made for a size that has gone: the next frame asks again
       const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
@@ -499,6 +509,13 @@ class Renderer {
     gl.disable(gl.BLEND);
   }
   render(st) {
+    this.render_(st);
+    if (sysOn() && S.set.letterbox) {          // the black bars of the Letterbox, drawn last so every return path of the render has them
+      const gl = this.gl, bar = Math.floor((this.H - Math.min(this.H, this.W / 2.39)) / 2);
+      if (bar > 0) { gl.enable(gl.SCISSOR_TEST); gl.clearColor(0, 0, 0, 1); gl.scissor(0, 0, this.W, bar); gl.clear(gl.COLOR_BUFFER_BIT); gl.scissor(0, this.H - bar, this.W, bar); gl.clear(gl.COLOR_BUFFER_BIT); gl.disable(gl.SCISSOR_TEST); }
+    }
+  }
+  render_(st) {
     const gl = this.gl, lay = this.layout(); this.lay = lay; this.checkSize(lay); this.framePages = [];
     gl.viewport(0, 0, this.W, this.H);
     const bg = hexToRgb(S.set.bg); gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -518,7 +535,7 @@ class Renderer {
       let a = 1;
       if (idx >= 0) {
         shown.add(idx);
-        this.framePages.push({ idx, x, y: lay.y0, w: lay.pw, h: lay.ph, wait: !this.tex.has(idx) });
+        this.framePages.push({ idx, x, y: lay.y0, w: lay.pw, h: lay.ph, wait: !this.tex.has(idx) && !(this.ph.get(idx) || {}).stale });          // a page standing in with its old picture is not waiting
         const f0 = this.fx.get(idx);
         if (f0 != null) { const p = (performance.now() - f0) / pageFadeMs(); if (p >= 1) this.fx.delete(idx); else { a = p; this.drawQuad(this.placeholder(idx), x, lay.y0, lay.pw, lay.ph, side, false); } }
       }
@@ -630,19 +647,23 @@ function layoutStage() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W = Math.round(cw * dpr), H = Math.round(ch * dpr);
   const mx = Math.max(W, H); if (mx > 2200) { W = Math.round(W * 2200 / mx); H = Math.round(H * 2200 / mx); }
-  if (W !== stageCanvas.width || H !== stageCanvas.height) { previewR.resize(W, H); }
+  if (W !== stageCanvas.width || H !== stageCanvas.height) { previewR.resize(W, H); if (S.pdf && S.spreads.length) { try { drawStage(); } catch (e) {} } }          // a resized canvas is empty: it is drawn again at once, so it never shows blank for a frame
   stageDirty = true; if (SZ.z !== 1) { szClamp(); szApply(false); }
   if (g.show) { if (SZS.z !== 1) { szClamp(SZS); szApply(false, SZS); } selSync(); }
 }
 /* ---- zoom and fit for the stage: view only (never saved, exported, or a History step), a transform on the picture ---- */
 const SZ = { z: 1, x: 0, y: 0, ar: null }, SZS = { z: 1, x: 0, y: 0 }, SZ_MAX = 4;          // the preview's view and, in System, the selector's
 const szView = st => st === SZS ? { cv: $('#selCv'), box: $('#sysSel'), cls: $('#sysSel') } : { cv: stageCanvas, box: $('#stageWrap'), cls: $('#stageWrap') };
-const szT = () => SPLIT.shown ? SZS : SZ;          // the one the zoom buttons and keys move: the selector while it shows, else the preview
+let szOverPrev = false;          // the pointer last moved over the preview (not the selector)
+const szT = () => SPLIT.shown && !szOverPrev ? SZS : SZ;          // the one the keys move: the picture the pointer is over, the selector first while it shows. Each picture's own buttons move that picture.
 function szClamp(st = SZ) {
   const { cv, box } = szView(st), mx = Math.max(0, (cv.offsetWidth * st.z - box.clientWidth) / 2 + 60), my = Math.max(0, (cv.offsetHeight * st.z - box.clientHeight) / 2 + 60);
   st.x = clamp(st.x, -mx, mx); st.y = clamp(st.y, -my, my); if (st.z <= 1.001) { st.z = 1; st.x = 0; st.y = 0; }
 }
-function szButtons() { const t = szT(); $('#szOut').disabled = $('#szFit').disabled = t.z <= 1; $('#szIn').disabled = t.z >= SZ_MAX; }
+function szButtons() {
+  $('#szOut').disabled = $('#szFit').disabled = SZ.z <= 1; $('#szIn').disabled = SZ.z >= SZ_MAX;
+  $('#selZOut').disabled = $('#selZFit').disabled = SZS.z <= 1; $('#selZIn').disabled = SZS.z >= SZ_MAX;
+}
 function szApply(smooth, st = SZ) {
   const { cv, cls } = szView(st); cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
   cv.style.transform = st.z === 1 ? '' : 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(3) + ')'; cls.classList.toggle('zoomed', st.z > 1);
@@ -658,9 +679,10 @@ function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy
 function szReset(smooth, st = SZ) { st.z = 1; st.x = st.y = 0; szApply(smooth, st); }
 function szBind() {
   const wrap = $('#stageWrap'), ptr = new Map(); let pan = null, pinch = null, gz = 1;
-  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty, #sysDiv, .sys-nav');
+  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty, #sysDiv, .sys-nav, .sys-zoom');
   const at = e => e.target.closest('#sysSel') ? SZS : SZ;          // the picture under the pointer
-  $('#szIn').addEventListener('click', () => szAt(szT().z * 1.6, null, null, true, szT())); $('#szOut').addEventListener('click', () => szAt(szT().z / 1.6, null, null, true, szT())); $('#szFit').addEventListener('click', () => szReset(true, szT()));
+  [[SZ, 'sz'], [SZS, 'selZ']].forEach(([v, id]) => { $('#' + id + 'In').addEventListener('click', () => szAt(v.z * 1.6, null, null, true, v)); $('#' + id + 'Out').addEventListener('click', () => szAt(v.z / 1.6, null, null, true, v)); $('#' + id + 'Fit').addEventListener('click', () => szReset(true, v)); });          // the preview's strip moves the preview; the selector's own strip moves the selector
+  wrap.addEventListener('pointermove', e => { szOverPrev = !e.target.closest('#sysSel'); });
   wrap.addEventListener('wheel', e => {
     if (!live(e)) return; const v = at(e);
     if (e.ctrlKey || e.metaKey) { e.preventDefault(); e.stopPropagation(); szAt(v.z * Math.exp(-e.deltaY * 0.012), e.clientX, e.clientY, false, v); }          // a pinch over the picture zooms the picture only; the timeline has its own
@@ -710,7 +732,7 @@ TL.sc = document.createElement('canvas'); TL.sctx = TL.sc.getContext('2d');
 
 function readColors() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
-  TL.C = { bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2') };
+  TL.C = { bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), turnSysSoft: g('--turn-sys-soft'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2') };
   TL.staticDirty = true;
 }
 /* The timeline's x axis: audio time, with a little empty room at both ends where the video's start and end handles can be
@@ -859,20 +881,20 @@ function sysTurnInfo(i) {
   return { page: pa, k: pa == null ? 0 : sysNo(a[1]), inner: pa != null && pa === pb };
 }
 function drawSysBlocks(c) {
-  if (sysBusy()) return;          // while systems are found the page lane is empty; the blocks come in once, together
+  const busy = sysBusy(), dim = clamp(hsGet('sysdim', busy ? .45 : 1), .3, 1);          // while systems are found the page blocks stay, dimmed, with no cells; they rise to full strength once when it ends
   const { C, vw, trackY, trackH } = TL, pa = S.pdf ? S.pdf.aspect : .77, th = Math.max(18, trackH - 48), tw = th * pa, bp = rvProgress('blocks'), last = S.spreads.length - 1;
   const at = (t, a, b, i) => t >= a && (t < b || (i === last && t <= b));
   sysBlocks().forEach(q => {
     const x0 = t2x(q.a), x1 = t2x(q.b); if (x1 < -4 || x0 > vw + 4) return;
-    const r = q.page == null ? null : SYS.byPage.get(q.page), cells = r && r.systems.length ? q.n : 0, card = q.page == null;
-    c.save();
-    if (bp < 1) { const k = rvGrow(bp, clamp((q.a - S.vStart) / Math.max(1e-6, vEnd() - S.vStart), 0, 1)), e = 1 - Math.pow(1 - k, 3); c.globalAlpha = e; c.translate(0, (1 - e) * 8); }
+    const r = q.page == null ? null : SYS.byPage.get(q.page), cells = !busy && r && r.systems.length ? q.n : 0, card = q.page == null;
+    c.save(); c.globalAlpha = dim;
+    if (bp < 1) { const k = rvGrow(bp, clamp((q.a - S.vStart) / Math.max(1e-6, vEnd() - S.vStart), 0, 1)), e = 1 - Math.pow(1 - k, 3); c.globalAlpha = e * dim; c.translate(0, (1 - e) * 8); }
     roundRect(c, x0 + 1, trackY, Math.max(2, x1 - x0 - 2), trackH, 7); c.fillStyle = C.block; c.fill(); c.strokeStyle = card ? C.cred : C.line; c.stroke(); c.clip();
     if (at(S.time, q.a, q.b, q.i1)) { c.save(); c.globalAlpha *= .07; c.fillStyle = C.accent; c.fillRect(x0, trackY, x1 - x0, trackH); c.restore(); }          // the block under the playhead
     for (let j = 0; j < cells; j++) {
       const [ca, cb] = spreadBounds(q.i0 + j);
       if (at(S.time, ca, cb, q.i0 + j)) { c.fillStyle = C.accentSoft; c.fillRect(t2x(ca), trackY, t2x(cb) - t2x(ca), trackH); }          // the system under the playhead
-      if (j) { c.fillStyle = C.line; c.fillRect(Math.round(t2x(ca)), trackY, 1, trackH); }
+      if (j) { c.save(); c.globalAlpha *= .6; c.fillStyle = C.turnSys; c.fillRect(Math.round(t2x(ca)), trackY, 1, trackH); c.restore(); }
     }
     const tx = Math.max(x0 + 7, 7), y = trackY + 5;
     if (!card) {
@@ -975,8 +997,12 @@ function drawHandles(c) {
     if (sysBusy()) continue;          // no handles until the systems are found
     let tick = false;          // a system turn too narrow for a handle is just the tick between its cells, until it is hovered, selected, or dragged
     if (sysT) { const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1); tick = Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) < 24 && TL.hover !== i && !selSet.has(i) && !(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i); }
-    if (tick && !ph) continue;
-    const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a darker orange
+    const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : sysT ? C.turnSysSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a quiet gray, so amber means a page turn only
+    if (tick && !ph) {          // never nothing: a short mark in its own color where there is no room for the handle
+      const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1);
+      if (Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) >= 7) { c.fillStyle = col; roundRect(c, x - 1, trackY + trackH / 2 - 5, 2, 10, 1); c.fill(); }
+      continue;
+    }
     const grabbed = !!(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i), sc = hsGet('t' + i, grabbed ? 1.16 : TL.hover === i ? 1.07 : 1), pw_ = (sysT ? 3 : 13) * sc * (.6 + .4 * pop), ph_ = (sysT ? 14 : 28) * sc * (.6 + .4 * pop), rd = sysT ? 1.5 * sc : 6, cy = trackY + trackH / 2;
     if (ph) {                                   // not placed yet: dashed
       c.globalAlpha = .75 * pop; c.strokeStyle = col; c.lineWidth = 1.5; c.setLineDash([4, 3]);
@@ -1182,6 +1208,7 @@ function drawTimeline() {
 }
 function tlPoint(e) { const r = TL.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function hitTurn(p) {
+  if (sysBusy()) return -1;          // the handles are not drawn while systems are found, so they cannot be grabbed
   if (p.y < TL.trackY - 8 || p.y > TL.trackY + TL.trackH + 8) return -1;
   let best = -1, bd = 10;
   for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(shownTurn(i)) - p.x); if (d <= bd) { bd = d; best = i; } }

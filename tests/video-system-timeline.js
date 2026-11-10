@@ -46,7 +46,7 @@ function staffPage(doc, n) {
   ok('the skinny handle can be grabbed as easily as the page handle', await p.evaluate(() => { const i = sysTurnInfo(0).inner ? 0 : -1, x = t2x(shownTurn(i)), y = TL.trackY + TL.trackH / 2; return i === 0 && hitTurn({ x: x + 6, y }) === 0 && hitTurn({ x: x - 6, y }) === 0; }));
   ok('every page and system is drawn, with the playhead in a cell, without errors', await p.evaluate(() => { S.time = (S.spreads.length ? spreadBounds(1)[0] + 0.1 : 0); TL.staticDirty = true; drawTimeline(); return true; }) && errs.length === 0, errs.join('; '));
   const css = require('fs').readFileSync(__dirname + '/../style.css', 'utf8');
-  ok('--turn-sys is in all three theme blocks', (css.match(/--turn-sys:/g) || []).length === 3 && css.includes('--turn-sys:#bf6500') && (css.match(/--turn-sys:#d97706/g) || []).length === 2);
+  ok('--turn-sys is in all three theme blocks', (css.match(/--turn-sys:/g) || []).length === 3 && (css.match(/--turn-sys-soft:/g) || []).length === 3 && css.includes('--turn-sys:#8690a6'));
   ok('the page and system handles pass 3:1 against the block in both themes', [['#d97706', '#ffffff'], ['#bf6500', '#ffffff'], ['#f59e3b', '#252b37'], ['#d97706', '#252b37']].every(([f, g]) => contrast(f, g) >= 3), [contrast('#d97706', '#ffffff'), contrast('#bf6500', '#ffffff'), contrast('#f59e3b', '#252b37'), contrast('#d97706', '#252b37')].map(v => v.toFixed(2)).join(' '));
   const keep = await p.evaluate(async () => {
     const R = window.__keyframes.previewR; S.time = S.vStart; drawStage(); await R.ensure([S.spreads[0][1]]);
@@ -59,7 +59,7 @@ function staffPage(doc, n) {
     const R = window.__keyframes.previewR, idx = S.spreads[0][1], o = window.sysSheet; let calls = 0, now = 0, max = 0; window.sysSheet = (...a) => { calls++; max = Math.max(max, ++now); return o(...a).finally(() => now--); };
     for (let i = 0; i < 8; i++) { S.set.margin = 3 + i % 4; R.prefetch([idx]); R.checkSize(R.layout()); await new Promise(r => setTimeout(r, 15)); }
     S.set.margin = 6; await R.ensure([idx]); window.sysSheet = o;
-    return { has: R.tex.has(idx), key: R.sizeKey.includes(',6,'), max };
+    return { has: R.tex.has(idx), key: R.sizeKey.includes('6,false,'), max };
   });
   ok('dragging the margin keeps up with one render at a time per page, and ends on the final margin', live.has && live.key && live.max === 1, JSON.stringify(live));
   ok('turns are spaced evenly and the hand edit is said', await p.evaluate(() => { const g = S.turns.slice(1, -1).map((t, i) => t - S.turns[i]); return Math.max(...g) - Math.min(...g) < 0.05 && !S.turnsEdited; }) && /turns/i.test(await toast()), await toast());

@@ -42,7 +42,7 @@ function staffPage(doc, n) {
   const g3 = await geo();
   ok('a double-click glides it back to half and half', near(g3.sel[0], (g3.wrap[0] - 2) / 2, 3), JSON.stringify([g.sel[0], g3.sel[0]]));
   ok('the split is not a History step', (await hist()) === undoBefore);
-  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await preset(id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f, near(g.sel[0], f * (g.wrap[0] - 2), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
+  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await preset(id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f + ' (never narrower than its two strips)', near(g.sel[0], Math.max(f * (g.wrap[0] - 2), id === 'spPrev' ? await p.evaluate(() => SPLIT.navW + 20) : 0), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
   await preset('spOnly'); await p.waitForTimeout(800); g = await geo();
   ok('Preview only hides the selector and gives the preview the stage', g.hidden && g.dh && g.st[2] > 700, JSON.stringify(g));
   await preset('spEq'); await p.waitForTimeout(800);
@@ -94,7 +94,7 @@ function staffPage(doc, n) {
   ok('the page keeps one size and place from system to system', sizes.every(q => Math.abs(q.u - sizes[0].u) < 1e-6 && Math.abs(q.ox - sizes[0].ox) < 1e-6), JSON.stringify(sizes));
   // Systems | Full page
   await p.evaluate(() => Transport.seek(S.vStart)); await p.waitForTimeout(500);
-  const strip = await p.evaluate(() => ({ seg: [...document.querySelectorAll('#selMode label')].map(l => l.textContent), checked: document.querySelector('input[name=selMode]:checked').value, again: document.querySelector('#spAgain').textContent, inStrip: !!document.querySelector('.sys-nav #selMode') && !!document.querySelector('.sys-nav #spAgain') && !document.querySelector('.sys-tools #spAgain') }));
+  const strip = await p.evaluate(() => ({ seg: [...document.querySelectorAll('#selMode label')].map(l => l.title), checked: document.querySelector('input[name=selMode]:checked').value, again: document.querySelector('#spAgain').getAttribute('aria-label'), inStrip: !!document.querySelector('.sys-nav #selMode') && !!document.querySelector('.sys-nav #spAgain') && !document.querySelector('.sys-tools #spAgain') }));
   ok('the selector strip holds Systems | Full page and Detect again', strip.seg.join() === 'Systems,Full page' && strip.checked === 'systems' && strip.again === 'Detect again' && strip.inStrip, JSON.stringify(strip));
   const h0 = await p.evaluate(() => ({ h: S.history.length, n: S.spreads.length }));
   await p.click('#selMode label:has(input[value=full])'); await p.waitForTimeout(500);
@@ -119,9 +119,9 @@ function staffPage(doc, n) {
   ok('the system-less wording is gone', await p.evaluate(() => !MSG.text['sys.pageNone'] && !MSG.text['sys.pageFinding']));
   await p.evaluate(() => Transport.seek(S.vStart)); await p.waitForTimeout(500);
   // zoom and pan in the selector
-  await p.click('#szIn'); await p.waitForTimeout(500);
-  let z = await p.evaluate(() => [SZS.z, SZ.z, document.querySelector('#szFit').disabled]);
-  ok('Zoom works in the selector and leaves the preview alone', z[0] > 1 && z[1] === 1 && z[2] === false, JSON.stringify(z));
+  await p.click('#selZIn'); await p.waitForTimeout(500);
+  let z = await p.evaluate(() => [SZS.z, SZ.z, document.querySelector('#selZFit').disabled]);
+  ok('The selector\'s own zoom strip zooms the selector and leaves the preview alone', z[0] > 1 && z[1] === 1 && z[2] === false, JSON.stringify(z));
   const c = await p.evaluate(() => { const r = document.querySelector('#selCv').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; });
   if (process.env.SHOTS) await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/zoomed.png' });
   await p.mouse.move(c[0], c[1]); await p.mouse.wheel(-60, -20); await p.waitForTimeout(100);          // a drag marks now, so a zoomed page pans by scrolling
@@ -130,8 +130,21 @@ function staffPage(doc, n) {
   const sp = await p.evaluate(() => [SZS.x, SZS.y, SEL.mark.space, Transport.playing === true]);
   ok('Space-drag pans the selector, marks nothing, and does not play', sp[0] > 60 && !sp[2] && !sp[3] && await p.evaluate(() => SYS.byPage.get(0).systems.length) === 3, JSON.stringify(sp));
   ok('a pan does not move the playhead', await p.evaluate(() => sysPage(SEL.key) === 0 && sysNo(SEL.key) === 0));
-  await p.click('#szFit'); await p.waitForTimeout(500);
+  await p.click('#selZFit'); await p.waitForTimeout(500);
   ok('Fit puts the selector back', await p.evaluate(() => SZS.z === 1 && SZS.x === 0));
+  await p.click('#szIn'); await p.waitForTimeout(500);
+  const zz = await p.evaluate(() => { const r = q => document.querySelector(q).getBoundingClientRect(), n = r('.sys-nav'), s = r('#selZoom'), pane = r('#sysSel'), pv = r('#stageStrip'); return { prev: SZ.z, sel: SZS.z, selDis: document.querySelector('#selZOut').disabled, gap: s.left - n.right, same: Math.abs(n.bottom - s.bottom) < 1 && n.right <= s.left, right: Math.round(pane.right - s.right), bottom: Math.round(pane.bottom - s.bottom), inPane: s.left >= pane.left && s.right <= pane.right, prevInPreview: pv.left >= pane.right }; });
+  ok('the preview\'s strip zooms the preview only, and the selector has its own strip at its bottom right beside the page strip', zz.prev > 1 && zz.sel === 1 && zz.selDis && (zz.gap >= 0 && zz.same) && zz.right <= 12 && zz.bottom <= 12 && zz.inPane && zz.prevInPreview, JSON.stringify(zz));
+  await p.click('#szFit'); await p.waitForTimeout(400);
+  await p.mouse.move(c[0], c[1]); await p.keyboard.press('='); await p.waitForTimeout(400);
+  ok('the + key zooms the picture the pointer is over', await p.evaluate(() => SZS.z > 1 && SZ.z === 1));
+  await p.keyboard.press('0'); await p.waitForTimeout(400);
+  ok('both pictures are back at Fit', await p.evaluate(() => SZS.z === 1 && SZ.z === 1), JSON.stringify(await p.evaluate(() => [SZS.z, SZ.z, szOverPrev])));
+  // Hide and back glide: the picture and the selector change a little each frame, never a jump when the selector goes or comes
+  await p.evaluate(() => { window.__w = []; const f = () => { window.__w.push([document.querySelector('#stage').offsetWidth, document.querySelector('#sysSel').hidden ? 0 : document.querySelector('#sysSel').offsetWidth]); window.__raf = requestAnimationFrame(f); }; f(); });
+  await preset('spOnly'); await p.waitForTimeout(900); await preset('spEq'); await p.waitForTimeout(900);
+  const gl = await p.evaluate(() => { cancelAnimationFrame(window.__raf); const w = window.__w.map(q => q[1]); let last = 0, first = 0, seenZero = false; for (const v of w) { if (v === 0) seenZero = true; else if (!seenZero) last = v; else if (!first) first = v; } const l = w.filter(v => v > 0 && !seenZero); return { last: Math.min(...w.slice(0, w.indexOf(0)).filter(v => v > 0)), first, zero: w.indexOf(0) >= 0 }; });
+  ok('hiding the selector narrows it all the way before it goes, and showing it widens from nothing', gl.zero && gl.last < 60 && gl.first < 60, JSON.stringify(gl));
   // narrow: stacked
   await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(800);
   if (process.env.SHOTS) await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/phone.png' });

@@ -52,7 +52,7 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const q = await sys();
   await click(await at(q[2][0] - 0.03)); await p.mouse.move(...(await at(q[3][1] + 0.03)), { steps: 3 }); await click(await at(q[3][1] + 0.03));
   s = await sys();
-  ok('click-click marks the same way, replacing what it overlaps', s.length === 3 && s[2][0] < q[2][0] && s[2][1] > q[3][1], JSON.stringify(s));
+  ok('click-click marks the same way, pushing what it overlaps and removing nothing', s.length === q.length + 1 && s.every((r, i) => r[1] - r[0] >= 0.014 && (!i || r[0] >= s[i - 1][1] - 1e-6)) && s[s.length - 1][1] <= 1.0001 && s.some(r => r[0] < q[2][0] && r[1] > q[3][1] - 0.001), JSON.stringify(s));
   ok('and is one step', await steps() === h0 + 2);
   await p.click('#bUndo'); await p.click('#bUndo'); await p.waitForTimeout(500);
   ok('two undos restore the found systems', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys()));
@@ -79,9 +79,9 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const tb = await p.evaluate(() => { const r = SYS.byPage.get(2); return { tilt: r.tilt, n: r.systems.length, s: r.systems[0] }; });
   ok('the tilted page has its tilt and two systems', Math.abs(tb.tilt) > 0.5 && tb.n === 2, JSON.stringify(tb));
   await p.evaluate(() => { window.__scans = 0; const o = peScan; peScan = (...a) => { window.__scans++; return o(...a); }; });
-  const m1 = await p.evaluate(async tb => { const b = await sysMark(2, tb.s.top, tb.s.bottom, SYS.byPage.get(2).systems[0]); return b; }, tb);
+  const m1 = await p.evaluate(async tb => { const b = await sysMark(2, tb.s.top, tb.s.bottom); return b; }, tb);
   ok('a mark on a tilted page lands on the same ink edges as the finder', m1 && Math.abs(m1.left - tb.s.left) < 0.012 && Math.abs(m1.right - tb.s.right) < 0.012, JSON.stringify([m1, tb.s]));
-  await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom + 0.01, SYS.byPage.get(2).systems[0]); }, tb);
+  await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom + 0.01); }, tb);
   ok('the page is scanned once for several marks', await p.evaluate(() => window.__scans === 1), String(await p.evaluate(() => window.__scans)));
   const sharp = await p.evaluate(async () => {          // the tallest row of ink: staff lines are sharpest when the page is level
     const peak = sc => { let m = 0; for (let y = 0; y < sc.h; y++) { let n = 0; for (let x = 0, i = y * sc.w; x < sc.w; x++, i++) n += sc.ink[i]; if (n > m) m = n; } return m; };

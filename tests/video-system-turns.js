@@ -22,21 +22,23 @@ function staffPage(doc, n) {
   await p.evaluate(() => { const r = document.querySelector('input[name=pageLayout][value=system]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); });
   await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 }); await p.waitForTimeout(1200);
 
-  // while finding: nothing is drawn in the page lane and there are no handles
+  // while finding: the page blocks stay, dimmed, with no cells and no handles
   const held = await p.evaluate(() => {
-    const calls = { n: 0 }, ctx = new Proxy({}, { get: (t, k) => k === 'canvas' ? document.createElement('canvas') : (...a) => { calls.n++; }, set: () => true });
-    const saved = SYS.prog; SYS.prog = { done: 1, total: 4 };
-    const o = window.roundRect; window.roundRect = (...a) => { calls.n++; }; drawSysBlocks(ctx); drawHandles(ctx); window.roundRect = o; SYS.prog = saved; return calls.n;
+    const calls = { n: 0, a: [], stroke: 0 }, ctx = new Proxy({}, { get: (t, k) => k === 'canvas' ? document.createElement('canvas') : k === 'measureText' ? () => ({ width: 10 }) : (...a) => { calls.n++; }, set: (t, k, v) => { if (k === 'globalAlpha') calls.a.push(v); return true; } });
+    const saved = SYS.prog; SYS.prog = { done: 1, total: 4 }; TL.hs = {}; hsGet('sysdim', .45); TL.hs.sysdim.x = .45;
+    const o = window.roundRect; let rr = 0; window.roundRect = () => { rr++; }; drawSysBlocks(ctx); const blocks = rr; rr = 0; drawHandles(ctx); const handles = rr; window.roundRect = o; SYS.prog = saved; delete TL.hs.sysdim;
+    return { blocks, handles, dim: calls.a.length > 0 && calls.a[0] < 0.6, hit: (() => { const s0 = SYS.prog; SYS.prog = { done: 1, total: 4 }; const h = hitTurn({ x: t2x(S.turns[0]), y: TL.trackY + 5 }); SYS.prog = s0; return h; })() };
   });
-  ok('while finding the page lane and the handles draw nothing', held === 0, String(held));
+  ok('while finding the page blocks stay, dimmed', held.blocks > 0 && held.dim, JSON.stringify(held));
+  ok('while finding there are no handles to draw or grab', held.handles === 0 && held.hit === -1, JSON.stringify(held));
   ok('the wipe, sweep, pop, and Stop code is gone', await p.evaluate(() => ['WIPE', 'sysWipeStart', 'sysWipeStep', 'wipeProg', 'sysPop', 'drawWipedThumb', 'drawSysSweep', 'sysStopRun'].every(n => typeof window[n] === 'undefined')));
 
-  // a page edited: the same pill with the real count, then one reveal
+  // a page edited: the same pill with the real percent, then one reveal
   await p.evaluate(() => { const o = SYS.run; SYS.run = function (m, k) { const t = SYS.token; return new Promise(r => setTimeout(r, 600)).then(() => t === SYS.token ? o.call(SYS, m, k) : null); }; });
   await p.evaluate(() => { const r = recipeOf(); r.slots[1].crop = [0, 0, 1, 0.95]; setRecipe(r); rebuildSpreads(false); });
   await p.waitForTimeout(250);
   const pill = await p.evaluate(() => ({ on: document.querySelector('#sysFind').classList.contains('on'), t: document.querySelector('#sysFindT').textContent, kept: [...SYS.byPage.keys()].sort().join() }));
-  ok('an edited page shows the same pill with the real count', pill.on && pill.t === 'Finding systems… 3 of 4' && pill.kept === '0,2,3', JSON.stringify(pill));
+  ok('an edited page shows the same pill with the real percent', pill.on && pill.t === 'Processing 75%' && pill.kept === '0,2,3', JSON.stringify(pill));
   await p.waitForFunction(() => !SYS.prog, null, { timeout: 30000 });
   ok('then the timeline comes back with one reveal', await p.evaluate(() => !!(TL.rv && TL.rv.blocks) || rvProgress('blocks') <= 1));
   await p.evaluate(() => { const o = SYS.run; SYS.run = o; }); await p.waitForTimeout(800);

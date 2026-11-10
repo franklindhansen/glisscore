@@ -13,7 +13,7 @@ function syncFirstAlone() {
 function baseSpreads() {
   const pages = S.pdf ? S.pdf.keep : [], n = pages.length, out = [];
   if (!n) return out;
-  if (sysOn()) return pages.flatMap(p => sysEntries(p).map(k => [-1, k]));          // one entry per system
+  if (sysOn()) return pages.flatMap(p => sysBoxes(p).map((bx, k) => Object.assign([-1, sysKey(p, k)], { b: bx })));          // one entry per system, each carrying its Selection (b) so its turn can follow it
   if (soloOn()) return pages.map(p => [-1, p]);          // each page sits in the right-hand slot, which the layout centers
   if (firstAloneOn()) {
     out.push([-1, pages[0]]);
@@ -56,7 +56,7 @@ function syncPageLayout(glide) {
   const one = soloOn();
   document.querySelectorAll('input[name=pageLayout]').forEach(r => { r.checked = r.value === S.set.pageLayout; });
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
-  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; $('#tbMarginField').hidden = !sysOn(); applyTransitionUI();
+  $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; $('#letterboxField').hidden = !sysOn(); applyTransitionUI();
   if (!sysOn() && (SYS.prog || SYS.job)) SYS.stop();          // leaving System ends the finding at once
   if (sysOn() && S.pdf && !SYS.prog) sysWarn(); else sysUI();
 }
@@ -210,7 +210,7 @@ const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!H
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
   ['Transition', ['transition', 'slideDir']], ['Turn length', ['flipDur', 'slideDur']], ['Turn reference', ['ref']], ['Bend', ['bend']], ['First page alone', ['firstAlone']],
-  ['Margin', ['margin']], ['Top and bottom margin', ['tbMargin']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
+  ['Margin', ['margin']], ['Letterbox', ['letterbox']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
   ['Aspect', ['aspect']], ['Resolution', ['res']], ['Frame rate', ['fps']], ['Render method', ['method']], ['Codec', ['codec']], ['Video quality', ['videoQuality']],
   ['Credits', ['creditsOn', 'creditsAt', 'creditsWithLast', 'creditsEarly', 'creditsFont', 'creditsBase', 'credTitleB', 'credTitleI', 'credTitleFont', 'credL2B', 'credL2I', 'credL2Font', 'credL3B', 'credL3I', 'credL3Font']],
   ['Audio format', ['audioFormat', 'audioKbps', 'audioRate']], ['Tags', ['tagsOn', 'tagTitle', 'tagArtist', 'tagAlbumArtist', 'tagAlbum', 'tagYear', 'tagTrack', 'tagDisc', 'tagComposer', 'tagWork', 'tagMovement', 'tagMovementNo', 'tagGenre', 'tagComment', 'tagShowWork', 'tagCompilation']]];
