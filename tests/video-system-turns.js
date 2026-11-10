@@ -84,6 +84,25 @@ function staffPage(doc, n) {
   });
   ok('every Selection is outlined, and the current one is the brightest', sel.out.length === 3 && sel.out[0].edge < sel.out[1].edge && sel.out[0].edge < sel.out[2].edge && sel.out.every(o => o.edge < 250), JSON.stringify(sel));
   ok('every Selection carries a reading-order number badge', sel.out.every(o => o.blue > 15), JSON.stringify(sel.out));
+  // with audio: the waveform stays while finding, the stops share the audio equally, and Play works once found
+  await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/stereo.wav');
+  await p.waitForFunction(() => S.audio && S.audio.duration > 1, null, { timeout: 60000 }); await p.waitForTimeout(1500);
+  await p.evaluate(() => { const o = SYS.run; window.__slow = o; SYS.run = function (m, k) { const t = SYS.token; return new Promise(r => setTimeout(r, 900)).then(() => t === SYS.token ? o.call(SYS, m, k) : null); }; const r = recipeOf(); r.slots[0].crop = [0, 0, 1, 0.97]; setRecipe(r); rebuildSpreads(false); });
+  await p.waitForTimeout(300);
+  const aud = await p.evaluate(() => {
+    const calls = { wave: 0, blocks: 0 }, ctx = c => new Proxy({}, { get: (t, k) => k === 'canvas' ? document.createElement('canvas') : (...a) => {} });
+    const ow = window.drawWave, ob = window.drawSysBlocks, oh = window.roundRect; window.drawWave = c => { calls.wave++; return ow(c); }; window.drawSysBlocks = c => { calls.blocks++; return ob(c); };
+    TL.staticDirty = true; drawTimeline(); window.drawWave = ow; window.drawSysBlocks = ob;
+    return { busy: sysBusy(), calls, play: document.querySelector('#bPlay').disabled, exp: document.querySelector('#btnExport').disabled };
+  });
+  ok('with audio loaded the waveform lane stays while Play and Export are held', aud.busy && aud.calls.wave >= 1 && aud.play && aud.exp, JSON.stringify(aud));
+  await p.waitForFunction(() => !SYS.prog, null, { timeout: 30000 }); await p.waitForTimeout(1200);
+  const fin = await p.evaluate(() => { const g = S.turns.slice(1).map((t, i) => t - S.turns[i]); return { gaps: Math.max(...g) - Math.min(...g), play: document.querySelector('#bPlay').disabled, exp: document.querySelector('#btnExport').disabled, hint: document.querySelector('#exportHint').textContent, len: vEnd() - S.vStart, dur: S.audio.duration }; });
+  ok('with audio every stop gets an equal share', fin.gaps < 0.02, JSON.stringify(fin));
+  ok('Play and Export are back once found', !fin.play && !fin.exp && /MOV/.test(fin.hint), JSON.stringify(fin));
+  await p.click('#bPlay'); await p.waitForTimeout(600);
+  ok('Play plays with audio in System', await p.evaluate(() => Transport.playing && S.time > S.vStart), String(await p.evaluate(() => S.time)));
+  await p.click('#bPlay');
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();
