@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+The "How it works" dropdowns open faster with a soft settle, and their arrow no longer jumps when you hover over it.
+
 ## 1.2.0
 
 System now finds your pages once, shows a quieter timeline, and lets you set any page to Full page.
