@@ -24,7 +24,7 @@ const K = '__keyframes';
   ok('one entry per page for now, and the turns follow', sy.spreads.length === sy.n && sy.turns === sy.n - 1, JSON.stringify(sy));
   ok('First page alone folds away', await hidden('#firstAloneField'));
   ok('the center fold shading folds away', await hidden('#centerFold'));
-  ok('the counter reads "System 1 / 3"', await p.evaluate(() => document.querySelector('#spreadNow').textContent) === 'System 1 / 3');
+  ok('the counter reads "System 1 / 3 · p. 1"', await p.evaluate(() => document.querySelector('#spreadNow').textContent) === 'System 1 / 3 · p. 1');
 
   await p.evaluate(() => document.querySelector('#bUndo').click()); await settle();
   ok('one undo returns to Spread', await S(s => s.set.pageLayout) === 'spread');

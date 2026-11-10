@@ -190,6 +190,11 @@ function updateButtons() {
 function infoParts(i, n) {
   const sp = S.spreads[i], one = soloOn();
   const pg = sp.credits ? 'credits' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp. ' + pageNo(sp[0]) + '–' + pageNo(sp[1]) : 'p. ' + pageNo(sp[0] >= 0 ? sp[0] : sp[1]);
+  if (sysOn() && sp[1] >= 0) {          // System: "System 23 / 259 · p. 13", or "Page 1 / 50" for a page shown whole
+    const pg = sysPage(sp[1]), r = SYS.byPage.get(pg), pages = [...new Set(S.pdf.keep)];
+    if (r && !r.systems.length) return [['p', 'Page '], ['c', (pages.indexOf(pg) + 1) + ' / ' + pages.length]];
+    return [['p', 'System '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', 'p. ' + pageNo(pg)]];
+  }
   if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits || sp.startCredits ? [['s', ' · '], ['t', 'credits']] : [])];
   return [['p', 'Spread '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', pg]];
 }
@@ -212,7 +217,7 @@ function updateInfo() {
     updateInfo.sp = S.spreads; updateInfo.layout = S.set.pageLayout;
     $('#spreadInfo .si').dataset.l = soloOn() ? 'single' : 'spread';
     const best = {}, len = p => p.reduce((a, [, t]) => a + t.length, 0);
-    S.spreads.forEach((sp, i) => { const p = infoParts(i, n), k = sp.credits ? 'c' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp' : 'p'; if (!best[k] || len(p) > len(best[k])) best[k] = p; });
+    S.spreads.forEach((sp, i) => { const p = infoParts(i, n), k = (sp.credits ? 'c' : (sp[0] >= 0 && sp[1] >= 0) ? 'pp' : 'p') + p.map(q => q[0]).join(''); if (!best[k] || len(p) > len(best[k])) best[k] = p; });
     max.textContent = '';
     Object.values(best).forEach(p => { const e = document.createElement('span'); setInfo(e, p); max.appendChild(e); });
     fitInfo();

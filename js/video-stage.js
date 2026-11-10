@@ -973,16 +973,19 @@ function drawHandles(c) {
     if (bx1 < -20 || bx0 > vw + 20) continue;
     const isCr = hasCreditsSpread() && i === S.turns.length - 1, info = sysTurnInfo(i), sysT = !!(info && info.inner && !isCr), pop = 1;
     if (sysBusy()) continue;          // no handles until the systems are found
+    let tick = false;          // a system turn too narrow for a handle is just the tick between its cells, until it is hovered, selected, or dragged
+    if (sysT) { const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1); tick = Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) < 24 && TL.hover !== i && !selSet.has(i) && !(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i); }
+    if (tick && !ph) continue;
     const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a darker orange
     const grabbed = !!(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i), sc = hsGet('t' + i, grabbed ? 1.16 : TL.hover === i ? 1.07 : 1), pw_ = (sysT ? 3 : 13) * sc * (.6 + .4 * pop), ph_ = (sysT ? 14 : 28) * sc * (.6 + .4 * pop), rd = sysT ? 1.5 * sc : 6, cy = trackY + trackH / 2;
     if (ph) {                                   // not placed yet: dashed
       c.globalAlpha = .75 * pop; c.strokeStyle = col; c.lineWidth = 1.5; c.setLineDash([4, 3]);
-      c.beginPath(); c.moveTo(x + .5, trackY - 3); c.lineTo(x + .5, waveY + waveH); c.stroke();
+      if (!sysT) { c.beginPath(); c.moveTo(x + .5, trackY - 3); c.lineTo(x + .5, waveY + waveH); c.stroke(); }
       roundRect(c, x - pw_ / 2, cy - ph_ / 2, pw_, ph_, rd); c.fillStyle = C.bg; c.fill(); c.stroke();
       c.setLineDash([]); c.lineWidth = 1; c.globalAlpha = 1; selRing(c, x, cy, pw_, ph_, selSet.has(i)); continue;
     }
-    if (D > 0) { c.fillStyle = soft; c.fillRect(bx0, trackY, Math.max(1, bx1 - bx0), trackH); c.fillRect(bx0, waveY, Math.max(1, bx1 - bx0), waveH); }
-    c.strokeStyle = col; c.globalAlpha = .55 * pop; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x + .5, trackY + trackH); c.lineTo(x + .5, waveY + waveH); c.stroke(); c.setLineDash([]); c.globalAlpha = pop;
+    if (D > 0) { c.fillStyle = soft; c.fillRect(bx0, trackY, Math.max(1, bx1 - bx0), trackH); if (!sysT) c.fillRect(bx0, waveY, Math.max(1, bx1 - bx0), waveH); }          // a system turn's band is in the page lane only
+    if (!sysT) { c.strokeStyle = col; c.globalAlpha = .55 * pop; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x + .5, trackY + trackH); c.lineTo(x + .5, waveY + waveH); c.stroke(); c.setLineDash([]); } c.globalAlpha = pop;
     c.fillStyle = col; if (!sysT) c.fillRect(x - 1, trackY - 3, 2, trackH + 6);
     c.save(); if (sc > 1.02) { c.shadowColor = col; c.shadowBlur = (sc - 1) * 60; }
     roundRect(c, x - pw_ / 2, cy - ph_ / 2, pw_, ph_, rd); c.fillStyle = col; c.fill(); c.restore();

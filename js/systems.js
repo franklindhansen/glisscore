@@ -180,16 +180,16 @@ async function sysLevelPages() {
 }
 function sysSettle() {
   if (!sysOn() || !S.pdf) return;
-  const none = S.pdf.keep.filter(i => { const r = SYS.byPage.get(i); return r && !r.systems.length; }).join(), before = spreadSig() + '#' + SYS.none;          // a page found to have no systems is a short block, so the turns are spaced again
-  S.spreads = buildSpreads(); SYS.none = none;
-  if (spreadSig() + '#' + none === before) return;
+  const before = spreadSig();
+  S.spreads = buildSpreads();
+  if (spreadSig() === before) return;
   if (S.turnsEdited) reconcileTurns(); else autoSpace(false);
   afterStructureChange(); onTurnsChanged();
 }
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), none: '', scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
+  byPage: new Map(), scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
   /* one to three workers, by what the browser reports about the computer; the page's own thread when none can start */
   lanes() { return clamp(Math.round((navigator.hardwareConcurrency || 2) / 3), 1, 3); },
   worker(k) {

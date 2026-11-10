@@ -37,6 +37,12 @@ function staffPage(doc, n) {
   ok('a block is as wide as its number of systems', Math.abs(blk[1].w / blk[2].w - 2) < 0.15, JSON.stringify(blk.map(q => q.w)));
   const kinds = await p.evaluate(() => S.turns.map((_, i) => sysTurnInfo(i).inner));
   ok('the turns inside a page are system turns, the others page turns, and none follows the last system', kinds.filter(Boolean).length === 5 && kinds.length === 9 && kinds.slice(-1)[0] === false && await p.evaluate(() => sysTurnInfo(S.turns.length) === null), JSON.stringify(kinds));
+  // a system turn is a tick until its cell is wide enough, or it is hovered
+  const hs = await p.evaluate(() => {
+    const vw0 = TL.vw, pps0 = S.pxPerSec, n = pps => { S.pxPerSec = pps; TL.vw = 1e7; TL.hover = -1; const o = window.roundRect; let c = 0; window.roundRect = (...a) => { c++; return o(...a); }; try { drawHandles(document.createElement('canvas').getContext('2d')); } finally { window.roundRect = o; TL.vw = vw0; S.pxPerSec = pps0; } return c; };
+    const small = n(1), big = n(400); return { small, big, sys: S.spreads.filter((s, i) => sysTurnInfo(i) && sysTurnInfo(i).inner).length };
+  });
+  ok('system turns draw no handle at a narrow zoom and show them zoomed in', hs.big > hs.small, JSON.stringify(hs));
   ok('the skinny handle can be grabbed as easily as the page handle', await p.evaluate(() => { const i = sysTurnInfo(0).inner ? 0 : -1, x = t2x(shownTurn(i)), y = TL.trackY + TL.trackH / 2; return i === 0 && hitTurn({ x: x + 6, y }) === 0 && hitTurn({ x: x - 6, y }) === 0; }));
   ok('every page and system is drawn, with the playhead in a cell, without errors', await p.evaluate(() => { S.time = (S.spreads.length ? spreadBounds(1)[0] + 0.1 : 0); TL.staticDirty = true; drawTimeline(); return true; }) && errs.length === 0, errs.join('; '));
   const css = require('fs').readFileSync(__dirname + '/../style.css', 'utf8');
@@ -83,8 +89,10 @@ function staffPage(doc, n) {
   await p.waitForFunction(() => S.pdf && S.pdf.keep.length === 3, null, { timeout: 60000 }); await p.waitForTimeout(800);
   await p.evaluate(() => sysDetectAll()); await p.waitForTimeout(1500);
   const cv = await p.evaluate(() => sysBlocks().map(q => ({ n: q.n, w: q.b - q.a })));
-  ok('a page with no systems is a short block, about 0.4 of a one-system block', cv.length === 3 && cv[0].n === 1 && cv[0].w / cv[1].w > 0.3 && cv[0].w / cv[1].w < 0.5, JSON.stringify(cv));
-  ok('the next page keeps a full block and the turns stay in order', await p.evaluate(() => S.turns.every((t, i) => !i || t > S.turns[i - 1]) && S.turns.length === 2));
+  ok('a page with no systems gets the same share as one system', cv.length === 3 && cv[0].n === 1 && Math.abs(cv[0].w / cv[1].w - 1) < 0.15, JSON.stringify(cv));
+  ok('the turns stay in order', await p.evaluate(() => S.turns.every((t, i) => !i || t > S.turns[i - 1]) && S.turns.length === 2));
+  const lab = await p.evaluate(() => { const o = []; for (let i = 0; i < S.spreads.length; i++) o.push(infoParts(i, S.spreads.length).map(q => q[1]).join('')); return o; });
+  ok('the label reads System N / M · p. N, and Page 1 / 3 on a page with no systems', lab[0] === 'Page 1 / 3' && /^System 2 \/ 3 · p\. 2$/.test(lab[1]), JSON.stringify(lab));
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

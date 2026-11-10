@@ -131,16 +131,12 @@ function reconcileTurns() {
   while (S.turns.length < need) { const b = S.turns.length ? S.turns[S.turns.length - 1] + turnGap() : turnMin(); S.turns.push(Math.min(b, vEnd())); S.ph.push(true); }
   fixPh();
 }
-/* the share of time an entry gets when the turns are spaced evenly: a page with no systems (a cover) is a short stay in System */
-const SPACE_NONE = 0.4;
-const spaceWeight = sp => { const r = sysOn() && sp[1] >= 0 ? SYS.byPage.get(sysPage(sp[1])) : null; return r && !r.systems.length ? SPACE_NONE : 1; };
 function autoSpace(record = true) {
   if (record) pushHistory();
   const n = S.spreads.length, dur = duration(), off = refOffset(), hasC = n > 0 && !!S.spreads[n - 1].credits;
   const pages = hasC ? n - 1 : n, span = hasC ? Math.max(1, audioLen() - S.vStart) : dur;      // the pages share the time up to the end of the audio
   S.turns = [];
-  const wt = S.spreads.slice(0, pages).map(spaceWeight), all = wt.reduce((x, y) => x + y, 0);
-  for (let i = 0, run = 0; i < pages - 1; i++) { run += wt[i]; S.turns.push(S.vStart + run * span / all + off); }
+  for (let i = 0; i < pages - 1; i++) S.turns.push(S.vStart + (i + 1) * span / pages + off);          // every stop gets an equal share
   if (hasC) S.turns.push(creditsTurn());
   normalizeTurns();
   S.ph = new Array(S.turns.length).fill(false);
