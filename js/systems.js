@@ -157,11 +157,22 @@ async function sysWarn() {
   if (!sysOn() || !S.pdf) { SYS.warn = null; sysUI(); return; }
   const gen = SYS.gen, pages = [...new Set(S.pdf.keep)];
   const tilt = pages.filter(i => { const r = SYS.byPage.get(i); return r && Math.abs(r.tilt) > SYS_TILT && !SYS.leveled.has(i) && !peTilted(S.pdf.slots[i]); });
-  let wide = 0; for (const i of pages) { const sl = S.pdf.slots[i]; try { await peAspectOf(sl); } catch (e) {} if (peSpread(sl)) wide++; }
+  const wide = []; for (const i of pages) { const sl = S.pdf.slots[i]; try { await peAspectOf(sl); } catch (e) {} if (peSpread(sl)) wide.push(i); }
   if (gen !== SYS.gen || !sysOn()) return;
   SYS.warn = { tilt, wide }; sysUI();
 }
-/* Level these pages: Re-kilter on only the tilted pages, one History step. The pages are found again on the new tilt. */
+/* a note naming its pages: "Pages 4, 7, and 12 are tilted…"; more than five are counted */
+const sysList = a => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
+function sysNote(kind, ids) {
+  const pg = ids.map(pageNo).sort((a, b) => a - b);
+  return pg.length > 5 ? tx('sys.' + kind + '.count', { n: pg.length }) : tx('sys.' + kind + (pg.length === 1 ? '.one' : '.many'), { pages: sysList(pg) });
+}
+/* Split spreads: the PDF Editor opens on that tool with the two-page scans ticked */
+function sysSplitPages() {
+  const ids = SYS.warn ? SYS.warn.wide.slice() : []; if (!ids.length || !S.pdf) return;
+  openPdfEditor(); PE.splitSel = new Set(ids); peTool('split');
+}
+/* Re-kilter: Re-kilter on only the tilted pages, one History step. The pages are found again on the new tilt. */
 async function sysLevelPages() {
   const ids = SYS.warn ? SYS.warn.tilt.slice() : []; if (!ids.length || SYS.leveling || !S.pdf) return;
   SYS.leveling = true; sysUI(); const gen = SYS.gen;
@@ -173,7 +184,7 @@ async function sysLevelPages() {
     if (!changed) { toast(tx('pe.skew.none')); return; }
     const was = Transport.playing, at = Transport.now(); Transport.pause();
     pushHistory(); const base = S.history.length;
-    setRecipe(r); ids.forEach(id => { SYS.byPage.delete(id); SYS.scan.delete(id); SYS.hand.delete(id); }); SYS.rev++;
+    SYS.noted = false; setRecipe(r);          // the pages whose picture changed are found again (and lose their marks, said in a toast); the rest keep theirs
     rebuildSpreads(false); if (S.history.length > base) S.history.length = base;
     S.time = was ? clamp(at, S.vStart, vEnd()) : S.time; setChips(); updateTimeUI(true); if (was) Transport.play();
   } finally { SYS.leveling = false; sysWarn(); }
@@ -226,28 +237,34 @@ function sysSync() {
   });
   if (!gone) return;
   SYS.rev++; stageDirty = true; if (sysOn() && S.pdf.keep.length) sysKick();
-  if (named.length && !HB.quiet) { SYS.noted = true; toast(tx('sys.redone', { page: named.sort((a, b) => a - b).join(', ') })); }          // noted: the caller's own toast would only replace this one
+  if (named.length && !HB.quiet) { SYS.noted = true; named.sort((a, b) => a - b); toast(tx(named.length === 1 ? 'sys.redone' : 'sys.redone.many', { page: sysList(named) })); }          // noted: the caller's own toast would only replace this one
 }
-/* The hand-marked pages for the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]]}] */
-const sysToList = () => [...SYS.hand].filter(i => SYS.byPage.has(i) && S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
-  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000;
-  return { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(b => { const e = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; return e; }) };
+/* Every found page for the project and the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]], f: 1 on Full page, h: systems held aside on Full page, a: 1 when found automatically, g: the picture it was found on}] */
+const sysToList = () => [...SYS.byPage.keys()].filter(i => S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
+  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => [q(b.top), q(b.bottom), q(b.left), q(b.right)], e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
+  if (r.full) e.f = 1; if (r.held && r.held.length) e.h = r.held.map(box); if (!SYS.hand.has(i)) e.a = 1; e.g = r.geo || sysGeo(S.pdf.slots[i]);
+  return e;
 });
 /* only values this site understands; null when nothing usable */
 function sysListClean(list, n) {
   if (!Array.isArray(list) || list.length > 500) return null; const out = [], f = v => Number.isFinite(v) && v >= 0 && v <= 1;
+  const boxes = a => { const s = []; for (const b of Array.isArray(a) ? a.slice(0, 100) : []) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; s.push({ top: b[0], bottom: b[1], left: b[2], right: b[3] }); } return s; };
   for (const e of list) {
     if (!e || !Number.isInteger(e.p) || e.p < 1 || e.p > n || !Array.isArray(e.s) || e.s.length > 100) continue;
-    const t = Number.isFinite(e.t) ? clamp(e.t, -15, 15) : 0, s = [];
-    for (const b of e.s) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; const o = { top: b[0], bottom: b[1], left: b[2], right: b[3] }; s.push(o); }
-    out.push({ p: e.p, t, s });
+    const t = Number.isFinite(e.t) ? clamp(e.t, -15, 15) : 0, s = boxes(e.s), o = { p: e.p, t, s };
+    if (e.f === 1 || e.f === true) o.f = true; if (e.a === 1 || e.a === true) o.a = true; const h = boxes(e.h); if (h.length) o.h = h; if (typeof e.g === 'string' && e.g.length < 300) o.g = e.g;
+    out.push(o);
   }
   return out.length ? out : null;
 }
-/* put saved marks on the pages, which must already be in the saved order */
+/* put saved pages in place (the pages must already be in the saved order); a page whose picture is not the one it was found on is found again */
 function sysFromList(list) {
   sysFresh(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear();
-  (list || []).forEach(e => { const i = e.p - 1, sl = S.pdf.slots[i]; if (!sl) return; SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [], full: !e.s.length }); SYS.hand.add(i); });
+  (list || []).forEach(e => {
+    const i = e.p - 1, sl = S.pdf.slots[i]; if (!sl || (e.g && e.g !== sysGeo(sl))) return;
+    SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [], full: !!e.f || !e.s.length, held: (e.h || []).slice().sort((a, b) => a.top - b.top) });
+    if (e.a) delete SYS.byPage.get(i).auto; else SYS.hand.add(i);
+  });
   SYS.rev++; stageDirty = true; if (sysOn()) sysKick();
 }
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */

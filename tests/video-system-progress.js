@@ -58,6 +58,20 @@ function staffPage(doc, n, o = {}) {
   ok('a tilted page gets a reason line with Level these pages', w.tilt && /tilted/.test(w.tt), JSON.stringify(w));
   ok('a two-page scan points to Split spreads', w.wide && /Split spreads/.test(w.wt), w.wt);
   ok('Export video is available once done', !w.exp);
+  ok('the tilt note names its page and carries Re-kilter', w.tt === 'Page 3 is tilted, which can clip its systems.' && await p.evaluate(() => document.querySelector('#sysLevel').textContent === 'Re-kilter'), w.tt);
+  ok('the two-page note names its page and carries Split spreads', /^Page 4 is a two-page scan, which hides its systems\.\s*Split spreads$/.test(w.wt.trim()), w.wt);
+  const nt = await p.evaluate(() => [sysNote('tilt', [3, 6, 11]), sysNote('wide', [1, 2]), sysNote('tilt', [0, 1, 2, 3, 4, 5, 6])]);
+  ok('three pages are listed with the Oxford comma, two with and, more than five are counted', nt[0] === 'Pages 4, 7, and 12 are tilted, which can clip their systems.' && nt[1] === 'Pages 2 and 3 are two-page scans, which hides their systems.' && nt[2] === '7 pages are tilted, which can clip their systems.', JSON.stringify(nt));
+  // Split spreads opens the PDF Editor on that tool with the scan ticked; after Done only the changed pages are found again
+  await p.evaluate(() => { window.__runs = 0; const o = SYS.run; SYS.run = function (...a) { window.__runs++; return o.apply(this, a); }; });
+  await p.click('#sysSplitGo'); await p.waitForTimeout(800);
+  const pe = await p.evaluate(() => ({ mode: PE.mode, tick: [...PE.splitSel] }));
+  ok('Split spreads opens the editor on Split spreads with those pages ticked', pe.mode === 'split' && pe.tick.join() === '3', JSON.stringify(pe));
+  await p.click('#peSplitGo'); await p.waitForFunction(() => !document.querySelector('#peSplitGo').disabled || PE.d.slots.length > 4, null, { timeout: 30000 }); await p.waitForTimeout(500);
+  await p.click('#peDone'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === new Set(S.pdf.keep).size, null, { timeout: 60000 }); await p.waitForTimeout(300);
+  const sp = await p.evaluate(() => ({ runs: window.__runs, keep: S.pdf.keep.length, wide: SYS.warn ? SYS.warn.wide.length : -1 }));
+  ok('after Split spreads only the split page and its new half are found again', sp.runs === 2 && sp.keep === 5, JSON.stringify(sp));
+  ok('the two-page note goes when no scan remains', await p.evaluate(() => document.querySelector('#sysWide').hidden), JSON.stringify(sp));
   const g = await p.evaluate(() => (window.uiGuard && uiGuard.report ? uiGuard.report() : []));
   ok('uiGuard reports nothing', !g.length, JSON.stringify(g));
   const before = await p.evaluate(() => ({ h: S.history.length }));

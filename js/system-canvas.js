@@ -68,15 +68,15 @@ function splitStop() { cancelAnimationFrame(SPLIT.raf); SPLIT.glide = 0; }
 /* the System group's status line: the run with its bar and Stop, then the reason lines for tilted pages and two-page scans */
 function sysStatusUI() {
   const note = $('#sysNote'); if (!note) return;
-  const on = sysOn() && !!S.pdf, p = on ? SYS.prog : null, w = on && !p ? SYS.warn : null, tilt = w ? w.tilt.length : 0, wide = w ? w.wide : 0;
+  const on = sysOn() && !!S.pdf, p = on ? SYS.prog : null, w = on && !p ? SYS.warn : null, tilt = w ? w.tilt.length : 0, wide = w ? w.wide.length : 0;
   $('#sysTilt').hidden = !tilt; $('#sysWide').hidden = !wide; note.hidden = !(tilt || wide);
   const pill = $('#sysFind'); pill.classList.toggle('on', !!p);
   if (p) { $('#sysFindT').textContent = tx('sys.finding', { done: p.done, total: p.total }); $('#sysFindFill').style.width = (p.total ? Math.round(p.done / p.total * 100) : 0) + '%'; }
-  if (tilt) { $('#sysTiltT').textContent = tx(tilt === 1 ? 'sys.tilt.one' : 'sys.tilt.many', { n: tilt }); $('#sysLevel').disabled = SYS.leveling; }
-  if (wide) $('#sysWide').innerHTML = tx('sys.wide');
+  if (tilt) { $('#sysTiltT').textContent = sysNote('tilt', w.tilt); $('#sysLevel').disabled = SYS.leveling; }
+  if (wide) $('#sysWideT').textContent = sysNote('wide', w.wide);
 }
 function splitBind() {
-  $('#sysLevel').addEventListener('click', sysLevelPages);
+  $('#sysLevel').addEventListener('click', sysLevelPages); $('#sysSplitGo').addEventListener('click', sysSplitPages);
   const div = $('#sysDiv'), wrap = $('#stageWrap'); let live = false, queued = 0;
   const at = e => { const r = wrap.getBoundingClientRect(), inset = 1; return SPLIT.stack ? (e.clientY - r.top - inset) / wrap.clientHeight : (e.clientX - r.left - inset) / wrap.clientWidth; };
   div.addEventListener('pointerdown', e => { if (e.button) return; splitStop(); live = true; div.setPointerCapture(e.pointerId); div.classList.add('drag'); e.preventDefault(); });

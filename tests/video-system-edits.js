@@ -43,7 +43,7 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   await p.waitForTimeout(2500);
   ok('a cropped page is found again', await n(0) === 3, String(await n(0)));
   ok('its hand marks are dropped', JSON.stringify(await hand()) === '[1]');
-  ok('the toast names the page', /page 1\b/.test(await toastText()), await toastText());
+  ok('the toast names the page', /^Marks cleared on p\. 1\.$/.test(await toastText()), await toastText());
   ok('an untouched page keeps its marks', await n(1) === 1);
   // undo brings the marks back
   await p.click('#bUndo'); await p.waitForTimeout(1500);
@@ -52,7 +52,7 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   await p.evaluate(() => { const r = recipeOf(); r.slots[1].skew = 0.5; r.slots[2].x = true; r.slots[2].crop = [0, 0, 1, 0.9]; pushHistory(); setRecipe(r); rebuildSpreads(false); });
   await p.waitForTimeout(2500);
   ok('a leveled page is found again', await n(1) === 2 && JSON.stringify(await hand()) === '[0]', JSON.stringify([await n(1), await hand()]));
-  ok('the toast names the leveled page', /page 2\b/.test(await toastText()), await toastText());
+  ok('the toast names the leveled page', /^Marks cleared on p\. 2\.$/.test(await toastText()), await toastText());
   ok('an inactive page is not found', !(await p.evaluate(() => SYS.byPage.has(2))));
   await p.click('#bUndo'); await p.waitForTimeout(1500);
   // a repeated page gets its own systems
@@ -62,10 +62,15 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   await p.click('#bUndo'); await p.waitForTimeout(1000);
   // export and import
   const text = await p.evaluate(() => buildExport('all'));
-  ok("the file carries the marks", /"systems":\[/.test(text) && JSON.parse(text).systems.length === 2, text.slice(text.indexOf('"systems"'), text.indexOf('"systems"') + 120));
+  ok("the file carries the marks", /"systems":\[/.test(text) && JSON.parse(text).systems.filter(e => !e.a).length === 2 && JSON.parse(text).systems.length >= 3 && JSON.parse(text).systems.every(e => typeof e.g === 'string'), text.slice(text.indexOf('"systems"'), text.indexOf('"systems"') + 120));
   await p.evaluate(() => { SYS.hand.forEach(i => { SYS.byPage.delete(i); }); SYS.hand.clear(); SYS.rev++; });
   await p.evaluate(t => importSettings(new File([t], 's.txt')), text); await p.waitForTimeout(2500);
   ok('import brings the marks back', JSON.stringify(await hand()) === '[0,1]' && await n(0) === 2 && await n(1) === 1, JSON.stringify([await hand(), await n(0), await n(1)]));
+  // opening saved work finds nothing again; a file from before this change still loads
+  const re = await p.evaluate(async t => { SYS.stop(); SYS.byPage.clear(); SYS.hand.clear(); let runs = 0; const o = SYS.run; SYS.run = function (...a) { runs++; return o.apply(this, a); }; await importSettings(new File([t], 's.txt')); await new Promise(r => setTimeout(r, 1500)); SYS.run = o; return { runs, size: SYS.byPage.size, keep: new Set(S.pdf.keep).size, prog: !!SYS.prog }; }, text);
+  ok('opening saved work does not find again', re.runs === 0 && re.size === re.keep && !re.prog, JSON.stringify(re));
+  const old = await p.evaluate(() => { const l = sysListClean([{ p: 1, t: 0, s: [[0.1, 0.3, 0.1, 0.9]] }], 4); return l && l.length === 1 && !l[0].a && !l[0].f && l[0].s.length === 1; });
+  ok('a settings file saved before this change still loads', old);
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();
