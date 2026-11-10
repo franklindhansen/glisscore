@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+System now finds your pages once, shows a quieter timeline, and lets you set any page to Full page.
+
 ## 1.1.22
 
 The System timeline now shows one block per page, with a skinnier handle for each system turn inside it, and clears the thumbnails with one smooth wipe while pages load. Changing the margins no longer makes the preview flash.
