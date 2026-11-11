@@ -107,9 +107,9 @@ function splitBind() {
 /* ---------- the selector ---------- */
 const SEL = { mark: { space: false, over: false, y0: null, pg: -1, hover: null, live: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
 /* the system the playhead is on: a credits card shows the nearest system instead */
-function selCurrent() {
+function selCurrent(ahead) {
   const n = S.spreads.length; if (!n) return null;
-  const i = frameState(S.time).spread, at = j => { const sp = S.spreads[j]; return sp && sp[1] >= 0 ? sp[1] : null; };
+  const fs = frameState(S.time), i = fs.spread + (ahead && fs.flip != null && fs.flip >= 0.5 ? 1 : 0), at = j => { const sp = S.spreads[j]; return sp && sp[1] >= 0 ? sp[1] : null; };
   for (let d = 0; d < n; d++) { const k = at(i + d); if (k != null) return k; }
   for (let d = 1; d < n; d++) { const k = at(i - d); if (k != null) return k; }
   return null;
@@ -131,7 +131,7 @@ function selJump(key) { const t = selTimeOf(key); if (t != null) Transport.seek(
 function selPgText() { if (SEL.key == null || !S.pdf) return; $('#selPg').textContent = ($('#sysSel').classList.contains('tight') ? 'p. ' : 'Page ') + pageNo(SEL.key); }
 function selSync(force) {
   if (!SPLIT.shown || !S.pdf) return;
-  const key = selCurrent(), cv = $('#selCv'); if (key == null) return;
+  const key = selCurrent(true), cv = $('#selCv'); if (key == null) return;          // the selector moves on at the middle of a turn, not after it ends
   const sig = [key, cv.clientWidth, cv.clientHeight, S.set.margin, S.set.letterbox, S.set.aspect, S.set.res, SYS.byPage.size, SYS.gen, SYS.rev, S.pdf.gen || 0].join();
   if (!force && sig === SEL.sig) return;
   if (sysPage(key) !== sysPage(SEL.key == null ? -1 : SEL.key) && SZS.z !== 1) szReset(false, SZS);          // a new page starts at Fit
