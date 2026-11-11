@@ -1,18 +1,26 @@
-# *glisscore™*
+# *glisscore*
 
 Create score videos from a PDF and a recording.
 
-**Official site:** [glisscore.com](https://glisscore.com) · **Official repository:** [github.com/franklindhansen/glisscore](https://github.com/franklindhansen/glisscore)
+**Site:** [glisscore.com](https://glisscore.com) · **Source:** [github.com/franklindhansen/glisscore](https://github.com/franklindhansen/glisscore)
 
 Everything runs in your browser. Your files never leave your device.
 
 ## Features
 
-- **Video editor.** Set when each page turns, add credits, fade in and out, and export the video.
-- **PDF Editor.** Arrange, rotate, crop, clean, re-kilter, dim repeated music, and re-size pages.
-- **Audio Editor.** Noise reduction, spectrogram, EQ, imager, level, and limiter.
+- **Video editor.** Set each page turn, display your score as spreads, single pages, or systems, add credits, fade in and out, and export video.
+- **PDF Editor.** Arrange, clean, re-kilter, crop, dim repeats, split spreads, re-size, and watermark pages. No acrobatics required.
+- **Audio Editor.** Reduce noise, heal blips, add EQ, adjust stereo width, level, and export audio.
 
-## Run it yourself
+## Feedback
+
+Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen/glisscore/issues). Code changes aren't being accepted yet.
+
+## Support
+
+*glisscore™* was made by composer, conductor, and grad student (who should probably be writing music), [Franklin D. Hansen](https://franklindhansen.com/). It's free and open source. If it's useful to you and you'd like to help cover hosting and upkeep, you can [buy me a coffee on Ko-fi](https://ko-fi.com/franklindhansen). There's no pressure: supporting unlocks nothing, and the app is the same for everyone.
+
+## Development
 
 There is nothing to build. Serve the folder and open it in a current browser:
 
@@ -21,14 +29,6 @@ There is nothing to build. Serve the folder and open it in a current browser:
 Then open <http://localhost:8123>.
 
 The checks in `tests/` need Playwright; `tests/README.md` has the setup.
-
-## Feedback
-
-Bug reports and ideas are welcome as [issues](https://github.com/franklindhansen/glisscore/issues). Code changes aren't being accepted yet.
-
-## Support
-
-*glisscore* is free and open source. If it's useful to you, you can help cover hosting and upkeep with a coffee on Ko-fi, linked from the About dialog ([glisscore.com/support](https://glisscore.com/support)).
 
 ## License
 
