@@ -1216,14 +1216,21 @@ function hitTurn(p) {
   if (sysBusy()) return -1;          // the handles are not drawn while systems are found, so they cannot be grabbed
   if (p.y < TL.trackY - 8 || p.y > TL.trackY + TL.trackH + 8) return -1;
   let best = -1, bd = 10;
-  for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(shownTurn(i)) - p.x); if (d <= bd) { bd = d; best = i; } }
+  for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(shownTurn(i)) - p.x); if (d <= bd && d <= (tlTickLike(i) ? 2 : 10)) { bd = d; best = i; } }          // a tick takes only a near-exact grab
   return best;
 }
-/* The playhead's line is a handle of its own: a turn beside it never takes the grab (a turn under it keeps the sides of its handle). */
+/* A system turn too narrow for a handle is drawn as a tick (unless selected): the playhead outranks it, and it needs a deliberate drag to move. */
+function tlTickLike(i) {
+  const info = sysTurnInfo(i); if (!info || !info.inner || (hasCreditsSpread() && i === S.turns.length - 1) || turnSel().includes(i)) return false;
+  const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1);
+  return Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) < 24;
+}
+/* The playhead's line is a handle of its own: a turn beside it never takes the grab. A turn under it wins in the middle of its handle (the playhead is still grabbed above it, in the ruler, and below the handle); a tick under it never does. */
 function hitPlayhead(p, hi, touch) {
   const px = t2x(S.time); if (px < -10 || px > TL.vw + 10) return false;
-  const under = hi >= 0 && Math.abs(t2x(shownTurn(hi)) - px) <= 1.5;
-  return Math.abs(p.x - px) <= (under ? (touch ? 4 : 2.5) : (touch ? 9 : 5));
+  const under = hi >= 0 && !tlTickLike(hi) && Math.abs(t2x(shownTurn(hi)) - px) <= 1.5;
+  if (under) return false;
+  return Math.abs(p.x - px) <= (touch ? 9 : 5);
 }
 function hitCredEnd(p) {
   if (!creditsEarlyOn() || p.y < TL.trackY - 8 || p.y > TL.trackY + TL.trackH + 8) return false;
@@ -1324,7 +1331,7 @@ TL.canvas.addEventListener('pointerdown', e => {
   } else if (hi >= 0) {
     if (!turnSel().includes(hi)) setTurnSel([]);                // a plain grab of an unselected turn drops the selection; a selected one takes the group along
     const grp = turnSel().length > 1 ? turnSel().slice() : null;
-    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, dx: S.turns[hi] - x2t(p.x), base: S.turns.slice(), group: grp, moved: false, rb, live: Transport.playing };
+    const rb = S.redo.slice(); pushHistory(); TL.drag = { kind: 'turn', i: hi, pend: tlTickLike(hi) ? p.x : null, dx: S.turns[hi] - x2t(p.x), base: S.turns.slice(), group: grp, moved: false, rb, live: Transport.playing };
     if (!TL.drag.live) { S.time = clamp(S.turns[hi], S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true); }          // paused: the playhead goes to the marker. Playing: the video keeps going, untouched, while the marker moves
   } else if (p.y >= TL.trackY && p.y <= TL.trackY + TL.trackH) {   // empty track: a click clears the selection and moves the playhead; a drag draws a box
     TL.drag = { kind: 'box', x0: p.x, resume: Transport.playing, keep: e.shiftKey ? turnSel().slice() : [], moved: false };
@@ -1345,6 +1352,7 @@ TL.canvas.addEventListener('pointermove', e => {
   } else if (d && d.kind === 'trim') {
     d.rawX = p.x; trimTo(d);
   } else if (d && d.kind === 'turn') {
+    if (d.pend != null) { if (Math.abs(p.x - d.pend) < 4) return; d.pend = null; d.dx = d.base[d.i] - x2t(p.x); }          // a tick waits for a few pixels of travel, then follows the pointer from there
     const want = x2t(p.x) + d.dx, delta = d.group ? clampGroupDelta(d.base, d.group, want - d.base[d.i]) : 0;
     const t = d.group ? d.base[d.i] + delta : clampTurn(d.i, want);
     const next = d.group ? nudgeGroup(d.base, d.group, delta) : nudgeTurns(d.base, d.i, t);

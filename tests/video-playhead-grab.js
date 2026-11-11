@@ -1,4 +1,4 @@
-// Video editor: the playhead can be grabbed on its line anywhere in the timeline, even with a page turn right beside it or under it; grabbing it never moves a turn. A turn still grabs by its own handle, away from the line.
+// Video editor: the playhead can be grabbed on its line anywhere in the timeline, even with a page turn right beside it; a turn under it wins in the middle of its handle, and the playhead is grabbed above the handle.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-playhead-grab.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -31,14 +31,13 @@ const K = '__keyframes';
   await dragFrom(0, -20, -60); r = await read();
   ok('beside a turn, up the line: the turns stay put and the playhead moves back', same(r.turns, before.turns) && r.time < before.time + 0.5, r.time.toFixed(2));
 
-  // a turn right under the playhead: the line (its middle 2px) is the playhead; the turn's handle grabs away from it
+  // a turn right under the playhead: the turn wins in the middle of its handle; the playhead is still grabbed in the ruler above it
   await setup(base, base[3]); before = await read();
   await dragFrom(0, 0, 60); r = await read();
-  ok('under a turn: the line drags the playhead, not the turn', same(r.turns, before.turns) && Math.abs(r.time - before.time) > 0.5, JSON.stringify(r.turns.slice(2, 5)) + ' ' + r.time.toFixed(2));
+  ok('under a turn: the middle of the handle moves the turn', Math.abs(r.turns[3] - before.turns[3]) > 0.5 && r.n === before.n + 1, JSON.stringify(r.turns.slice(2, 5)));
   await setup(base, base[3]); before = await read();
-  await dragFrom(5, 0, 60); r = await read();
-  ok('under a turn: the handle beside the line still moves the turn', Math.abs(r.turns[3] - before.turns[3]) > 0.5 && r.n === before.n + 1, JSON.stringify(r.turns.slice(2, 5)));
-
+  { const g0 = await geo(); await dragFrom(0, 8 - g0.ty - g0.th / 2, 60); } r = await read();
+  ok('under a turn: the line above the handle drags the playhead, not the turn', same(r.turns, before.turns) && Math.abs(r.time - before.time) > 0.5, JSON.stringify(r.turns.slice(2, 5)) + ' ' + r.time.toFixed(2));
   // a turn far from the playhead keeps its whole handle
   await setup(base, base[6]); before = await read();
   const g = await geo(); const x3 = g.l + g.tx[3], y = g.t + g.ty + g.th / 2;
@@ -59,7 +58,7 @@ const K = '__keyframes';
   await p.mouse.up();
   // hovering the playhead's line lights it up; moving away puts it back
   await setup(base, base[1]); const g3 = await geo();
-  await p.mouse.move(g3.l + g3.px, g3.t + g3.ty + g3.th / 2 + 20);
+  await p.mouse.move(g3.l + g3.px, g3.t + 8);
   ok('hovering the playhead lights it up', await p.evaluate(K => !!window[K].TL.hoverPh, K));
   await p.mouse.move(g3.l + g3.px + 60, g3.t + g3.ty + g3.th / 2 + 20);
   ok('moving away turns the light off', await p.evaluate(K => !window[K].TL.hoverPh, K));

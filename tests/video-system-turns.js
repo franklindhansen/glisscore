@@ -43,10 +43,23 @@ function staffPage(doc, n) {
   ok('then the timeline comes back with one reveal', await p.evaluate(() => !!(TL.rv && TL.rv.blocks) || rvProgress('blocks') <= 1));
   await p.evaluate(() => { const o = SYS.run; SYS.run = o; }); await p.waitForTimeout(800);
 
-  // system turns: ticks at Fit, handles when zoomed; every turn works as before
+  // system turns: ticks when zoomed far out, handles when zoomed in; every turn works as before
   const info = await p.evaluate(() => { const inner = []; for (let i = 0; i < S.turns.length; i++) { const t = sysTurnInfo(i); if (t && t.inner) inner.push(i); } return { inner, n: S.turns.length }; });
   ok('the score has system turns inside its pages', info.inner.length >= 4, JSON.stringify(info));
   const zoom = () => p.evaluate(() => { S.pxPerSec = Math.max(S.pxPerSec, 60); const t = S.turns[2]; TL.scroller.scrollLeft = Math.max(0, (t - tlLo()) * S.pxPerSec + TL_ROOM - 300); TL.staticDirty = TL.overlayDirty = true; });
+  // zoomed far out, a spread narrower than a handle (24px) makes its system turn a tick: the playhead outranks one beside it, and a tick needs a few pixels of travel to move
+  await p.evaluate(() => setZoom(2.5, 0, false)); await p.waitForTimeout(400);
+  const tk = await p.evaluate(i => { const r = TL.canvas.getBoundingClientRect(); return { l: r.left, y: r.top + TL.trackY + TL.trackH / 2, x: t2x(shownTurn(i)), tick: tlTickLike(i), t: S.turns[i], h: S.history.length }; }, info.inner[0]);
+  ok('zoomed out a system turn is a tick', tk.tick, JSON.stringify(tk));
+  const tdrag = async (dx, mv) => { await p.mouse.move(tk.l + tk.x + dx, tk.y); await p.mouse.down(); for (let s = 1; s <= 10; s++) await p.mouse.move(tk.l + tk.x + dx + mv * s / 10, tk.y); await p.mouse.up(); await p.waitForTimeout(150); };
+  await p.evaluate(i => { Transport.seek(S.turns[i] + x2t(t2x(0) + 4) - x2t(t2x(0))); }, info.inner[0]);
+  const tt = () => p.evaluate(() => ({ t: S.turns.slice(), h: S.history.length })); let b0 = await tt(); await tdrag(4, 30); let b1 = await tt();
+  ok('a tick beside the playhead stays put while the playhead is dragged', Math.abs(b1.t[info.inner[0]] - b0.t[info.inner[0]]) < 1e-6 && b1.h === b0.h, JSON.stringify([b0.t[info.inner[0]], b1.t[info.inner[0]]]));
+  await p.evaluate(() => Transport.seek(0)); b0 = await tt();
+  ok('a tick pressed and moved under 4px does not move', Math.abs(b1.t[info.inner[0]] - b0.t[info.inner[0]]) < 1e-6 && b1.h === b0.h, JSON.stringify([b0.t[info.inner[0]], b1.t[info.inner[0]]]));
+  await tdrag(0, 30); b1 = await tt();
+  ok('a tick dragged on its own line moves, in one History step', Math.abs(b1.t[info.inner[0]] - b0.t[info.inner[0]]) > 0.05 && b1.h === b0.h + 1, JSON.stringify([b0.t[info.inner[0]], b1.t[info.inner[0]], b0.h, b1.h]));
+  await p.evaluate(() => undo()); await p.waitForTimeout(200);
   await zoom(); await p.waitForTimeout(400);
   const geo = i => p.evaluate(i => { const r = TL.canvas.getBoundingClientRect(); return { x: r.left + t2x(shownTurn(i)), y: r.top + TL.trackY + TL.trackH / 2 }; }, i);
   const turns = () => p.evaluate(() => ({ t: S.turns.slice(), ph: S.ph.slice(), h: S.history.length, sel: (TL.sel || []).slice() }));
