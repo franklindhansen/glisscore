@@ -49,24 +49,52 @@ function sysDetectCore(ink, w, h, deg, reg) {
       if (lr[e] >= L) { wy += e * lr[e]; sw += lr[e]; if (rx0[e] < a0) a0 = rx0[e]; if (rx1[e] > a1) a1 = rx1[e]; }
       e++;
     }
-    P.push({ y: wy / sw, t: e - y, x0: a0, x1: a1 }); y = e;
+    P.push({ y: wy / sw, t: e - y, x0: a0, x1: a1, a: y, b: e - 1 }); y = e;
   }
   // 2. five evenly spaced lines make a staff
   const ov = (a, b) => Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0) >= 0.6 * Math.min(a.x1 - a.x0, b.x1 - b.x0);
+  const five = i => {
+    if (i + 4 >= P.length) return null;
+    const sp = [1, 2, 3, 4].map(k => P[i + k].y - P[i + k - 1].y), m = (P[i + 4].y - P[i].y) / 4;
+    if (m >= 3 && m <= h * 0.03 && sp.every(v => Math.abs(v - m) <= 0.3 * m) && [1, 2, 3, 4].every(k => ov(P[i], P[i + k]))) return { n: 5, top: P[i].y, bot: P[i + 4].y, d: m, x0: Math.min(...[0, 1, 2, 3, 4].map(k => P[i + k].x0)), x1: Math.max(...[0, 1, 2, 3, 4].map(k => P[i + k].x1)), next: i + 5 };
+    return null;
+  };
+  const four = i => {                                  // one line lost in a dropout: two even gaps and one double gap
+    if (i + 3 >= P.length) return null;
+    const sp = [1, 2, 3].map(k => P[i + k].y - P[i + k - 1].y), q = sp.slice().sort((a, b) => a - b), m = (q[0] + q[1]) / 2;
+    if (m >= 3 && m <= h * 0.03 && Math.abs(q[0] - q[1]) <= 0.3 * m && Math.abs(q[2] - 2 * m) <= 0.35 * 2 * m && [1, 2, 3].every(k => ov(P[i], P[i + k])))
+      return { n: 4, top: P[i].y, bot: P[i + 3].y, d: (P[i + 3].y - P[i].y) / 4, x0: Math.min(...[0, 1, 2, 3].map(k => P[i + k].x0)), x1: Math.max(...[0, 1, 2, 3].map(k => P[i + k].x1)), next: i + 4 };
+    return null;
+  };
   const staves = [];
+  for (let i = 0; i < P.length;) { const st = five(i); if (st) { staves.push(st); i = st.next; } else i++; }
+  // a beam, a slur, or a run of ledger lines joins a staff line into a thick lump, and one stray long stroke breaks the count: with the staff spacing this page already shows,
+  // a staff is also five lines at that spacing from a line, where a lump covers every line inside it (four of the five, the first and last among them, will do)
+  const ds = staves.map(q => q.d).sort((a, b) => a - b), dRef = ds.length ? ds[ds.length >> 1] : 0, ws = staves.map(q => q.x1 - q.x0).sort((a, b) => a - b), wMin = ws.length ? 0.8 * ws[ws.length >> 1] : 0;          // a staff line runs the width of the staff; a beam or a slur is short
+  const tmpl = i => {
+    if (!dRef || !P[i]) return null;
+    let best = null;
+    for (let f = 0.88; f <= 1.121; f += 0.02) {
+      const m = dRef * f, tol = Math.max(2, 0.2 * m), used = [];
+      for (let k = 0; k < 5; k++) { const y = P[i].y + k * m; let hit = -1; for (let j = i; j < P.length && P[j].a - tol <= y; j++) if (P[j].b + tol >= y && P[j].x1 - P[j].x0 >= wMin && ov(P[i], P[j])) { hit = j; break; } used.push(hit); }
+      const n = used.filter(j => j >= 0).length;
+      if (n >= 4 && used[0] === i && used[4] >= 0 && (!best || n > best.n)) best = { n, m, used };
+    }
+    if (!best) return null;
+    const L = best.used.filter(j => j >= 0), m = best.m;
+    return { n: 5, top: P[i].y, bot: P[i].y + 4 * m, d: m, x0: Math.min(...L.map(j => P[j].x0)), x1: Math.max(...L.map(j => P[j].x1)), next: Math.max(...L) + 1 };
+  };
+  const blob = i => {                                  // a staff so thick with notes and beams that all five lines have run together into one full-width lump of staff height
+    const q = P[i]; if (!dRef || !q || q.x1 - q.x0 < wMin || q.t < 3.5 * dRef || q.t > 6.5 * dRef) return null;
+    return { n: 5, top: q.y - 2 * dRef, bot: q.y + 2 * dRef, d: dRef, x0: q.x0, x1: q.x1, next: i + 1, blob: true };
+  };
+  const staves2 = [];
   for (let i = 0; i < P.length;) {
-    let st = null;
-    if (i + 4 < P.length) {
-      const sp = [1, 2, 3, 4].map(k => P[i + k].y - P[i + k - 1].y), m = (P[i + 4].y - P[i].y) / 4;
-      if (m >= 3 && m <= h * 0.03 && sp.every(v => Math.abs(v - m) <= 0.3 * m) && [1, 2, 3, 4].every(k => ov(P[i], P[i + k]))) st = { n: 5, top: P[i].y, bot: P[i + 4].y, d: m, x0: Math.min(...[0, 1, 2, 3, 4].map(k => P[i + k].x0)), x1: Math.max(...[0, 1, 2, 3, 4].map(k => P[i + k].x1)) };
-    }
-    if (!st && i + 3 < P.length) {                    // one line lost in a dropout: two even gaps and one double gap
-      const sp = [1, 2, 3].map(k => P[i + k].y - P[i + k - 1].y), q = sp.slice().sort((a, b) => a - b), m = (q[0] + q[1]) / 2;
-      if (m >= 3 && m <= h * 0.03 && Math.abs(q[0] - q[1]) <= 0.3 * m && Math.abs(q[2] - 2 * m) <= 0.35 * 2 * m && [1, 2, 3].every(k => ov(P[i], P[i + k])))
-        st = { n: 4, top: P[i].y, bot: P[i + 3].y, d: (P[i + 3].y - P[i].y) / 4, x0: Math.min(...[0, 1, 2, 3].map(k => P[i + k].x0)), x1: Math.max(...[0, 1, 2, 3].map(k => P[i + k].x1)) };
-    }
-    if (st) { staves.push(st); i += st.n === 5 ? 5 : 4; } else i++;
+    let st = five(i);
+    if (!st) { const f4 = four(i); st = f4 && !(five(i + 1) || tmpl(i + 1)) ? f4 : tmpl(i) || blob(i); }          // a stray stroke just above a staff is not the start of one
+    if (st) { staves2.push(st); i = st.next; } else i++;
   }
+  staves.length = 0; staves2.forEach(q => staves.push(q));
   if (!staves.length) return none;
   // 3. staves joined by a bar line are one system
   const joined = (a, b) => {
@@ -84,7 +112,7 @@ function sysDetectCore(ink, w, h, deg, reg) {
     for (const q of g) for (let y = Math.round(q.top) + 1; y < Math.round(q.bot); y++) { if (lineRow[y + 1]) continue; for (let x = Math.round(q.x0); x < q.x1; x++) { const i = y * w + x; if (px[i] && (px[i - 1] || px[i + 1] || px[i - w] || px[i + w])) n++; } }
     return n >= 4 * g.reduce((t, q) => t + q.d, 0);
   };
-  for (let k = groups.length - 1; k >= 0; k--) if (!written(groups[k])) groups.splice(k, 1);
+  for (let k = groups.length - 1; k >= 0; k--) if (!groups[k].some(q => q.blob) && !written(groups[k])) groups.splice(k, 1);          // (a lump is all ink: there is no bare staff to look through)
   if (!groups.length) return Object.assign({}, none, { staves: staves.length });
   // 4. how far each system reaches
   const blank = Math.max(2, W * 0.006);
