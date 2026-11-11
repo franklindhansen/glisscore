@@ -34,7 +34,7 @@ const K = '__keyframes';
       ok(layout + ' ' + w + 'px: the preview keeps one size while scrubbing', ss.size === 1, [...ss].join(','));
       ok(layout + ' ' + w + 'px: the label box keeps one width', is.size === 1, [...is].join(','));
       const r0 = runs[0], overlaps = (a, b) => a.l < b.r - 0.5 && b.l < a.r - 0.5 && a.t < b.b - 0.5 && b.t < a.b - 0.5;
-      ok(layout + ' ' + w + 'px: the label is on the right edge of the row', runs.every(r => Math.abs(r.inf.r - r.tr.r) <= 1.5), runs.map(r => Math.round(r.tr.r - r.inf.r)).join(','));
+      ok(layout + ' ' + w + 'px: the label is on the right edge of the row (hidden on a phone)', w <= 520 || runs.every(r => Math.abs(r.inf.r - r.tr.r) <= 1.5), runs.map(r => Math.round(r.tr.r - r.inf.r)).join(','));
       ok(layout + ' ' + w + 'px: the label touches no button or the time', runs.every(r => !overlaps(r.inf, r.tap) && !overlaps(r.inf, r.time)), 'wording ' + r0.lvl + ', ' + (r0.inf.t > r0.tap.b - 4 ? 'own row' : 'same row'));
       ok(layout + ' ' + w + 'px: the wording does not change while scrubbing', new Set(runs.map(r => r.lvl)).size === 1, [...new Set(runs.map(r => r.lvl))].join(','));
       ok(layout + ' ' + w + 'px: the label shows more than one text and always fits its box', texts.size > 1 && runs.every(r => r.nowW <= r.maxW + 0.5), [...texts].join(' | '));

@@ -37,7 +37,7 @@ const K = '__keyframes';
     const r = await read();
     const sameRow = r.un1 && Math.abs(r.un1.t - r.hist.t) < r.un1.b - r.un1.t;
     ok('Phone ' + w + ': no sideways scroll', r.sw <= r.cw, r.sw + ' vs ' + r.cw);
-    ok('Phone ' + w + ': the history pill holds one row and the turn tools sit below it', sameRow && r.tu1 && r.tu1.t >= r.un1.b - 1, JSON.stringify({ un: r.un1, tu: r.tu1 }));
+    ok('Phone ' + w + ': the turn tools and the history icons share the second row (at 360px the tools take a row of their own), tools at the left', r.un1 && r.tu1 && (w <= 360 ? r.tu1.t >= r.un1.b - 1 : Math.abs(r.tu1.t - r.un1.t) < 2 && r.tu1.r <= r.un1.l), JSON.stringify({ un: r.un1, tu: r.tu1 }));
   }
   ok('No script errors', errs.length === 0, errs.join(' | '));
   await b.close();

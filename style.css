@@ -173,6 +173,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:8px}
+.hist-wrap .hi{display:none}
 kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
@@ -854,6 +855,37 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end}
   .tl-bar .hint.warn{grid-column:1/-1}
+}
+/* phones: one transport row, and the timeline bar in two rows (turn tools left, history icons right) */
+@media (max-width:520px){
+  .tl-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . zm" "trn trn trn his";align-items:center;gap:8px;padding:8px 16px 10px;min-height:0}
+  .tl-bar h2{grid-area:ttl}
+  .tl-bar .tl-info{grid-area:inf;margin:0}
+  .tl-bar .hist-wrap{grid-area:his;justify-self:end}
+  .tl-bar .tl-turns{grid-area:trn;justify-self:start}
+  .tl-bar .zoom{grid-area:zm;justify-self:end;min-width:0}
+  .tl-bar .zoom input{width:clamp(56px,calc(100vw - 300px),110px)}
+  .tl-bar .hint.warn{grid-column:1/-1}
+  .tl-bar .hist.up{left:auto;right:0}
+  .tl-bar .hist-wrap .hw{display:none}
+  .tl-bar .hist-wrap .hi{display:block;width:16px;height:16px}
+  .tl-bar .hist-wrap>.btn{padding:0 7px}
+  .tl-bar .tl-turns>.btn{padding:0 5px}
+  #spreadInfo{display:none}
+  .transport{flex-wrap:nowrap}
+  .transport .time{min-width:0;margin:0 4px 0 8px;white-space:nowrap}
+  .transport .spacer{display:none}
+  #bTap{margin-left:auto}
+  #bTap kbd{display:none}
+}
+@media (max-width:360px){
+  #bTap{padding:0;min-width:var(--h-l);min-height:var(--h-l)}
+  #bTap .tw{display:none}
+  .tl-bar{grid-template-areas:"ttl inf his zm" "trn trn trn trn"}
+  .tl-bar .zoom input{width:44px}
+  .tl-bar .hist-wrap>.btn{padding:0 6px}
+  .tl-bar .tl-turns{justify-self:stretch;display:flex}
+  .tl-bar .tl-turns>.btn{flex:1 1 auto}
 }
 /* touch screens: 16px text in fields stops iPhones zooming the page in when you tap one */
 @media (hover:none) and (pointer:coarse){
