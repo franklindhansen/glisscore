@@ -918,7 +918,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about a:hover{text-decoration-thickness:2px}
 .about .row{margin-top:10px;align-items:flex-end}
 /* the version: a quiet round outline with no fill, no hover and the plain cursor, so it reads as a label and not a button */
-.about .ver{width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
+.about .ver{position:relative;z-index:1;width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
 .about .ver[hidden]{display:none}
 /* in the page window the spare height goes above the version, so it stays with the links beneath it; the usual paragraph gap sits above it */
 .dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:-21px}
@@ -2341,7 +2341,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .how-d>summary:hover{background:var(--accent-soft)}
 .how-d>summary:hover::before{border-color:var(--ink)}
 .how-d>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.how-in{box-sizing:border-box;padding:2px 14px 14px;border-top:1px solid var(--line)}
+.how-in{box-sizing:border-box;padding:10px 14px 14px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
@@ -2449,6 +2449,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #howDlg:not([hidden]) .how-body>section:nth-child(4){--i:3}
   #howDlg:not([hidden]) .how-body>section:nth-child(5){--i:4}
   #howDlg:not([hidden]) .how-body>section:nth-child(6){--i:5}
+  #howDlg:not([hidden]) .how-body>section:nth-child(7){--i:6}
 }
 
 /* About: the version, hovered, gets one soft sweep of light across it, a glissando for the eye, and its words come up to full ink */
