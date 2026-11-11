@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.4
+
+The playhead is easy to grab on the timeline without moving page turns, and it lights up softly when you hover it. The page or system under it is shaded as you drag.
+
 ## 1.2.3
 
 The System page selector now changes with the page turn, and System finds every staff on dense part pages. System also keeps the Play button in view in short windows.
