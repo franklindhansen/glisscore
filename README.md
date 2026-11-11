@@ -9,7 +9,7 @@ Everything runs in your browser. Your files never leave your device.
 ## Features
 
 - **Video editor.** Set each page turn, display your score as spreads, single pages, or systems, add credits, fade in and out, and export video.
-- **PDF Editor.** Arrange, clean, re-kilter, crop, dim repeats, split spreads, re-size, and watermark pages. No acrobatics required.
+- **PDF Editor.** Arrange, clean, re-kilter, crop, dim repeats, split spreads, re-size, and watermark pages. *No acrobatics required.*
 - **Audio Editor.** Reduce noise, heal blips, add EQ, adjust stereo width, level, and export audio.
 
 ## Feedback

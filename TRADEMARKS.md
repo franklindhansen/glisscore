@@ -40,7 +40,7 @@ If you publish a modified version, or run a modified version as your own service
 4. Do not suggest that I sponsor, approve, or endorse it.
 5. Keep the AGPL, its source offer, and the copyright and attribution notices.
 
-A name like "AriaScore, based on *glisscore*" is fine. A name like "Glisscore Pro", "Glisscore Cloud" or "glisscore 2" is not, because it reads as the official project.
+A name like "AriaScore, based on *glisscore*" is fine. A name like "Glisscore Pro", "Glisscore Cloud", "glisscore 2", or "2 Glisscore 2 Furious" is not, because it reads as the official project.
 
 ## What needs my permission
 
