@@ -521,7 +521,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .app.fs{--fs-gap:8px}
   .app.fs .timeline{border-radius:var(--r-lg)}
   .stage-wrap{height:min(62vw,420px)}
-  .stage-wrap.sys-split{height:min(110vw,640px)}      /* System stacks the selector above the preview, so the stage gets more height */
+  .stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 125px,320px))}      /* System has the selector and the preview, so the stage gets more height, but never so much that the Play button drops below a short window (125px is the header above the stage and the transport below it) */
   .stage-wrap:has(>.empty:not([hidden])){height:auto;min-height:min(62vw,420px)}      /* the intro sets its own height, so a phone's narrow screen never clips its top or bottom */
   .stage-wrap:has(>.empty:not([hidden]))>#stage{display:none}
   .stage-wrap>.empty:not([hidden]){position:relative;inset:auto;flex:none;width:100%}
@@ -530,6 +530,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .panel{border-left:0;border-top:1px solid var(--line);padding:6px clamp(16px,5vw,40px) 24px}
   .panel .group,.panel .status{max-width:560px;margin-left:auto;margin-right:auto}
 }
+@media (max-width:760px){.stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
 
 /* ----- Reduced-motion preferences ----- */
 @media (prefers-reduced-motion:reduce){.toast,.bar i{transition:none}}
