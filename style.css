@@ -2487,7 +2487,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #howDlg:not([hidden]) .how-body>section:nth-child(4){--i:3}
   #howDlg:not([hidden]) .how-body>section:nth-child(5){--i:4}
   #howDlg:not([hidden]) .how-body>section:nth-child(6){--i:5}
-  #howDlg:not([hidden]) .how-body>section:nth-child(7){--i:6}
 }
 
 /* About: the version, hovered, gets one soft sweep of light across it, a glissando for the eye, and its words come up to full ink */
