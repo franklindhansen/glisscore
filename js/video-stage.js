@@ -1266,8 +1266,34 @@ function nudgeGroup(base, idx, delta) {
 }
 const turnSel = () => (TL.selN === S.turns.length ? TL.sel : []);
 function setTurnSel(a) { TL.sel = a.slice().sort((x, y) => x - y); TL.selN = S.turns.length; TL.staticDirty = true; }
+/* Two fingers on the timeline zoom it around the point between them (a pinch, like the preview's); the slider follows, and zoom is never a History step. A second finger landing during a drag ends the drag and puts everything back. */
+const tlPtr = new Map(); let tlPinch = null, tlGz = null;
+function tlCancelDrag() {
+  const d = TL.drag; if (!d) return; TL.drag = null; TL.box = null;
+  if (d.kind === 'turn' || d.kind === 'trim' || d.kind === 'credEnd') { if (d.moved) undo(); else S.history.pop(); S.redo = d.rb || []; updateHistoryButtons(); if (d.moved) { onTurnsChanged(); onTrimChanged(); } }
+  TL.staticDirty = true; TL.overlayDirty = true; stageDirty = true;
+  if (d.resume) Transport.play();
+}
+function tlPinchDown(e) {
+  if (e.pointerType === 'mouse') return false;
+  tlPtr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (tlPtr.size < 2) return false;
+  if (tlPtr.size === 2) { tlCancelDrag(); const [a, b] = [...tlPtr.values()]; tlPinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: S.pxPerSec }; try { TL.canvas.setPointerCapture(e.pointerId); } catch (_) {} }
+  return true;
+}
+function tlPinchMove(e) {
+  if (!tlPtr.has(e.pointerId)) return false; tlPtr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (!tlPinch || tlPtr.size < 2) return false;
+  if (!tlGz) { const [a, b] = [...tlPtr.values()], r = TL.canvas.getBoundingClientRect(); setZoom(tlPinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / tlPinch.d, (a[0] + b[0]) / 2 - r.left); }
+  return true;
+}
+function tlPinchUp(e) { tlPtr.delete(e.pointerId); if (tlPtr.size < 2) tlPinch = null; }
+TL.canvas.addEventListener('gesturestart', e => { e.preventDefault(); tlCancelDrag(); tlGz = S.pxPerSec; });          // Safari reports a pinch as a gesture; it takes over from the pointer pair
+TL.canvas.addEventListener('gesturechange', e => { e.preventDefault(); if (tlGz) setZoom(tlGz * e.scale, e.clientX - TL.canvas.getBoundingClientRect().left); });
+TL.canvas.addEventListener('gestureend', e => { e.preventDefault(); tlGz = null; });
 TL.canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
+  if (tlPinchDown(e)) { e.preventDefault(); return; }
   const p = tlPoint(e), hi = hitTurn(p), tr = hitTrim(p), ce = hitCredEnd(p);
   TL.canvas.setPointerCapture(e.pointerId);
   const trX = tr ? t2x(tr === 'start' ? S.vStart : vEnd()) : 0;
@@ -1299,6 +1325,7 @@ TL.canvas.addEventListener('pointerdown', e => {
   e.preventDefault();
 });
 TL.canvas.addEventListener('pointermove', e => {
+  if (tlPinchMove(e)) return;
   const p = tlPoint(e), d = TL.drag;
   if (d && d.kind === 'credEnd') {
     const hi = vEnd(), lo = Math.min(creditsFull() + 0.5, hi), t = clamp(x2t(p.x) + d.dx, lo, hi);
@@ -1373,8 +1400,8 @@ TL.canvas.addEventListener('dblclick', e => {
   if (!S.fitMode) { TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL.scroller.scrollLeft + (lo0 - tlLo()) * S.pxPerSec); }
   normalizeTurns(); onTurnsChanged(); onTrimChanged(); if (from) tlGlide(from); toast(trimText(which) + '.', 2600);
 });
-TL.canvas.addEventListener('pointerup', endDrag);
-TL.canvas.addEventListener('pointercancel', endDrag);
+TL.canvas.addEventListener('pointerup', e => { tlPinchUp(e); endDrag(e); });
+TL.canvas.addEventListener('pointercancel', e => { tlPinchUp(e); endDrag(e); });
 TL.canvas.addEventListener('pointerleave', () => { if (!TL.drag && (TL.hover !== -1 || TL.hoverTrim || TL.hoverCr)) { TL.hover = -1; TL.hoverTrim = null; TL.hoverCr = false; TL.staticDirty = true; } });
 TL.scroller.addEventListener('scroll', () => { TL.staticDirty = true; });
 TL.scroller.addEventListener('wheel', e => {
