@@ -2253,7 +2253,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:12px;--lh:1}
 .chip[data-k=audio] .chip-name{max-width:9em}
 /* the Open audio button while the sound is read: it fills as it goes and says how far */
-.btn.loading{font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;overflow:hidden;color:var(--accent-ink);cursor:progress;opacity:1;background:linear-gradient(90deg,var(--accent) var(--p,0%),color-mix(in srgb,var(--accent) 48%,var(--panel2)) var(--p,0%));background-origin:border-box;background-repeat:no-repeat;transition:background .45s var(--ease-out)}
+.btn.loading{font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;overflow:hidden;isolation:isolate;color:var(--accent-ink);cursor:progress;opacity:1;background:color-mix(in srgb,var(--accent) 48%,var(--panel2))}
+.btn.loading::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent);transform:translateX(calc(var(--p,0%) - 100%));transition:transform .45s var(--ease-out);will-change:transform;pointer-events:none}          /* the fill is a layer slid in from the left (the wait pill's way), so it glides on the compositor while the page is busy; a new run is a new layer and starts empty */
+@media (prefers-reduced-motion:reduce){.btn.loading::before{transition-duration:.08s}}
 .btn.loading.ind{animation:busy-pulse 1.4s var(--ease-ui) infinite alternate}
 @keyframes busy-pulse{from{filter:brightness(1)}to{filter:brightness(1.12)}}
 @media (prefers-reduced-motion:reduce){.btn.loading.ind{animation:none}}
