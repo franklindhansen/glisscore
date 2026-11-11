@@ -50,6 +50,13 @@ const K = '__keyframes';
   const g2 = await geo(); const ex = g2.l + g2.px + 40, ey = g2.t + g2.ty + 4;
   await p.mouse.click(ex, ey); r = await read();
   ok('a click on empty track still moves the playhead there', Math.abs(r.time - before.time) > 0.05, r.time.toFixed(2));
+  // while the playhead is dragged, the shaded page or system under it follows (it is drawn in the cached layer, which must redraw)
+  await setup(base, base[1]); const g4 = await geo();
+  await p.evaluate(() => { window.__sd = 0; const f = window.drawTimelineStatic; window.drawTimelineStatic = function () { window.__sd++; return f.apply(this, arguments); }; });
+  await p.mouse.move(g4.l + g4.px, g4.t + g4.ty + g4.th / 2 + 20); await p.mouse.down();
+  await p.mouse.move(g4.l + g4.px + 40, g4.t + g4.ty + g4.th / 2 + 20, { steps: 8 }); await p.waitForTimeout(150);
+  ok('mid-drag the timeline layer redraws so the shading follows', await p.evaluate(() => window.__sd >= 2), String(await p.evaluate(() => window.__sd)));
+  await p.mouse.up();
   // hovering the playhead's line lights it up; moving away puts it back
   await setup(base, base[1]); const g3 = await geo();
   await p.mouse.move(g3.l + g3.px, g3.t + g3.ty + g3.th / 2 + 20);

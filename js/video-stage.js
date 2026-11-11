@@ -1180,8 +1180,8 @@ function drawTimeline() {
     c.save(); c.shadowColor = C.play; c.shadowBlur = 20; c.globalAlpha = 0.35 + 0.35 * pulse; c.fillStyle = C.play; c.fillRect(px - 6, 0, 12, TL.h); c.restore();
   }
   if (px >= -10 && px <= TL.vw + 10) {          // the playhead is the top layer: one unbroken line from its head in the ruler to the bottom
-    const hot = TL.hoverPh || (TL.drag && TL.drag.kind === 'scrub'), lw = hot ? 3 : 2, hw = hot ? 8 : 7;          // hovered or dragged: the line thickens a little and takes a soft shadow, like a hovered turn handle, so you can see what a grab takes
-    c.save(); if (hot) { c.shadowColor = C.play; c.shadowBlur = 4; }
+    const hot = TL.hoverPh || (TL.drag && TL.drag.kind === 'scrub'), lw = hot ? 3 : 2, hw = 7;          // hovered or dragged: the line thickens a little and takes a soft shadow, like a hovered turn handle, so you can see what a grab takes
+    c.save(); if (hot) { c.shadowColor = C.play; c.shadowBlur = 2; }
     c.fillStyle = C.play; c.fillRect(Math.round(px) - lw / 2, 0, lw, TL.h);
     c.beginPath(); c.moveTo(px - hw, 0); c.lineTo(px + hw, 0); c.lineTo(px, hw + 3); c.closePath(); c.fill(); c.restore();
   }
@@ -1317,7 +1317,7 @@ TL.canvas.addEventListener('pointerdown', e => {
   } else if (hitPlayhead(p, hi, e.pointerType !== 'mouse') && !(hi >= 0 && e.shiftKey)) {          // the playhead's line: drag it without a jump, whatever turn sits beside or under it
     TL.drag = { kind: 'scrub', dx: p.y < TL.rulerH ? 0 : S.time - x2t(p.x), resume: Transport.playing };          // in the ruler a click still jumps to the pointer, as always
     if (Transport.playing) Transport.pause();
-    S.time = fadeLookAt = clamp(x2t(p.x) + TL.drag.dx, S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true;
+    S.time = fadeLookAt = clamp(x2t(p.x) + TL.drag.dx, S.vStart, vEnd()); stageDirty = true; TL.staticDirty = TL.overlayDirty = true; updateTimeUI(true);
   } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
     const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
     TL.drag = { kind: 'noop' };
@@ -1332,7 +1332,7 @@ TL.canvas.addEventListener('pointerdown', e => {
   } else {
     TL.drag = { kind: 'scrub', resume: Transport.playing };
     if (Transport.playing) Transport.pause();
-    S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
+    S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.staticDirty = TL.overlayDirty = true; updateTimeUI(true);
   }
   e.preventDefault();
 });
@@ -1359,7 +1359,7 @@ TL.canvas.addEventListener('pointermove', e => {
     setTurnSel(d.keep.concat(S.turns.map((t, i) => i).filter(i => { const x = t2x(shownTurn(i)); return x >= a && x <= z && !d.keep.includes(i); })));
     TL.box = { a, z }; TL.overlayDirty = true;
   } else if (d && d.kind === 'scrub') {
-    S.time = fadeLookAt = clamp(x2t(p.x) + (d.dx || 0), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
+    S.time = fadeLookAt = clamp(x2t(p.x) + (d.dx || 0), S.vStart, vEnd()); stageDirty = true; TL.staticDirty = TL.overlayDirty = true; updateTimeUI(true);
   } else {
     const h = hitTurn(p), tr = hitTrim(p), ce = hitCredEnd(p);
     if (ce !== TL.hoverCr) { TL.hoverCr = ce; TL.staticDirty = true; }
