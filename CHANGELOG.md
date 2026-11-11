@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+The System page selector now changes with the page turn, and System finds every staff on dense part pages. System also keeps the Play button in view in short windows.
+
 ## 1.2.2
 
 System keeps your turns, systems, and preview steady as you edit, and gains a Letterbox switch. Loading pages show one clear pill in every layout.
