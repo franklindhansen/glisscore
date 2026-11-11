@@ -2161,6 +2161,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* the status bar: how many pages, and Select all / Deselect all as plain text buttons */
 .pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:7px 12px 6px 20px;border-top:1px solid var(--line)}
 .pe-count{margin-right:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:136px;min-width:0;height:var(--h-s);margin:0 6px 0 8px;padding:0 9px;border-radius:var(--r-sm);font-size:13px;font-variant-numeric:tabular-nums}
+.pe-bar .pe-pages:disabled{opacity:.55;cursor:not-allowed}
 .pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
 .pe-bar .btn:not(:disabled):hover{background:var(--accent-soft);border-color:transparent;box-shadow:none;transform:none}
@@ -2200,7 +2202,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .pe-grid{grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:14px 8px}
   .pe-stage{flex:none;height:min(58vh,480px);padding:14px}
   .pe-bar{padding-left:14px}
+  .pe-bar .pe-pages{width:96px;margin:0 2px 0 6px}
 }
+@media (max-width:400px){.pe-bar{padding-right:6px}.pe-bar .pe-pages{width:78px;margin:0 0 0 4px;padding:0 7px}.pe-bar .btn.small{padding-left:8px;padding-right:8px}}
 /* short windows (a laptop with the browser not full screen): the editor scrolls instead of squeezing the pages */
 @media (min-width:761px) and (max-height:700px){
   .dlg.editor.pe{height:auto;max-height:none;grid-template-rows:none}

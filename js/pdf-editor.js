@@ -894,8 +894,8 @@ function peState() {
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
-  else swapText(cnt, m === 'dim' ? d.order.filter(id => dimKey(d.slots[id])).length + ' / ' + d.order.filter(id => !d.slots[id].x).length + ' pages dimmed' : m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true);
-  $('#peAll').hidden = $('#peNone').hidden = m === 'dim'; $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
+  else { const ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? d.order.filter(id => dimKey(d.slots[id])).length + ' / ' + d.order.filter(id => !d.slots[id].x).length + ' pages dimmed' : ph ? on + ' / ' + pool : m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true); }          // a phone keeps just the numbers, to leave room for the Pages field
+  $('#peAll').hidden = $('#peNone').hidden = $('#pePages').hidden = m === 'dim'; $('#pePages').disabled = !!PE.busy; if (document.activeElement !== $('#pePages')) $('#pePages').value = pePagesText(); $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
   $('#peWmB').setAttribute('aria-pressed', String(w.b !== false)); $('#peWmI').setAttribute('aria-pressed', String(!!w.i));
@@ -933,6 +933,47 @@ function peGlide(was, cv, ow) {
   }
   cv.animate(frames, { duration: PE_TURN_MS, easing: 'linear' });
 }
+/* ---- page ranges: Shift-click a run, or type the pages ----
+   A number is the PDF's own page number (the "p. 12" on a card: sl.src + 1), so it does not shift when pages are left out; it names every copy of that page. */
+const peOn = id => PE.mode === 'pages' ? !PE.d.slots[id].x : peTicked(id);
+const peCan = id => { const sl = PE.d.slots[id]; return PE.mode === 'pages' || !(sl.x || (PE.mode === 'split' && sl.half)); };
+const peWarn = txt => { const c = $('#peCount'); swapText(c, txt, true); c.classList.add('warn'); };
+const peTicksHistory = () => PE.mode === 'pages' || (PE.mode === 'wm' && PE.d.wm.on);          // the only places a tick is a History step
+/* sets each page in `want` (id -> on) in the current tool; false when it was refused, true when something changed */
+function peSetMany(want) {
+  const d = PE.d, ids = [...want.keys()].filter(id => peCan(id) && peOn(id) !== want.get(id)); if (!ids.length) return null;
+  if (PE.mode === 'pages' && !d.order.some(id => ids.includes(id) ? want.get(id) : !d.slots[id].x)) { peWarn('Keep at least one page.'); return false; }
+  if (peTicksHistory()) pePush();
+  if (PE.mode === 'pages') ids.forEach(id => { d.slots[id].x = !want.get(id); });
+  else if (PE.mode === 'wm') { if (d.wm.on) ids.forEach(id => { d.slots[id].nw = !want.get(id); const c = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); if (c) peDrawCard(c, d.slots[id]); }); else { const z = PE.wmSel = PE.wmSel || new Set(d.order.filter(i => !d.slots[i].x)); ids.forEach(id => { if (want.get(id)) z.add(id); else z.delete(id); }); } }
+  else if (PE.mode === 'split') { const z = PE.splitSel = PE.splitSel || new Set(); ids.forEach(id => { if (want.get(id)) z.add(id); else z.delete(id); }); }
+  else ids.forEach(id => { if (want.get(id)) PE.skip.delete(id); else PE.skip.add(id); });
+  peState(); return true;
+}
+function peRangeClick(id) {          // Shift-click: every page from the one clicked before to this one takes the state that click gave
+  const a = PE.anchor, d = PE.d, i = d.order.indexOf(a.id), j = d.order.indexOf(id); if (i < 0 || j < 0) return false;
+  const want = new Map(); d.order.slice(Math.min(i, j), Math.max(i, j) + 1).forEach(x => want.set(x, a.on));
+  const r = peSetMany(want); PE.anchor = { id, on: a.on, mode: PE.mode }; if (r) { const c = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); pePop(c); } return true;
+}
+function peRanges(nums) {          // [1,2,3,4,9,10] -> "1-4, 9-10"
+  const a = [...new Set(nums)].sort((x, y) => x - y), out = [];
+  for (let i = 0; i < a.length;) { let j = i; while (j + 1 < a.length && a[j + 1] === a[j] + 1) j++; out.push(j > i ? a[i] + '-' + a[j] : '' + a[i]); i = j + 1; }
+  return out.join(', ');
+}
+const pePagesText = () => PE.d ? peRanges(PE.d.order.filter(id => peCan(id) && !(PE.mode !== 'pages' && PE.d.slots[id].x) && peOn(id)).map(id => PE.d.slots[id].src + 1)) : '';
+function peParsePages(txt) {          // "1-3, 7" (spaces and an en dash allowed) -> a Set of page numbers, or null when it cannot be read
+  const t = txt.replace(/[‐-―−]/g, '-').replace(/\s+/g, ''); if (!t) return null; const set = new Set();
+  for (const part of t.split(',')) { const m = /^(\d+)(?:-(\d+))?$/.exec(part); if (!m) return null; const a = +m[1], b = m[2] == null ? a : +m[2]; if (a < 1 || b < a || b - a > 100000) return null; for (let n = a; n <= b; n++) set.add(n); }
+  return set;
+}
+function peTypePages() {
+  const f = $('#pePages'), d = PE.d, back = () => { f.value = pePagesText(); };
+  if (!d || PE.busy) { back(); return; }
+  const set = peParsePages(f.value); if (!set) { back(); peWarn('Type pages like 1-4, 9.'); return; }
+  const last = Math.max(...d.slots.map(sl => sl.src + 1)); if ([...set].some(n => n > last)) { back(); peWarn('The last page is ' + last + '.'); return; }
+  const want = new Map(); d.order.forEach(id => want.set(id, set.has(d.slots[id].src + 1)));
+  const r = peSetMany(want); if (r === false) back(); else { f.value = pePagesText(); PE.anchor = null; }
+}
 function peAct(act, id) {
   const d = PE.d, sl = d.slots[id], card = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); if (!sl) return;
   if (act === 'toggle') {
@@ -944,7 +985,7 @@ function peAct(act, id) {
       if (PE.mode === 'wm') { if (d.wm.on) { pePush(); sl.nw = !sl.nw; if (card) peDrawCard(card, sl); } else { const z = PE.wmSel = PE.wmSel || new Set(d.order.filter(i => !d.slots[i].x)); if (z.has(id)) z.delete(id); else z.add(id); } }
       else if (PE.mode === 'split') { const z = PE.splitSel = PE.splitSel || new Set(); if (z.has(id)) z.delete(id); else z.add(id); } else if (PE.skip.has(id)) PE.skip.delete(id); else PE.skip.add(id);
     } else return;
-    peState(); pePop(card); return;
+    peState(); pePop(card); PE.anchor = { id, on: peOn(id), mode: PE.mode }; return;
   }
   if (act === 'open') { peOneOpen(id); return; }
   if (PE.mode !== 'pages') return;
@@ -1236,7 +1277,9 @@ function peBind() {
   grid.addEventListener('click', e => {
     if (PE.justDragged) return;
     const card = e.target.closest('.page-card'); if (!card) return;
-    const tool = e.target.closest('[data-act]'); peAct(tool ? tool.dataset.act : 'toggle', +card.dataset.id);
+    const tool = e.target.closest('[data-act]');
+    if (e.shiftKey && !tool && PE.anchor && PE.anchor.mode === PE.mode && PE.anchor.id !== +card.dataset.id && (PE.mode === 'pages' || peTickMode()) && peRangeClick(+card.dataset.id)) return;
+    peAct(tool ? tool.dataset.act : 'toggle', +card.dataset.id);
   });
   grid.addEventListener('dblclick', e => {          // a quick double-click opens the large view where the corner button does; its two clicks have ticked and unticked the page, so the tick is as it was
     const card = e.target.closest('.page-card'); if (!card || e.target.closest('[data-act]') || !peOneMode()) return; peOneOpen(+card.dataset.id);
@@ -1266,6 +1309,7 @@ function peBind() {
     else live.forEach(id => { if (yes) PE.skip.delete(id); else PE.skip.add(id); });
     peState();
   };
+  { const f = $('#pePages'); f.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); peTypePages(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); f.value = pePagesText(); } else e.stopPropagation(); }); f.addEventListener('blur', () => { f.value = pePagesText(); }); }
   $('#peAll').addEventListener('click', () => peSelAll(true)); $('#peNone').addEventListener('click', () => peSelAll(false));
   const wmPush = () => { if (!PE.wmQuiet) pePush(); PE.wmQuiet = true; clearTimeout(PE.wmT); PE.wmT = setTimeout(() => { PE.wmQuiet = false; }, 900); };       // one undo step per burst of typing or dragging
   peCropBind(); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
