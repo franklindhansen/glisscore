@@ -35,7 +35,7 @@ The app's code is the script files in `js/`, loaded by the tags in `index.html`.
 
     zsh tests/run-all.sh
 
-Runs every check below, eight at a time (`-j N` sets how many; `-j 1` runs them one after another), and prints one line each with its time, any FAIL lines, the five slowest scripts and the total (about 3.5 minutes). It serves the app itself. A check that reads the page a set time after an action and fails when the machine is busy goes in the `serial` list in `run-all.sh`, which runs it alone after the rest (today only `tool-ring`). `-o FILE` writes every PASS and FAIL line, sorted, to FILE; diff two of them to show two runs checked the same things.
+Runs every check below, eight at a time (`-j N` sets how many; `-j 1` runs them one after another), and prints one line each with its time, any FAIL lines, the five slowest scripts and the total (about 3.5 minutes). It serves the app itself. A check that reads the page a set time after an action and fails when the machine is busy goes in the `serial` list in `run-all.sh`, which runs it alone after the rest (today `tool-ring`, `menu-fade-out`, and `audio-editor-play-export`). `-o FILE` writes every PASS and FAIL line, sorted, to FILE; diff two of them to show two runs checked the same things.
 
 Test tones that peak above 0dB (`Test tone +3.3dB.mp3` and `.m4a`) go in the same local folder.
 

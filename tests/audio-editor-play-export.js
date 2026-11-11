@@ -30,7 +30,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       return { n, worst, rms: Math.sqrt(sum / Math.max(1, n)), pk, wpk, gain: gr, gaps, ceil: Math.pow(10, LIM_CEIL / 20), readers: READERS.filter(x => x !== 'rec-out'), act: fxActive(d.fx, 2), rate: [sr, mm.sr || 0] };
     });
     ok(tag + 'the limiter is working in this check (the volume pushes the sound past the ceiling)', r.wpk <= r.ceil && r.pk > r.ceil * 0.95 && r.act.length === 2, JSON.stringify({ gain: r.gain, exportPeak: r.wpk, heardPeak: r.pk, ceil: r.ceil, act: r.act }));
-    ok(tag + 'what plays equals the export sample for sample (EQ, Imager, loudness, limiter)', r.n > 150000 && r.gaps === 0 && r.worst < 2e-5, r.n + ' samples, worst ' + r.worst.toExponential(2) + ', rms ' + r.rms.toExponential(2));
+    ok(tag + 'what plays equals the export sample for sample (EQ, Imager, loudness, limiter)', r.n > 150000 && r.gaps === 0 && r.worst < 2e-5, r.n + ' samples, ' + r.gaps + ' dropouts, worst ' + r.worst.toExponential(2) + ', rms ' + r.rms.toExponential(2));
     ok(tag + 'no worklet reads sound back from the browser while the editor plays', r.readers.length === 0, r.readers.join(', '));
     // the video's own player, with a loudness target and the limiter
     await p.evaluate(() => { aeApply(); }); await p.waitForTimeout(500);
