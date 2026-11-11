@@ -1180,8 +1180,10 @@ function drawTimeline() {
     c.save(); c.shadowColor = C.play; c.shadowBlur = 20; c.globalAlpha = 0.35 + 0.35 * pulse; c.fillStyle = C.play; c.fillRect(px - 6, 0, 12, TL.h); c.restore();
   }
   if (px >= -10 && px <= TL.vw + 10) {          // the playhead is the top layer: one unbroken line from its head in the ruler to the bottom
-    c.fillStyle = C.play; c.fillRect(Math.round(px) - 1, 0, 2, TL.h);
-    c.beginPath(); c.moveTo(px - 7, 0); c.lineTo(px + 7, 0); c.lineTo(px, 10); c.closePath(); c.fill();
+    const hot = TL.hoverPh || (TL.drag && TL.drag.kind === 'scrub'), lw = hot ? 3 : 2, hw = hot ? 8 : 7;          // hovered or dragged: the line thickens a little and takes a soft shadow, like a hovered turn handle, so you can see what a grab takes
+    c.save(); if (hot) { c.shadowColor = C.play; c.shadowBlur = 4; }
+    c.fillStyle = C.play; c.fillRect(Math.round(px) - lw / 2, 0, lw, TL.h);
+    c.beginPath(); c.moveTo(px - hw, 0); c.lineTo(px + hw, 0); c.lineTo(px, hw + 3); c.closePath(); c.fill(); c.restore();
   }
   // tooltip
   let tipI = TL.drag && TL.drag.kind === 'turn' ? TL.drag.i : TL.hover;
@@ -1216,6 +1218,12 @@ function hitTurn(p) {
   let best = -1, bd = 10;
   for (let i = 0; i < S.turns.length; i++) { const d = Math.abs(t2x(shownTurn(i)) - p.x); if (d <= bd) { bd = d; best = i; } }
   return best;
+}
+/* The playhead's line is a handle of its own: a turn beside it never takes the grab (a turn under it keeps the sides of its handle). */
+function hitPlayhead(p, hi, touch) {
+  const px = t2x(S.time); if (px < -10 || px > TL.vw + 10) return false;
+  const under = hi >= 0 && Math.abs(t2x(shownTurn(hi)) - px) <= 1.5;
+  return Math.abs(p.x - px) <= (under ? (touch ? 4 : 2.5) : (touch ? 9 : 5));
 }
 function hitCredEnd(p) {
   if (!creditsEarlyOn() || p.y < TL.trackY - 8 || p.y > TL.trackY + TL.trackH + 8) return false;
@@ -1306,6 +1314,10 @@ TL.canvas.addEventListener('pointerdown', e => {
     const rb = S.redo.slice(); pushHistory();
     TL.drag = { kind: 'trim', which: tr, rawX: p.x, ev: 0, er: 0, lo: tlLo(), hi: tlHi(), fitLo: fitLo(), fitHi: fitHi(), dx: (tr === 'start' ? S.vStart : vEnd()) - x2t(p.x), moved: false, rb, resume: Transport.playing };
     if (Transport.playing) Transport.pause();
+  } else if (hitPlayhead(p, hi, e.pointerType !== 'mouse') && !(hi >= 0 && e.shiftKey)) {          // the playhead's line: drag it without a jump, whatever turn sits beside or under it
+    TL.drag = { kind: 'scrub', dx: p.y < TL.rulerH ? 0 : S.time - x2t(p.x), resume: Transport.playing };          // in the ruler a click still jumps to the pointer, as always
+    if (Transport.playing) Transport.pause();
+    S.time = fadeLookAt = clamp(x2t(p.x) + TL.drag.dx, S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true;
   } else if (hi >= 0 && e.shiftKey) {                           // shift-click adds a turn to the selection or takes it out
     const cur = turnSel(); setTurnSel(cur.includes(hi) ? cur.filter(v => v !== hi) : cur.concat(hi));
     TL.drag = { kind: 'noop' };
@@ -1347,13 +1359,14 @@ TL.canvas.addEventListener('pointermove', e => {
     setTurnSel(d.keep.concat(S.turns.map((t, i) => i).filter(i => { const x = t2x(shownTurn(i)); return x >= a && x <= z && !d.keep.includes(i); })));
     TL.box = { a, z }; TL.overlayDirty = true;
   } else if (d && d.kind === 'scrub') {
-    S.time = fadeLookAt = clamp(x2t(p.x), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
+    S.time = fadeLookAt = clamp(x2t(p.x) + (d.dx || 0), S.vStart, vEnd()); stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
   } else {
     const h = hitTurn(p), tr = hitTrim(p), ce = hitCredEnd(p);
     if (ce !== TL.hoverCr) { TL.hoverCr = ce; TL.staticDirty = true; }
     if (h !== TL.hover) { TL.hover = h; TL.staticDirty = true; }
     if (tr !== TL.hoverTrim) { TL.hoverTrim = tr; TL.staticDirty = true; }
-    TL.canvas.style.cursor = (h >= 0 || tr || ce) ? 'ew-resize' : (p.y < TL.rulerH ? 'pointer' : 'default');
+    const hp = !tr && !ce && hitPlayhead(p, h, e.pointerType !== 'mouse'); if (hp !== !!TL.hoverPh) { TL.hoverPh = hp; TL.overlayDirty = true; }
+    TL.canvas.style.cursor = hp ? 'ew-resize' : (h >= 0 || tr || ce) ? 'ew-resize' : (p.y < TL.rulerH ? 'pointer' : 'default');
   }
 });
 function endDrag(e) {
@@ -1402,7 +1415,7 @@ TL.canvas.addEventListener('dblclick', e => {
 });
 TL.canvas.addEventListener('pointerup', e => { tlPinchUp(e); endDrag(e); });
 TL.canvas.addEventListener('pointercancel', e => { tlPinchUp(e); endDrag(e); });
-TL.canvas.addEventListener('pointerleave', () => { if (!TL.drag && (TL.hover !== -1 || TL.hoverTrim || TL.hoverCr)) { TL.hover = -1; TL.hoverTrim = null; TL.hoverCr = false; TL.staticDirty = true; } });
+TL.canvas.addEventListener('pointerleave', () => { if (!TL.drag && TL.hoverPh) { TL.hoverPh = false; TL.overlayDirty = true; } if (!TL.drag && (TL.hover !== -1 || TL.hoverTrim || TL.hoverCr)) { TL.hover = -1; TL.hoverTrim = null; TL.hoverCr = false; TL.staticDirty = true; } });
 TL.scroller.addEventListener('scroll', () => { TL.staticDirty = true; });
 TL.scroller.addEventListener('wheel', e => {
   if (e.ctrlKey || e.metaKey) { e.preventDefault(); setZoom(S.pxPerSec * Math.exp(-e.deltaY * 0.01), tlPoint(e).x); }
