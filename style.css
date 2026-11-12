@@ -714,7 +714,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .ae-bar .push-right{margin-left:auto}
 #aeGainField{transition:opacity .3s var(--ease-ui)}
 #aeGainField.dim{opacity:.45}
-/* Normalize greys the Gain slider: its card dims (.55) and the slider dims (.4), which stacks to about 22% and hides the track. Here the slider is not dimmed as a whole: the track and fill carry their own greyed colors (ink and accent, derived, so both themes hold), and the thumb takes the .4 */
+/* Normalize grays the Gain slider (a one-off: no shared disabled style dims a slider track and leaves its thumb readable): its card dims (.55) and the slider dims (.4), which stacks to about 22% and hides the track. Here the slider is not dimmed as a whole: the track and fill carry their own greyed colors (ink and accent, derived, so both themes hold), and the thumb takes the .4 */
 #aeGain:disabled{opacity:1}
 #aeGain:disabled::-webkit-slider-thumb{opacity:.4}
 #aeGain:disabled::-webkit-slider-runnable-track{background:linear-gradient(to right,color-mix(in srgb,var(--ink) 26%,transparent) 0,color-mix(in srgb,var(--ink) 26%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) 100%)}
@@ -1155,7 +1155,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-read{margin-top:8px}
 .lv-read b{font-size:15px}
 .fd-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-#aeShapeCard{grid-column:1/-1}
+#aeShapeCard{grid-column:1/-1;display:flex;flex-direction:column;justify-content:center}          /* the card is held as tall as the Length card beside it: its heading and row sit in the middle, the spare height split evenly above and below (Decision 9) */
 #aeFadeLenCard .seg{margin:0 0 var(--gap-set)}
 .fd-shape canvas{display:block;width:100%}
 .im-scope{display:flex;flex-direction:column}
@@ -1354,7 +1354,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (max-width:760px){
   .ae-main{grid-template-columns:1fr}
   .ae-win{min-height:0;padding:14px}
-  .eq-band.ae-card{grid-template-columns:1fr 1fr;gap:12px 14px}
+  .eq-band.ae-card{grid-template-columns:1fr 1fr;gap:var(--gap-card)}
   .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .mt-steps.two{grid-template-columns:1fr}
   .ae-jack{width:22px}
@@ -1556,7 +1556,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* EQ, narrow: the graph keeps a usable height. Below 980px the band is two columns (its Band row across the top, then Type and Frequency, then Gain and Width), the same two-column narrow rule Fades and Noise use, so no slider is squeezed to nothing */
 @media (max-width:760px){#audioDlg:not(.afull) #aePaneEq .eq-stage{flex:none;height:clamp(160px,36dvh,240px)}}
 @media (min-width:761px) and (max-width:980px){
-  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 14px;align-items:start}
+  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card);align-items:start}
   #audioDlg:not(.afull) .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   #audioDlg:not(.afull) .eq-band .eq-cell{min-width:0}
 }
@@ -1793,7 +1793,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @keyframes bal-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 0%,transparent)}}
 #aeBalAuto.on,#aeBandThrAuto.on,#aeNrFind.on,#aeNrHum.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 #aeBalCard .field{margin:0}
-.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
+.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--gap-head) var(--gap-set);align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
 .bal-meter.none{opacity:.35}
 .bm-name{min-width:34px}
 .bm-val{min-width:64px;text-align:right;color:var(--ink);font-weight:500}
@@ -1805,7 +1805,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .bal-foot output{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
 .bal-foot .bal-say{margin-left:0}
 .bal-say.even{color:var(--ink)}
-.im-scope{min-height:0;gap:10px}
+.im-scope{min-height:0;gap:var(--gap-card)}
 .im-scope canvas{flex:1 1 0;min-height:0;aspect-ratio:auto;height:auto}
 /* Level: the meter sits at the bottom, the two cards above it share what is left */
 .lv-grid{height:100%;align-content:stretch;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--gap-card)}          /* no picture here: the two cards above keep their natural heights, and the Meter takes the spare height and spreads its rows inside its card (a card never holds the spare height as space between cards) */
@@ -2527,7 +2527,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .t-head{margin:0 0 var(--gap-head)}
 .dlg>.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a control in a window sits --gap-label under it, not a whole window gap */
 .pg>.field{margin-bottom:0}
-:is(.sp-card,#aeNrCtl,#aeGainCard,.fd-shape,.em-view)>.t-head{margin-bottom:calc(var(--gap-head) - var(--gap-set))}          /* a card that spaces its parts with --gap-set pulls the first part up to --gap-head under its heading */
+:is(.sp-card,#aeNrCtl,#aeGainCard,#aeShapeCard,.fd-shape,.em-view)>.t-head{margin-bottom:calc(var(--gap-head) - var(--gap-set))}          /* a card that spaces its parts with --gap-set pulls the first part up to --gap-head under its heading */
 #aeGainCard>.lv-big{margin:0 0 auto}
 #aeGainCard #aeGainField{margin-top:var(--gap-set)}
 .em-view>.t-note{margin-top:calc(var(--gap-label) - var(--gap-set))}

@@ -102,7 +102,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       aeUndo(); await sleep(200); o.undoEdit = aeBpTool('eq') && AE.d.fx.eq.bands[0].g === 6;          // one Undo brings back the old setting and the bypass
       aeRedo(); await sleep(200); o.redoEdit = !aeBpTool('eq') && AE.d.fx.eq.bands[0].g === 9;
       aeToggleBypass(); await sleep(200);          // bypassed again, with the new setting, for Done
-      o.tip = $('#aeAB').title.length <= 90 && /until/.test($('#aeAB').title);
+      o.tip = $('#aeAB').title.length <= 90 && /^Leaves this tool out of the sound until you switch it back on or edit it\.$/.test($('#aeAB').title);
       aeApply(); await sleep(300);
       o.saved = JSON.stringify(S.set.bp) === '{"eq":true}' && JSON.parse(localStorage.getItem('glisscore.settings')).bp.eq === true;
       openAudioEditor(); await sleep(500); aeTool('eq'); await sleep(400);
@@ -141,6 +141,79 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     await p.reload(); await p.waitForTimeout(800);
     const rl = await p.evaluate(() => JSON.stringify(S.set.bp));
     ok('the bypass survives a reload of the page', rl === '{"eq":true}', rl);
+  }
+  {          // Bypass in the running editor: stopped and playing agree, every bypassable tool redraws the wave, Level takes out its lift and the Clip light, the meter waits while a copy is made, the Emulator's Bypass stays on its own tools, the outside sound costs no copy per frame, and a disk recording behaves the same
+    { const sr = 22050, n = sr * 3, wav = Buffer.alloc(44 + n * 4); wav.write('RIFF', 0); wav.writeUInt32LE(36 + n * 4, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(2, 22); wav.writeUInt32LE(sr, 24); wav.writeUInt32LE(sr * 4, 28); wav.writeUInt16LE(4, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(n * 4, 40);
+      let seed = 3; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296 * 2 - 1;          // a little hiss, so Auto has a noise floor to learn
+      for (let i = 0; i < n; i++) { wav.writeInt16LE(Math.round(20000 * Math.sin(i / sr * 2 * Math.PI * 220) + 900 * rnd()), 44 + i * 4); wav.writeInt16LE(Math.round(6000 * Math.sin(i / sr * 2 * Math.PI * 330) + 900 * rnd()), 46 + i * 4); }          // a stereo sound whose sides differ, so the Imager has something to change
+      fs.writeFileSync(path.join(os.tmpdir(), 'kf-bp-stereo.wav'), wav); }
+    await p.setInputFiles('#audioIn', path.join(os.tmpdir(), 'kf-bp-stereo.wav')); await p.waitForFunction(() => S.audio); await p.waitForTimeout(800);
+    const r = await p.evaluate(async () => {
+      const o = {}, num = s => parseFloat(String(s).replace('−', '-')), eqBands = () => [{ type: 'peaking', f: 1000, g: 18, q: 1, on: true }, { type: 'peaking', f: 3000, g: 18, q: 1, on: true }, { type: 'peaking', f: 6000, g: 18, q: 1, on: true }];
+      openAudioEditor(); await sleep(500); aeTool('eq'); await sleep(400);
+      aePush(); AE.d.gainDb = 0; AE.d.normalize = false; AE.d.limiter = false; AE.d.audioFades = false; AE.d.fx.eq.on = true; AE.d.fx.eq.bands = eqBands(); aeRefresh(); await sleep(1500);
+      aeToggleBypass(); await sleep(1500); o.byStop = num(AE.ms.text);
+      $('#aePlay').click(); await sleep(2200); o.byPlay = num(AE.ms.text); $('#aePlay').click(); await sleep(1000); o.byAfterStop = num(AE.ms.text);
+      aeToggleBypass(); AE.d.fx.eq.on = false; aeRefresh(); await sleep(1500); o.offStop = num(AE.ms.text);          // the EQ switched off: the reading Bypass must match
+      o.stoppedVsPlaying = Math.abs(o.byStop - o.byPlay) <= 0.5 && Math.abs(o.byAfterStop - o.byStop) <= 0.5 && Math.abs(o.byStop - o.offStop) <= 0.5;
+      AE.d.fx.eq.on = true; AE.d.fx.eq.bands = eqBands(); aeRefresh(); await sleep(800);
+      o.wave = {};
+      for (const [t, set] of [['eq', () => {}], ['noise', () => { AE.d.fx.noise.on = true; AE.d.fx.noise.hum = { f: 50, n: [1, 2, 3, 4, 5, 6] }; o.nrInfo = [!!nrReady(AE.d.fx.noise), AE.d.fx.noise.on]; }], ['imager', () => { AE.d.fx.imager.on = true; AE.d.fx.imager.width = 0; }], ['spec', () => { AE.d.fx.spec.on = true; AE.d.fx.spec.edits = [{ a: 0.2, b: 0.6, f0: 150, f1: 260, mode: 'cut', db: -18 }]; }]]) {
+        aeTool(t); await sleep(300); await set(); aeRefresh(); await sleep(t === 'spec' ? 6000 : 500); 
+        if (t === 'spec') { aeSetView('wave', 0); await sleep(700); } const kw = () => AE.baseWKey; const k0 = kw(); aeToggleBypass(); await sleep(1500); o.wave[t] = kw() !== k0; if (t === 'spec') aeToggleBypass(); await sleep(600);
+        if (t !== 'eq') { AE.d.fx[t].on = false; aeRefresh(); await sleep(300); }
+      }
+      AE.d.fx.eq.on = false; aeRefresh(); await sleep(300);
+      aeTool('level'); await sleep(300); aePush(); AE.d.gainDb = 12; aeRefresh(); await sleep(1800);
+      o.clipBefore = AE.ms.hot; o.liftBefore = AE.G;
+      aeToggleBypass(); await sleep(700);
+      o.clipAfter = !AE.ms.hot; o.liftAfter = AE.G === 1; o.clipLight = !$('#aeClip').classList.contains('on');
+      o.gainShown = document.querySelector('#aeGainBig').textContent.indexOf('+12') === 0; o.netZero = /0dB/.test(document.querySelector('#aeNet').textContent);
+      aeToggleBypass(); await sleep(600); AE.d.gainDb = 0; aeRefresh(); await sleep(300);
+      aeTool('eq'); await sleep(300); aePush(); AE.d.fx.eq.on = true; AE.d.fx.eq.bands[0].g = 9; aeRefresh(); await sleep(50);
+      aeToggleBypass(); o.busyOk = !AE.sumIn.busy || AE.ms.text === '…'; await sleep(1200);
+      aeToggleBypass(); o.backInstant = !AE.sumIn.busy; await sleep(300); aeToggleBypass(); await sleep(300);
+      o.oneOfOne = aeLimMsg().lim.on === !!limOn(aeHeard(AE.d));
+      AE.d.bp = {}; AE.d.fx.eq.bands[0].g = 6; aeRefresh(); await sleep(300);
+      aeTool('eq'); await sleep(200); aeToggleBypass(); await sleep(200);
+      AE.d.fx.imager.on = true; AE.d.gainDb = 3; aeRefresh(); await sleep(300); AE.em = { ref: { I: -14, LRA: 6, tone: null, side: null }, result: aeCopy(AE.d) }; aeTool('emu'); await sleep(300);          // the Emulator set the EQ, the Imager and Level; only the EQ is bypassed
+      o.emLit = aeBpSet('emu').length;
+      o.emuEqAlone = !aeBpTool('emu') && Number(getComputedStyle(document.querySelector('.ae-bypill')).opacity) < 0.05 && $('#aeAB').getAttribute('aria-pressed') !== 'true';
+      AE.em = null; AE.d.gainDb = 0; AE.d.fx.imager.on = false; aeTool('eq'); await sleep(300); aeToggleBypass(); await sleep(300);
+      // a copy of the sound outside the editor costs no deep clone: the view of the saved settings and the bypassed draft are built without JSON
+      const J = JSON.stringify; let cl = 0; JSON.stringify = function (...a) { cl++; return J.apply(this, a); };
+      const t0 = performance.now(); for (let i = 0; i < 300; i++) { soundSet(); aeHeard(AE.d); } const ms = (performance.now() - t0) / 600;
+      JSON.stringify = J;
+      o.noClone = cl === 0; o.perCallTime = +ms.toFixed(4);
+      o.readiness = outSrc() === (aeFxPeek(soundSet().fx) || S.audio);          // the video and the editor agree on whether the sound is ready
+      aeTool('fades'); await sleep(500);          // the Curve card: its heading and row sit in the middle, the spare height split evenly (Decision 9)
+      { const cc = $('#aeShapeCard').getBoundingClientRect(), hd = $('#aeShapeCard .t-head').getBoundingClientRect(), sg = $('#aeFadeShape').getBoundingClientRect(); o.curveTop = hd.top - cc.top; o.curveBottom = cc.bottom - sg.bottom; }
+      closeAudioEditor(); await sleep(200);
+      return o;
+    });
+    ok('the Fades Curve card centers its heading and row: the space above and below is equal', Math.abs(r.curveTop - r.curveBottom) <= 1.5, JSON.stringify([r.curveTop, r.curveBottom]));
+    ok('the EQ bypass stopped reads within 0.5dB of the playing reading and of the EQ switched off', r.stoppedVsPlaying, JSON.stringify(r));
+    ok('the waveform redraws on Bypass for the EQ, the Imager, Noise reduction, and Spectra', r.wave.eq && r.wave.imager && r.wave.noise && r.wave.spec, JSON.stringify([r.wave, r.nrInfo]));
+    ok('Level bypassed: the wave loses its lift, True peak and the Clip light follow, and the Gain number keeps its setting with Net gain at 0dB', r.clipBefore && r.clipAfter && r.clipLight && r.liftBefore > 1 && r.liftAfter && r.gainShown && r.netZero, JSON.stringify(r));
+    ok('the meter reads "…" or the new number while a copy is made, and switching back is instant', r.busyOk && r.backInstant, JSON.stringify(r));
+    ok('the Emulator\'s Bypass stays unpressed and shows no pill when only the EQ is bypassed', r.emuEqAlone, JSON.stringify(r));
+    ok('the outside sound costs no deep clone per call, and the video and the editor agree on whether it is ready', r.noClone && r.readiness && r.oneOfOne, JSON.stringify(r));
+  }
+  {          // a disk recording (?disk=1): the EQ bypass reads and plays the same
+    const dp = await b.newPage(); dp.setDefaultTimeout(60000); const derrs = []; dp.on('pageerror', e => derrs.push(e.message));
+    await dp.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); await dp.setInputFiles('#audioIn', path.join(os.tmpdir(), 'kf-bp.wav')); await dp.waitForFunction(() => S.audio); await dp.waitForTimeout(900);
+    const dr = await dp.evaluate(async () => {
+      const o = {}, num = s => parseFloat(String(s).replace('−', '-'));
+      openAudioEditor(); await sleep(500); aeTool('eq'); await sleep(400);
+      aePush(); AE.d.gainDb = 0; AE.d.normalize = false; AE.d.limiter = false; AE.d.audioFades = false; AE.d.fx.eq.on = true; AE.d.fx.eq.bands = [{ type: 'peaking', f: 1000, g: 18, q: 1, on: true }, { type: 'peaking', f: 6000, g: 18, q: 1, on: true }]; aeRefresh(); await sleep(1500);
+      aeToggleBypass(); await sleep(1500); o.byStop = num(AE.ms.text); o.disk = !!S.audio.disk;
+      $('#aePlay').click(); await sleep(2000); o.byPlay = num(AE.ms.text); $('#aePlay').click(); await sleep(800);
+      o.heard = aeFxHeard(AE.d.fx, AE.d.bp).eq.on === false;
+      o.agree = Math.abs(o.byStop - o.byPlay) <= 0.5;
+      return o;
+    });
+    ok('a disk recording: the EQ bypass reads the same stopped and playing, and leaves the EQ out', dr.disk && dr.agree && dr.heard, JSON.stringify(dr));
+    ok('no errors on the disk recording', derrs.length === 0, derrs.join(' | ')); await dp.close();
   }
   ok('no page errors', !errs.length, errs.join('; ')); await b.close(); process.exit(0);
 })();

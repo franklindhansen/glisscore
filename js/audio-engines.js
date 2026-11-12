@@ -269,7 +269,7 @@ async function fxGet(fx, opts) {
   catch (e) { FXC.delete(key); throw e; }
 }
 /* the sound the video uses (the processed one once it is ready) */
-const outSrc = () => fxPeek(soundSet().fx) || S.audio;
+const outSrc = () => aeFxPeek(soundSet().fx) || S.audio;          // the same readiness as the editor's player: a sound kept from just before counts too
 const outBuf = () => outSrc().buffer;
 
 /* ====================================================================

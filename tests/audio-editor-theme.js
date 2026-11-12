@@ -3,6 +3,7 @@
 // The Mains hum divider has a contrast of 1.3 or more against the surface behind it, before and after a noise is learned, in both themes; in light mode the token is no heavier than --line was.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-theme.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
+const sleep2 = ms => new Promise(r => setTimeout(r, ms));
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 // a made recording: a little hiss all through, a 60Hz hum, and tones in bursts, so Auto finds a noise profile in the quiet parts
 const sr = 44100, n = sr * 6; let seed = 7; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
@@ -95,6 +96,31 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
       return { disabled: g.disabled, inputOpacity: getComputedStyle(g).opacity, ratio: K.ratio(K.over([c[0], c[1], c[2], c[3] * op], s), s) };
     });
     ok('the greyed Gain track is 1.3 or more against its card, and the slider is not dimmed as a whole (' + t + ')', r.disabled && r.inputOpacity === '1' && r.ratio >= 1.3, JSON.stringify(r));
+  }
+  {          // a theme change redraws every picture in the same task, stopped or playing, in both directions; the timeline and the PDF Editor's pictures too
+    await p.evaluate(() => { openAudioEditor(); }); await settle();
+    const spyOn = (names, fn) => p.evaluate(([names, fn]) => {
+      const cnt = {}, saved = {}; names.forEach(n => { saved[n] = window[n]; cnt[n] = 0; window[n] = function (...a) { cnt[n]++; return saved[n].apply(this, a); }; });
+      try { window[fn](); } finally { names.forEach(n => { window[n] = saved[n]; }); }
+      return cnt;
+    }, [names, fn]);
+    const tools = [['noise', 'aeNrDraw'], ['spec', null], ['eq', 'aeEqDraw'], ['imager', 'aeScopeDraw'], ['fades', 'aeFadeDraw'], ['emu', 'aeEmDraw']];
+    const bad = [];
+    for (const playing of [false, true]) for (const t of ['light', 'dark']) for (const [tool, own] of tools) {
+      await p.evaluate(([tool, playing]) => { if (AE.playing) $('#aePlay').click(); aeTool(tool); if (playing) $('#aePlay').click(); }, [tool, playing]); await sleep2(400);
+      await p.evaluate(t => flip(t, null), t); await sleep2(150);
+      const cnt = await spyOn(['aeDraw', 'aeEqDraw', 'aeNrDraw', 'aeScopeDraw', 'aeFadeDraw', 'aeEmDraw'], 'readColors');
+      if (!(cnt.aeDraw >= 1 && (!own || cnt[own] >= 1))) bad.push(tool + (playing ? ' playing ' : ' stopped ') + t + ' ' + JSON.stringify(cnt));
+    }
+    ok('the editor\'s pictures redraw in the same task on a theme change, stopped or playing, in both directions, for every tool', bad.length === 0, bad.join('; '));
+    await p.evaluate(() => { if (AE.playing) $('#aePlay').click(); closeAudioEditor(); });
+    await p.setInputFiles('#pdfIn', (process.env.S || 'tests/fixtures') + '/score.pdf'); await p.waitForFunction(() => S.pdf); await settle();
+    const pe = await p.evaluate(() => { openPdfEditor(); return true; }); await sleep2(400);
+    for (const t of ['light', 'dark']) {
+      await p.evaluate(t => flip(t, null), t); await sleep2(100);
+      const r = await p.evaluate(() => { TL.staticDirty = false; const cnt = {}, saved = window.peDrawCard; cnt.n = 0; window.peDrawCard = function (...a) { cnt.n++; return saved.apply(this, a); }; try { readColors(); } finally { window.peDrawCard = saved; } return { pe: cnt.n, timeline: TL.staticDirty, accent: PE.accent === TL.C.accent, open: !!PE.d }; });
+      ok('the PDF Editor and the timeline redraw on a theme change (' + t + ')', r.pe >= 1 && r.timeline && r.accent, JSON.stringify(r));
+    }
   }
   ok('no errors', errs.length === 0, errs.join(' | '));
   await b.close(); fs.unlinkSync(file);
