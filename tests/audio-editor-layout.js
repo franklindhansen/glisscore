@@ -67,6 +67,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const el = s => document.querySelector(s);
     if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view .em-note')).bottom) };
+    if (pane.id === 'aePaneNoise') out.noise = { pre: el('#aeNrGrid').classList.contains('pre'), graphTop: rnd(R(el('#aeNrGrid .nr-stage')).top), graphBottom: rnd(R(el('#aeNrGrid .nr-stage')).bottom), sampleTop: rnd(R(el('#aeNrSample')).top), sampleBottom: rnd(R(el('#aeNrSample')).bottom), ctlTop: rnd(R(el('#aeNrCtl')).top), ctlBottom: rnd(R(el('#aeNrCtl')).bottom), content: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('.fd-shape canvas')).bottom) };
     return out;
   };
@@ -92,6 +93,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     out.hum = await p.evaluate(async () => { const pos = () => { const s = document.querySelector('#aeNrHum').getBoundingClientRect(), c = document.querySelector('#aeNrSample').getBoundingClientRect(), r = document.querySelector('#aeNrHumRow').getBoundingClientRect(); return { sw: Math.round(s.top * 10) / 10, card: Math.round(c.height * 10) / 10, row: Math.round(r.height * 10) / 10, sub: document.querySelector('#aeNrHumVal').textContent }; };
       aeTool('noise'); await sleep(300); const rec = { idle: pos() }; document.querySelector('#aeNrHum').click(); await sleep(60); rec.busy = pos(); for (let i = 0; i < 400 && AE.humBusy; i++) await sleep(25); await sleep(300); rec.done = pos();
       document.querySelector('#aeNrHum').click(); await sleep(300); rec.off = pos(); return rec; });
+    await p.evaluate(() => aeTool('noise')); await p.waitForTimeout(400); await p.evaluate(async () => { document.querySelector('#aeNrLearn').click(); for (let i = 0; i < 200 && document.querySelector('#aeNrGrid').classList.contains('pre'); i++) await sleep(50); await sleep(700); });
+    await look(p, 'noise learned');
     await p.evaluate(() => aeTool('eq')); await p.waitForTimeout(600); await p.evaluate(() => document.querySelector('#aeMatchBtn').click()); await p.waitForTimeout(900); await look(p, 'EQ Match open');
     await p.close();
     const q = await mk('f32over.wav'); await q.evaluate(() => aeTool('level')); await q.waitForTimeout(700);
@@ -161,6 +164,23 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
     ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));
   }
+  // Noise reduction, by Principle 2: before a noise is learned the sample card sits on the graph and both end together, and Removal (the last card) ends on the content's bottom line; after learning, the sample and Removal end on one line, and the graph above them takes the spare height
+  for (const h of heights) { const sp = sweep[h].space, tag = '1440x' + h + ': ', nz = sp.filter(f => f.noise).map(f => f.noise), near = (a, b) => Math.abs(a - b) <= 1;
+    const pre = nz.filter(n => n.pre), post = nz.filter(n => !n.pre);
+    const preBad = pre.filter(n => !(near(n.sampleBottom, n.graphBottom) && near(n.ctlBottom, n.content) && near(n.graphBottom + 10, n.ctlTop)));
+    ok(tag + 'Noise reduction before learning: the sample and graph end together, and Removal ends on the content line 10px under the graph', pre.length > 0 && !preBad.length, JSON.stringify(pre[0] || null) + (preBad.length ? ' bad ' + JSON.stringify(preBad[0]) : ''));
+    const postBad = post.filter(n => !(near(n.sampleBottom, n.ctlBottom) && near(n.ctlBottom, n.content) && near(n.graphBottom + 10, n.ctlTop)));
+    ok(tag + 'Noise reduction after learning: the sample and Removal end on one line, the content\'s bottom, and the graph sits 10px above them', post.length > 0 && !postBad.length, JSON.stringify(post[0] || null) + (postBad.length ? ' bad ' + JSON.stringify(postBad[0]) : ''));
+  }
+  // the EQ band at phone to 980px: two columns, no overflow, and the Gain and Width sliders keep a usable width
+  const eqW = [];
+  for (const w of [530, 600, 700, 800, 900, 980, 1040]) { const p = await b.newPage({ viewport: { width: w, height: 900 } }); p.setDefaultTimeout(90000);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3');
+    await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400);
+    await p.evaluate(() => aeTool('eq')); await p.waitForTimeout(800);
+    eqW.push({ w, v: await p.evaluate(() => { const c = document.querySelector('#aeEqBand'); return { over: c.scrollWidth - c.clientWidth, g: Math.round(document.querySelector('#aeBandG').getBoundingClientRect().width), q: Math.round(document.querySelector('#aeBandQ').getBoundingClientRect().width) }; }) }); await p.close(); }
+  const eqBad = eqW.filter(x => x.v.over > 1 || x.v.g < 90 || x.v.q < 90);
+  ok('EQ band, 530 to 1040px wide: no overflow, and Gain and Width keep at least 90px', !eqBad.length, JSON.stringify(eqW).slice(0, 400));
   for (const n of narrowFoot) { const bad = n.sp.foot.filter(x => Math.abs(x.above - x.below) > 1);
     ok('Imager at ' + n.w + 'px: the footer row (Center low notes) keeps equal space above and below its switch', n.sp.foot.length > 0 && !bad.length, JSON.stringify(n.sp.foot)); }
   const feet = new Set(sweep[heights[0]].space.flatMap(f => f.foot.map(x => x.id)));

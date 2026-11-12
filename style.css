@@ -1553,11 +1553,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #audioDlg:not(.afull) .ae-win{height:100%;min-height:0}
   #audioDlg:not(.afull) .ae-pbody{flex:1 1 auto;height:auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 }
-/* EQ, narrow: the graph keeps a usable height and the band controls stay compact (one row from 521px, two columns below) */
+/* EQ, narrow: the graph keeps a usable height. Below 980px the band is two columns (its Band row across the top, then Type and Frequency, then Gain and Width), the same two-column narrow rule Fades and Noise use, so no slider is squeezed to nothing */
 @media (max-width:760px){#audioDlg:not(.afull) #aePaneEq .eq-stage{flex:none;height:clamp(160px,36dvh,240px)}}
-@media (min-width:521px) and (max-width:760px){
-  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
-  #audioDlg:not(.afull) .eq-bn{grid-column:auto;flex-direction:row;align-self:center}
+@media (min-width:761px) and (max-width:980px){
+  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 14px;align-items:start}
+  #audioDlg:not(.afull) .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
+  #audioDlg:not(.afull) .eq-band .eq-cell{min-width:0}
 }
 
 /* ---- full screen, both editors: no title bar. Small glass chips float at the top; the controls and the tools sit in glass rows at the bottom. ---- */
@@ -1715,7 +1716,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeNrSub>.fa-in{opacity:1}
 #aeNrSub:not(.open)>.fa-in{opacity:0}
 #aeNrSub.open>.fa-in{padding:0}
-.nr-grid{height:100%;grid-template-rows:minmax(64px,1fr) auto;gap:10px 12px}
+.nr-grid{height:100%;grid-template-rows:minmax(64px,1fr) auto;gap:var(--gap-card)}
 .nr-grid>.nr-stage{min-height:64px;height:auto}
 .nr-grid.pre{grid-template-rows:minmax(0,1fr) auto}          /* before any noise is found the picture's place is the grey card the first step sits on: it takes the spare height, never the Removal card */
 #aeNrCtl{gap:var(--gap-set)}
