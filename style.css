@@ -2309,7 +2309,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
 .ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--hairline)}
 @media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
-.ae-chain b.bp{background:var(--panel2);color:var(--muted);text-decoration:line-through}
+.ae-chain b.bp{background:transparent;color:var(--muted);text-decoration:line-through;box-shadow:inset 0 0 0 1px var(--hairline)}          /* a hairline edge in place of the fill, so the pill still reads on the status bar; same box as the others */
 
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
 .ae-ptl{display:flex;align-items:center;gap:10px;min-width:0;height:20px}

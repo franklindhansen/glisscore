@@ -1964,7 +1964,7 @@ function aeLit(d) {
   const nch = fxChannels(), fx = d.fx;
   return { noise: !!fx.noise.on, spec: !!fx.spec.on, eq: !!fx.eq.on && eqHas(fx), imager: !!fx.imager.on && nch === 2, level: !!d.normalize || d.gainDb !== 0, fades: d.audioFades !== false };
 }
-const aeChainOrder = d => ['noise', 'spec'].concat(d.fx.order, ['level', 'fades']);
+const aeChainOrder = d => ['noise', 'spec'].concat(d.fx.order, ['fades', 'level']);          // the tool list's order: Fades sits above Level
 function aeRailSync() {
   const procs = $('#aeProcs'), want = AE.d.fx.order, cur = Array.from(procs.children).map(e => e.dataset.tool), d = AE.d, fx = d.fx, nch = fxChannels(), lit = aeLit(d);
   if (want.join() !== cur.join()) {
@@ -1984,7 +1984,7 @@ function aeRailSync() {
 }
 /* the wires: a cable runs from light to light down the list, in the order the sound travels. A tool that is off has nothing to plug in, so the cable skips it.
    Each cable is a small rope (points with gravity and fixed link lengths) pinned to two lights. Unplug a light and its cable swings loose and reels back in; plug one in and the cable whips across and settles. */
-const WR = { N: 11, H: 1 / 120, G: 1200, SIDE: 70, K: 300, C: 22 };
+const WR = { N: 11, H: 1 / 120, G: 1200, SIDE: 70, K: 300, C: 22, EDGE: 3 };          // EDGE: the cable never goes left of the tool list's edge (the wind would push it past)
 const AE_LEDS = { noise: '#aeNrLed', spec: '#aeSpLed', eq: '#aeEqLed', imager: '#aeImLed', level: '#aeLvLed', fades: '#aeFdLed' };
 const AE_JACKS = { in: '#aeJackIn i', out: '#aeJackOut i' };          // where the sound comes in and goes out: the cable always runs from one to the other through whatever is lit
 const WIRE_DEFS = '<defs><radialGradient id="wDot" cx=".34" cy=".28" r=".8"><stop offset="0" stop-color="#ecfff3"/><stop offset=".3" stop-color="#7defa6"/><stop offset=".7" stop-color="#2fb872"/><stop offset="1" stop-color="#17894c"/></radialGradient></defs>';
@@ -2008,6 +2008,7 @@ function wireStep(r) {
     }
   }
   pin(0, r.pa); pin(n - 1, r.pb);
+  P.forEach(p => { if (p.x < WR.EDGE) { p.x = WR.EDGE; p.px = p.x; } });
 }
 function wireMake(a, b, s, e, settled) {
   const r = { a, b, pa: wirePin(s[0], s[1]), pb: wirePin(settled ? e[0] : s[0], settled ? e[1] : s[1]), pts: [], L: 0, alpha: 1, life: 0.45, dying: false };
@@ -2022,7 +2023,7 @@ function wireRender() {
   W.ropes.forEach(r => { if (r.alpha > 0.01) { h += wireCable(wirePath(r.pts.map(p => [p.x, p.y])), '', r.alpha); const f = r.pa.free ? r.pts[0] : r.pb.free ? r.pts[r.pts.length - 1] : null; if (f) h += '<circle class="w-plug drag" cx="' + f.x.toFixed(1) + '" cy="' + f.y.toFixed(1) + '" r="3.5" opacity="' + r.alpha.toFixed(2) + '"/>'; } });
   Object.keys(W.pg).forEach(k => { const g = W.pg[k]; if (g.s > 0.02 && W.at[k]) h += '<circle class="w-plug" cx="' + W.at[k][0] + '" cy="' + W.at[k][1] + '" r="' + (8 * g.s).toFixed(2) + '"/>'; });
   Object.keys(W.pg).forEach(k => { const g = W.pg[k]; if (g.s > 0.02 && W.at[k]) h += '<circle class="w-dot" cx="' + W.at[k][0] + '" cy="' + W.at[k][1] + '" r="' + (5 * Math.min(1, g.s)).toFixed(2) + '"/>'; });          // the lit light is drawn again above the cable, so the cable goes over the lights that are off and under the ones it plugs into
-  if (AE.wire && W.at[AE.wire.tool]) { const [x0, y0] = W.at[AE.wire.tool], w = AE.wire, gap = w.y - y0, bow = Math.max(6, Math.min(15, 6 + Math.abs(gap) * 0.1)); h += wireCable('M' + x0 + ' ' + y0 + 'C' + (x0 - bow) + ' ' + (y0 + gap * 0.3) + ' ' + (w.x - bow) + ' ' + (w.y - gap * 0.3) + ' ' + w.x + ' ' + w.y, 'drag', 1) + '<circle class="w-plug drag" cx="' + w.x + '" cy="' + w.y + '" r="6"/>'; }
+  if (AE.wire && W.at[AE.wire.tool]) { const [x0, y0] = W.at[AE.wire.tool], w = AE.wire, gap = w.y - y0, bow = Math.max(6, Math.min(15, 6 + Math.abs(gap) * 0.1)); h += wireCable('M' + x0 + ' ' + y0 + 'C' + Math.max(WR.EDGE, x0 - bow) + ' ' + (y0 + gap * 0.3) + ' ' + Math.max(WR.EDGE, w.x - bow) + ' ' + (w.y - gap * 0.3) + ' ' + w.x + ' ' + w.y, 'drag', 1) + '<circle class="w-plug drag" cx="' + w.x + '" cy="' + w.y + '" r="6"/>'; }
   svg.innerHTML = WIRE_DEFS + h;
 }
 function wireLoop(now) {
@@ -2051,7 +2052,7 @@ function aeWiresDraw(force) {
   } else clearTimeout(AE.wcT);
   chain = AE.wc || rawChain;
   if (reducedMotion()) {       // no swinging: a plain curve between the lights
-    const cable = (x0, y0, x1, y1, cls) => { const gap = y1 - y0, bow = Math.max(6, Math.min(15, 6 + Math.abs(gap) * 0.1)); return wireCable('M' + x0 + ' ' + y0 + 'C' + (x0 - bow) + ' ' + (y0 + gap * 0.3) + ' ' + (x1 - bow) + ' ' + (y1 - gap * 0.3) + ' ' + x1 + ' ' + y1, cls, 1); };
+    const cable = (x0, y0, x1, y1, cls) => { const gap = y1 - y0, bow = Math.max(6, Math.min(15, 6 + Math.abs(gap) * 0.1)); return wireCable('M' + x0 + ' ' + y0 + 'C' + Math.max(WR.EDGE, x0 - bow) + ' ' + (y0 + gap * 0.3) + ' ' + Math.max(WR.EDGE, x1 - bow) + ' ' + (y1 - gap * 0.3) + ' ' + x1 + ' ' + y1, cls, 1); };
     let h = ''; for (let i = 0; i < chain.length - 1; i++) h += cable(...at[chain[i]], ...at[chain[i + 1]], '');
     chain.forEach(k => { if (AE_LEDS[k]) h += '<circle class="w-plug" cx="' + at[k][0] + '" cy="' + at[k][1] + '" r="8"/>'; });
     if (AE.wire) { const w = AE.wire; h += cable(...at[w.tool], w.x, w.y, 'drag') + '<circle class="w-plug drag" cx="' + w.x + '" cy="' + w.y + '" r="6"/>'; }
