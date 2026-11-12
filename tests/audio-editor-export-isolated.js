@@ -23,5 +23,23 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok(tag + 'edits made while it runs do not reach the file', a.size > 1e5 && a.size === c.size && a.h === c.h, JSON.stringify({ a, c }));
     ok(tag + 'no errors', errs.length === 0, errs.join(' | ')); await p.close();
   }
+  {          // Export audio leaves a bypassed tool out: the file matches one made with that tool switched off; Match gain changes nothing in it
+    const p = await b.newPage({ viewport: { width: 1240, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
+    await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(800);
+    const x = await p.evaluate(async () => {
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+      const exp = async () => { let out = null; const o = window.saveFile; window.saveFile = async blob => { out = new Uint8Array(await blob.arrayBuffer()); }; S.set.audioFormat = 'wav24'; await aeExport(); window.saveFile = o; let h = 0; for (let i = 0; i < out.length; i++) h = (Math.imul(h, 31) + out[i]) | 0; return { size: out.length, h }; };
+      AE.d.fx.eq.on = true; AE.d.fx.eq.bands = [{ type: 'peaking', f: 800, g: 9, q: 1, on: true }]; aeRefresh(); await sleep(200);
+      aeTool('eq'); await sleep(300); aeToggleBypass(); await sleep(300);          // the EQ bypassed in the editor
+      AE.d.matchGain = true; aeToolsRefresh(); const byp = await exp();
+      AE.d.matchGain = false; AE.d.bp = {}; AE.d.fx.eq.on = false; aeRefresh(); await sleep(200); const off = await exp();
+      AE.d.fx.eq.on = true; aeRefresh(); await sleep(200); const on = await exp();
+      return { byp, off, on };
+    });
+    ok('export audio with the EQ bypassed equals the export with the EQ switched off (Match gain on, too)', x.byp.size > 1e5 && x.byp.size === x.off.size && x.byp.h === x.off.h, JSON.stringify(x));
+    ok('the EQ itself changes the exported file, so the check above means something', x.on.h !== x.off.h, JSON.stringify(x));
+    ok('no errors', errs.length === 0, errs.join(' | ')); await p.close();
+  }
   await b.close();
 })();

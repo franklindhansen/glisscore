@@ -14,12 +14,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     await p.addInitScript(() => { window.READERS = []; const W = window.AudioWorkletNode; window.AudioWorkletNode = function (ctx, name, o) { if (!(ctx instanceof OfflineAudioContext) && (!o || o.numberOfInputs !== 0)) window.READERS.push(name); return new W(ctx, name, o); }; window.AudioWorkletNode.prototype = W.prototype; });          // every worklet made on the live context that takes sound in
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/stereo.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
-    const r = await p.evaluate(async () => {
+    const rs = await p.evaluate(async () => { const run = async byp => {
       aeFx(fx => { fx.eq.on = true; fx.eq.auto = true; fx.eq.bands = [{ type: 'peaking', f: 900, g: 5, q: 1, on: true }, { type: 'highshelf', f: 7000, g: -3, q: 0.71, on: true }, { type: 'peaking', f: 2500, g: 4, q: 1.4, on: true, place: 'side' }, { type: 'highpass', f: 50, g: 0, q: 0.71, slope: 24, on: true }];
         fx.imager.on = true; fx.imager.width = 140; fx.imager.monoBass = 120; fx.imager.bal = 1.5; });
-      const d = AE.d; d.normalize = true; d.normBy = 'loud'; d.normLufs = -6; d.normPreset = 'custom'; d.limiter = true; aeRefresh(); await sleep(300);
-      const ch = 2, mm = S.audio.disk ? await aeMasterDisk(d, ch, false, null) : await aeMasterFor(d, (await fxGet(d.fx)).buffer, ch, false), total = mm.total, want = new Float32Array(total * ch); await mm.fill(0, total, want);          // the export's samples
-      const gr = aeLevel(d, Math.max(0, d.vStart), Math.min(aeEnd(d), S.audio.duration)); let wpk = 0; for (const v of want) wpk = Math.max(wpk, Math.abs(v));
+      const d = AE.d; d.normalize = true; d.normBy = 'loud'; d.normLufs = -6; d.normPreset = 'custom'; d.limiter = true; AE.d.bp = byp ? { eq: aeBpSig(AE.d, 'eq') } : {}; aeRefresh(); const h = aeHeard(d); await sleep(300);          // the second run has the EQ bypassed: the player and the export both leave it out
+      const ch = 2, mm = S.audio.disk ? await aeMasterDisk(h, ch, false, null) : await aeMasterFor(h, (await fxGet(h.fx)).buffer, ch, false), total = mm.total, want = new Float32Array(total * ch); await mm.fill(0, total, want);          // the export's samples
+      const gr = aeLevel(h, Math.max(0, h.vStart), Math.min(aeEnd(h), S.audio.duration)); let wpk = 0; for (const v of want) wpk = Math.max(wpk, Math.abs(v));
       AE.pos = Math.max(0, d.vStart); document.querySelector('#aePlay').click(); await new Promise(res => { const t = setInterval(() => { if (AE.playing && AE.ph) { clearInterval(t); res(); } }, 5); });
       const ac = AE.src.context, code = "registerProcessor('rec-out', class extends AudioWorkletProcessor { process(i) { if (i[0] && i[0][1]) this.port.postMessage({ at: currentFrame, l: i[0][0].slice(), r: i[0][1].slice() }); return true; } });";
       await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([code], { type: 'text/javascript' }))); const rec = new AudioWorkletNode(ac, 'rec-out', { numberOfInputs: 1, numberOfOutputs: 0, channelCount: 2, channelCountMode: 'explicit' }), got = []; rec.port.onmessage = e => got.push(e.data); AE.src.connect(rec);          // the check's own recorder, on the player's output (this test browser adds nothing to what it reads)
@@ -27,13 +27,16 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       /* a frame the recorder heard at 'at' is the sound's frame at - start, and the limiter holds the sound back by its look-ahead */
       let worst = 0, n = 0, sum = 0, pk = 0; const sr = ac.sampleRate, a = Math.round(0.8 * sr), z = Math.round(3.2 * sr);
       for (const g of got) for (let i = 0; i < g.l.length; i++) { const k = g.at + i - start - D; if (k < a || k >= z || k >= total) continue; const dl = Math.abs(g.l[i] - want[k]), dr = Math.abs(g.r[i] - want[total + k]); worst = Math.max(worst, dl, dr); sum += dl * dl + dr * dr; n += 2; pk = Math.max(pk, Math.abs(g.l[i]), Math.abs(g.r[i])); }
-      return { n, worst, rms: Math.sqrt(sum / Math.max(1, n)), pk, wpk, gain: gr, gaps, ceil: Math.pow(10, LIM_CEIL / 20), readers: READERS.filter(x => x !== 'rec-out'), act: fxActive(d.fx, 2), rate: [sr, mm.sr || 0] };
+      return { n, worst, rms: Math.sqrt(sum / Math.max(1, n)), pk, wpk, gain: gr, gaps, ceil: Math.pow(10, LIM_CEIL / 20), readers: READERS.filter(x => x !== 'rec-out'), act: fxActive(h.fx, 2), rate: [sr, mm.sr || 0] }; };
+      return { plain: await run(false), bp: await run(true) };
     });
+    const r = rs.plain, rb = rs.bp;
     ok(tag + 'the limiter is working in this check (the volume pushes the sound past the ceiling)', r.wpk <= r.ceil && r.pk > r.ceil * 0.95 && r.act.length === 2, JSON.stringify({ gain: r.gain, exportPeak: r.wpk, heardPeak: r.pk, ceil: r.ceil, act: r.act }));
     ok(tag + 'what plays equals the export sample for sample (EQ, Imager, loudness, limiter)', r.n > 150000 && r.gaps === 0 && r.worst < 2e-5, r.n + ' samples, ' + r.gaps + ' dropouts, worst ' + r.worst.toExponential(2) + ', rms ' + r.rms.toExponential(2));
     ok(tag + 'no worklet reads sound back from the browser while the editor plays', r.readers.length === 0, r.readers.join(', '));
+    ok(tag + 'with the EQ bypassed, what plays equals the export sample for sample', rb.n > 150000 && rb.gaps === 0 && rb.worst < 2e-5 && rb.readers.length === 0, rb.n + ' samples, ' + rb.gaps + ' dropouts, worst ' + rb.worst.toExponential(2) + ', readers ' + rb.readers.join(', '));
     // the video's own player, with a loudness target and the limiter
-    await p.evaluate(() => { aeApply(); }); await p.waitForTimeout(500);
+    await p.evaluate(() => { AE.d.bp = {}; aeRefresh(); aeApply(); }); await p.waitForTimeout(500);
     await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(500);
     const v = await p.evaluate(async () => {
       const lim = limOn(S.set); READERS.length = 0; S.time = S.vStart; await Transport.play(); await new Promise(res => { const t = setInterval(() => { if (Transport.dh) { clearInterval(t); res(); } }, 5); });

@@ -19,7 +19,7 @@ const Transport = {
     if (S.audio) {
       const ac = ensureCtx();
       if (ac.state !== 'running') { try { await ac.resume(); } catch (e) {} }
-      if (!S.audio.disk) { try { await fxGet(S.set.fx); } catch (e) { dbg('Processing failed: ' + (e && e.message || e)); } }
+      if (!S.audio.disk) { try { await fxGet(soundSet().fx); } catch (e) { dbg('Processing failed: ' + (e && e.message || e)); } }
       if (this.playing || !S.audio) return;
       this.src = ac.createGain(); this.gain = ac.createGain(); { const gt = ac.currentTime; this.gain.gain.setValueAtTime(0, gt); this.gain.gain.setValueAtTime(0, gt + 0.02); this.gain.gain.linearRampToValueAtTime(1, gt + 0.03); }          // the player makes the sound into this.src; eased in over a few milliseconds
       this.src.connect(this.gain); this.gain.connect(ac.destination);
@@ -34,8 +34,8 @@ const Transport = {
     const tok = this.tok = (this.tok || 0) + 1; this.dh = null; this.endAt = null;
     try {
       if (t < 0) { await new Promise(r => setTimeout(r, -t * 1000)); if (this.tok !== tok) return; t = 0; }
-      const v = this.lvl = soundFadeAt(t) * audioGain(), o = { ease: true, init: Object.assign({ gain: v, now: true }, limOn(S.set) ? { lim: { on: true, ceil: LIM_CEIL - LIM_GUARD, tp: TP_H } } : {}) };          // a loudness target with the limiter on: the sound goes through the limiter on its way out
-      let h; if (S.audio.disk) { DISK.fxUse(S.set.fx); h = await DISK.play(ac, Math.floor(t * S.audio.sr), this.src, Object.assign({ fx: true }, o)); } else h = await soundPlay(ac, memSound(ac, outBuf()), Math.floor(t * ac.sampleRate), this.src, o);
+      const v = this.lvl = soundFadeAt(t) * audioGain(), o = { ease: true, init: Object.assign({ gain: v, now: true }, limOn(soundSet()) ? { lim: { on: true, ceil: LIM_CEIL - LIM_GUARD, tp: TP_H } } : {}) };          // a loudness target with the limiter on: the sound goes through the limiter on its way out
+      let h; if (S.audio.disk) { DISK.fxUse(soundSet().fx); h = await DISK.play(ac, Math.floor(t * S.audio.sr), this.src, Object.assign({ fx: true }, o)); } else h = await soundPlay(ac, memSound(ac, outBuf()), Math.floor(t * ac.sampleRate), this.src, o);
       if (this.tok !== tok) { h.stop(); return; }
       this.dh = h;
     } catch (e) { if (this.tok === tok && e !== STALE) { console.error(e); this.pause(); toast(tx('ae.playfail') + ' ' + (e && e.message || ''), 5000); } }
@@ -960,7 +960,7 @@ function drawWave(c) {
     c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'center';
     c.fillText('Add your audio to see its waveform here', vw / 2, waveY + waveH / 2); c.textAlign = 'left'; return;
   }
-  const d = aeFromApp(), pk = aeShownPeaks(d), G = audioGain(), cap = limOn(d) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, cy = waveY + waveH / 2, half = waveH / 2 - 3;          // the sound that comes out, at its real level against full scale (as the Audio Editor draws it)
+  const d = soundSet(), pk = aeShownPeaks(d), G = audioGain(), cap = limOn(d) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, cy = waveY + waveH / 2, half = waveH / 2 - 3;          // the sound that comes out, at its real level against full scale (as the Audio Editor draws it)
   c.fillStyle = C.wave;
   const endX = t2x(S.audio.duration), wp = rvProgress('wave');
   for (let x = 0; x < vw; x++) {

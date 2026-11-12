@@ -19,6 +19,7 @@ function cleanSettings(src) {
     const v = src[k], d = DEFAULTS[k];
     if (typeof d === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
     else if (d === null && v === null) out[k] = null;                 // "same as In" for the fade out length
+    else if (k === 'bp') { if (v && typeof v === 'object' && !Array.isArray(v)) { const o = {}; Object.keys(AE_BPSET).forEach(t => { if (v[t] === true) o[t] = true; }); out.bp = o; } }          // only the tools Bypass knows, as flags
     else if (k === 'normPreset') { if (typeof v === 'string' && /^[a-z0-9]{1,12}$/.test(v)) out[k] = v; }
     else if (/^tag[A-Z]/.test(k)) { if (typeof v === 'string') out[k] = v.replace(/[\u0000-\u001f]/g, ' ').slice(0, 200); }
     else if (CRED_FONT_KEYS.includes(k)) { if (typeof v === 'string' && (v === '' || validFontName(v))) out[k] = v; }
@@ -69,6 +70,7 @@ async function importSettings(file) {
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
   const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(creditsFontsMigrate(Object.assign({}, data.settings))) : null;
   if (clean && !('creditsBase' in clean) && clean.creditsOn) clean.creditsBase = 'Instrument Sans';          // a file made before the font changed, with credits on
+  if (clean && !('bp' in clean)) clean.bp = {};          // a file from before the bypass was saved has none, so nothing is bypassed
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }
   Transport.pause();
@@ -78,7 +80,7 @@ async function importSettings(file) {
   const oldRef = S.set.ref;
   if (clean) { Object.assign(S.set, clean); S.set.audioKey = ''; }          // settings brought in from a file apply to whichever recording is loaded next
   if (marks && typeof data.firstAlone === 'boolean') S.set.firstAlone = data.firstAlone;
-  saveSettings(); creditsBaseLoad().then(() => { stageDirty = true; }); if (S.audio) fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {});
+  saveSettings(); creditsBaseLoad().then(() => { stageDirty = true; }); if (S.audio) fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {});
   if (!marks && S.turns.length && S.set.ref !== oldRef) { const d = refOffset() - refOffset(oldRef); S.turns = S.turns.map(t => t + d); }   // same as changing the handle reference by hand
   syncControls(); layoutStage();
   let adopted = null;
@@ -144,7 +146,7 @@ async function onExportClick() {
 function restoreDefaults() {
   const was = JSON.stringify(snap()), redoWas = S.redo; pushHistory();
   const oldOff = refOffset(), oldFirst = S.set.firstAlone, oldLayout = S.set.pageLayout;
-  S.set = Object.assign({}, DEFAULTS, { fx: fxClone(FX_DEFAULT) }); saveSettings();
+  S.set = Object.assign({}, DEFAULTS, { fx: fxClone(FX_DEFAULT), bp: {} }); saveSettings();
   const nOff = refOffset();
   if (S.turns.length) { S.turns = S.turns.map(t => t - oldOff + nOff); normalizeTurns(); }
   syncControls(); layoutStage(); stageDirty = true; TL.staticDirty = true;
