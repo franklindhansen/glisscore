@@ -2,8 +2,8 @@
 // height from tool to tool and the dialog itself never scrolls. The sizes run side by side in one script, so it adds almost no time to a full run.
 // Add SHOTS=1 to also save a screenshot of each tool window (t-<size>-<tool>.png) to look at: the numbers do not catch everything.
 // The fit sweep (1440px wide, heights 680 to 900px): every module, and in Level, Noise reduction, and EQ the states that change a card, checked for the dialog inside the screen, a status bar ending at the window's bottom,
-// no content passing its card's padding box, no card passing the body, and (Level) the True peak and every card keeping their place with and without clipping. Under 720px tall the picture has given way
-// all it can and the tool body scrolls inside the window, so there a card may pass the body (it is reached by scrolling) but nothing may pass its own card.
+// no content passing its card's padding box, no card passing the body, and (Level) the True peak and every card keeping their place with and without clipping. Under 806px tall (the waveform's 170px and the tool's floor no longer fit) the tool body
+// scrolls inside the window, and the pictures keep the sizes they have on a tall screen, so there a card may pass the body (it is reached by scrolling) but nothing may pass its own card.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-layout.js
 const { chromium } = require('playwright-core');
 const { fitMeasure } = require('./lib/fit-measure.js');
@@ -68,13 +68,14 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     out.guard = await q.evaluate(() => { const c = document.querySelector('#aeGainCard'); c.style.height = '80px'; c.style.flex = 'none'; const r = uiGuard.scan().filter(x => x[1] === 'card').map(x => x[2]); c.style.height = ''; c.style.flex = ''; return r; });
     await q.close();
   }));
-  for (const h of heights) { const o = sweep[h], tag = '1440x' + h + ': ', main = o.frames[0], short = h < floor + 100 + chrome + 32;          // the least the dialog needs: the floor, the picture at 100px, and the rest of the dialog
+  for (const h of heights) { const o = sweep[h], tag = '1440x' + h + ': ', main = o.frames[0], short = h < floor + 170 + chrome + 32;          // what the dialog needs: the floor, the picture at its one size (170px), and the rest of the dialog
     const outside = o.frames.filter(f => f.dlg.top < -0.5 || f.dlg.bottom > f.vh + 0.5 || f.btns.some(x => x.bottom > f.vh || x.top < 0)).map(f => f.label + ' dlg ' + f.dlg.top.toFixed(0) + '→' + f.dlg.bottom.toFixed(0));
     ok(tag + 'the dialog is inside the screen, with Cancel and Done in view, in every state', !outside.length, outside.slice(0, 3).join(' | '));
     const stat = o.frames.filter(f => Math.abs(f.stat - (f.win - 1)) > 0.5 || f.statH !== 28 || f.statFrac).map(f => f.label + ' stat ' + f.stat.toFixed(1) + ' win ' + f.win.toFixed(1) + ' h ' + f.statH);
     ok(tag + 'the status bar is 28px, its content sits on whole pixels, and it ends at the window\'s bottom edge, with no blank under it', !stat.length, stat.slice(0, 3).join(' | '));
-    if (!short) { const sc = o.frames.filter(f => f.scrolls > 1 || f.railScrolls > 1 || f.body < floor - 0.5).map(f => f.label + ' body ' + f.body + ' scrolls ' + f.scrolls + '/' + f.railScrolls); ok(tag + 'the tool body is at least its floor (' + floor + 'px), and neither it nor the tool list scrolls', !sc.length, sc.slice(0, 3).join(' | ')); }
-    else ok(tag + 'on a screen this short the picture is at its least (100px) and the tool body scrolls inside the window', main.wave <= 100.5 && o.frames.every(f => f.body < floor && f.body >= 180), 'wave ' + main.wave + ', body ' + main.body);
+    if (!short) { const sc = o.frames.filter(f => f.scrolls > 1 || f.railScrolls > 1 || Math.abs(f.body - floor) > 0.5).map(f => f.label + ' body ' + f.body + ' scrolls ' + f.scrolls + '/' + f.railScrolls); ok(tag + 'the tool body is exactly its floor (' + floor + 'px), and neither it nor the tool list scrolls', !sc.length, sc.slice(0, 3).join(' | ')); }
+    else ok(tag + 'on a screen this short the tool body is shorter than its tool and scrolls inside the window', o.frames.every(f => f.body < floor && f.body >= 180), 'body ' + main.body);
+    ok(tag + 'the waveform is 170px, whatever the screen', o.frames.every(f => Math.abs(f.wave - 170) < 0.5), o.frames.map(f => f.wave).join(','));
     ok(tag + 'no content passes its card\'s padding box (every module and state)', !o.pass.length, o.pass.slice(0, 4).join(' | '));
     ok(tag + 'no card passes the tool body', !o.body.length, o.body.slice(0, 4).join(' | '));
     ok(tag + 'Imager: the scope card and the two control cards start and end on the same lines', Math.abs(o.imager.balBottom - o.imager.scopeBottom) < 1 && Math.abs(o.imager.widthTop - o.imager.scopeTop) < 1, JSON.stringify(o.imager));
