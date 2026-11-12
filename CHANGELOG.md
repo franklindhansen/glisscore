@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.5
+
+The Audio Editor's tool windows are a little shorter, with even space above and below their cards and headings, labels, sliders, and step numbers lined up. The Imager and EQ grids show in dark mode, and Mains hum matches Noise only. The How it works intro is shorter.
+
 ## 1.2.4
 
 The playhead is easy to grab on the timeline without moving page turns, and it lights up softly when you hover it. The page or system under it is shaded as you drag.
