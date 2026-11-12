@@ -792,6 +792,8 @@ function peDrawCard(card, sl, frame) {
   const wm = PE.d && PE.d.wm;
   if (wm && wm.on && !sl.nw) drawWatermark(x, wm, 0, 0, w, h);
 }
+/* the theme changed with the PDF Editor open: the crop frame's color is read again and the cards are drawn again */
+function peColorsChanged() { if (!PE.d || $('#pdfDlg').hidden) return; PE.accent = getComputedStyle($('#peGrid')).getPropertyValue('--accent').trim(); peRepaint(); }
 const peRepaint = () => document.querySelectorAll('#peGrid .page-card').forEach(c => { const sl = PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); });
 function peCard(id, sl) {
   const [w, ch] = peCardSize(sl), el = document.createElement('div');
