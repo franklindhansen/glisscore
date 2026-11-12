@@ -230,8 +230,8 @@
           </div>
         </div>
         <div class="field sys-note" id="sysNote" hidden>
-          <p class="hint sys-why" id="sysTilt" hidden><span id="sysTiltT"></span> <button class="btn small" id="sysLevel" type="button">Re-kilter</button></p>
-          <p class="hint sys-why" id="sysWide" hidden><span id="sysWideT"></span> <button class="btn small" id="sysSplitGo" type="button">Split spreads</button></p>
+          <p class="t-note sys-why" id="sysTilt" hidden><span id="sysTiltT"></span> <button class="btn small" id="sysLevel" type="button">Re-kilter</button></p>
+          <p class="t-note sys-why" id="sysWide" hidden><span id="sysWideT"></span> <button class="btn small" id="sysSplitGo" type="button">Split spreads</button></p>
         </div>
         <div class="field sub" id="firstAloneField">
           <div class="check-row">
@@ -297,7 +297,7 @@
 
       <!-- ----- PANEL GROUP: SHADOWS ----- -->
       <div class="group" data-sum="shadows">
-        <div class="group-head">
+        <div class="group-head t-head">
           <h3>Shadows</h3>
           <label class="group-toggle"><input type="checkbox" class="switch" id="shadowsOn" aria-label="Shadows on or off" checked></label>
         </div>
@@ -337,8 +337,8 @@
             <label for="scoreSoft">Softness <output id="scoreSoftOut">50%</output></label>
             <input type="range" id="scoreSoft" min="0" max="100" step="1" value="50">
           </div>
-          <p class="hint" id="scoreHint">Shows best on a light background, with some space around the score.</p>
-          <p class="hint" id="scoreInvHint" hidden>Off while colors are inverted.</p>
+          <p class="t-note" id="scoreHint">Shows best on a light background, with some space around the score.</p>
+          <p class="t-note" id="scoreInvHint" hidden>Off while colors are inverted.</p>
         </div>
         <!-- ----- BUTTON: Reset shadows to defaults ----- -->
         <button class="btn small" id="shadowReset" type="button">Reset shadows to defaults</button>
@@ -346,14 +346,16 @@
 
       <!-- ----- PANEL GROUP: FADES ----- -->
       <div class="group" data-sum="fades">
-        <div class="group-head">
+        <div class="group-head t-head">
           <h3>Fades</h3>
         </div>
         <div id="fadeBody">
-          <div class="field" id="fadeLenField">
+          <div class="field" id="fadeSideField">
             <span class="lbl" id="fadeSideLbl">Apply to</span>
             <div class="seg" id="fadeSide" role="radiogroup" aria-labelledby="fadeSideLbl"><label><input type="radio" name="fadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="fadeSide" value="in"><span>In</span></label><label><input type="radio" name="fadeSide" value="out"><span>Out</span></label></div>
-            <span class="lbl fade-len-lbl" id="fadeLenLbl">Length <output id="fadeLenVal">1.0s</output></span>
+          </div>
+          <div class="field" id="fadeLenField">
+            <span class="lbl" id="fadeLenLbl">Length <output id="fadeLenVal">1.0s</output></span>
             <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" aria-labelledby="fadeLenLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end auto" type="button" data-v="10">Auto</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
           </div>
           <div class="fa open" id="fadeMoreFold"><div class="fa-in">
@@ -375,7 +377,7 @@
 
       <!-- ----- PANEL GROUP: CREDITS ----- -->
       <div class="group" data-sum="credits">
-        <div class="group-head">
+        <div class="group-head t-head">
           <h3>Credits</h3>
           <button class="info-i" type="button" aria-label="About credits" aria-expanded="false">i</button>
           <span class="tip" role="tooltip" data-tip="tip.credits">Shown beside the first page or at the end. They only appear once a line has text.</span>
@@ -395,7 +397,7 @@
         <div class="field">
           <label for="credL2">Line 2</label>
           <div class="line-row"><textarea id="credL2" class="autogrow" rows="1" maxlength="160" placeholder="Performed by…" spellcheck="false"></textarea><button type="button" class="fmt-btn aa" id="credL2Aa" aria-expanded="false" aria-controls="credL2Fold" aria-label="Font, bold, and italic for line 2" title="Font, bold, and italic">Aa</button></div>
-          <p class="hint">Press Enter to split this into two lines.</p>
+          <p class="t-note">Press Enter to split this into two lines.</p>
           <div class="fa line-fold" id="credL2Fold"><div class="fa-in" inert>
             <div class="line-style sub" id="credL2Style">
               <div class="combo" id="credL2FontBox"><input type="text" class="line-font" id="credL2Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 2"><span class="ph" aria-hidden="true"></span></div>
@@ -418,7 +420,7 @@
         <div class="field" id="credFontField">
           <label for="credFont">Font</label>
           <div class="combo" id="credFontBox"><input type="text" id="credFont" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false"><span class="ph" aria-hidden="true"></span></div>
-          <p class="hint" id="credFontMsg"></p>
+          <p class="t-note" id="credFontMsg"></p>
         </div>
         <div class="field" id="creditsAtField">
           <span class="lbl" id="credAtLbl">Credits at</span>
@@ -426,7 +428,7 @@
             <label><input type="radio" name="creditsAt" value="start"><span>Start</span></label>
             <label><input type="radio" name="creditsAt" value="end" checked><span>End</span></label>
           </div>
-          <p class="hint" id="creditsAtHint" hidden></p>
+          <p class="t-note" id="creditsAtHint" hidden></p>
         </div>
         <div class="field" id="creditsWithLastField">
           <span class="lbl" id="credStartLbl">Credits appear</span>
@@ -434,7 +436,7 @@
             <label><input type="radio" name="credStart" value="with" checked><span>With last page</span></label>
             <label><input type="radio" name="credStart" value="after"><span>After last page</span></label>
           </div>
-          <p class="hint" id="creditsStartHint"></p>
+          <p class="t-note" id="creditsStartHint"></p>
         </div>
         <div class="field" id="creditsEarlyField">
           <span class="lbl" id="credEndLbl">Credits end</span>
@@ -442,7 +444,7 @@
             <label><input type="radio" name="credEnd" value="end" checked><span>With video</span></label>
             <label><input type="radio" name="credEnd" value="early"><span>Custom</span></label>
           </div>
-          <p class="hint" id="creditsEarlyHint"></p>
+          <p class="t-note" id="creditsEarlyHint"></p>
         </div>
       </div>
 
@@ -483,7 +485,7 @@
             <label><input type="radio" name="vidQ" value="high"><span>High</span></label>
             <label><input type="radio" name="vidQ" value="max"><span>Max</span></label>
           </div>
-          <p class="vq-note" id="vqNote" aria-live="polite"></p>
+          <p class="t-note" id="vqNote" aria-live="polite"></p>
         </div>
         <details class="adv">
           <summary>Advanced</summary>
@@ -510,7 +512,7 @@
         </details>
         <!-- ----- BUTTON: Export video ----- -->
         <button class="btn primary" id="btnExport" type="button" disabled>Export video</button>
-        <p class="hint" id="exportHint">Add a score PDF to enable export.</p>
+        <p class="t-note" id="exportHint">Add a score PDF to enable export.</p>
       </div>
     </aside>
   </main>
@@ -532,7 +534,7 @@
         <span class="vsep" aria-hidden="true"></span>
         <button class="btn small" id="bHist" type="button" aria-expanded="false" aria-controls="mHist" disabled title="Every step so far, to go back to one" aria-label="History"><span class="hw">History</span><svg class="hi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
         <div class="hist up" id="mHist" role="dialog" aria-label="History" hidden>
-          <div class="hist-top"><h3>History</h3><span class="hist-sub" id="mHistSub">Pick a step to go back to it</span></div>
+          <div class="hist-top t-block"><h3>History</h3><span class="hist-sub t-sub" id="mHistSub">Pick a step to go back to it</span></div>
           <ol class="hist-list" id="mHistList"></ol>
           <div class="fa" id="mHistFoot"><div class="fa-in" inert><div class="hist-foot"><span id="mHistSum"></span><div><button class="btn small" id="mHistNo" type="button">Cancel</button><button class="btn small primary" id="mHistGo" type="button">Go back</button></div></div></div></div>
         </div>
@@ -558,8 +560,7 @@
 <!-- ----- DIALOG: Diagnostics ----- -->
 <div id="diagDlg" class="exp-overlay z-diag" role="dialog" aria-modal="true" aria-labelledby="diagTitle" hidden>
   <div class="dlg page">
-    <h2 id="diagTitle">Diagnostics</h2>
-    <p class="hint">If something goes wrong, please run the self-test and copy this log.</p>
+    <div class="t-block"><h2 id="diagTitle">Diagnostics</h2><p class="t-sub">If something goes wrong, please run the self-test and copy this log.</p></div>
     <textarea id="diagLog" readonly spellcheck="false"></textarea>
     <div class="row">
       <button class="btn" id="diagTest" type="button">Run self-test</button>
@@ -580,8 +581,7 @@
 <!-- ----- DIALOG: Import / Export settings ----- -->
 <div id="ioDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="ioTitle" hidden>
   <div class="dlg page">
-    <h2 id="ioTitle">Import / Export</h2>
-    <p class="hint">Save your work to a small text file, or load one back in.</p>
+    <div class="t-block"><h2 id="ioTitle">Import / Export</h2><p class="t-sub">Save your work to a small text file, or load one back in.</p></div>
     <div class="field">
       <span class="lbl" id="ioKindLbl">What to export</span>
       <div class="seg" role="radiogroup" aria-labelledby="ioKindLbl">
@@ -589,9 +589,9 @@
         <label><input type="radio" name="ioKind" value="settings"><span>Settings</span></label>
         <label><input type="radio" name="ioKind" value="markings"><span>Page markings</span></label>
       </div>
-      <p class="hint" id="ioKindHint"></p>
+      <p class="t-note" id="ioKindHint"></p>
     </div>
-    <p class="hint" id="ioMsg" role="status"></p>
+    <p class="t-note" id="ioMsg" role="status"></p>
     <div class="row">
       <button class="btn push-left" id="ioClose" type="button">Close</button>
       <button class="btn" id="ioImport" type="button">Import file…</button>
@@ -602,8 +602,7 @@
 <!-- ----- DIALOG: How it works ----- -->
 <div id="howDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="howTitle" hidden>
   <div class="dlg page how">
-    <h2 id="howTitle">How it works</h2>
-    <p class="how-lead">Everything happens inside your browser, on your own device. Your score and audio are never uploaded.</p>
+    <div class="t-block"><h2 id="howTitle">How it works</h2><p class="t-sub">Everything happens inside your browser, on your own device. Your score and audio are never uploaded.</p></div>
     <div class="how-body">
       <section><h3>Local and private</h3><p>Your files are read into this tab’s memory. Nothing goes to a server, and closing the tab clears them. The only thing fetched from outside the site is a Google Font, and only when you pick one for the credits.</p></section>
       <section><h3>Score</h3><p>PDF.js, from Mozilla, draws each page. Your changes are a list of steps on top of the original PDF, which is never touched. Export PDF builds a new file from that list.</p>
@@ -639,7 +638,7 @@
 <!-- ----- DIALOG: About ----- -->
 <div id="aboutDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
   <div class="dlg page about">
-    <h2 id="aboutTitle">About</h2>
+    <div class="t-block"><h2 id="aboutTitle">About</h2></div>
     <div class="about-g">
     <p><em>glisscore</em> was made by composer, conductor, and grad student (who should probably be writing music), <a href="https://franklindhansen.com/" target="_blank" rel="noopener">Franklin D. Hansen</a>.</p>
     <p><em>glisscore</em> is free and open source under the AGPL-3.0. <a href="https://github.com/franklindhansen/glisscore" target="_blank" rel="noopener">View on GitHub</a>.</p>
@@ -659,9 +658,10 @@
 <!-- ----- DIALOG: Keyboard shortcuts ----- -->
 <div id="keysDlg" class="exp-overlay z-io" role="dialog" aria-modal="true" aria-labelledby="keysTitle" hidden>
   <div class="dlg page">
-    <h2 id="keysTitle">Keyboard shortcuts</h2>
+    <div class="t-block"><h2 id="keysTitle">Keyboard shortcuts</h2></div>
     <div class="keys-groups" id="keysList">
-      <section><h3>Playback</h3>
+      <div class="keys-col">
+      <section><h3 class="t-head">Playback</h3>
       <dl class="keys">
         <dt>Play / pause</dt><dd><kbd>Space</kbd></dd>
         <dt>Jump to start</dt><dd><kbd>Enter</kbd></dd>
@@ -670,26 +670,29 @@
         <dt>Previous / next marker</dt><dd><kbd data-alt></kbd> <kbd>←</kbd> <kbd>→</kbd></dd>
         <dt>Add page turn</dt><dd><kbd>T</kbd></dd>
       </dl></section>
-      <section><h3>Timeline</h3>
+      <section><h3 class="t-head">Timeline</h3>
       <dl class="keys">
         <dt>Zoom in / out</dt><dd><kbd data-mod></kbd> <kbd>+</kbd> <kbd>−</kbd></dd>
         <dt>Fit</dt><dd><kbd data-mod></kbd> <kbd>0</kbd></dd>
       </dl></section>
-      <section><h3>Editing</h3>
+      </div>
+      <div class="keys-col">
+      <section><h3 class="t-head">Editing</h3>
       <dl class="keys">
         <dt>Undo</dt><dd><kbd data-mod></kbd> <kbd>Z</kbd></dd>
         <dt>Redo</dt><dd><kbd>Shift</kbd> <kbd data-mod></kbd> <kbd>Z</kbd></dd>
       </dl></section>
-      <section><h3>Audio Editor</h3>
+      <section><h3 class="t-head">Audio Editor</h3>
       <dl class="keys">
         <dt>Bypass</dt><dd><kbd>B</kbd></dd>
         <dt>Hide tools</dt><dd><kbd>T</kbd></dd>
       </dl></section>
-      <section><h3>Display</h3>
+      <section><h3 class="t-head">Display</h3>
       <dl class="keys">
         <dt>Full screen</dt><dd><kbd>F</kbd></dd>
         <dt>Exit full screen</dt><dd><kbd>Esc</kbd></dd>
       </dl></section>
+      </div>
     </div>
     <div class="row"><button class="btn primary" id="keysClose" type="button">Close</button></div>
   </div>
@@ -698,7 +701,7 @@
 <div id="audioDlg" class="exp-overlay z-audio" role="dialog" aria-modal="true" aria-labelledby="audioTitle" hidden>
   <div class="dlg wide editor ae">
     <div class="ed-head">
-      <h2 id="audioTitle">Audio Editor</h2>
+      <div class="t-block"><h2 id="audioTitle">Audio Editor</h2><p class="t-sub ed-lead" id="aeLead">Trim, shape, and level your audio.</p></div>
       <div class="ed-tools btn-group">
         <button class="btn small" id="aeUndo" type="button" disabled>Undo</button>
         <span class="vsep" aria-hidden="true"></span>
@@ -709,12 +712,11 @@
         <button class="btn small" id="aeReset" type="button" disabled>Reset</button>
       </div>
       <div class="hist" id="aeHist" role="dialog" aria-label="History" hidden>
-        <div class="hist-top"><h3>History</h3><span class="hist-sub" id="aeHistSub">Pick a step to go back to it</span></div>
+        <div class="hist-top t-block"><h3>History</h3><span class="hist-sub t-sub" id="aeHistSub">Pick a step to go back to it</span></div>
         <ol class="hist-list" id="aeHistList"></ol>
         <div class="fa" id="aeHistFoot"><div class="fa-in" inert><div class="hist-foot"><span id="aeHistSum"></span><div><button class="btn small" id="aeHistNo" type="button">Cancel</button><button class="btn small primary" id="aeHistGo" type="button">Go back</button></div></div></div></div>
       </div>
     </div>
-    <p class="hint ed-lead" id="aeLead">Trim, shape, and level your audio.</p>
     <div class="ae-wave"><canvas id="aeCanvas" aria-label="Audio waveform with start and end handles"></canvas><p class="ae-stop" id="aeStopNote" role="status" aria-live="polite" hidden></p></div>
     <div class="ae-bar">
       <button class="icon-btn play" id="aePlay" type="button" aria-label="Play preview"><svg viewBox="0 0 24 24" id="aePlayIcon" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
@@ -746,22 +748,22 @@
         </div></div>
       </nav>
       <div class="ae-panes ae-win" id="aeWin">
-        <div class="ae-top" id="aeTop"><div class="ae-phead" id="aeHead"><div class="ae-pt"><div class="ae-ptl"><h3 id="aePaneTitle">Noise reduction</h3><span class="ae-bypill" aria-hidden="true">Bypassed</span></div><p class="ae-sub" id="aePaneSub"></p></div><div class="ae-abs"><button class="btn small" id="aeABm" type="button" aria-pressed="false" title="Bypass plays at the loudness of the processed sound, so before and after are fair to compare">Match gain</button><button class="btn small" id="aeAB" type="button" aria-pressed="false" title="Hear the sound without the EQ and Imager (B)" disabled>Bypass</button></div></div></div>
+        <div class="ae-top" id="aeTop"><div class="ae-phead" id="aeHead"><div class="ae-pt t-block tool"><div class="ae-ptl"><h3 id="aePaneTitle">Noise reduction</h3><span class="ae-bypill" aria-hidden="true">Bypassed</span></div><p class="ae-sub t-sub" id="aePaneSub"></p></div><div class="ae-abs"><button class="btn small" id="aeABm" type="button" aria-pressed="false" title="Plays Bypass at the same loudness, so the comparison is fair.">Match gain</button><button class="btn small" id="aeAB" type="button" aria-pressed="false" title="Hear the sound without the EQ and Imager (B)" disabled>Bypass</button></div></div></div>
         <i class="ae-rule" id="aeRule" aria-hidden="true"></i>
         <div class="ae-pbody" id="aeBody">
         <section class="ae-pane" id="aePaneNoise">
           <div class="nr-grid pre" id="aeNrGrid">
             <div class="eq-stage nr-stage"><canvas id="aeNrCv" aria-label="The noise profile"></canvas></div>
             <div class="ae-card" id="aeNrSample">
-              <div class="mt-head"><h4>Noise sample</h4><button class="info-i" type="button" aria-label="About noise reduction" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.noise">Auto works out the noise from the whole recording. Or pick a stretch of just the noise yourself, like a quiet gap before the music. It learns the sound and turns it down everywhere else.</span></div>
+              <div class="mt-head t-head"><h4>Noise sample</h4><button class="info-i" type="button" aria-label="About noise reduction" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.noise">Auto finds the noise for you. Manual lets you pick a stretch of it.</span></div>
               <div class="mt-steps">
-                <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title">Select noise</div><div class="mt-pick" id="aeNrPick"><button class="btn small" id="aeNrFind" type="button" aria-pressed="false" title="Works out the noise from the whole recording. No quiet gap is needed.">Auto</button><button class="btn small" id="aeNrHand" type="button" aria-pressed="false" title="Then drag across the waveform">Manual</button><span id="aeNrSelTxt"></span></div></div></div>
+                <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Select noise</div><div class="mt-pick" id="aeNrPick"><button class="btn small" id="aeNrFind" type="button" aria-pressed="false" title="Works out the noise from the whole recording. No quiet gap is needed.">Auto</button><button class="btn small" id="aeNrHand" type="button" aria-pressed="false" title="Then drag across the waveform">Manual</button><span id="aeNrSelTxt"></span></div></div></div>
                 <div class="mt-step" id="aeNrLearnStep"><span class="mt-n">2</span><div class="mt-body"><div class="nr-learn"><button class="btn small primary" id="aeNrLearn" type="button">Learn noise</button><div class="mt-chip" id="aeNrChip" hidden><b id="aeNrChipTxt"></b><button id="aeNrClear" type="button" aria-label="Forget the noise" title="Forget the noise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div></div></div></div>
               </div>
               <div class="nr-hum" id="aeNrHumRow"><label class="nr-hum-l" for="aeNrHum"><span>Mains hum</span><small id="aeNrHumVal"></small></label><input type="checkbox" class="switch" id="aeNrHum" title="Finds a steady 50 or 60Hz hum and its overtones, and takes out just those"><i class="nr-hum-bar" aria-hidden="true"><b id="aeNrHumBar"></b></i></div>
             </div>
             <div class="ae-card dim" id="aeNrCtl">
-              <div class="im-head nr-head"><h4><span class="mt-n inl">3</span>Removal</h4><div class="seg" id="aeNrMode" role="radiogroup" aria-label="Method" title="Natural leaves the remaining hiss steady. Classic is the earlier method."><label><input type="radio" name="aeNrMode" value="natural" checked disabled><span>Natural</span></label><label><input type="radio" name="aeNrMode" value="classic" disabled><span>Classic</span></label></div></div>
+              <div class="im-head nr-head t-head"><h4><span class="mt-n inl">3</span>Removal</h4><div class="seg" id="aeNrMode" role="radiogroup" aria-label="Method" title="Natural leaves the remaining hiss steady. Classic is the earlier method."><label><input type="radio" name="aeNrMode" value="natural" checked disabled><span>Natural</span></label><label><input type="radio" name="aeNrMode" value="classic" disabled><span>Classic</span></label></div></div>
               <div class="field"><label for="aeNrRed"><span>Reduction</span><output id="aeNrRedVal">12dB</output></label><input type="range" id="aeNrRed" min="0" max="30" step="1" value="12" data-default="12" disabled></div>
               <div class="fa open" id="aeNrSub"><div class="fa-in"><div class="sub"><div class="field" id="aeNrSensF"><label for="aeNrSens"><span>Sensitivity</span><output id="aeNrSensVal">50%</output></label><input type="range" id="aeNrSens" min="0" max="100" step="1" value="50" data-default="50" disabled></div>
               <div class="field" id="aeNrSmoothF"><label for="aeNrSmooth"><span>Smoothing</span><output id="aeNrSmoothVal">50%</output></label><input type="range" id="aeNrSmooth" min="0" max="100" step="1" value="50" data-default="50" disabled></div></div></div></div>
@@ -773,7 +775,7 @@
         <section class="ae-pane" id="aePaneSpec" hidden>
           <div class="sp-grid">
             <div class="ae-card sp-card sp-sel">
-              <div class="mt-head"><h4>Select</h4><button class="info-i" type="button" aria-label="About Spectra" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.spec">Press Draw, then drag over a blip, a hum, or a squeak on the picture. Heal bridges it with the sound around it; Reduce just turns it down. Box picks a stretch and a pitch range, Band takes a pitch for the whole sound, Moment takes every pitch for an instant.</span></div>
+              <div class="mt-head t-head"><h4>Select</h4><button class="info-i" type="button" aria-label="About Spectra" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.spec">Draw over a blip, a hum, or a squeak. Heal fills it in, and Reduce turns it down.</span></div>
               <div class="sp-tools">
                 <button class="btn small sp-draw" id="spDraw" type="button" aria-pressed="false" title="Then drag over the spectrogram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>Draw</button>
                 <div class="seg sp-seg" id="spShape" role="radiogroup" aria-label="Selection shape">
@@ -789,7 +791,7 @@
               <div class="fa" id="spAmtF"><div class="fa-in" inert><div class="field"><label for="spAmt"><span>Reduce by</span><output id="spAmtVal">24dB</output></label><input type="range" id="spAmt" min="3" max="60" step="1" value="24" data-default="24"></div></div></div>
             </div>
             <div class="ae-card sp-card sp-lcard">
-              <div class="mt-head"><h4>Edits</h4><button class="btn small push-right" id="spClear" type="button" disabled>Clear all</button></div>
+              <div class="mt-head t-head"><h4>Edits</h4><button class="btn small push-right" id="spClear" type="button" disabled>Clear all</button></div>
               <div class="sp-list" id="spList"></div>
             </div>
           </div>
@@ -805,33 +807,33 @@
             </div>
             <div class="seg" id="aeBandPlace" role="radiogroup" aria-label="Selected band works on" title="Where the selected band works: the whole stereo sound, or only its mid or its side"><label><input type="radio" name="aeBandPlace" value="st" checked><span>Stereo</span></label><label><input type="radio" name="aeBandPlace" value="mid"><span>Mid</span></label><label><input type="radio" name="aeBandPlace" value="side"><span>Side</span></label></div>
             <button class="btn small push-right" id="aeAutoBtn" type="button" aria-pressed="false">Auto gain</button>
-            <span class="eq-tipwrap"><button class="info-i" type="button" aria-label="About Auto gain" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.eqopts">Auto gain takes off what the curve adds or removes overall, so before and after sound equally loud.</span></span>
+            <span class="eq-tipwrap"><button class="info-i" type="button" aria-label="About Auto gain" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.eqopts">Keeps the loudness the same, so before and after are fair to compare.</span></span>
             <button class="btn small" id="aeMatchBtn" type="button" aria-pressed="false">EQ Match</button>
           </div>
-          <div class="eq-stage"><canvas id="aeEqCv" title="Double-click to add a band. Drag a point to move it. Scroll over a point to change its width." aria-label="EQ curve"></canvas></div>
+          <div class="eq-stage"><canvas id="aeEqCv" title="Double-click to add a band. Drag a point to move it." aria-label="EQ curve"></canvas></div>
           <div class="eq-fold" id="aeBandFold"><div class="eq-fold-in">
           <div class="eq-band ae-card" id="aeEqBand">
-            <div class="eq-cell eq-bn"><span class="eq-lbl">Band <b id="aeBandNo">1</b></span><div class="eq-ctl"><input type="checkbox" class="switch" id="aeBandOn" aria-label="Band on"><button class="btn small" id="aeBandHear" type="button" aria-pressed="false" title="Hear only the part of the sound this band works on">Listen</button><button class="btn small" id="aeBandDyn" type="button" aria-pressed="false" title="The band moves with how loud the sound is in its own region">Dynamic</button></div></div>
-            <div class="eq-cell"><label class="eq-lbl" for="aeBandType">Type</label><div class="eq-ctl"><select id="aeBandType"></select></div></div>
-            <div class="eq-cell"><label class="eq-lbl" for="aeBandF">Frequency</label><div class="eq-ctl"><input type="number" id="aeBandF" min="20" max="20000" step="1" inputmode="numeric"></div></div>
-            <div class="eq-cell" id="aeBandGField"><label class="eq-lbl" for="aeBandG"><span>Gain</span><output id="aeBandGVal">0dB</output></label><div class="eq-ctl"><input type="range" class="bi" id="aeBandG" min="-12" max="12" step="0.5" value="0" data-default="0"></div></div>
-            <div class="eq-cell" id="aeBandQField"><label class="eq-lbl" for="aeBandQ"><span>Width</span><output id="aeBandQVal">1.4oct</output></label><div class="eq-ctl"><input type="range" id="aeBandQ" min="0" max="100" step="1" value="59" data-default="59"></div></div>
-            <div class="eq-cell" id="aeBandSField" hidden><span class="eq-lbl"><span>Slope</span><output>dB/oct</output></span><div class="eq-ctl"><div class="seg" id="aeBandSlope" role="radiogroup" aria-label="Slope"><label><input type="radio" name="aeBandSlope" value="12" checked><span>12</span></label><label><input type="radio" name="aeBandSlope" value="24"><span>24</span></label><label><input type="radio" name="aeBandSlope" value="48"><span>48</span></label></div></div></div>
+            <div class="eq-cell eq-bn"><span class="eq-lbl t-lbl">Band <b id="aeBandNo">1</b></span><div class="eq-ctl"><input type="checkbox" class="switch" id="aeBandOn" aria-label="Band on"><button class="btn small" id="aeBandHear" type="button" aria-pressed="false" title="Hear only the part of the sound this band works on">Listen</button><button class="btn small" id="aeBandDyn" type="button" aria-pressed="false" title="The band moves with how loud the sound is in its own region">Dynamic</button></div></div>
+            <div class="eq-cell"><label class="eq-lbl t-lbl" for="aeBandType">Type</label><div class="eq-ctl"><select id="aeBandType"></select></div></div>
+            <div class="eq-cell"><label class="eq-lbl t-lbl" for="aeBandF">Frequency</label><div class="eq-ctl"><input type="number" id="aeBandF" min="20" max="20000" step="1" inputmode="numeric"></div></div>
+            <div class="eq-cell" id="aeBandGField"><label class="eq-lbl t-lbl" for="aeBandG"><span>Gain</span><output id="aeBandGVal">0dB</output></label><div class="eq-ctl"><input type="range" class="bi" id="aeBandG" min="-12" max="12" step="0.5" value="0" data-default="0"></div></div>
+            <div class="eq-cell" id="aeBandQField"><label class="eq-lbl t-lbl" for="aeBandQ"><span>Width</span><output id="aeBandQVal">1.4oct</output></label><div class="eq-ctl"><input type="range" id="aeBandQ" min="0" max="100" step="1" value="59" data-default="59"></div></div>
+            <div class="eq-cell" id="aeBandSField" hidden><span class="eq-lbl t-lbl"><span>Slope</span><output>dB/oct</output></span><div class="eq-ctl"><div class="seg" id="aeBandSlope" role="radiogroup" aria-label="Slope"><label><input type="radio" name="aeBandSlope" value="12" checked><span>12</span></label><label><input type="radio" name="aeBandSlope" value="24"><span>24</span></label><label><input type="radio" name="aeBandSlope" value="48"><span>48</span></label></div></div></div>
             <div class="fa eq-dyn" id="aeBandDynFold"><div class="fa-in" inert><div class="eq-dyn-g">
-              <div class="eq-cell"><div class="eq-lbl"><label for="aeBandThr">Threshold</label><span class="eq-lbl-r"><button class="btn small" id="aeBandThrAuto" type="button" title="Sets the threshold where this band gets loud, so only its louder moments move it">Auto</button><output id="aeBandThrVal">−30dB</output></span></div><div class="eq-ctl"><input type="range" id="aeBandThr" min="-80" max="0" step="1" value="-30" data-default="-30"></div></div>
-              <div class="eq-cell"><div class="eq-lbl"><label for="aeBandRange">Range</label><output id="aeBandRangeVal">−6dB</output></div><div class="eq-ctl"><input type="range" class="bi" id="aeBandRange" min="-24" max="24" step="1" value="-6" data-default="-6"></div></div>
+              <div class="eq-cell"><div class="eq-lbl t-lbl"><label for="aeBandThr">Threshold</label><span class="eq-lbl-r"><button class="btn small" id="aeBandThrAuto" type="button" title="Sets the threshold where this band gets loud, so only its louder moments move it">Auto</button><output id="aeBandThrVal">−30dB</output></span></div><div class="eq-ctl"><input type="range" id="aeBandThr" min="-80" max="0" step="1" value="-30" data-default="-30"></div></div>
+              <div class="eq-cell"><div class="eq-lbl t-lbl"><label for="aeBandRange">Range</label><output id="aeBandRangeVal">−6dB</output></div><div class="eq-ctl"><input type="range" class="bi" id="aeBandRange" min="-24" max="24" step="1" value="-6" data-default="-6"></div></div>
             </div></div></div>
           </div>
           </div></div>
           <div class="eq-fold shut" id="aeMatchFold" inert aria-hidden="true"><div class="eq-fold-in">
           <div class="eq-match ae-card" id="aeMatch">
-            <div class="mt-head"><h4>EQ Match</h4><button class="info-i" type="button" aria-label="About EQ Match" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.match">Shape this sound to match another. Import an EQ profile saved from a sound you like, or choose an audio file to measure. Everything stays on your device.</span><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button" title="Save the tone of the sound you are editing, to use as a reference in another project">Export EQ profile</button></span></div>
+            <div class="mt-head t-head"><h4>EQ Match</h4><button class="info-i" type="button" aria-label="About EQ Match" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.match">Matches the tone of another recording. Nothing leaves your device.</span><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button" title="Save the tone of the sound you are editing, to use as a reference in another project">Export EQ profile</button></span></div>
             <div class="mt-steps two">
-              <div class="mt-step" id="aeRefStep"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title">Reference</div>
+              <div class="mt-step" id="aeRefStep"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Reference</div>
                 <div class="mt-pick" id="aeRefEmpty"><button class="btn small" id="aeRefProfile" type="button">Import EQ profile</button><span>or</span><button class="btn small" id="aeRefAudio" type="button">Use an audio file</button></div>
                 <div class="mt-chip" id="aeRefChip" hidden><span class="mt-spin" aria-hidden="true"></span><b id="aeRefName"></b><button id="aeRefClear" type="button" aria-label="Remove the reference" title="Remove the reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
               </div></div>
-              <div class="mt-step dim" id="aeAmtStep"><span class="mt-n">2</span><div class="mt-body"><div class="field" id="aeMatchAmtField"><label for="aeMatchAmt"><span class="mt-title">Amount</span><output id="aeMatchAmtVal">100%</output></label><input type="range" id="aeMatchAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div></div></div>
+              <div class="mt-step dim" id="aeAmtStep"><span class="mt-n">2</span><div class="mt-body"><div class="field" id="aeMatchAmtField"><label for="aeMatchAmt"><span class="mt-title t-lbl">Amount</span><output id="aeMatchAmtVal">100%</output></label><input type="range" id="aeMatchAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div></div></div>
             </div>
             <input type="file" id="aeRefIn" accept="audio/*" hidden><input type="file" id="aeProfIn" accept=".txt,.csv,.tsv,text/plain" hidden>
           </div>
@@ -841,7 +843,7 @@
           <div class="im-cols">
             <div class="im-ctl">
               <div class="ae-card" id="aeWidthCard">
-                <div class="im-head"><h4>Width</h4><div class="seg" id="aeWidthMode" role="radiogroup" aria-label="Width for"><label><input type="radio" name="aeWidthMode" value="all" checked><span>Overall</span></label><label><input type="radio" name="aeWidthMode" value="bands"><span>Frequency</span></label></div></div>
+                <div class="im-head t-head"><h4>Width</h4><div class="seg" id="aeWidthMode" role="radiogroup" aria-label="Width for"><label><input type="radio" name="aeWidthMode" value="all" checked><span>Overall</span></label><label><input type="radio" name="aeWidthMode" value="bands"><span>Frequency</span></label></div></div>
                 <div class="im-views">
                   <div class="im-view" id="aeWvAll"><div class="field"><div class="im-slrow"><div class="sl-track"><input type="range" class="bi" id="aeWidth" min="-100" max="100" step="1" value="0" data-default="0" aria-label="Stereo width"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-100">Mono</button><button class="sl-end" type="button" data-v="0">Normal</button><button class="sl-end" type="button" data-v="100">Wider</button></div></div><output id="aeWidthVal">100%</output></div></div></div>
                   <div class="im-view off" id="aeWvBands">
@@ -853,65 +855,65 @@
                 <div class="im-low" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
               </div>
               <div class="ae-card" id="aeBalCard">
-                <div class="im-head"><h4>Balance</h4><div class="bal-foot"><span class="bal-say" id="aeBalSay" aria-live="polite"></span><output id="aeBalVal">No shift</output></div><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Measures the sound and shifts it so the left and right are equally loud. Press again to remove the shift.">Auto</button></div>
-                <div class="bal-meter" id="aeLR" title="The average level of each side over the part you kept, quiet gaps left out. The bars show the levels after the shift."><span class="bm-name">Left</span><i class="bm-track"><b id="aeBalLb"></b></i><span class="bm-val" id="aeBalL"></span><span class="bm-name">Right</span><i class="bm-track"><b id="aeBalRb"></b></i><span class="bm-val" id="aeBalR"></span></div>
+                <div class="im-head t-head"><h4>Balance</h4><div class="bal-foot"><span class="t-note inline bal-say" id="aeBalSay" aria-live="polite"></span><output id="aeBalVal">No shift</output></div><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Makes left and right equally loud. Press again to undo.">Auto</button></div>
+                <div class="bal-meter" id="aeLR" title="The average level of each side, after the shift."><span class="bm-name">Left</span><i class="bm-track"><b id="aeBalLb"></b></i><span class="bm-val" id="aeBalL"></span><span class="bm-name">Right</span><i class="bm-track"><b id="aeBalRb"></b></i><span class="bm-val" id="aeBalR"></span></div>
                 <div class="field"><input type="range" class="bi" id="aeBal" min="-12" max="12" step="0.1" value="0" data-default="0" aria-label="Balance, left or right"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-12">Left</button><button class="sl-end" type="button" data-v="0">Center</button><button class="sl-end" type="button" data-v="12">Right</button></div></div>
                 <em id="aeLRtxt" hidden></em></div>
               </div>
-            <div class="ae-card im-scope"><canvas id="aeScope" aria-label="Stereo image"></canvas><div class="im-corr" title="How alike the left and right sides are. In the red end, parts of the sound cancel each other when the two sides are added together for mono. Genuine stereo recordings rarely get there, but widening can."><span>Wide</span><i id="aeCorr"></i><span>Mono</span></div><div class="im-listen"><span>Listen</span><div class="seg" id="aeListen" role="radiogroup" aria-label="Listen to"><label><input type="radio" name="aeListen" value="" checked><span>Both</span></label><label><input type="radio" name="aeListen" value="mid"><span>Middle</span></label><label><input type="radio" name="aeListen" value="side"><span>Sides</span></label></div></div></div>
+            <div class="ae-card im-scope"><canvas id="aeScope" aria-label="Stereo image"></canvas><div class="im-corr" title="How alike left and right are. In the red, the sound thins out in mono."><span>Wide</span><i id="aeCorr"></i><span>Mono</span></div><div class="im-listen"><span>Listen</span><div class="seg" id="aeListen" role="radiogroup" aria-label="Listen to"><label><input type="radio" name="aeListen" value="" checked><span>Both</span></label><label><input type="radio" name="aeListen" value="mid"><span>Middle</span></label><label><input type="radio" name="aeListen" value="side"><span>Sides</span></label></div></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneLevel" hidden>
           <div class="lv-grid">
             <div class="ae-card" id="aeNormCard">
-              <div class="lv-head im-head"><h4>Normalize</h4><button class="info-i" type="button" aria-label="About normalizing" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.normalize">Moves the whole sound up or down. Peak aims its loudest moment at a level you pick. Loudness aims how loud it sounds overall. Nothing gets squashed.</span><div class="seg" id="aeNormMode" role="radiogroup" aria-label="Normalize by"><label><input type="radio" name="aeNormMode" value="off" checked><span>Off</span></label><label><input type="radio" name="aeNormMode" value="loud"><span>Loudness</span></label><label><input type="radio" name="aeNormMode" value="peak"><span>Peak</span></label></div></div>
+              <div class="lv-head im-head t-head"><h4>Normalize</h4><button class="info-i" type="button" aria-label="About normalizing" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.normalize">Peak sets the loudest moment. Loudness sets how loud it sounds overall.</span><div class="seg" id="aeNormMode" role="radiogroup" aria-label="Normalize by"><label><input type="radio" name="aeNormMode" value="off" checked><span>Off</span></label><label><input type="radio" name="aeNormMode" value="loud"><span>Loudness</span></label><label><input type="radio" name="aeNormMode" value="peak"><span>Peak</span></label></div></div>
               <div class="fa-stack"><div class="fa" id="aePeakFold"><div class="fa-in" inert>
                 <label class="lv-target" id="aeNormTarget">Loudest peak <span class="num"><input type="number" id="aeNormDb" min="-12" max="0" step="0.1" inputmode="decimal"><em>dB</em></span></label>
-                <p class="lv-note" id="aePeakNote" aria-live="polite"></p>
+                <p class="t-note lv-note" id="aePeakNote" aria-live="polite"></p>
               </div></div>
               <div class="fa" id="aeLoudFold"><div class="fa-in" inert>
                 <div class="lv-loud">
                   <select id="aeLoudPreset" aria-label="Loudness target"></select><label class="lv-target lv-trow" for="aeLoudDb" title="Target loudness"><span class="num"><input type="number" id="aeLoudDb" min="-36" max="-6" step="0.1" inputmode="decimal"><em>LUFS</em></span></label>
-                  <div class="lv-noterow"><p class="lv-note" id="aeLoudNote" aria-live="polite"></p></div>
+                  <div class="lv-noterow"><p class="t-note lv-note" id="aeLoudNote" aria-live="polite"></p></div>
                   <div class="lv-limrow" id="aeLimRow"><label class="check-row" for="aeLimiter"><span>Limiter</span><span class="lv-tip-warn" id="aeLimTip" style="visibility:hidden">Turn on to stop clipping</span><input type="checkbox" class="switch" id="aeLimiter"></label></div>
                   
                 </div>
               </div></div></div>
             </div>
-            <div class="ae-card" id="aeGainCard"><h4>Gain</h4><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
-            <div class="ae-card lv-meter" id="aeMeter"><div class="lv-mh"><h4>Meter</h4><div class="lv-read"><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>Change</span><b id="aeSumChg">—</b></div></div></div>
+            <div class="ae-card" id="aeGainCard"><h4 class="t-head">Gain</h4><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
+            <div class="ae-card lv-meter" id="aeMeter"><div class="lv-mh t-head"><h4>Meter</h4><div class="lv-read"><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>Change</span><b id="aeSumChg">—</b></div></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneFades" hidden>
           <div class="fd-grid">
-            <div class="ae-card" id="aeFadeLenCard"><h4>Length</h4><div class="seg" id="aeFadeSide" role="radiogroup" aria-label="Fade length for"><label><input type="radio" name="aeFadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="aeFadeSide" value="in"><span>In</span></label><label><input type="radio" name="aeFadeSide" value="out"><span>Out</span></label></div><div class="field" id="aeFadeLenField"><output class="lv-big" id="aeFadeLenVal">Off</output><input type="range" id="aeFadeLen" min="0" max="3" step="0.1" value="0" data-default="0" aria-label="Fade length"><div class="sl-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end" type="button" data-v="max">Longer</button></div></div></div>
-            <div class="ae-card fd-shape"><h4>Shape</h4><canvas id="aeFadeCv" aria-label="Fade shape"></canvas></div>
-            <div class="ae-card" id="aeShapeCard"><h4>Curve</h4><div class="seg" id="aeFadeShape" role="radiogroup" aria-label="Fade curve"><label><input type="radio" name="aeFadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="aeFadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: the usual choice for a crossfade or a music fade"><input type="radio" name="aeFadeShape" value="natural"><span>Natural</span></label><label title="Stays quiet longest on the way in and drops fastest on the way out, like a sound dying away"><input type="radio" name="aeFadeShape" value="slow"><span>Slow</span></label><label title="Comes in fastest and holds on longest before the end"><input type="radio" name="aeFadeShape" value="fast"><span>Fast</span></label></div></div>
+            <div class="ae-card" id="aeFadeLenCard"><h4 class="t-head">Length</h4><div class="seg" id="aeFadeSide" role="radiogroup" aria-label="Fade length for"><label><input type="radio" name="aeFadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="aeFadeSide" value="in"><span>In</span></label><label><input type="radio" name="aeFadeSide" value="out"><span>Out</span></label></div><div class="field" id="aeFadeLenField"><output class="lv-big" id="aeFadeLenVal">Off</output><input type="range" id="aeFadeLen" min="0" max="3" step="0.1" value="0" data-default="0" aria-label="Fade length"><div class="sl-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end" type="button" data-v="max">Longer</button></div></div></div>
+            <div class="ae-card fd-shape"><h4 class="t-head">Shape</h4><canvas id="aeFadeCv" aria-label="Fade shape"></canvas></div>
+            <div class="ae-card" id="aeShapeCard"><h4 class="t-head">Curve</h4><div class="seg" id="aeFadeShape" role="radiogroup" aria-label="Fade curve"><label><input type="radio" name="aeFadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="aeFadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: the usual choice for a crossfade or a music fade"><input type="radio" name="aeFadeShape" value="natural"><span>Natural</span></label><label title="Starts slowly and ends quickly, like a sound dying away."><input type="radio" name="aeFadeShape" value="slow"><span>Slow</span></label><label title="Comes in fastest and holds on longest before the end"><input type="radio" name="aeFadeShape" value="fast"><span>Fast</span></label></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneEmu" hidden>
           <div class="em-grid">
             <div class="ae-card" id="aeEmCard">
               <div class="mt-steps">
-                <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title">Reference</div>
+                <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Reference</div>
                   <div class="mt-pick" id="aeEmEmpty"><button class="btn small" id="aeEmPick" type="button">Choose an audio file</button></div>
                   <div class="mt-chip" id="aeEmChip" hidden><span class="mt-spin" aria-hidden="true"></span><b id="aeEmName"></b><button id="aeEmClear" type="button" aria-label="Remove the reference" title="Remove the reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
                   <div class="em-bar" id="aeEmBar" hidden aria-hidden="true"><i></i></div>
                 </div></div>
-                <div class="mt-step dim" id="aeEmTakeStep"><span class="mt-n">2</span><div class="mt-body"><div class="mt-title" id="aeEmTakeL">Take its</div>
+                <div class="mt-step dim" id="aeEmTakeStep"><span class="mt-n">2</span><div class="mt-body"><div class="mt-title t-lbl" id="aeEmTakeL">Take its</div>
                   <div class="em-take" role="group" aria-labelledby="aeEmTakeL"><button class="btn small" id="aeEmTone" type="button" aria-pressed="true" title="Sets the EQ's curve">Tone</button><button class="btn small" id="aeEmWidth" type="button" aria-pressed="true" title="Sets the Imager's width for the low, middle, and high notes">Width</button><button class="btn small" id="aeEmLoud" type="button" aria-pressed="true" title="Sets Level to the reference's loudness, with the limiter on">Loudness</button></div>
                 </div></div>
-                <div class="mt-step dim" id="aeEmAmtStep"><span class="mt-n">3</span><div class="mt-body"><div class="field" id="aeEmAmtField"><label for="aeEmAmt"><span class="mt-title">Amount</span><output id="aeEmAmtVal">100%</output></label><input type="range" id="aeEmAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div>
-                  <div class="em-go"><button class="btn small primary" id="aeEmGo" type="button" aria-pressed="false" disabled>Emulate</button><span class="em-say" id="aeEmSay" aria-live="polite"></span></div>
+                <div class="mt-step dim" id="aeEmAmtStep"><span class="mt-n">3</span><div class="mt-body"><div class="field" id="aeEmAmtField"><label for="aeEmAmt"><span class="mt-title t-lbl">Amount</span><output id="aeEmAmtVal">100%</output></label><input type="range" id="aeEmAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div>
+                  <div class="em-go"><button class="btn small primary" id="aeEmGo" type="button" aria-pressed="false" disabled>Emulate</button><span class="t-note inline em-say" id="aeEmSay" aria-live="polite"></span></div>
                 </div></div>
               </div>
               <input type="file" id="aeEmIn" accept="audio/*" hidden>
             </div>
             <div class="ae-card em-view">
-              <div class="mt-head"><h4>Tone</h4><span class="em-key" aria-hidden="true"><i class="a"></i>Yours<i class="b"></i>Reference<i class="c"></i>After</span></div>
+              <div class="mt-head t-head"><h4>Tone</h4><span class="em-key" aria-hidden="true"><i class="a"></i>Yours<i class="b"></i>Reference<i class="c"></i>After</span></div>
               <div class="em-stage"><canvas id="aeEmCv" aria-label="The tone of your recording and of the reference"></canvas><p class="em-empty" id="aeEmEmptyMsg">Choose a reference to see how yours differs.</p></div>
               <div class="lv-sum"><div><span>Tone</span><b id="aeEmT">–</b><small id="aeEmT2"></small></div><div><span>Width</span><b id="aeEmW">–</b><small id="aeEmW2"></small></div><div><span>Loudness</span><b id="aeEmL">–</b><small id="aeEmR"></small></div></div>
-              <p class="em-note">The line marked After is yours with the EQ curve added. Dynamics and the room stay as they are.</p>
+              <p class="t-note em-note">The line marked After is yours with the EQ curve added. Dynamics and the room stay as they are.</p>
             </div>
           </div>
         </section>
@@ -935,9 +937,9 @@
     <div class="pg-wrap" id="aePgWrap">
       <div class="pg pg-main" id="aePgMain">
         <h2 id="aeExpTitle">Export audio</h2>
-        <div class="field"><label for="aeFormat">File type</label><select id="aeFormat"><optgroup label="Lossless"><option value="flac">FLAC</option><option value="wav">WAV</option></optgroup><optgroup label="Smaller file"><option value="m4a">M4A</option></optgroup></select><div class="fa" id="aeSrcFold"><div class="fa-in"><p class="vq-note" id="aeExpSrc" aria-live="polite"></p></div></div></div>
-        <div class="field"><label for="aeFormatQ" id="aeFormatQL">Bit depth</label><select id="aeFormatQ"></select><p class="vq-note" id="aeExpNote" aria-live="polite"></p></div>
-        <div class="field"><label for="aeRate">Sample rate</label><select id="aeRate"></select><div class="fa" id="aeRateFold"><div class="fa-in"><p class="vq-note" id="aeExpRate" aria-live="polite"></p></div></div></div>
+        <div class="field"><label for="aeFormat">File type</label><select id="aeFormat"><optgroup label="Lossless"><option value="flac">FLAC</option><option value="wav">WAV</option></optgroup><optgroup label="Smaller file"><option value="m4a">M4A</option></optgroup></select><div class="fa" id="aeSrcFold"><div class="fa-in"><p class="t-note" id="aeExpSrc" aria-live="polite"></p></div></div></div>
+        <div class="field"><label for="aeFormatQ" id="aeFormatQL">Bit depth</label><select id="aeFormatQ"></select><p class="t-note" id="aeExpNote" aria-live="polite"></p></div>
+        <div class="field"><label for="aeRate">Sample rate</label><select id="aeRate"></select><div class="fa" id="aeRateFold"><div class="fa-in"><p class="t-note" id="aeExpRate" aria-live="polite"></p></div></div></div>
         <button class="go-row" id="aeMetaGo" type="button"><span>Metadata</span><em id="aeMetaVal">Off</em><i aria-hidden="true"></i></button>
         <div class="row"><button class="btn" id="aeExpCancel" type="button">Cancel</button><button class="btn primary" id="aeExpGo" type="button">Export</button></div>
       </div>
@@ -970,7 +972,7 @@
       <h2 id="aeRunTitle">Exporting your audio…</h2>
       <p id="aeRunMsg" aria-live="polite">Processing…</p>
       <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="aeRunBarWrap"><i id="aeRunBar"></i></div>
-      <p class="hint" id="aeRunNote">You can keep editing while this runs. The Export audio button shows how far it is, and brings this window back.</p>
+      <p class="t-note" id="aeRunNote">You can keep editing while this runs. The Export audio button shows how far it is, and brings this window back.</p>
       <div class="row"><button class="btn" id="aeRunStop" type="button">Stop export</button><button class="btn primary" id="aeRunHide" type="button">Keep editing</button><button class="btn primary" id="aeRunClose" type="button" hidden>Close</button></div>
     </div>
   </div>
@@ -979,7 +981,7 @@
 <div id="pdfDlg" class="exp-overlay z-pdf" role="dialog" aria-modal="true" aria-labelledby="pdfTitle" hidden>
   <div class="dlg wide editor pe">
     <div class="ed-head">
-      <h2 id="pdfTitle">PDF Editor</h2>
+      <div class="t-block"><h2 id="pdfTitle">PDF Editor</h2><p class="t-sub ed-lead" id="peLead">Arrange, fix, and finish your pages.</p></div>
       <div class="ed-tools btn-group">
         <button class="btn small" id="peUndo" type="button" disabled>Undo</button>
         <span class="vsep" aria-hidden="true"></span>
@@ -990,12 +992,11 @@
         <button class="btn small" id="peReset" type="button" disabled>Reset</button>
       </div>
       <div class="hist" id="peHist" role="dialog" aria-label="History" hidden>
-        <div class="hist-top"><h3>History</h3><span class="hist-sub" id="peHistSub">Pick a step to go back to it</span></div>
+        <div class="hist-top t-block"><h3>History</h3><span class="hist-sub t-sub" id="peHistSub">Pick a step to go back to it</span></div>
         <ol class="hist-list" id="peHistList"></ol>
         <div class="fa" id="peHistFoot"><div class="fa-in" inert><div class="hist-foot"><span id="peHistSum"></span><div><button class="btn small" id="peHistNo" type="button">Cancel</button><button class="btn small primary" id="peHistGo" type="button">Go back</button></div></div></div></div>
       </div>
     </div>
-    <p class="hint ed-lead" id="peLead">Arrange, fix, and finish your pages.</p>
     <div class="pe-main">
       <nav class="pe-rail" id="peRail" aria-label="Tools"><div class="pe-rail-in" id="peRailIn"><i class="pe-sel" id="peRailSel" aria-hidden="true"></i>
         <div class="pe-rail-h">Pages</div>
@@ -1013,31 +1014,31 @@
       <section class="pe-win" id="peWin" data-mode="pages" aria-label="Pages">
         <div class="pe-top" id="peBand">
           <div class="pe-tv" id="peViewAdd" data-tool="pages">
-            <div class="pe-phead"><div class="pe-pt"><h3>Arrange</h3><p class="pe-sub">Drag to reorder. Click a page to leave it out.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peAddStatus" aria-live="polite"></span></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Arrange</h3><p class="pe-sub t-sub">Drag to reorder. Click a page to leave it out.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peAddStatus" aria-live="polite"></span></div></div>
             <div class="pe-steps" role="group" aria-label="Insert pages">
-              <div class="pe-step"><span class="mt-n">1</span><span class="pe-st" id="peAddKindL">Insert</span>
+              <div class="pe-step"><span class="mt-n">1</span><span class="pe-st t-lbl" id="peAddKindL">Insert</span>
                 <div class="seg" role="radiogroup" aria-labelledby="peAddKindL"><label><input type="radio" name="peAddKind" value="blank" checked><span>Blank page</span></label><label><input type="radio" name="peAddKind" value="pdf"><span>PDF</span></label></div></div>
-              <div class="pe-step"><span class="mt-n">2</span><label class="pe-st" for="peAddAt">Position</label><select id="peAddAt"></select></div>
+              <div class="pe-step"><span class="mt-n">2</span><label class="pe-st t-lbl" for="peAddAt">Position</label><select id="peAddAt"></select></div>
               <div class="pe-step"><span class="mt-n">3</span><button class="btn small primary" id="peAddGo" type="button">Insert</button></div>
               <input type="file" id="peAddIn" accept="application/pdf,.pdf" hidden>
             </div>
           </div>
           <div class="pe-tv" id="peViewClean" data-tool="clean" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Clean</h3><p class="pe-sub">Whitens the paper and takes the specks out of scans.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peCleanStatus" aria-live="polite"></span><button class="btn small" id="peCleanClear" type="button">Revert</button><button class="btn small primary" id="peCleanGo" type="button">Clean</button></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Clean</h3><p class="pe-sub t-sub">Whitens the paper and takes the specks out of scans.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peCleanStatus" aria-live="polite"></span><button class="btn small" id="peCleanClear" type="button">Revert</button><button class="btn small primary" id="peCleanGo" type="button">Clean</button></div></div>
             <div class="pe-opts">
-              <div class="pe-og"><span class="pe-st" id="peClBgL">Paper</span><div class="seg" role="radiogroup" aria-labelledby="peClBgL"><label><input type="radio" name="peClBg" value="1" checked><span>White</span></label><label><input type="radio" name="peClBg" value="2"><span>Page color</span></label></div></div>
-              <div class="pe-og"><span class="pe-st" id="peClSpL">Specks</span><div class="seg" role="radiogroup" aria-labelledby="peClSpL"><label><input type="radio" name="peClSp" value="1" checked><span>Light</span></label><label><input type="radio" name="peClSp" value="2"><span>Strong</span></label></div></div>
+              <div class="pe-og"><span class="pe-st t-lbl" id="peClBgL">Paper</span><div class="seg" role="radiogroup" aria-labelledby="peClBgL"><label><input type="radio" name="peClBg" value="1" checked><span>White</span></label><label><input type="radio" name="peClBg" value="2"><span>Page color</span></label></div></div>
+              <div class="pe-og"><span class="pe-st t-lbl" id="peClSpL">Specks</span><div class="seg" role="radiogroup" aria-labelledby="peClSpL"><label><input type="radio" name="peClSp" value="1" checked><span>Light</span></label><label><input type="radio" name="peClSp" value="2"><span>Strong</span></label></div></div>
             </div>
           </div>
           <div class="pe-tv" id="peViewSkew" data-tool="skew" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Re-kilter</h3><p class="pe-sub">Levels tilted, slanted, and curved scans, page by page.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peSkewStatus" aria-live="polite"></span><button class="btn small" id="peSkewClear" type="button">Revert</button><button class="btn small primary" id="peSkewGo" type="button">Re-kilter</button></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-kilter</h3><p class="pe-sub t-sub">Levels tilted, slanted, and curved scans, page by page.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peSkewStatus" aria-live="polite"></span><button class="btn small" id="peSkewClear" type="button">Revert</button><button class="btn small primary" id="peSkewGo" type="button">Re-kilter</button></div></div>
           </div>
           <div class="pe-tv" id="peViewCrop" data-tool="crop" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Crop</h3><p class="pe-sub" id="peCropSub" data-normal="Finds the music on the ticked pages and trims the extra margins.">Finds the music on the ticked pages and trims the extra margins.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Crop</h3><p class="pe-sub t-sub" id="peCropSub" data-normal="Finds the music on the ticked pages and trims the extra margins.">Finds the music on the ticked pages and trims the extra margins.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
             <div class="pe-opts">
               <div class="seg pe-cmode" role="radiogroup" aria-label="Frame"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div>
               <div class="pe-range" id="peCropPadF"><label for="peCropPad">Margin</label><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2" data-default="2"><output id="peCropPadVal" for="peCropPad">2%</output></div>
@@ -1045,33 +1046,33 @@
             </div>
           </div>
           <div class="pe-tv" id="peViewDim" data-tool="dim" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Dim</h3><p class="pe-sub">Visually soften music before or after a repeat.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peDimStatus" aria-live="polite"></span><button class="btn small" id="peDimClear" type="button">Revert</button></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Dim</h3><p class="pe-sub t-sub">Visually soften music before or after a repeat.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peDimStatus" aria-live="polite"></span><button class="btn small" id="peDimClear" type="button">Revert</button></div></div>
           </div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Split spreads</h3><p class="pe-sub">Cuts two pages scanned side by side into single pages.</p></div>
-              <div class="pe-acts"><span class="pe-status" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary" id="peSplitGo" type="button">Split</button></div></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Split spreads</h3><p class="pe-sub t-sub">Cuts two pages scanned side by side into single pages.</p></div>
+              <div class="pe-acts"><span class="pe-status t-note inline" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary" id="peSplitGo" type="button">Split</button></div></div>
             <p class="pe-notice" id="peSplitNote"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span id="peSplitMsg">Looking for spreads…</span></p>
           </div>
           <div class="pe-tv pe-rz" id="peViewResize" data-tool="resize" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Re-size</h3><p class="pe-sub">Fits every page to one paper size.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-size</h3><p class="pe-sub t-sub">Fits every page to one paper size.</p></div>
               <div class="pe-acts"><p class="rz-now" id="peRzNow"><b id="peRzFrom"></b><span class="norm-to" id="peRzTo"><svg class="norm-arrow" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14" pathLength="1"/><path d="m12 5 7 7-7 7" pathLength="1"/></svg><b id="peRzNew"></b></span> <span class="rz-unit">in</span></p>
                 <div class="rz-custom" id="peRzCustom"><input type="number" id="peRzW" min="2" max="60" step="0.01" inputmode="decimal" aria-label="Width in inches"><span aria-hidden="true">×</span><input type="number" id="peRzH" min="2" max="60" step="0.01" inputmode="decimal" aria-label="Height in inches"><span class="rz-in">in</span></div><button class="btn small primary" id="peRzGo" type="button">Re-size</button></div></div>
             <div class="rz-grid" id="peRzGrid" role="radiogroup" aria-label="Page size"></div>
             <div class="rz-grid rz-shapes" id="peRzShape" role="radiogroup" aria-label="Page shape"></div>
           </div>
           <div class="pe-tv pe-wm" id="peViewWm" data-tool="wm" hidden>
-            <div class="pe-phead"><div class="pe-pt"><h3>Watermark</h3><p class="pe-sub">Prints text across the pages you pick.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Watermark</h3><p class="pe-sub t-sub">Prints text across the pages you pick.</p></div>
               <div class="pe-acts"><button class="btn small" id="peWmRemove" type="button" hidden>Remove</button><button class="btn small primary" id="peWmAdd" type="button">Watermark</button></div></div>
             <div class="pe-wm-grid">
-              <label class="pe-wl" for="peWmText">Text</label>
+              <label class="pe-wl t-lbl" for="peWmText">Text</label>
               <div class="line-style"><input type="text" id="peWmText" maxlength="60" placeholder="Perusal score" autocomplete="off" spellcheck="false"><button type="button" class="fmt-btn pe-fmt" id="peWmB" aria-label="Bold" title="Bold" aria-pressed="true"><b>B</b></button><button type="button" class="fmt-btn pe-fmt" id="peWmI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></div>
-              <label class="pe-wl" for="peWmOpacity">Opacity</label>
+              <label class="pe-wl t-lbl" for="peWmOpacity">Opacity</label>
               <div class="pe-range"><input type="range" id="peWmOpacity" min="5" max="60" step="1" value="20" data-default="20"><output id="peWmOpacityVal">20%</output></div>
-              <span class="pe-wl" id="peWmAngleLbl">Direction</span>
+              <span class="pe-wl t-lbl" id="peWmAngleLbl">Direction</span>
               <div class="pe-dir"><div class="seg" role="radiogroup" aria-labelledby="peWmAngleLbl"><label><input type="radio" name="peWmAngle" value="45" checked><span>Diagonal</span></label><label><input type="radio" name="peWmAngle" value="0"><span>Straight</span></label><label><input type="radio" name="peWmAngle" value="custom"><span>Custom</span></label></div>
                 <span class="pe-deg"><input type="number" id="peWmDeg" min="-180" max="180" step="1" value="45" inputmode="numeric" aria-label="Degrees"><span aria-hidden="true">°</span></span></div>
-              <span class="pe-wl" id="peWmModeLbl">Layout</span>
+              <span class="pe-wl t-lbl" id="peWmModeLbl">Layout</span>
               <div class="seg" role="radiogroup" aria-labelledby="peWmModeLbl"><label><input type="radio" name="peWmMode" value="center" checked><span>Centered</span></label><label><input type="radio" name="peWmMode" value="tile"><span>Tiled</span></label></div>
             </div>
           </div>
@@ -1112,7 +1113,7 @@
     <div class="field">
       <label for="pwIn">Password</label>
       <div class="pw-line"><input type="password" id="pwIn" autocomplete="off" spellcheck="false" autocapitalize="off"><button class="pw-eye" id="pwEye" type="button" aria-label="Show password" aria-pressed="false" title="Show password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg></button></div>
-      <div class="fa" id="pwErrFold"><div class="fa-in"><p class="vq-note err" id="pwErr">That password didn’t work.</p></div></div>
+      <div class="fa" id="pwErrFold"><div class="fa-in"><p class="t-note err" id="pwErr">That password didn’t work.</p></div></div>
     </div>
     <div class="row"><button class="btn" id="pwCancel" type="button">Cancel</button><button class="btn primary" id="pwOk" type="button">Open</button></div>
   </div>
@@ -1122,12 +1123,12 @@
   <div class="dlg">
     <h2 id="expTitle">Exporting your video…</h2>
     <p id="expMsg">Processing…</p>
-    <p class="hint" id="expMethod"></p>
-    <div class="fa" id="expStallFold"><div class="fa-in" inert><p class="hint err" id="expStall"></p></div></div>
+    <p class="t-note" id="expMethod"></p>
+    <div class="fa" id="expStallFold"><div class="fa-in" inert><p class="t-note err" id="expStall"></p></div></div>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="expBarWrap"><i id="expBar"></i></div>
-    <p class="hint" id="expNote">Keep this tab open and in front until the export finishes.</p>
+    <p class="t-note" id="expNote">Keep this tab open and in front until the export finishes.</p>
     <video id="expPreview" class="exp-preview" controls playsinline hidden></video>
-    <div class="fa" id="expLinkFold"><div class="fa-in" inert><p class="hint" id="expLinkWrap">Save button not doing anything? <a id="expLink" href="#">Use this download link</a>, or open this page in its own browser tab.</p></div></div>
+    <div class="fa" id="expLinkFold"><div class="fa-in" inert><p class="t-note" id="expLinkWrap">Save button not doing anything? <a id="expLink" href="#">Use this download link</a>, or open this page in its own browser tab.</p></div></div>
     <div class="row">
       <button class="btn" id="expLogBtn" type="button" hidden>Show debug log</button>
       <button class="btn" id="expRetry" type="button" hidden>Try real-time recording</button>

@@ -19,6 +19,7 @@
 /* ==================== 1. THEME & VARIABLES ==================== */
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
+  --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px;   /* the spacing scale (2, 4, 8, 12, 16): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:30px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
@@ -187,20 +188,17 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;pad
 .group{padding:18px 0;border-bottom:1px solid var(--line)}
 .group:last-child{border-bottom:0}
 .group h3{margin:0 0 10px;font-size:14px;font-weight:600}
-.group-head{position:relative;display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.group-head{position:relative;display:flex;align-items:center;gap:8px}
 .group .group-head h3{margin:0}
 .group-toggle{display:flex;align-items:center;margin-left:auto;cursor:pointer}
 .group.off .group-head{margin-bottom:0}
 
 /* ----- Form fields: labels, sliders, selects ----- */
-.field{display:grid;gap:6px;margin-bottom:12px}
+.field{display:grid;gap:var(--gap-label);margin-bottom:var(--gap-field)}          /* a label sits --gap-label above its control, and one setting stands --gap-field from the next; an editor card sets its own --gap-set */
 .field:last-child{margin-bottom:0}
 /* the settings panel: a label sits close to its control and a note sits right under the control it explains, while one setting stands clearly apart from the next */
-.panel .field{gap:4px}
-.panel .field:not(:last-child){margin-bottom:16px}
-.panel .field>.hint:not(.err):not(.warn),.panel .field>.vq-note{margin-top:-2px}
-.panel .sub>.field+.hint{margin-top:-12px}
-.panel .field>.hint:empty{display:none}
+.field+.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a field that has its --gap-field below it still sits --gap-label under the control */
+.panel .field>.t-note:empty{display:none}
 .panel .adv,.panel .adv[open]{margin-bottom:10px}        /* the same 16px above Export video (with its 6px) whether Advanced is open or not */
 #creditsAtField:has(~ #creditsEarlyField[hidden]){margin-bottom:0}        /* at Start the two rows after it are closed, so it ends the group */
 .field label,.field .lbl{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted)}
@@ -235,7 +233,7 @@ input.bad{border-color:var(--danger)}
 /* a credits line: its label, box, and note stay together, and a closed font row takes no room at all, so the next setting is the usual 16px away */
 .panel .field:has(>.line-row){gap:0}
 .panel .field:has(>.line-row)>.line-row{margin-top:4px}
-.panel .field:has(>.line-row)>.hint{margin-top:2px}
+.panel .field:has(>.line-row)>.t-note{margin-top:var(--gap-label)}
 .panel .field:has(>.line-row)>.line-fold{margin-top:0}
 .panel .field:has(>.line-row)>.line-fold.open{margin-top:4px}
 .line-fold>.fa-in{transition:opacity .25s var(--ease-color),padding .45s var(--ease-out),overflow 0s allow-discrete}
@@ -269,9 +267,6 @@ input.bad{border-color:var(--danger)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .sub>.field:last-child{margin-bottom:0}
 /* small notes under a control: tucked to the right and quieter, so they stay out of the way of the labels */
-.group .hint{margin:0;font-size:11px;--lh:1.35;text-align:left;text-wrap:pretty}
-#exportHint{margin-top:4px!important}
-.group .hint.err,.group .hint.warn{text-align:left;font-size:12.5px}
 #shadowReset{margin-top:14px}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
@@ -341,7 +336,6 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #turnField.glow-ring{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent),0 0 18px 4px var(--accent)}
 .colorrow[hidden]{display:none}
 .colorrow input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
-.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
 .panel .btn.primary{width:100%;padding:10px 14px;margin-top:6px}
 
 /* ==================== 7. TIMELINE ==================== */
@@ -383,7 +377,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 
 /* ----- Dialog box, buttons row, progress bar ----- */
 .dlg .row{flex-wrap:wrap}
-.dlg{width:min(480px,92vw);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:20px 22px;display:grid;gap:14px}
+.dlg{width:min(480px,92vw);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:20px 22px;display:grid;gap:var(--gap-field)}
 .dlg h2{margin:0;font:500 24px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
 .dlg p{margin:0;color:var(--muted)}
 .bar{height:10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
@@ -679,9 +673,8 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 /* ==================== 15. EDITORS (Audio Editor, PDF Editor) ==================== */
 .dlg.editor{width:min(900px,94vw);gap:16px}      /* wide enough for five pages per row beside the tools */
 .ed-head{display:flex;align-items:center;gap:10px}
-.ed-head h2{margin:0;flex:1}
+.ed-head .t-block{flex:1;min-width:min-content}          /* never narrower than its title, so on a phone the buttons wrap below it instead of covering it */
 .ed-tools{display:flex;gap:6px}
-.ed-lead{margin:-8px 0 0}
 .ae-wave{position:relative}
 .ae-wave canvas{display:block;width:100%;height:100%;touch-action:none}
 .ae-bar{display:flex;align-items:center;gap:14px}
@@ -690,7 +683,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 
 /* ----- PDF Editor ----- */
 
-.hint.warn{color:var(--turn-ink);font-weight:600}
+.t-note.warn{color:var(--turn-ink);font-weight:600}
 
 /* ==================== 16. FILE CHIPS (a steady size) ==================== */
 /* the name is cut with an ellipsis, and on hover the small text (page count or length) trades places with the action, in the same space,
@@ -717,7 +710,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 /* ----- Editor tidy-ups: room for focus rings, grid footer, gain ----- */
 
 .ae-bar .push-right{margin-left:auto}
-#aeGainField{margin-top:10px;transition:opacity .3s var(--ease-ui)}
+#aeGainField{transition:opacity .3s var(--ease-ui)}
 #aeGainField.dim{opacity:.45}
 .ed-head{flex-wrap:wrap}
 .ed-head h2{white-space:nowrap}
@@ -832,7 +825,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .pe .row .btn svg,.editor .row .btn svg{width:16px;height:16px;flex:none}
 
 /* ----- How it works, and a steady scrollbar ----- */
-.dlg.how{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:hidden;grid-template-rows:auto auto minmax(0,1fr) auto}
+.dlg.how{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto}
 .how-lead{font-size:14px;color:var(--ink)}
 .how-body{display:grid;gap:14px;align-content:start;overflow:auto;scrollbar-gutter:stable;padding-right:6px;min-height:0}
 .how-body h3{margin:0 0 3px;font-size:13.5px;font-weight:600}
@@ -954,8 +947,8 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .about .ver{position:relative;z-index:1;width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
 .about .ver[hidden]{display:none}
 /* in the page window the spare height goes above the version, so it stays with the links beneath it; the usual paragraph gap sits above it */
-.dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:-21px}
-@media (max-width:374px){.dlg.page.about>.ver:not([hidden]){margin-bottom:-6px}}      /* the links wrap above Close here, so they start at the top of their row */
+.dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:-24px}
+@media (max-width:374px){.dlg.page.about>.ver:not([hidden]){margin-bottom:-9px}}      /* the links wrap above Close here, so they start at the top of their row */
 .dlg.page.about>.ver:not([hidden])+.row:last-child{margin-top:0}
 .about .fine{margin:0 auto 0 0;font-size:12.5px}
 .about .fine a{color:inherit}
@@ -966,10 +959,11 @@ html.leaving body{opacity:0;transition-duration:.18s}
 #diagDlg .dlg.page{width:min(720px,92vw)}      /* About, How it works, Import/Export, Keyboard shortcuts and Diagnostics share one size */
 #keysDlg .dlg.page{width:min(900px,92vw)}      /* the reading window and the two-column shortcuts get the editors' width */
 .dlg.page.how{width:min(720px,92vw);height:min(830px,calc(100dvh - 32px))}      /* one frame: opening a dropdown scrolls the text inside, it never resizes the window */
-.keys-groups{column-count:2;column-gap:20px}      /* the groups fill two columns; one group never splits */
-.keys-groups section{break-inside:avoid;margin-bottom:14px}
-.keys-groups h3{margin:0 0 8px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-@media (max-width:820px){.keys-groups{column-count:1}}
+.keys-groups{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:start}      /* the groups fill two columns of whole-pixel height; one group never splits */
+.keys-col section{margin-bottom:var(--gap-field)}
+.keys-col section:last-child{margin-bottom:0}
+.keys-groups h3{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:820px){.keys-groups{grid-template-columns:1fr}.keys-col+.keys-col{margin-top:var(--gap-field)}}
 /* a control that is switched off dims smoothly */
 .field.dim{opacity:.45}
 .field{transition:opacity .35s var(--ease-ui)}
@@ -1024,7 +1018,6 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .status .st{border:1px solid var(--line);border-radius:999px;background:var(--panel2);transition:color .3s var(--ease-color),border-color .3s var(--ease-color),background-color .3s var(--ease-color)}
 .status .st.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
 .status{border-bottom:0;padding-bottom:6px}.status .st{padding:3px 9px 3px 7px;font-size:12.5px}
-.vq-note{margin:0;font-size:11px;--lh:1.35;text-align:left;color:var(--muted)}
 /* the two file checks share the row evenly */
 .status{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .status .st{justify-content:center;white-space:nowrap}
@@ -1109,7 +1102,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 /* EQ */
 .eq-top{gap:8px}
 .eq-band{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:6px 18px;align-items:end;margin-top:14px;transition:opacity .3s var(--ease-ui)}
-.eq-bn{display:flex;align-items:center;gap:10px;align-self:center;font-weight:600}
+.eq-bn{display:flex;align-items:stretch;gap:10px;align-self:center;font-weight:600}
 .eq-bn b{font-variant-numeric:tabular-nums}
 .eq-bn .switch{order:2}
 .eq-stage canvas{cursor:default}
@@ -1131,7 +1124,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 
 /* ----- Cards, folding windows, Fades and Level ----- */
 .ae-card{padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
-.ae-card h4{margin:0 0 12px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ae-card h4{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-card .field{margin-bottom:0}
 .ae-card.dim{opacity:.55}
 .ae-rail{padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);gap:0}
@@ -1144,7 +1137,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-grid{display:grid}
 .lv-meter{grid-column:1/-1}
 .lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
-.lv-head{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px}
+.lv-head{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-label) 8px}
 .lv-head h4{margin:0}
 .lv-head .switch{margin-left:auto}
 .lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity .3s var(--ease-ui)}
@@ -1157,7 +1150,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-read b{font-size:15px}
 .fd-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 #aeShapeCard{grid-column:1/-1}
-#aeFadeLenCard .seg{margin:0 0 10px}
+#aeFadeLenCard .seg{margin:0 0 var(--gap-set)}
 .fd-shape canvas{display:block;width:100%}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
@@ -1210,8 +1203,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .sl-end:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.sl-end:not(:disabled):active{transform:none}}
 /* Fades */
-#aeShapeCard .seg{margin-top:2px}
-#aeFadeLenCard .field{margin-top:2px}
+
 .fd-shape{display:flex;flex-direction:column}
 .fd-shape canvas{flex:1;min-height:150px;height:auto}
 /* level meter: red clips, green is a healthy peak, blue is quiet */
@@ -1224,7 +1216,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-meter.hot .lv-read b{color:var(--bad)}
 .lv-big.clip{color:var(--bad)}
 /* EQ Match */
-.mt-head{position:relative;display:flex;align-items:center;gap:8px;margin:0 0 14px}
+.mt-head{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-label) 8px}          /* on a phone the card's buttons wrap below its title instead of passing the card */
 .mt-head h4{margin:0}
 .mt-head .btn{margin-left:auto}
 .mt-steps{display:flex;flex-direction:column;gap:14px}
@@ -1232,8 +1224,8 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-step.dim{opacity:.45}
 .mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:-1px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
 .mt-body{flex:1;min-width:0}
-.mt-title{margin:0 0 8px;font-size:13.5px;font-weight:600;color:var(--ink)}
-.mt-body .field label{display:flex;justify-content:space-between;margin-bottom:6px}
+.mt-title{margin:0 0 var(--gap-label);font-weight:600;color:var(--ink)}
+.mt-body .field label{display:flex;justify-content:space-between}
 .mt-body .field .mt-title{margin:0}
 .mt-pick{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:13px}
 .mt-chip{display:flex;align-items:center;gap:8px;max-width:100%;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:13px}
@@ -1322,8 +1314,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .w-front.drag{stroke-dasharray:none;opacity:.9}
 /* EQ: every control sits on the same two lines, a small label above and the control below */
 .eq-band.ae-card{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 20px;align-items:start;padding:12px 18px 14px}
-.eq-cell{display:flex;flex-direction:column;gap:6px;min-width:0}
-.eq-lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;font-size:12px;font-weight:500;color:var(--muted);line-height:16px}
+.eq-cell{display:flex;flex-direction:column;gap:var(--gap-label);min-width:0}
+.eq-lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;font-weight:500;color:var(--muted)}
 .eq-lbl output{color:var(--ink);font-variant-numeric:tabular-nums}
 .eq-lbl b{color:var(--ink)}
 .eq-ctl{display:flex;align-items:center;height:34px}
@@ -1339,7 +1331,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* EQ Match fits beside the curve without growing the window */
 .eq-match{padding:12px 18px 14px;margin-top:12px}
 .mt-steps.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px 22px}
-.eq-match .mt-head{margin-bottom:10px}
 /* Noise reduction steps */
 .nr-learn{display:flex;align-items:center;gap:8px 10px}
 .nr-learn .mt-chip{padding-top:4px;padding-bottom:4px}
@@ -1398,8 +1389,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-grid.pre .nr-stage canvas{opacity:0}
 .nr-grid.pre .mt-steps{flex-direction:row;gap:32px}
 .nr-grid.pre .mt-step{flex:1}
-.nr-grid.pre .mt-head{margin-bottom:12px}
-#aeNrSample .mt-head{margin-bottom:8px}
 #aeNrSample .mt-steps{gap:12px}
 @media (max-width:760px){
   .ae-pbody{min-height:0}
@@ -1424,10 +1413,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .w-dot{fill:url(#wDot);stroke:rgba(23,137,76,.55);stroke-width:.5}
 
 /* Imager: width overall or by frequency, balance, listen */
-.im-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.im-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .im-head h4{margin:0}
 .im-head .seg{width:auto;font-size:12px}.im-head .seg span{padding:4px 10px}
-.nr-head{margin:0}.nr-head h4{margin:0}
+.nr-head h4{margin:0}
 .im-view{grid-area:1/1;transition:opacity .35s var(--ease-ui),transform .45s var(--ease-out)}
 .im-view.off{opacity:0;transform:translateY(6px);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--ease-out),visibility 0s .35s}.im-view .field:last-child{margin-bottom:0}
 .hz{font-style:normal;color:var(--muted);font-size:11.5px;margin-left:4px}
@@ -1446,12 +1435,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .field.row3 input{order:2;margin:0}
 .field.row3 output{order:3;text-align:right}
 #aeWidthCard,#aeBalCard{padding:14px 18px}
-.im-head{margin-bottom:8px}
 .ae-abs{display:flex;align-items:center;gap:6px}
 #aeABm{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 /* the noise window stays within the same height as every other tool */
-#aeNrCtl .sub>.field{margin-bottom:8px}
-#aeNrCtl .field:nth-of-type(3){margin-bottom:10px}
 @media (min-width:761px) and (max-width:980px){.ae-pbody{min-height:430px}}
 .ae-wave{height:128px}
 .ae-view{width:auto;flex:none;font-size:12px}.ae-view span{padding:4px 11px}
@@ -1460,7 +1446,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .eq-tipwrap .tip{left:auto;right:0;width:260px;max-width:70vw}
 /* margins inside the noise card never merge, so closing the sliders slides "Noise only" the whole way with no jump at the end */
 #aeNrCtl{display:flex;flex-direction:column}
-#aeNrCtl .sub>.field:last-child{margin-bottom:0}
 #aeNrCtl .nr-listen{flex:none}
 
 /* ==================== AUDIO EDITOR: full screen (the picture fills the screen, everything else floats as glass) ==================== */
@@ -1471,7 +1456,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* while the window grows or shrinks, one animation moves it and nothing else glides on its own */
 #audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
 #audioDlg.fsmove{overflow:hidden}          /* no scroll bars flash up while the window moves past the edges */
-#audioDlg.afull .ed-lead{display:none}
 #audioDlg.afull>.dlg.editor.ae>.row{visibility:hidden}          /* Export audio, Cancel, and Done have no place in full screen: left to the grid they stretch into its tall middle row, behind the picture */
 #audioDlg.afull .ed-head{grid-row:1;z-index:2}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
@@ -1484,8 +1468,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){#audioDlg.afull .ae-main{transition:none}}
 /* the Spectra tool */
 .sp-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
-.sp-card{display:flex;flex-direction:column;gap:12px;min-height:0}
-.sp-card .mt-head{margin:0}
+.sp-card{display:flex;flex-direction:column;gap:var(--gap-set);min-height:0}
 .sp-seg label span{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .sp-seg svg{width:15px;height:15px;flex:none}
 .sp-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;overflow-x:hidden;min-height:0;flex:1}
@@ -1562,7 +1545,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (max-width:760px){#audioDlg.afull .ae-main,#audioDlg.afull[data-tool=spec] .ae-main{max-height:50dvh}#audioDlg.afull .ae-pbody{min-height:0}}
 /* narrow, not full screen: the dialog keeps one fixed height and never scrolls, so Done and Cancel always show. The picture gives way first (down to 64px), then the tool body scrolls inside the window. */
 @media (max-width:760px){
-  #audioDlg:not(.afull) .dlg.editor.ae{height:94dvh;max-height:94dvh;overflow:hidden;grid-template-rows:auto auto minmax(64px,min(128px,calc(100dvh - 470px))) auto minmax(0,1fr) auto}
+  #audioDlg:not(.afull) .dlg.editor.ae{height:94dvh;max-height:94dvh;overflow:hidden;grid-template-rows:auto minmax(64px,min(128px,calc(100dvh - 457px))) auto minmax(0,1fr) auto}
   #audioDlg:not(.afull) .ae-wave{height:auto;min-height:0;align-self:stretch}
   #audioDlg:not(.afull) .ae-main{grid-template-rows:auto minmax(0,1fr);height:100%;min-height:0}
   #audioDlg:not(.afull) .ae-win{height:100%;min-height:0}
@@ -1578,7 +1561,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ---- full screen, both editors: no title bar. Small glass chips float at the top; the controls and the tools sit in glass rows at the bottom. ---- */
 #audioDlg.afull .ed-head{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;justify-content:flex-end;pointer-events:none;align-items:flex-start}
 #audioDlg.afull .ed-head::before{display:none}
-#audioDlg.afull .ed-head h2{display:none}
+#audioDlg.afull .ed-head .t-block{display:none}
 #audioDlg.afull .ed-head .ed-tools{pointer-events:auto;margin:0}
 #audioDlg.afull .ed-head .btn,.app.fs .transport .btn:not(.primary),.app.fs .transport .icon-btn:not(.play){background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border:1px solid var(--glass-edge);color:var(--ink);box-shadow:var(--glass-shadow)}
 #audioDlg.afull .ed-head .btn:disabled{opacity:.55}
@@ -1612,7 +1595,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .fa.open>.fa-in{padding:4px 4px 5px;margin:0 -4px}
 .tag-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px 10px;padding:6px 4px 4px;margin:0 -4px}
 .tag-grid.inner{padding:5px 0 0;margin:0}
-.tag-grid .field{gap:3px}
 .tag-grid input{padding-top:4px;padding-bottom:4px;font-size:13.5px}
 .tag-grid .check{padding:2px 0}
 .tag-sub{display:grid}
@@ -1653,7 +1635,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-loud .lv-trow input{height:var(--h-l);box-sizing:border-box}
 #aeNormCard .lv-loud .lv-trow{height:var(--h-l);margin:0;padding:0;align-items:center}
 .lv-trow{margin-top:10px}
-.lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:8px 0 0;min-height:16px;font-size:12px;--lh:1.35;color:var(--muted);transition:color .3s var(--ease-color)}
+.lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;transition:color .3s var(--ease-color)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
 @keyframes note-pulse{from{opacity:.45}to{opacity:1}}
 .lv-note.warn{color:var(--warn,#b7791f)}
@@ -1681,9 +1663,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.lv-limrow.nudge .switch:not(:checked){animation:none;box-shadow:inset 0 0 0 1px rgba(128,128,128,.22),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}}
 
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
-:root{--ae-floor:362px;--ae-chrome:246px;--ae-body:max(180px,min(412px,max(calc(100dvh - 32px - var(--ae-chrome) - 170px),min(var(--ae-floor),calc(100dvh - 32px - var(--ae-chrome) - 100px)))))}          /* the tool window's height, set here once. Floor (--ae-floor): the height the tallest tool needs, never less than the tool list forces (356px). Ceiling 412px. --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). Under the floor the picture has already given way (down to 100px), so the body shrinks and scrolls inside the window. */
+:root{--ae-floor:356px;--ae-chrome:232px;--ae-body:max(180px,min(412px,max(calc(100dvh - 32px - var(--ae-chrome) - 170px),min(var(--ae-floor),calc(100dvh - 32px - var(--ae-chrome) - 100px)))))}          /* the tool window's height, set here once. Floor (--ae-floor): the height the tallest tool needs, never less than the tool list forces (356px). Ceiling 412px. --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). Under the floor the picture has already given way (down to 100px), so the body shrinks and scrolls inside the window. */
 .dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
-.dlg.editor.ae .ed-lead,.dlg.editor.pe .ed-lead{margin:-4px 0 0;--lh:1.2}
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:9px;height:22px;margin:2px 0;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-end i{flex:none;width:16px;height:16px;margin-left:3px;border:2px solid var(--accent);border-radius:50%;background:var(--panel2);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -1692,9 +1673,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-panes{min-height:0}
 .ae-top{position:relative;flex:none;height:56px;overflow:clip}
 .ae-win .ae-phead,.ae-phead{position:absolute;inset:0;margin:0;min-height:0;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.ae-pt{min-width:0;display:grid;gap:2px}
-.ae-win .ae-phead h3{margin:0;font-size:16px;font-weight:600;--lh:1.25}
-.ae-sub{margin:0;font-size:13px;--lh:1.3;color:var(--muted)}
+.ae-pt{min-width:0}
 .ae-rule{display:block;flex:none;height:1px;background:var(--line)}
 .ae-rule.ghost{position:absolute;left:0;right:0;pointer-events:none}
 .ae-pbody{position:relative;flex:none;height:var(--ae-body);min-height:0;overflow:hidden;padding:0}
@@ -1705,20 +1684,20 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-chain svg{flex:none;width:12px;height:12px;opacity:.7}
 .ae-net{margin-left:auto;flex:none;font-variant-numeric:tabular-nums}
 .ae-net b{color:var(--ink);font-weight:500}
-.ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2));padding:12px 14px;gap:10px}
+.ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2));padding:var(--gap-set) 14px;gap:var(--gap-set)}
 .ae-card h4{min-height:22px}
 /* the picture, with the transport floating over its lower edge as glass (the picture keeps its drawing above it) */
 @media (min-width:761px){
   #audioDlg:not(.afull) .ae-wave{height:clamp(100px,calc(100dvh - 32px - var(--ae-chrome) - var(--ae-body)),170px)}          /* the picture gives way first on a short screen, so the dialog always fits */
-  #audioDlg:not(.afull) .ae-main{margin-top:-6px}          /* the tool window sits a little closer to the picture, so a tool has the room it was drawn for on a laptop screen */
+  #audioDlg:not(.afull) .ae-main{margin-top:-7px}          /* the tool window sits a little closer to the picture, so a tool has the room it was drawn for on a laptop screen */
   #audioDlg:not(.afull) .ae-bar{position:relative;z-index:3;flex-wrap:nowrap;height:48px;margin:-66px 8px 8px;padding:0 8px 0 10px;gap:12px;border:1px solid var(--glass-edge);border-radius:var(--r-lg);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow);isolation:isolate}
   #audioDlg:not(.afull) .ae-bar::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.5),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);opacity:.7}
   #audioDlg:not(.afull) .ae-bar .btn,#audioDlg:not(.afull) .ae-bar .seg,#audioDlg:not(.afull) .ae-bar .icon-btn:not(.play){background:color-mix(in srgb,var(--panel2) 58%,transparent)}
 }
 :root[data-theme="dark"] #audioDlg:not(.afull) .ae-bar::before{opacity:.22}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #audioDlg:not(.afull) .ae-bar::before{opacity:.22}}
-/* a screen shorter than the floor + the picture's least 100px + --ae-chrome + 32px (740px): the dialog still fits the screen, so the tool body is shorter than its tool and scrolls inside the window, as it does in the narrow layout */
-@media (min-width:761px) and (max-height:739px){
+/* a screen shorter than the floor + the picture's least 100px + --ae-chrome + 32px (720px): the dialog still fits the screen, so the tool body is shorter than its tool and scrolls inside the window, as it does in the narrow layout */
+@media (min-width:761px) and (max-height:719px){
   #audioDlg:not(.afull) .ae-pbody{overflow-y:auto;overscroll-behavior:contain}
   #audioDlg:not(.afull) .ae-pane{height:auto;min-height:100%;overflow:visible}
   #audioDlg:not(.afull) .im-cols,#audioDlg:not(.afull) .lv-grid,#audioDlg:not(.afull) .fd-grid,#audioDlg:not(.afull) .nr-grid,#audioDlg:not(.afull) .em-grid,#audioDlg:not(.afull) .sp-grid{height:auto}
@@ -1734,7 +1713,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull[data-tool] .ae-main,#audioDlg.afull .ae-main{max-height:none;overflow:visible}
 #audioDlg.afull .ae-pbody,#audioDlg.afull[data-tool] .ae-pbody{min-height:0}
 /* Noise reduction: the second step is the button itself. Removal's two small sliders fold away when Reduction is Off. */
-#aeNrLearnStep .mt-n{margin-top:3px}
 #aeNrSub.fa{display:grid}
 #aeNrSub>.fa-in{opacity:1}
 #aeNrSub:not(.open)>.fa-in{opacity:0}
@@ -1742,14 +1720,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-grid{height:100%;grid-template-rows:minmax(64px,1fr) auto;gap:10px 12px}
 .nr-grid>.nr-stage{min-height:64px;height:auto}
 .nr-grid.pre{grid-template-rows:minmax(0,1fr) auto}          /* before any noise is found the picture's place is the grey card the first step sits on: it takes the spare height, never the Removal card */
-#aeNrCtl{gap:8px}
-#aeNrCtl .field{margin-bottom:0;gap:3px}
-#aeNrCtl .sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px;margin-top:2px}
+#aeNrCtl{gap:var(--gap-set)}
+#aeNrCtl .field{margin-bottom:0}
+#aeNrCtl .sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
 #aeNrCtl .sub>.field{margin:0}
-#aeNrCtl .nr-listen{margin-top:4px;padding-top:8px}
+#aeNrCtl .nr-listen{padding-top:var(--gap-head)}
 /* Spectra: the tools sit in one roomy row, the edits fill the rest */
 .sp-grid{display:flex;flex-direction:column;gap:10px;height:100%}
-.sp-sel{flex:none;gap:10px}
+.sp-sel{flex:none}
 .sp-tools{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
 .sp-tools .btn,.sp-tools .seg{height:34px;box-sizing:border-box}
 .sp-draw{display:inline-flex;align-items:center;gap:7px;padding:0 14px;font-size:13px;border-radius:var(--r-ctl)}
@@ -1768,7 +1746,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aePaneEq .eq-fold{flex:none}
 #aePaneEq .eq-band.ae-card{flex:none;margin-top:10px;padding:10px 14px}
 #aePaneEq .eq-match{flex:none;margin-top:10px;padding:10px 14px}
-#aePaneEq .eq-match .mt-head{margin-bottom:8px}
 #aePaneEq .mt-steps.two{gap:6px 20px}
 /* Imager: both columns end together */
 .im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:10px;align-items:stretch}
@@ -1790,7 +1767,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-view .field{margin:0}
 .field.row3{margin-bottom:2px}
 .im-low{margin-top:4px;padding-top:6px}
-.bal-say{margin-left:auto;display:inline-flex;align-items:center;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.bal-say{margin-left:auto;display:inline-flex;align-items:center;white-space:nowrap}
 .bal-say.auto{color:var(--accent);font-weight:600}
 .bal-say.auto::before{content:'';flex:none;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 30%,transparent);animation:bal-pulse 1.8s var(--ease-ui) infinite}
 @keyframes bal-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 0%,transparent)}}
@@ -1816,7 +1793,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeNormCard>*{flex:none}
 #aeGainCard{display:flex;flex-direction:column}          /* the row is as tall as Normalize in Loudness: the Gain slider sits at the foot and the number under the heading, so nothing in the card stretches */
 .lv-loud{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:start}
-#aeNormCard .lv-head{margin-bottom:6px}
 .lv-loud>.lv-note,.lv-loud>.lv-limrow,.lv-loud>.fa{grid-column:1/-1}
 .lv-loud .lv-trow{margin-top:0}
 .lv-loud .lv-note{margin:0}
@@ -1841,7 +1817,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg-dlg{overflow:hidden;padding:0}
 .pg-wrap{position:relative;overflow:hidden;transition:height .45s var(--ease-out)}
 .pg-wrap.moving{transition:none}
-.pg{display:grid;gap:14px;padding:20px 22px;box-sizing:border-box;position:absolute;left:0;top:0;width:100%}
+.pg{display:grid;gap:var(--gap-field);padding:20px 22px;box-sizing:border-box;position:absolute;left:0;top:0;width:100%}
 .pg-sub{gap:10px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow:auto;visibility:hidden}
 .pg-main{visibility:visible}
 .pg-back{display:flex;align-items:center;gap:8px;justify-self:start;margin:0 0 0 -4px;padding:2px 8px 2px 2px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
@@ -1862,9 +1838,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ed-head{position:relative}
 .hist{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(360px,92vw);display:grid;gap:8px;padding:14px 14px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);box-shadow:0 1px 2px rgba(16,20,40,.06),0 12px 32px rgba(16,20,40,.16)}
 .hist[hidden]{display:none}
-.hist-top{display:grid;gap:2px}
+.hist-top{min-width:0}
 .hist-top h3{margin:0;font:500 18px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
-.hist-sub{font-size:12px;color:var(--muted)}
 .hist-list{position:relative;list-style:none;margin:0;padding:0;max-height:min(46vh,380px);overflow:auto;display:block}
 .hs-row{position:relative;padding-left:22px}
 .hs-row::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--line)}
@@ -1911,12 +1886,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pw-eye{position:absolute;right:4px;top:50%;width:30px;height:30px;margin-top:-15px;display:grid;place-items:center;border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color)}
 .pw-eye svg{width:17px;height:17px}.pw-eye:hover{color:var(--ink);background:var(--hover,rgba(127,127,127,.1))}.pw-eye[aria-pressed="true"]{color:var(--accent)}
 .pw-file{margin:-6px 0 0;font-size:13px;word-break:break-all}
-.vq-note.err{color:var(--bad,#d1453b)}
+.t-note.err{color:var(--bad,#d1453b)}
 
 /* ==================== PDF Editor ====================
    The Audio Editor's shape: a tool list on the left, one window on the right. The window has a head (title, what the tool does,
    its buttons), the tool's options, then the pages, then a status bar. Pages look like paper: no card frame, just a soft shadow. */
-.dlg.editor.pe{width:min(1040px,96vw);height:min(88vh,880px);max-height:calc(100dvh - 32px);grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto}
+.dlg.editor.pe{width:min(1040px,96vw);height:min(88vh,880px);max-height:calc(100dvh - 32px);grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
 .pe-main{display:grid;grid-template-columns:196px minmax(0,1fr);gap:20px;min-height:0}
 
 /* the tool list: grouped, with the same gliding pill as the Audio Editor */
@@ -1949,21 +1924,21 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-body.sliding{overflow:clip}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
-.pe-pt h3{margin:0;font-size:16px;font-weight:600;--lh:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-pt h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-sub.warn{color:var(--turn-ink)}
-.pe-sub{margin:1px 0 0;font-size:13px;--lh:1.4;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pe-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
-.pe-status{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pe-status{font-variant-numeric:tabular-nums;white-space:nowrap}
 .pe-status:empty{display:none}
 .pe-status.err{color:var(--bad);font-weight:600}
 
 /* options: one tidy row under the head */
 .pe-opts{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin-top:14px}
 .pe-opts select{width:auto;min-width:150px;height:var(--pe-h);padding-top:0;padding-bottom:0;border-radius:var(--r-sm);font-size:13px}
-.pe-check{gap:12px;font-size:13.5px;cursor:pointer;min-height:28px}
+.pe-check{gap:12px;font-size:13px;cursor:pointer;min-height:28px}
 .pe-check .switch{margin-left:0}
 .pe-end{margin-left:auto}
-.pe-range{display:flex;align-items:center;gap:12px;font-size:13.5px}
+.pe-range{display:flex;align-items:center;gap:12px;font-size:13px}
 .pe-range label{color:var(--ink)}
 .pe-range input{width:170px;transition:opacity .25s var(--ease-ui)}
 .pe-range output{min-width:3ch;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1972,7 +1947,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-steps{display:flex;align-items:center;flex-wrap:wrap;gap:12px 26px;margin-top:14px}
 .pe-step{display:flex;align-items:center;gap:9px;min-width:0}
 .pe-step .mt-n{margin:0}
-.pe-st{font-size:12px;font-weight:600;color:var(--muted)}
+.pe-st{font-weight:600;color:var(--muted)}
 .pe-steps .seg{min-width:0;min-height:var(--pe-h)}
 .pe-steps .seg label{padding:5px 10px;font-size:13px}
 .pe-steps select{width:auto;min-width:112px;height:var(--pe-h);padding-top:0;padding-bottom:0;border-radius:var(--r-ctl);font-size:13px}
@@ -2008,7 +1983,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* Watermark: labels beside their controls, two rows */
 .pe-wm-grid{display:grid;grid-template-columns:auto minmax(0,1.2fr) auto minmax(0,1fr);align-items:center;gap:10px 14px;margin-top:14px;transition:opacity .3s var(--ease-ui)}
-.pe-wl{font-size:13.5px;color:var(--muted);white-space:nowrap}
+.pe-wl{color:var(--muted);white-space:nowrap}
 .pe-wm-grid .line-style{display:flex;gap:6px;min-width:0}
 .pe-wm-grid .line-style input{flex:1;min-width:0;height:var(--h-s)}
 .pe-wm-grid .pe-fmt i{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:600}
@@ -2258,7 +2233,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @keyframes ring-turn{to{transform:rotate(1turn)}}
 @media (prefers-reduced-motion:reduce){.ae-jack.busy.wait::before{animation:none}.ae-jack::before{transition:opacity .3s var(--ease-ui)}}
 /* the Removal card: the processing row sits right under Noise only, and its space is kept when idle so nothing shifts */
-#aeNrCtl .nr-listen{margin-top:0}
 /* before the first tick, the shared sweep (.sweeping) moves along the track: it says the job has started */
 #aeNrProgBar .nr-prog-t{overflow:hidden}
 
@@ -2321,9 +2295,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeEmChip{width:fit-content}
 @media (min-width:761px){#aePaneEmu:not([hidden]){display:flex;flex-direction:column;height:100%}#aePaneEmu .em-grid{flex:1 1 auto;min-height:0}}
 .em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:var(--h-s)}
-.em-say{min-width:0;font-size:12.5px;--lh:1.35;color:var(--muted)}
+.em-say{min-width:0}
 .em-view{display:flex;flex-direction:column;min-width:0}
-.em-view .mt-head{margin-bottom:8px}
 .em-key{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12px;color:var(--muted)}
 .em-key i{width:14px;height:2px;border-radius:2px;background:var(--muted)}
 .em-key i.b{margin-left:8px;background:var(--turn)}
@@ -2331,14 +2304,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-stage canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
 .em-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:0 12px;font-size:13px;color:var(--muted);text-align:center}
 .em-empty[hidden]{display:none}
-.em-note{margin:8px 0 0;font-size:12px;--lh:1.4;color:var(--muted)}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
 .ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
 @media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
 .ae-chain b.bp{background:var(--panel2);color:var(--muted);text-decoration:line-through}
 
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
-.ae-ptl{display:flex;align-items:center;gap:10px;min-width:0}
+.ae-ptl{display:flex;align-items:center;gap:10px;min-width:0;height:20px}
+@media (max-width:760px){.ae-ptl{height:auto;min-height:20px}}          /* the narrow layout lets a long tool name wrap onto a second line */
 .ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
 #audioDlg[data-by="1"][data-tool="level"] .ae-bypill,#audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
@@ -2419,7 +2392,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .fade-shape canvas{display:block;width:100%;height:84px}
 #fadeSide{margin-bottom:0}
 .fade-shape{margin-top:2px}
-.fade-len-lbl{margin-top:12px}
 .field output .ov-dim{color:var(--muted)}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
 #fadeLenField .fade-ends{position:relative;display:block;height:20px}
@@ -2463,7 +2435,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .tl-scroll.gliding{overflow-x:hidden}
 
 /* ----- Info windows (About, How it works, Import/Export, Keyboard shortcuts, Diagnostics): one voice for the subtitle, one for the section labels ----- */
-.dlg.page>.hint,.how-lead{margin:-8px 0 0;font-size:13.5px;--lh:1.45;color:var(--muted);text-wrap:pretty}      /* the subtitle sits tight under the title, the same in every window */
 .dlg.page p{text-wrap:pretty}
 /* About: three short groups (who made it, how to help, how to reach out): close inside a group, more room between groups */
 .about-g{display:grid;gap:12px}
@@ -2520,3 +2491,25 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg-wait.show .pg-wait-l{opacity:1}
 @media (prefers-reduced-motion:reduce){.pg-wait,.pg-wait-l{transition-duration:.08s}}
 .sys-find #sysFindT{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-block;text-align:center}          /* "Processing 100%" fits, so the pill never changes width as the number grows */
+
+/* ==================== 20. SPACING AND SMALL TEXT: the tokens in :root, the title block, and the three small-text roles ====================
+   Title block (.t-block): a title and its subtitle in one block, --gap-sub apart, so the subtitle's place never depends on the buttons beside it.
+   A window title is Newsreader 24px; a tool head (.t-block.tool) is a 20px title line, --gap-sub, and a 16px subtitle line (38px), centered against the head's buttons.
+   Subtitle (.t-sub): 13px, muted, one sentence.  Label: 13px, --gap-label above its control (a .field's own gap).  Note (.t-note): 12px on a 16px line, muted, --gap-label under what it explains.
+   Heading (.t-head): a card or group heading, --gap-head above its content. One setting to the next: --gap-set in an editor card, --gap-field in the video panel and the page windows. */
+.t-block{display:grid;gap:var(--gap-sub);min-width:0}
+.t-block>h2,.t-block>h3{margin:0}
+.t-block.tool{align-content:center}
+.t-block.tool h3{margin:0;font-size:16px;font-weight:600;line-height:20px}
+.t-sub{display:block;margin:0;font-size:13px;font-weight:400;font-style:normal;line-height:16px;color:var(--muted);text-wrap:pretty}
+.t-lbl{font-size:13px;line-height:16px}
+.t-note{margin:var(--gap-label) 0 0;font-size:12px;font-weight:400;line-height:16px;color:var(--muted);text-align:left;text-wrap:pretty}
+.field>.t-note,.t-note.inline{margin:0}
+.t-head{margin:0 0 var(--gap-head)}
+.dlg>.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a control in a window sits --gap-label under it, not a whole window gap */
+.pg>.field{margin-bottom:0}
+:is(.sp-card,#aeNrCtl,#aeGainCard,.fd-shape,.em-view)>.t-head{margin-bottom:calc(var(--gap-head) - var(--gap-set))}          /* a card that spaces its parts with --gap-set pulls the first part up to --gap-head under its heading */
+#aeGainCard>.lv-big{margin:0 0 auto}
+#aeGainCard #aeGainField{margin-top:var(--gap-set)}
+.em-view>.t-note{margin-top:calc(var(--gap-label) - var(--gap-set))}
+.eq-bn .eq-lbl{justify-content:flex-start;gap:var(--gap-label)}          /* "Band 1" reads as one label, left-aligned like the others */

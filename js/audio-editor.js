@@ -310,10 +310,10 @@ function aeNormUI(d) {
   if (mode === 'loud') { if (!i || !i.ready) { txt = 'Processing…'; cls = 'busy'; } else if (i.silent) txt = 'Nothing to measure.'; else if (i.capped) { txt = 'Capped at +24dB · reaches ' + LUFS_TXT(i.reached); cls = 'warn'; } else txt = 'Reaches ' + LUFS_TXT(i.reached); }
   const lim = mode === 'loud' && d.limiter;
   if (lim && i && i.ready && !i.silent) { if (!i.lim) { txt = 'Processing…'; cls = 'busy'; } else if (i.lim.short) { txt = 'Limiter at its limit · reaches ' + LUFS_TXT(i.lim.I); cls = 'warn'; } else txt = 'Reaches ' + LUFS_TXT(i.lim.I); }
-  setDots(note, txt); note.className = 'lv-note' + (cls ? ' ' + cls : '');
+  setDots(note, txt); note.className = 't-note lv-note' + (cls ? ' ' + cls : '');
   const pn = $('#aePeakNote'); let ptxt = '', pcls = '';
   if (mode === 'peak') { const mx = aePeakMax(d); if (mx > 1e-4 && Math.pow(10, d.normPeakDb / 20) / mx > Math.pow(10, 24 / 20)) { ptxt = 'Capped at +24dB · reaches ' + DB_TXT(20 * Math.log10(mx * Math.pow(10, 24 / 20))); pcls = 'warn'; } }
-  setDots(pn, ptxt); pn.className = 'lv-note' + (pcls ? ' ' + pcls : '');
+  setDots(pn, ptxt); pn.className = 't-note lv-note' + (pcls ? ' ' + pcls : '');
   const lhint = mode === 'loud' && i && i.ready && i.clips && !d.limiter;
   const lt = $('#aeLimTip'); lt.style.visibility = lhint ? 'visible' : 'hidden'; $('#aeLimiter').checked = !!d.limiter; $('#aeLimRow').classList.toggle('nudge', !!lhint);          // when the target would clip, the switch gently asks to be tried
   if (mode === 'loud' || AE.tool === 'level') loudWant(d);
@@ -2071,7 +2071,7 @@ function aeBpUi() {
   const lit = aeLit(AE.d); AE.bpS = AE.bpS || {};
   Object.keys(AE.bp || {}).forEach(k => { if (!lit[k]) delete AE.bp[k]; else if (AE.bpS[k] === undefined) AE.bpS[k] = aeBpSig(k); else if (AE.bpS[k] !== aeBpSig(k)) { delete AE.bp[k]; AE.bpEdit = true; } });          // editing a bypassed tool switches it back on
   $('#audioDlg').dataset.by = aeBy();          // a tool that no longer does anything has nothing to bypass
-  const act = (AE_BPSET[AE.tool] || []).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Hear the sound without ' + (AE_NAMES[AE.tool] || 'this tool') + ', to compare (B)'; return lit;
+  const act = (AE_BPSET[AE.tool] || []).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Hear the sound without ' + (AE_NAMES[AE.tool] || 'this tool').replace(/ \(beta\)$/, '') + ', to compare (B)'; return lit;
 }
 /* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn noise, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
    and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn noise knows no share, so a short arc turns */

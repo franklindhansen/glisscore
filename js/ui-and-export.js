@@ -556,7 +556,7 @@ function initGroupFolds() {
 }
 /* Anything in the side panel that is shown or hidden slides open or closed instead of jumping. The code just sets `hidden`
    as before; this watches for the change and animates it (a hiding element is kept on screen until its animation ends). */
-const SMOOTH = '.field, .sub, .colorrow, .line-style, .combo, .hint, .group-body, #turnShadowBlock, #centerFold, #fileStatus, details';
+const SMOOTH = '.field, .sub, .colorrow, .line-style, .combo, .t-note, .group-body, #turnShadowBlock, #centerFold, #fileStatus, details';
 const SMOOTH_PROPS = ['height', 'opacity', 'marginTop', 'marginBottom', 'paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'];
 /* text that changes in place: it rises in, and a block of text eases to its new height (so a dialog or panel never jumps) */
 function swapText(el, txt, flat) {
