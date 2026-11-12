@@ -1902,6 +1902,8 @@ function aeFadeDraw() {
   zone(a0, a1, Li, 1, 'FADE IN', side !== 'out'); zone(b0, b1, Lo, -1, 'FADE OUT', side !== 'in');
   c.save(); c.setLineDash([2, 5]); c.strokeStyle = C.muted; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(a1 + 4, y(1)); c.lineTo(b0 - 4, y(1)); c.stroke(); c.restore();          // the music carries on in between
 }
+/* the theme changed with the editor open: the pictures it shows are drawn again at once, stopped or playing (their caches hold the colors, so a draw is enough) */
+function aeColorsChanged() { if (!AE.d || $('#audioDlg').hidden) return; aeDraw(); aeToolLive(); if (AE.tool === 'emu') aeEmDraw(); }
 function aeToolLive() { if (AE.tool === 'eq') aeEqDraw(); else if (AE.tool === 'imager') aeScopeDraw(); else if (AE.tool === 'level') { aeMeterLive(); aeBounce(); } else if (AE.tool === 'fades') aeFadeDraw(); else if (AE.tool === 'noise') aeNrDraw(); }
 /* the tool windows slide like one tall page: the new one comes in from the side of the list you are moving toward, with the old one leaving the other way */
 /* the order of tools as they sit on screen: every slide's direction is read from here */

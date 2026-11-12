@@ -24,6 +24,7 @@
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
   --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
+  --hairline:color-mix(in srgb,var(--ink) 13.5%,transparent);   /* a divider or an unlit light on a tinted surface (where --line disappears in dark mode); made from ink, so it follows each theme with no override */
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
   --fade:#b0389c; --turn:#d97706; --turn-soft:rgba(251,185,40,.34); --play:#d6333f; --cred:#12907c; --cred-soft:rgba(18,144,124,.20);
   --stage:#dfe3ea; --block:#ffffff; --wave:#7c8bf0; --danger:#c4283a;
@@ -712,6 +713,10 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .ae-bar .push-right{margin-left:auto}
 #aeGainField{transition:opacity .3s var(--ease-ui)}
 #aeGainField.dim{opacity:.45}
+/* Normalize greys the Gain slider: its card dims (.55) and the slider dims (.4), which stacks to about 22% and hides the track. Here the slider is not dimmed as a whole: the track and fill carry their own greyed colors (ink and accent, derived, so both themes hold), and the thumb takes the .4 */
+#aeGain:disabled{opacity:1}
+#aeGain:disabled::-webkit-slider-thumb{opacity:.4}
+#aeGain:disabled::-webkit-slider-runnable-track{background:linear-gradient(to right,color-mix(in srgb,var(--ink) 26%,transparent) 0,color-mix(in srgb,var(--ink) 26%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) 100%)}
 .ed-head{flex-wrap:wrap}
 .ed-head h2{white-space:nowrap}
 .line-style.sub{display:flex}
@@ -1192,7 +1197,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-times{gap:4px 18px}
 .ae-bar{flex-wrap:wrap}
 /* the green light on an Output tool that is doing something: a small glass bead */
-.led{position:relative;display:block;border-radius:50%;background:var(--line);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(0,0,0,.12)}
+.led{position:relative;display:block;border-radius:50%;background:var(--hairline);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(0,0,0,.12)}
 .led::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ecfff3 0,#7defa6 30%,var(--ok) 70%,#17894c 100%);box-shadow:0 0 0 .5px rgba(23,137,76,.5),0 0 8px 1px rgba(47,184,114,.6),0 0 16px 3px rgba(47,184,114,.22),inset 0 1px 1px rgba(255,255,255,.8);opacity:0;transform:scale(.55);transition:opacity .4s var(--ease-out),transform .55s var(--spring-press)}
 .led.on::after{opacity:1;transform:none}
 .ae-badge{margin-right:6px}
@@ -1269,8 +1274,8 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-prog b{display:block;width:0;height:100%;background:var(--accent);transition:width .25s linear}
 .ae-tool{padding:8px 8px;white-space:nowrap}
 #aeNrCtl .field:last-of-type{margin-bottom:0}
-.nr-listen{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.nr-hum{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:14px}
+.nr-listen{margin-top:14px;padding-top:12px;border-top:1px solid var(--hairline)}
+.nr-hum{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--hairline);font-size:14px}
 .nr-hum{position:relative}
 .nr-hum-l{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;cursor:pointer}
 .nr-hum-l small{font-size:12px;--lh:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
@@ -1402,7 +1407,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* Noise reduction: rows size to their content; even spacing around Noise only */
 #aeNrCtl{position:relative;overflow:hidden}
-#aeNrCtl .nr-listen{border-top:1px solid var(--line)}
+#aeNrCtl .nr-listen{border-top:1px solid var(--hairline)}
 #aeNrCtl .nr-prog{left:0;right:0;bottom:0;margin:0;height:3px;border-radius:0}
 #aeNrSample .mt-pick{row-gap:6px}
 @media (max-width:760px){.nr-grid{grid-template-rows:auto}}
@@ -1420,7 +1425,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-view{grid-area:1/1;transition:opacity .35s var(--ease-ui),transform .45s var(--ease-out)}
 .im-view.off{opacity:0;transform:translateY(6px);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--ease-out),visibility 0s .35s}.im-view .field:last-child{margin-bottom:0}
 .hz{font-style:normal;color:var(--muted);font-size:11.5px;margin-left:4px}
-.im-low{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line)}
+.im-low{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--hairline)}
 .im-low .check{white-space:nowrap}
 .im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity .3s var(--ease-ui)}
 .im-lowf.dim{opacity:.45}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1641,7 +1646,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-note.warn{color:var(--warn,#b7791f)}
 .lv-ld{margin-left:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 /* the Level summary under the meter: loudness, peak and change, before → after */
-.lv-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.lv-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--hairline)}
 .lv-sum>div{min-width:0}
 #aeSum{grid-template-columns:repeat(2,minmax(0,1fr))}          /* Level's strip holds two values, so two even columns */
 .lv-sum span{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
@@ -1674,7 +1679,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-top{position:relative;flex:none;height:56px;overflow:clip}
 .ae-win .ae-phead,.ae-phead{position:absolute;inset:0;margin:0;min-height:0;padding:0 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .ae-pt{min-width:0}
-.ae-rule{display:block;flex:none;height:1px;background:var(--line)}
+.ae-rule{display:block;flex:none;height:1px;background:var(--hairline)}
 .ae-rule.ghost{position:absolute;left:0;right:0;pointer-events:none}
 .ae-pbody{position:relative;flex:none;height:var(--ae-body);min-height:0;overflow:hidden;padding:0}
 .ae-pane{height:100%;padding:12px 16px;overflow:hidden}
@@ -2302,7 +2307,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:0 12px;font-size:13px;color:var(--muted);text-align:center}
 .em-empty[hidden]{display:none}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
-.ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--line)}
+.ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--hairline)}
 @media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
 .ae-chain b.bp{background:var(--panel2);color:var(--muted);text-decoration:line-through}
 

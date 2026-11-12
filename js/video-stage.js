@@ -737,6 +737,8 @@ function readColors() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
   TL.C = { bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), turnSysSoft: g('--turn-sys-soft'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2') };
   TL.staticDirty = true;
+  if (typeof aeColorsChanged === 'function') aeColorsChanged();          // the editors' pictures are drawn again in the new theme, in the same frame
+  if (typeof peColorsChanged === 'function') peColorsChanged();
 }
 /* The timeline's x axis: audio time, with a little empty room at both ends where the video's start and end handles can be
    dragged outward. While a handle is being dragged the axis is frozen, so the handle follows the pointer. */
