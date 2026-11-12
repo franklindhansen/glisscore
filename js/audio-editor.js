@@ -311,8 +311,6 @@ function aeNormUI(d) {
   const lim = mode === 'loud' && d.limiter;
   if (lim && i && i.ready && !i.silent) { if (!i.lim) { txt = 'Processing…'; cls = 'busy'; } else if (i.lim.short) { txt = 'Limiter at its limit · reaches ' + LUFS_TXT(i.lim.I); cls = 'warn'; } else txt = 'Reaches ' + LUFS_TXT(i.lim.I); }
   setDots(note, txt); note.className = 'lv-note' + (cls ? ' ' + cls : '');
-  const lp = $('#aeLoudPk'), clipTxt = mode === 'loud' && i && i.ready && i.clips ? 'Audio clips (' + DB_TXT(i.peakDb) + ')' : '';
-  setDots(lp, clipTxt); lp.className = 'lv-note warn';
   const pn = $('#aePeakNote'); let ptxt = '', pcls = '';
   if (mode === 'peak') { const mx = aePeakMax(d); if (mx > 1e-4 && Math.pow(10, d.normPeakDb / 20) / mx > Math.pow(10, 24 / 20)) { ptxt = 'Capped at +24dB · reaches ' + DB_TXT(20 * Math.log10(mx * Math.pow(10, 24 / 20))); pcls = 'warn'; } }
   setDots(pn, ptxt); pn.className = 'lv-note' + (pcls ? ' ' + pcls : '');
@@ -341,7 +339,6 @@ function aeRefresh() {
     const dbf = v => isFinite(v) ? (v >= 0.05 ? '+' : '') + v.toFixed(1).replace('-', '−') + 'dB' : '—';
     AE.ms = busy ? { fill: 0, orig: pos(db(mO)), hot: false, good: false, text: '…' } : { fill: pos(db(mNow)), orig: pos(db(mO)), hot: mNow > 1.0005, good: mNow >= 0.5 && mNow <= 1.0005, text: dbf(db(mNow)) };          // at rest the bar is the loudest peak you will get; the tick is the file's own
     AE.sumIn = { mNow, mO, gdBnow, busy }; aeSummary(d);
-    { /* with a loudness target and no limiter it says so too, once the volume is known */ const cn = $('#aeClipNote'), lw = d.normalize && d.normBy === 'loud', li = lw ? aeLoudInfo(d) : null, on = !busy && !limOn(d) && (!lw || (li && li.ready)) && mNow > 1.00001; cn.hidden = !on; setDots(cn, on ? 'Audio clips (' + DB_TXT(20 * Math.log10(mNow)) + ')' : ''); }
     { const lk = [d.gainDb, d.normalize, d.normBy, d.normLufs, d.normPeakDb, d.limiter, fxKey(d.fx)].join('|'); if (AE.clipKey !== lk) { AE.clipKey = lk; AE.clipLatch = false; AE.clipFrom = performance.now() + 150; if (AE.mLive) { AE.mv = 0; AE.hold = 0; } } }          // a change to what sets the level clears the Clip light; if the sound still clips while it plays, the light comes back at once
     if (!AE.mLive) aeMeterStatic();
     const clip = mNow > 1 && (over / Math.max(1, i1 - i0 + 1) >= 0.005 || mNow > 1.19);          // a lot of clipping: a few louder moments are not worth a joke
@@ -1818,10 +1815,12 @@ function aeScopeDraw() {
   $('#aeCorr').classList.toggle('bad', AE.corr < 0);
 }
 /* the meter at rest shows the loudest peak of the part you keep; while the sound plays it rides the audio instead, with a peak hold, and a Clip light that stays on until you click it (or until you change what sets the level) */
+/* the Clip pill has a reserved place beside True peak (it is never taken out of the layout), so showing it moves nothing */
+function clipPill(on) { const el = $('#aeClip'); el.classList.toggle('on', !!on); el.setAttribute('aria-hidden', on ? 'false' : 'true'); el.tabIndex = on ? 0 : -1; }
 function aeMeterStatic() {
   const m = AE.ms, el = $('#aeMeter'); if (!m) return;
   $('#aeMeterFill').style.width = m.fill + '%'; $('#aeMeterOrig').style.left = m.orig + '%'; $('#aeMeterHold').style.opacity = '0'; el.classList.toggle('hot', m.hot); el.classList.toggle('good', m.good);
-  $('#aePeakNow').textContent = m.text; $('#aeClip').hidden = !(m.hot || AE.clipLatch);
+  $('#aePeakNow').textContent = m.text; clipPill(m.hot || AE.clipLatch);
 }
 function aeMeterLive() {
   const el = $('#aeMeter'), on = !!(AE.playing && AE.an);
@@ -1834,7 +1833,7 @@ function aeMeterLive() {
   $('#aeMeterFill').style.width = pos(db(AE.mv)) + '%'; const h = $('#aeMeterHold'); h.style.left = pos(db(AE.hold)) + '%'; h.style.opacity = AE.hold > 1e-4 ? '1' : '0';
   el.classList.toggle('hot', AE.mv > 1.0005); el.classList.toggle('good', AE.mv >= 0.5 && AE.mv <= 1.0005);
   $('#aePeakNow').textContent = DB_TXT(db(AE.hold));          // the number is the highest true peak since play started
-  if (!fresh) AE.mv = 0; else if (pk > 1.0005 && !AE.clipLatch) { AE.clipLatch = true; if (!AE.clip) aeClipSay(); } $('#aeClip').hidden = !(AE.clipLatch || (fresh && AE.mv > 1.0005));
+  if (!fresh) AE.mv = 0; else if (pk > 1.0005 && !AE.clipLatch) { AE.clipLatch = true; if (!AE.clip) aeClipSay(); } clipPill(AE.clipLatch || (fresh && AE.mv > 1.0005));
 }
 /* while the sound clips, the gain readout jumps with the music */
 function aeBounce() {
@@ -2169,7 +2168,7 @@ function aeToolsBind() {
   $('#aeRailCur').addEventListener('click', () => aeRailOpen(!$('#aeRail').classList.contains('open')));
   $('#aeAB').addEventListener('click', aeToggleBypass);
   $('#aeABm').addEventListener('click', () => { aePush(); AE.d.matchGain = !AE.d.matchGain; AE.bpKey = null; aeToolsRefresh(); aeRefresh(); if (AE.playing && aeBpAny()) aeRoute(); });
-  $('#aeClip').addEventListener('click', () => { AE.clipLatch = false; if (AE.mLive) AE.mv = 0; aeMeterStatic(); $('#aeClip').hidden = !(AE.ms && AE.ms.hot); });
+  $('#aeClip').addEventListener('click', () => { AE.clipLatch = false; if (AE.mLive) AE.mv = 0; aeMeterStatic(); clipPill(AE.ms && AE.ms.hot); });
   $('#aeZoomFit').addEventListener('click', () => aeZoomSet(-1e9, 1e9, false));
   /* a lit light on EQ or Imager is a plug: pull its wire onto another lit light and the two swap places */
   document.querySelectorAll('#aeProcs .ae-proc').forEach(row => {
