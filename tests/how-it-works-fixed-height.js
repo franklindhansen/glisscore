@@ -47,7 +47,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     return { max: Math.round(max * 10) / 10, fin: Math.round(fin * 10) / 10 };
   });
   ok('the dropdown glides open without going past its final height', ov.max <= ov.fin + 0.5 && ov.fin > 0, JSON.stringify(ov));
-  const sub = await p.evaluate(() => ({ t: document.querySelector('#howDlg .t-sub').textContent, local: [...document.querySelectorAll('#howDlg h3')].some(h => /Local and private/.test(h.textContent)) }));
-  ok('the opening line is two plain sentences and the privacy point is not repeated below', !/;/.test(sub.t) && /^Everything runs in this tab and clears when you close it\. Nothing is uploaded\. The only outside request is a Google Font, when you pick one for the credits\.$/.test(sub.t) && !sub.local, JSON.stringify(sub));
+  const sub = await p.evaluate(() => ({ sub: !!document.querySelector('#howDlg .t-sub'), t: (([...document.querySelectorAll('#howDlg h3')].find(h => /Local and private/.test(h.textContent)) || {}).nextElementSibling || {}).textContent }));
+  ok('How it works has no subtitle; the privacy point is one paragraph under "Local and private"', !sub.sub && sub.t === 'Everything runs in this tab and clears when you close it. Nothing is uploaded. The only outside request is a Google Font, when you pick one for the credits.', JSON.stringify(sub));
   ok('no errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

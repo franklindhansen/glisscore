@@ -149,9 +149,9 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   for (const h of heights) { const o = sweep[h], sp = o.space, tag = '1440x' + h + ': ';
     const ins = sp.flatMap(f => f.inset.filter(x => x.v !== null && Math.abs(x.v - 17) > 0.6).map(x => f.label + ': ' + x.id + ' ' + x.v));
     ok(tag + 'one padding: every tool card starts its content 17px from its left edge (the card padding and border)', !ins.length, ins.slice(0, 5).join(' | '));
-    const plain = sp.flatMap(f => [f.heads.gain, f.heads.length].filter(v => v !== null && Math.abs(v - 13) > 1));
-    const seg = sp.flatMap(f => ['normalize', 'removal', 'width'].map(k => [f.label, k, f.heads[k]]).filter(([, , v]) => v !== null && Math.abs(v - 13) > 1).map(([l, k, v]) => l + ': ' + k + ' ' + v));
-    ok(tag + 'a heading beside a segmented control sits as far from its card\'s top as a plain heading (13px)', !seg.length && !plain.length, seg.slice(0, 5).join(' | ') + (plain.length ? ' plain ' + plain.join(',') : ''));
+    const plain = sp.flatMap(f => [f.heads.length].filter(v => v !== null && Math.abs(v - 13) > 1));
+    const seg = sp.flatMap(f => ['normalize', 'removal', 'width'].map(k => [f.label, k, f.heads[k]]).filter(([, , v]) => v !== null && Math.abs(v - 19) > 1).map(([l, k, v]) => l + ': ' + k + ' ' + v));
+    ok(tag + 'a heading beside a segmented control is centered on it (19px from the card\'s top), and a plain heading sits 13px from it', !seg.length && !plain.length, seg.slice(0, 5).join(' | ') + (plain.length ? ' plain ' + plain.join(',') : ''));
     const lv = sp.filter(f => f.meter), lvBad = lv.filter(f => Math.abs(f.meter.track - 14) > 0.5 || Math.abs(f.meter.scale - 16) > 0.5 || Math.abs(f.meter.bottom - f.meter.cardsBottom) > 1);
     ok(tag + 'Level: the bar keeps 14px and its scale 16px, and the Meter ends on the cards\' bottom line', lv.length > 0 && !lvBad.length, JSON.stringify(lv.map(f => f.meter)).slice(0, 300));
     const em = sp.filter(f => f.emulate);

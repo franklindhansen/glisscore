@@ -1203,7 +1203,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .led.on::after{opacity:1;transform:none}
 .ae-badge{margin-right:6px}
 /* slider labels that are also buttons */
-.sl-ends{margin-top:4px}
+.sl-ends{margin-top:0}          /* the end labels sit directly under their slider (the field's own gap is the space between them) */
 .sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .sl-end:hover,.sl-end:focus-visible{color:var(--accent);background:var(--accent-soft)}
 .sl-end:not(:disabled):active{transform:scale(.97)}
@@ -1228,8 +1228,11 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-steps{display:flex;flex-direction:column;gap:14px}
 .mt-step{display:flex;align-items:flex-start;gap:12px;transition:opacity .35s var(--ease-ui)}
 .mt-step.dim{opacity:.45}
-.mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:-1px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
 .mt-body{flex:1;min-width:0}
+.mt-step .mt-title{display:flex;align-items:center;min-height:22px}          /* a step's first line is as tall as its number, so the number is centered on it */
+.mt-step .nr-learn{min-height:30px}
+#aeNrLearnStep .mt-n{margin-top:4px}          /* a step whose first line is a small button: the number is centered on the button */
 .mt-title{margin:0 0 var(--gap-label);font-weight:600;color:var(--ink)}
 .mt-body .field label{display:flex;justify-content:space-between}
 .mt-body .field .mt-title{margin:0}
@@ -1430,7 +1433,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-listen{display:flex;align-items:center;gap:10px}.im-listen>span{font-size:12.5px;color:var(--muted)}.im-listen .seg{flex:1;font-size:12px}.im-listen .seg span{padding:4px 6px}
 #aeBalCard .field{margin-bottom:0}
 @media (max-width:760px){.im-low{flex-wrap:wrap}.im-lowf{max-width:none;flex-basis:100%}}
-.im-view{align-content:center}
+.im-view{align-content:start}          /* the slider sits right under the heading and the spare height sits above the footer row, so nothing lands on half a pixel */
 .im-view .field{margin-bottom:6px}
 .field.row3{display:grid;grid-template-columns:92px minmax(0,1fr) 38px;align-items:center;gap:0 10px}
 .field.row3 label{display:contents}
@@ -1665,7 +1668,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.lv-limrow.nudge .switch:not(:checked){animation:none;box-shadow:inset 0 0 0 1px rgba(128,128,128,.22),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}}
 
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
-:root{--ae-floor:372px;--ae-chrome:232px;--ae-wave:170px;--ae-body:max(180px,min(var(--ae-floor),calc(100dvh - 32px - var(--ae-chrome) - var(--ae-wave))));--ae-pad:clamp(0px,calc((var(--ae-body) - 348px) / 2),12px)}          /* the tool window's height, set here once, and the picture's: both are fixed sizes, whatever the screen. --ae-floor is the height the tallest tool needs (Noise reduction with its hum result showing is the tallest, 372px). --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). On a screen too short for both, the tool body is what gets shorter: the tool keeps its full size and scrolls inside it. */
+:root{--ae-floor:362px;--ae-chrome:232px;--ae-wave:170px;--ae-body:max(180px,min(var(--ae-floor),calc(100dvh - 32px - var(--ae-chrome) - var(--ae-wave))));--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the tool window's height, set here once, and the picture's: both are fixed sizes, whatever the screen. --ae-floor is the height the tallest tool needs (Level, with its Meter, and Imager are the tallest, 362px). --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). On a screen too short for both, the tool body is what gets shorter: the tool keeps its full size and scrolls inside it. */
 .dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:9px;height:22px;margin:2px 0;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -1679,7 +1682,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-rule{display:block;flex:none;height:1px;background:var(--hairline)}
 .ae-rule.ghost{position:absolute;left:0;right:0;pointer-events:none}
 .ae-pbody{position:relative;flex:none;height:var(--ae-body);min-height:0;overflow:hidden;padding:0}
-.ae-pane{height:100%;padding:var(--ae-pad) 16px;overflow:hidden}          /* the space above the cards and below them are one value: 12px, less when the window is up to 24px shorter than the tool, so neither is ever a sliver the other is not */
+.ae-pane{height:100%;padding:var(--ae-pad) 16px;overflow:hidden}          /* the space above the cards and below them are one value: 12px, down to 6px when the window is up to 12px shorter than the tool, so neither is ever a sliver the other is not */
 .ae-stat{flex:none;display:flex;align-items:center;gap:12px;box-sizing:border-box;height:28px;padding:0 20px;box-shadow:inset 0 1px 0 var(--line);font-size:13px;--lh:1.3846;color:var(--muted)}          /* 28px with its rule drawn inside and an 18px line, so its content sits on whole pixels */
 .ae-chain{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap}
 .ae-chain b{padding:1px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;line-height:16px;font-weight:500}
@@ -1698,16 +1701,16 @@ input.switch:disabled{cursor:progress;opacity:.55}
 }
 :root[data-theme="dark"] #audioDlg:not(.afull) .ae-bar::before{opacity:.22}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #audioDlg:not(.afull) .ae-bar::before{opacity:.22}}
-/* a screen shorter than the picture + the floor + --ae-chrome + 32px (806px): the dialog still fits the screen, so the tool window is shorter than its tool, and the tool keeps its full size and scrolls inside the window, as it does in the narrow layout */
-@media (min-width:761px) and (max-height:805px){
+/* a screen shorter than the picture + the floor + --ae-chrome + 32px (796px): the dialog still fits the screen, so the tool window is shorter than its tool, and the tool keeps its full size and scrolls inside the window, as it does in the narrow layout */
+@media (min-width:761px) and (max-height:795px){
   #audioDlg:not(.afull) .ae-pbody{overflow-y:auto;overscroll-behavior:contain}
-  #audioDlg:not(.afull) .ae-pane{height:clamp(348px,var(--ae-body),var(--ae-floor));overflow:visible}
+  #audioDlg:not(.afull) .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}
 }
-@media (min-width:761px){#audioDlg:not(.afull) .ae-rail{contain:size;overflow-y:auto;overscroll-behavior:contain}}          /* the tool list never makes the window taller: on a screen too short for it, it scrolls */
+@media (min-width:761px){#audioDlg:not(.afull) .ae-rail{contain:size;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}}          /* the scrollbar's room is always kept, so the buttons and the selection outline keep one width whether or not the list scrolls */          /* the tool list never makes the window taller: on a screen too short for it, it scrolls */
 @media (max-width:760px){.ae-win{overflow:visible}.ae-top{height:auto;padding:12px 0;overflow:visible}.ae-win .ae-phead,.ae-phead{position:static;inset:auto;height:auto;padding:0 14px}.ae-pbody{height:auto;overflow:visible}.ae-pane{height:auto;padding:14px}}
 /* full screen keeps its own rows: the picture gives way so the whole tool window always shows */
-#audioDlg.afull{--ae-body:max(180px,min(var(--ae-floor),calc(100dvh - 392px)));--ae-pad:clamp(0px,calc((var(--ae-body) - 348px) / 2),12px)}          /* the same rule as the window: the tool is one size, and on a screen too short for it the tool window gets shorter and the tool scrolls inside it */
-@media (min-width:761px){#audioDlg.afull .ae-pbody{overflow-y:auto;overscroll-behavior:contain}#audioDlg.afull .ae-pane{height:clamp(348px,var(--ae-body),var(--ae-floor));overflow:visible}}
+#audioDlg.afull{--ae-body:max(180px,min(var(--ae-floor),calc(100dvh - 392px)));--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the same rule as the window: the tool is one size, and on a screen too short for it the tool window gets shorter and the tool scrolls inside it */
+@media (min-width:761px){#audioDlg.afull .ae-pbody{overflow-y:auto;overscroll-behavior:contain}#audioDlg.afull .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}}
 #audioDlg.afull .ae-stat{display:none}
 #audioDlg.afull[data-tool] .ae-main,#audioDlg.afull .ae-main{max-height:none;overflow:visible}
 #audioDlg.afull .ae-pbody,#audioDlg.afull[data-tool] .ae-pbody{min-height:0}
@@ -1736,11 +1739,15 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeEmCard>.mt-steps{flex:1;justify-content:space-between}
 #aeMeter{display:flex;flex-direction:column;gap:0;min-height:0}
 #aeMeter .lv-track{margin-top:0}          /* a flex column does not collapse margins: the heading keeps its --gap-head to the bar */
-#aeMeter .lv-scale{margin-top:auto}          /* the spare height sits under the bar, above its scale */
+#aeMeter{gap:0}
+#aeMeter>*{flex:none}
+#aeMeter .lv-scale{margin-top:6px;margin-bottom:8px}          /* the scale sits under its bar; the spare height sits above the Loudness and Change row, which stays pinned to the bottom */
+#aeMeter .lv-sum{margin-top:auto}
 #aeWidthCard{gap:0}
 /* Level: the folds take the card's spare height, so the Limiter's footer row pins to the bottom of Normalize in Loudness */
-/* a heading beside a segmented control starts at the card's top, as a plain heading does (the control is taller, so it is not centered on the heading) */
-#aeNormCard .lv-head,#aeWidthCard .im-head,#aeNrCtl .nr-head{align-items:flex-start}
+/* a heading beside a segmented control is centered on it, with its (i) and its step number; the plain heading beside it in the same row (Gain next to Normalize) is as tall, so the two headings sit on one line */
+#aeNormCard .lv-head,#aeWidthCard .im-head,#aeNrCtl .nr-head{align-items:center}
+#aeGainCard>.t-head{display:flex;align-items:center;min-height:34px}
 /* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
 @media (max-width:760px){#aeBassCard{flex-wrap:nowrap}#aeBassCard .im-lowf{flex-basis:auto;max-width:none}}
 #aeNormCard>.fa-stack{flex:1 1 auto}
@@ -1775,7 +1782,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeWidthCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
 #aeBalCard{flex:none;min-height:0;align-content:space-between}
 .im-views{display:grid;align-content:center;height:64px}
-.im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:12px;align-items:center}
+.im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;grid-template-rows:20px auto;gap:0 12px;align-items:center}
+.im-slrow .sl-track{display:contents}
+.im-slrow input[type=range]{grid-column:1;grid-row:1}
+.im-slrow output{grid-column:2;grid-row:1}
+.im-slrow .sl-ends{grid-column:1;grid-row:2}          /* the value sits at the end of the slider, level with it; the end labels sit under the slider only */
 .im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 /* the slider and its end labels share one track, so Normal sits under the middle of the slider */
 .im-slrow{grid-template-columns:minmax(0,1fr) 46px}
