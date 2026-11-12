@@ -1594,12 +1594,12 @@ function eqDisp(real) {
 function aeEqDraw() {
   const cv = $('#aeEqCv'); if (!AE.d || $('#aePaneEq').hidden || !aeCvSize(cv)) return;
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, real = AE.d.fx.eq.bands, bands = eqDisp(real), on = AE.d.fx.eq.on;
-  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
+  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
   c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted;
-  [-9, -6, -3, 3, 6, 9].forEach(g => { c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(EQ_PAD, Math.round(eqY(g, H)), W - 2 * EQ_PAD, 1); });
-  c.globalAlpha = 1; c.fillStyle = C.line; c.fillRect(EQ_PAD, Math.round(eqY(0, H)), W - 2 * EQ_PAD, 1.5);
-  [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
+  [-9, -6, -3, 3, 6, 9].forEach(g => { c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(EQ_PAD, Math.round(eqY(g, H)), W - 2 * EQ_PAD, 1); });
+  c.globalAlpha = 1; c.fillStyle = C.hairline; c.fillRect(EQ_PAD, Math.round(eqY(0, H)), W - 2 * EQ_PAD, 1.5);
+  [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
   c.textAlign = 'right'; [[12, '+12'], [6, '+6'], [0, '0'], [-6, '−6'], [-12, '−12']].forEach(([g, t]) => { c.fillStyle = C.muted; c.fillText(t, EQ_PAD - 6, eqY(g, H)); });
   // the live spectrum while playing
   if (AE.an && AE.playing) {                 // the spectrum as it plays: smoothed to a sixth of an octave, with a thin line that holds the peaks and falls back slowly
@@ -1821,8 +1821,8 @@ function aeImBind() {
 function aeScopeDraw() {
   const cv = $('#aeScope'); if (!AE.d || $('#aePaneImager').hidden || !aeCvSize(cv)) return;
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 18;
-  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
-  c.save(); c.strokeStyle = C.line; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
+  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
+  c.save(); c.strokeStyle = C.hairline; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
   c.fillStyle = C.muted; c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText('Mono', cx, cy - R - 8); c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
   if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
@@ -2102,7 +2102,7 @@ function aeBpSync(d) {
 function aeBpUi() {
   const lit = aeLit(AE.d); aeBpSync(AE.d);          // editing a bypassed tool switches it back on
   $('#audioDlg').dataset.by = aeBy();          // a tool that no longer does anything has nothing to bypass
-  const act = aeBpSet(AE.tool).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Leaves this tool out of the sound until you switch it back on or edit it.'; return lit;
+  const act = aeBpSet(AE.tool).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Bypass this tool. Changing any control re-engages it.'; return lit;
 }
 /* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn noise, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
    and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn noise knows no share, so a short arc turns */
@@ -2704,10 +2704,10 @@ function aeNrDraw() {
   const cv = $('#aeNrCv'); if (!AE.d || $('#aePaneNoise').hidden || !aeCvSize(cv)) return;
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, nz = AE.d.fx.noise, has = !!nz.profile; if (has) AE.nrProf = nz.profile;
   const pa = hsGet('ae-nrp', has ? 1 : 0), red = hsGet('ae-nrr', has && nz.on ? nz.reduction : 0), by = hsGet('ae-by', aeBy());
-  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
+  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
   c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle';
-  [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.line; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
+  [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
   { const hm = nz.hum && !aeBp('noise') ? nz.hum : null, ha = hsGet('ae-hum', hm ? 1 : 0); if (hm) AE.humLast = hm; const hh = hm || AE.humLast;
     if (hh && ha > 0.01) { c.save(); c.globalAlpha = ha; const col = C.accent, hs = (hh.n && hh.n.length ? hh.n : [1]).filter(k => hh.f * k < 20000);          // the hum's own pitch and its overtones: thin dashed lines where the notches are
       hs.forEach((k, i) => { const x = Math.round(eqFx(hh.f * k, W)); c.save(); c.globalAlpha = ha * (i ? 0.55 : 0.9); c.strokeStyle = col; c.lineWidth = 1.4; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x + 0.5, 22); c.lineTo(x + 0.5, H - 24); c.stroke(); c.restore(); });

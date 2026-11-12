@@ -102,7 +102,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       aeUndo(); await sleep(200); o.undoEdit = aeBpTool('eq') && AE.d.fx.eq.bands[0].g === 6;          // one Undo brings back the old setting and the bypass
       aeRedo(); await sleep(200); o.redoEdit = !aeBpTool('eq') && AE.d.fx.eq.bands[0].g === 9;
       aeToggleBypass(); await sleep(200);          // bypassed again, with the new setting, for Done
-      o.tip = $('#aeAB').title.length <= 90 && /^Leaves this tool out of the sound until you switch it back on or edit it\.$/.test($('#aeAB').title);
+      o.tip = $('#aeAB').title.length <= 90 && /^Bypass this tool\. Changing any control re-engages it\.$/.test($('#aeAB').title);
       aeApply(); await sleep(300);
       o.saved = JSON.stringify(S.set.bp) === '{"eq":true}' && JSON.parse(localStorage.getItem('glisscore.settings')).bp.eq === true;
       openAudioEditor(); await sleep(500); aeTool('eq'); await sleep(400);
