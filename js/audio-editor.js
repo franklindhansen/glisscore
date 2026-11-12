@@ -13,8 +13,8 @@ const AE_SHAPES = { standard: x => x, smooth: x => x * x * (3 - 2 * x), natural:
 /* the two fade lengths of a sound's settings: In is audioFadeLen, Out is audioFadeOutLen (empty means the same as In); 0 means that side has no fade, and with the fades switched off both are 0 */
 const aeFadeLens = d => { if (d.audioFades === false) return [0, 0]; const i = d.audioFadeLen == null ? AE_FADE : +d.audioFadeLen; return [i, d.audioFadeOutLen == null ? i : +d.audioFadeOutLen]; };
 const aeEnv = (vs, ve, t, li, shape, lo) => { const h = (ve - vs) / 2; li = Math.min(li, h); lo = Math.min(lo == null ? li : lo, h); if (li <= 0 && lo <= 0) return 1; const g = AE_SHAPES[shape] || AE_SHAPES.smooth, f = x => g(clamp(x, 0, 1)); return Math.min(li > 0 ? f((t - vs) / li) : 1, lo > 0 ? f((ve - t) / lo) : 1); };
-const AE_DEFAULT = { vStart: 0, vEndSet: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeLen: AE_FADE, audioFadeOutLen: null, audioFadeShape: 'smooth', matchGain: false, fx: FX_DEFAULT };
-const aeCopy = d => Object.assign({}, d, { fx: fxClone(d.fx) });
+const AE_DEFAULT = { vStart: 0, vEndSet: null, normalize: false, normBy: 'peak', normLufs: -14, normPreset: 'stream', limiter: false, normPeakDb: -1, gainDb: 0, audioFades: false, audioFadeLen: AE_FADE, audioFadeOutLen: null, audioFadeShape: 'smooth', matchGain: false, fx: FX_DEFAULT, bp: {} };
+const aeCopy = d => Object.assign({}, d, { fx: fxClone(d.fx), bp: Object.assign({}, d.bp) });
 const aeF = (d, vs, ve, t) => { const [li, lo] = aeFadeLens(d); return aeEnv(vs, ve, t, li, d.audioFadeShape, lo); };          // the chosen fade length, or none when they are switched off
 /* The one place the final samples are made: the processed sound for a stretch of the output, with the level and the fades applied.
    The WAV, M4A and video exports all read through this, so they cannot disagree with each other (or with what the editor plays).
@@ -42,15 +42,15 @@ function masterMaker(buf, ch, vs, ve, gain, fadeAt, opt) {
   return { sr, total, ch, fill: lim ? limited : raw, reduction: () => lim ? 20 * Math.log10(lim.L.maxGr) : 0 };
 }
 const aeEnd = d => d.vEndSet == null ? defaultEnd() : d.vEndSet;
-const aeSame = (a, b) => Object.keys(AE_DEFAULT).every(k => k === 'fx' ? JSON.stringify(a.fx) === JSON.stringify(b.fx) : a[k] === b[k]);
-const aeFromApp = () => { const d = { vStart: S.vStart, vEndSet: S.vEndSet, fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { d[k] = S.set[k]; }); return d; };
+const aeSame = (a, b) => Object.keys(AE_DEFAULT).every(k => k === 'fx' || k === 'bp' ? JSON.stringify(a[k]) === JSON.stringify(b[k]) : a[k] === b[k]);
+const aeFromApp = () => { const d = { vStart: S.vStart, vEndSet: S.vEndSet, fx: fxClone(S.set.fx), bp: {} }; AE_SET.forEach(k => { d[k] = S.set[k]; }); Object.keys(S.set.bp || {}).forEach(k => { if (S.set.bp[k] && Array.isArray(AE_BPSET[k])) d.bp[k] = aeBpSig(d, k); }); return d; };          // the saved Bypass (a flag for each tool) becomes the draft's: each bypassed tool with its settings as they are now
 const aeFull = () => { const L = S.audio.duration, d = AE.d, vs = AE.dvs != null ? AE.dvs : d.vStart, ve = AE.dve != null ? AE.dve : aeEnd(d); return [Math.min(0, vs), Math.max(L, ve)]; };
 const aeRange = () => AE.rlo != null && AE.rhi != null ? [AE.rlo, AE.rhi] : (AE.zoom ? [AE.zoom.lo, AE.zoom.hi] : aeFull());          // what the waveform shows: everything, or the zoomed stretch          // the shown positions glide when the draft changes (undo, reset); while dragging they follow directly
 const hsSnap = (k, v) => { (TL.hs || (TL.hs = {}))[k] = { x: v, v: 0, t: v }; return v; };
 const aeW = () => AE.cw || $('#aeCanvas').clientWidth, AE_PAD = 16;          // the width is read once per frame (asking the page for it in the middle of a drawing loop forces it to lay itself out again and again)
 const aeX = t => { const [lo, hi] = aeRange(); return AE_PAD + (t - lo) / (hi - lo) * (aeW() - 2 * AE_PAD); };
 const aeT = x => { const [lo, hi] = aeRange(); return lo + (x - AE_PAD) / (aeW() - 2 * AE_PAD) * (hi - lo); };
-function aePush() { AE.undo.push(aeCopy(AE.d)); if (AE.undo.length > 60) AE.undo.shift(); AE.redo = []; }
+function aePush() { if (AE.d) aeBpSync(AE.d); AE.undo.push(aeCopy(AE.d)); if (AE.undo.length > 60) AE.undo.shift(); AE.redo = []; }
 function aeUndo() { const s = AE.undo.pop(); if (!s) return; AE.redo.push(aeCopy(AE.d)); AE.d = s; aeRefresh(); aeLive(); }
 function aeRedo() { const s = AE.redo.pop(); if (!s) return; AE.undo.push(aeCopy(AE.d)); AE.d = s; aeRefresh(); aeLive(); }
 
@@ -72,7 +72,7 @@ function aeOps(a, b, path = [], out = []) {
 }
 function aeApplyOp(d, op) {
   let o = d; for (let i = 0; i < op.path.length - 1; i++) { if (!aeIsObj(o[op.path[i]])) o[op.path[i]] = {}; o = o[op.path[i]]; } const k = op.path[op.path.length - 1];
-  if (op.t === 'set') { o[k] = aeClone(op.val); return; }
+  if (op.t === 'set') { if (op.val === undefined) delete o[k]; else o[k] = aeClone(op.val); return; }
   const arr = Array.isArray(o[k]) ? o[k] : (o[k] = []), at = x => arr.findIndex(y => aeJ(y) === aeJ(x));
   if (op.kind === 'add') { if (at(op.after) < 0) arr.push(aeClone(op.after)); }
   else if (op.kind === 'remove') { const i = at(op.before); if (i >= 0) arr.splice(i, 1); }
@@ -95,6 +95,7 @@ function aeRecords(a, b) {
       const lab = eq ? (op.kind === 'change' ? 'EQ band ' + band(op.before) + ' → ' + band(op.after) : (op.kind === 'add' ? 'EQ band added · ' : 'EQ band removed · ') + band(x)) : (op.kind === 'change' ? 'Box ' + box(op.before) + ' → ' + box(op.after) : (op.kind === 'add' ? 'Box added · ' : 'Box removed · ') + box(x));
       recs.push({ label: lab, ops: [op] }); return;
     }
+    if (/^bp\./.test(p)) { const k = p.slice(3), nm = AE_NAMES[k] || k; recs.push({ label: b.bp && b.bp[k] ? 'Bypassed ' + nm : nm + ' back in', ops: [op] }); return; }          // Bypass is a step of its own: 'Bypassed EQ', or 'EQ back in' (an edit that switches a tool back on lands here too)
     const g = G.find(x => x[0].test(p)); const key = g ? g[1] : p, r = by[key] || (by[key] = { label: g ? g[2]() : 'Change', ops: [] }); if (!r.ops.length) recs.push(r); r.ops.push(op);
   });
   return recs;
@@ -173,13 +174,13 @@ function aeHistBind() {
 const aeHasMatch = () => !!(AE.matchOpen || (AE.match && (AE.match.ref || AE.match.busy)));
 function aeReset() {
   if (aeSame(AE.d, AE_DEFAULT) && !aeHasMatch() && !aeBpAny()) return;
-  if (!aeSame(AE.d, AE_DEFAULT)) { aePush(); Object.assign(AE.d, AE_DEFAULT, { fx: fxClone(FX_DEFAULT) }); }
-  AE.match = null; AE.matchOpen = false; AE.bp = {}; AE.band = 0; AE.nsel = null; AE.nrListen = false; if (AE.zoom) aeZoomSet(-1e9, 1e9, false); aeRefresh(); aeLive(); if (AE.playing) aeRoute(); aeAnim();
+  if (!aeSame(AE.d, AE_DEFAULT)) { aePush(); Object.assign(AE.d, AE_DEFAULT, { fx: fxClone(FX_DEFAULT), bp: {} }); }
+  AE.match = null; AE.matchOpen = false; AE.band = 0; AE.nsel = null; AE.nrListen = false; if (AE.zoom) aeZoomSet(-1e9, 1e9, false); aeRefresh(); aeLive(); if (AE.playing) aeRoute(); aeAnim();
 }
 function openAudioEditor() {
   if (!S.audio) return;
   Transport.pause();
-  AE.base = aeFromApp(); AE.d = aeCopy(AE.base); AE.undo = []; AE.redo = []; AE.pos = Math.max(0, AE.d.vStart); AE.bp = {}; AE.band = 0; AE.meas = null; aeInitTools();
+  AE.base = aeFromApp(); AE.d = aeCopy(AE.base); AE.undo = []; AE.redo = []; AE.pos = Math.max(0, AE.d.vStart); AE.band = 0; AE.meas = null; aeInitTools();
   aeFormatUI();
   sheetShow($('#audioDlg')); aeRefresh(); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
 }
@@ -252,11 +253,11 @@ function aeApply() {
   const changed = !aeSame(d, AE.base);
   if (changed) {
     pushHistory();
-    S.vStart = d.vStart; S.vEndSet = d.vEndSet; AE_SET.forEach(k => { S.set[k] = d[k]; }); S.set.fx = fxClone(d.fx);
+    S.vStart = d.vStart; S.vEndSet = d.vEndSet; AE_SET.forEach(k => { S.set[k] = d[k]; }); S.set.fx = fxClone(d.fx); S.set.bp = Object.keys(d.bp || {}).filter(k => d.bp[k]).reduce((o, k) => (o[k] = true, o), {});
     S.time = clamp(S.time, S.vStart, vEnd());
     normalizeTurns(); onTurnsChanged(); onTrimChanged(); syncControls(); saveSettings(); stageDirty = true;
     TL.staticDirty = true;
-    fxGet(S.set.fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
+    fxGet(soundSet().fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
     toast(tx('vid.updated'), 2400);
   }
   closeAudioEditor();
@@ -781,22 +782,24 @@ const aeNow = () => AE.ph ? AE.ph.frame() / AE.ph.sr : AE.pos;
 const AE_BPSET = { noise: ['noise'], spec: ['spec'], eq: ['eq'], imager: ['imager'], level: ['level'], fades: ['fades'] };
 /* the tools a Bypass takes out: the Emulator's are only those it set and that are lit, and only while it holds its result (emLive) */
 const aeBpSet = t => { if (t !== 'emu') return AE_BPSET[t] || []; if (!AE.d || !emLive()) return []; const k = emTake(), lit = aeLit(AE.d); return [k.tone && 'eq', k.width && 'imager', k.loud && 'level'].filter(x => x && lit[x]); };
-const aeBp = k => !!(AE.bp && AE.bp[k]), aeBpAny = () => !!AE.bp && Object.values(AE.bp).some(Boolean), aeBpTool = t => { const s = aeBpSet(t); return s.length > 0 && s.every(aeBp); }, aeBy = () => aeBpTool(AE.tool) ? 1 : 0;
-const aeBpKey = () => Object.keys(AE.bp || {}).filter(k => AE.bp[k]).sort().join(',');          // part of the Clip light's key: a change of bypass clears a held light
+const aeBp = k => !!(AE.d && AE.d.bp && AE.d.bp[k]), aeBpAny = () => !!AE.d && Object.values(AE.d.bp || {}).some(Boolean), aeBpTool = t => { const s = aeBpSet(t); return s.length > 0 && s.every(aeBp); }, aeBy = () => aeBpTool(AE.tool) ? 1 : 0;
+const aeBpKey = () => { const b = AE.d && AE.d.bp || {}; return Object.keys(b).filter(k => b[k]).sort().join(','); };          // part of the Clip light's key: a change of bypass clears a held light
 /* the draft as it is heard: a bypassed tool is taken out of it (Level at 0dB with no Normalize or limiter, Fades off), the rest stays as set. Every reading and picture of what runs reads this one */
 function aeHeard(d) {
-  if (!d || !aeBpAny()) return d;
-  const fx = aeFxHeard(d.fx), lv = aeBp('level'), fd = aeBp('fades'); if (fx === d.fx && !lv && !fd) return d;
+  const bp = d && d.bp || {}; if (!d || !Object.values(bp).some(Boolean)) return d;
+  const fx = aeFxHeard(d.fx, bp), lv = !!bp.level, fd = !!bp.fades; if (fx === d.fx && !lv && !fd) return d;
   const h = Object.assign({}, d, { fx }); if (lv) { h.gainDb = 0; h.normalize = false; h.limiter = false; } if (fd) h.audioFades = false; return h;
 }
 /* the sound already made for the settings that Bypass has just left is kept (the last two), so switching Bypass back needs no new render */
 function aeFxKeep(fx) { const r = fxPeek(fx); if (!r) return; const k = fxKey(fx); AE.keptFx = (AE.keptFx || []).filter(x => x.k !== k).concat([{ k, r }]).slice(-2); }
 const aeFxPeek = fx => fxPeek(fx) || (AE.keptFx || []).reduce((f, x) => f || (x.k === fxKey(fx) ? x.r : null), null);
 /* the settings as they are heard: a bypassed tool does nothing (its volume and fades are handled where the gain is worked out) */
-function aeFxHeard(fx) {
-  if (!aeBp('noise') && !aeBp('spec') && !aeBp('eq') && !aeBp('imager')) return fx;
-  const f = fxClone(fx); if (aeBp('noise')) { f.noise.on = false; f.noise.profile = null; f.noise.hum = null; } if (aeBp('spec')) { f.spec.on = false; f.spec.edits = []; } if (aeBp('eq')) f.eq.on = false; if (aeBp('imager')) f.imager.on = false; return f;
+function aeFxHeard(fx, bp = (AE.d && AE.d.bp) || {}) {
+  if (!bp.noise && !bp.spec && !bp.eq && !bp.imager) return fx;
+  const f = fxClone(fx); if (bp.noise) { f.noise.on = false; f.noise.profile = null; f.noise.hum = null; } if (bp.spec) { f.spec.on = false; f.spec.edits = []; } if (bp.eq) f.eq.on = false; if (bp.imager) f.imager.on = false; return f;
 }
+/* what runs outside the editor (the video's playback and export, and an exported audio file): the saved settings with the bypassed tools taken out, the same answer the editor's player gives */
+const soundSet = () => aeHeard(aeFromApp());
 const aeGainAt = (d, st, en, t) => { const h = aeHeard(d); return aeF(h, h.vStart, aeEnd(h), t) * aeLevel(h, st, en); };
 /* the tools changed while a recording from the disk store plays: the new settings are sent, and what plays carries on for a quarter of a second before the new sound takes over. A burst of changes (a slider drag) becomes one */
 /* what the disk store works out for the editor's playback: the noise reduction and Spectra only. The EQ and the Imager run live on the page, as for a recording in memory, so a band can be moved, listened to or made dynamic without the sound being made over */
@@ -1320,7 +1323,7 @@ function wavBlock(tmp, len, ch, bits) {
   return dv.buffer;
 }
 async function aeExport() {
-  const btn = $('#aeExport'), d = AE.d && aeCopy(AE.d); if (!d || !S.audio || AE.exporting) return;          // the export works from a copy of the draft as it is now: edits made while it runs do not reach it
+  const btn = $('#aeExport'), d = AE.d && aeHeard(aeCopy(AE.d)); if (!d || !S.audio || AE.exporting) return;          // the export works from a copy of the draft as it is now: edits made while it runs do not reach it
   AE.exporting = true; aeRunShow(); let failed = null; const lb = btn.querySelector('span'), label = lb.textContent, ui = aeExpUI(btn); ui('Processing');
   const fmtKind = /^m4a/.test(S.set.audioFormat) ? 'm4a' : /^flac/.test(S.set.audioFormat) ? 'flac' : 'wav';          // wav24 (default), wav (16-bit), wav32 (float), flac24, flac16, m4a<kbps>
   AE.expStop = false; $('#aeExpStop').hidden = false;
@@ -2079,12 +2082,18 @@ function aeWiresDraw(force) {
 function aeWiresFollow() { const t0 = performance.now(); (function f(now) { aeWiresDraw(true); if (now - t0 < 480) requestAnimationFrame(f); })(t0); }
 /* the Bypass button follows the open tool: it works when that tool is doing something, and shows whether it is bypassed */
 /* what a tool is set to, so a bypassed tool that is then edited can come back in: the sound you hear should follow the change you make */
-function aeBpSig(k) { const d = AE.d; const pick = re => JSON.stringify(Object.keys(d).filter(x => re.test(x)).sort().map(x => [x, d[x]])); return k === 'level' ? pick(/^(norm|gain|limiter)/i) : k === 'fades' ? pick(/fade/i) : JSON.stringify(d.fx[k]); }
+function aeBpSig(d, k) { const pick = re => JSON.stringify(Object.keys(d).filter(x => re.test(x)).sort().map(x => [x, d[x]])); return k === 'level' ? pick(/^(norm|gain|limiter)/i) : k === 'fades' ? pick(/fade/i) : JSON.stringify(d.fx[k]); }
+/* a bypass keeps the signature of its tool as it was when Bypass was pressed. A tool that stops doing anything drops it; an edit to a bypassed tool (its signature no longer matches) switches it back on, inside the same History step as the edit. It lives in the draft, so Undo and Redo bring back the bypass each step had */
+function aeBpSync(d) {
+  const lit = aeLit(d), bp = d.bp || (d.bp = {});
+  Object.keys(bp).forEach(k => { if (!lit[k] || bp[k] !== aeBpSig(d, k)) delete bp[k]; });
+  const now = JSON.stringify(Object.keys(bp).sort().map(k => [k, bp[k]]));
+  if (now !== AE.bpSeen) { AE.bpSeen = now; AE.bpEdit = true; }          // what is heard has changed (an edit, Bypass, Undo or Redo): the player follows it
+}
 function aeBpUi() {
-  const lit = aeLit(AE.d); AE.bpS = AE.bpS || {};
-  Object.keys(AE.bp || {}).forEach(k => { if (!lit[k]) delete AE.bp[k]; else if (AE.bpS[k] === undefined) AE.bpS[k] = aeBpSig(k); else if (AE.bpS[k] !== aeBpSig(k)) { delete AE.bp[k]; AE.bpEdit = true; } });          // editing a bypassed tool switches it back on
+  const lit = aeLit(AE.d); aeBpSync(AE.d);          // editing a bypassed tool switches it back on
   $('#audioDlg').dataset.by = aeBy();          // a tool that no longer does anything has nothing to bypass
-  const act = aeBpSet(AE.tool).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Hear the sound without ' + (AE_NAMES[AE.tool] || 'this tool').replace(/ \(beta\)$/, '') + ', to compare (B)'; return lit;
+  const act = aeBpSet(AE.tool).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Left out of the sound until it is switched back on. An edit switches it back on too.'; return lit;
 }
 /* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn noise, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
    and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn noise knows no share, so a short arc turns */
@@ -2104,9 +2113,10 @@ function aeToolsRefresh() {
   if ((!aeFxPeek(hd.fx) || (AE.nrListen && !S.audio.disk && !nrPeek(hd.fx.noise, true))) && (!AE.playing || hd.normalize || limOn(hd) || AE.tool === 'level')) { clearTimeout(AE.fxT); const rest = Math.max(AE.sliding ? 220 : 60, Math.min(1400, S.audio.duration * 5)); AE.fxT = setTimeout(() => { const d = AE.d; if (!d) return; const h = aeHeard(d); fxGet(h.fx, { preview: true }).then(() => AE.nrListen && !S.audio.disk && d === AE.d && nrReady(h.fx.noise) ? nrGet(h.fx.noise, true, { preview: true }) : null).then(() => { if (AE.d) { aeSwapSrc(); aeRefresh(); } }, () => {}); }, rest); }       // the processed sound, for Normalize's loudest peak and the picture: a long recording waits longer, and while the sound plays it waits for Stop (the live chain is what you hear, and the quick sketch already moves the picture)
 }
 function aeToggleBypass() {
-  if ($('#aeAB').disabled || !AE.d) return; const lit = aeLit(AE.d), set = aeBpSet(AE.tool), off = aeBpTool(AE.tool); AE.bp = AE.bp || {};
+  if ($('#aeAB').disabled || !AE.d) return; const lit = aeLit(AE.d), set = aeBpSet(AE.tool), off = aeBpTool(AE.tool);
+  aePush();          // Bypass is one step in the History: Bypassed EQ, or EQ back in
   aeFxKeep(aeHeard(AE.d).fx);          // the sound that runs now is kept, so a switch back needs no new render
-  AE.bpS = AE.bpS || {}; set.forEach(k => { if (off) delete AE.bp[k]; else if (lit[k]) { AE.bp[k] = true; AE.bpS[k] = aeBpSig(k); } }); if (!off) edSay('ae', 'bypass');
+  AE.d.bp = Object.assign({}, AE.d.bp); set.forEach(k => { if (off) delete AE.d.bp[k]; else if (lit[k]) AE.d.bp[k] = aeBpSig(AE.d, k); }); if (!off) edSay('ae', 'bypass');
   { const v = aeFxHeard(AE.d.fx); if (aeBp('noise') && v.spec.edits.length && !prePeek(v, false)) preGet(v, false).then(() => { if (AE.d) { aeSwapSrc(); } }, () => {}); }          // Spectra's edits on the sound with no noise reduction are made once, for the comparison
   aeRefresh(); aeSwapSrc(); if (AE.playing) { aeRoute(); aeLimSync(); } aeAnim(); }
 /* the export choice is two menus: the file type, then its depth (WAV) or bitrate (M4A) */
@@ -2447,7 +2457,7 @@ function emApply(base, plan) {
   fxTidy(d.fx); return d;
 }
 const emTake = () => ({ tone: $('#aeEmTone').getAttribute('aria-pressed') === 'true', width: $('#aeEmWidth').getAttribute('aria-pressed') === 'true' && !$('#aeEmWidth').disabled, loud: $('#aeEmLoud').getAttribute('aria-pressed') === 'true' });
-const emLive = () => !!(AE.em && AE.em.result && AE.d && aeSame(AE.d, AE.em.result));          // the editor still holds exactly what the Emulator set
+const emLive = () => !!(AE.em && AE.em.result && AE.d && aeSame(Object.assign({}, AE.d, { bp: {} }), Object.assign({}, AE.em.result, { bp: {} })));          // the editor still holds exactly what the Emulator set (a Bypass of those tools does not change that)
 /* your own recording over the part you keep, measured once for that part */
 function aeEmOwn() {
   const em = AE.em || (AE.em = {}), d = AE.d, sr = S.audio.sr || S.audio.buffer.sampleRate, from = Math.floor(Math.max(0, d.vStart) * sr), to = Math.floor(Math.min(aeEnd(d), S.audio.duration) * sr), key = from + '|' + to, nch = fxChannels();

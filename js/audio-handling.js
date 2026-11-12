@@ -623,7 +623,7 @@ function adoptAudio(file, audio, frames) {
   if (audio.disk) diskTruePeaks(audio);          // a recording held in memory replaces the one on the disk store
   S.audio = audio; vqNote();
   { const key = file.name + '|' + file.size + '|' + frames;          // the Audio Editor's changes belong to the recording they were made on: a different file starts clean (noise profiles and Spectra boxes mean nothing on another sound)
-    if (S.set.audioKey && S.set.audioKey !== key) { AE_SET.forEach(k => { S.set[k] = AE_DEFAULT[k]; }); S.set.fx = fxClone(FX_DEFAULT); }
+    if (S.set.audioKey && S.set.audioKey !== key) { AE_SET.forEach(k => { S.set[k] = AE_DEFAULT[k]; }); S.set.fx = fxClone(FX_DEFAULT); S.set.bp = {}; }
     S.set.audioKey = key; saveSettings(); }
   if (hadAudio) { S.vStart = 0; S.vEndSet = null; }       // replacing the audio starts the video matching it again
   if (vEnd() - S.vStart < 1) { S.vStart = 0; S.vEndSet = null; }
@@ -637,7 +637,7 @@ function adoptAudio(file, audio, frames) {
     }
   }
   setChips(); zoomFit(); rvStart('wave'); TL.staticDirty = true; stageDirty = true; updateButtons(); updateInfo();
-  fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {});
+  fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {});
   return movedMsg;
 }
 async function loadAudio(file) {

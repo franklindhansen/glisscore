@@ -19,7 +19,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const bands = p => p.evaluate(async txt => { AE.matchOpen = true; AE.match = null; const f = new File([txt], 'p.txt'); await aeMatchLoad(f, 'profile'); await aeMatchApply(false); return JSON.stringify(AE.d.fx.eq.curve || []); }, prof);
   const ba = await bands(m), bc = await bands(d); ok('EQ match: the same curve', ba === bc && JSON.parse(ba).length === 240, JSON.stringify(JSON.parse(bc).slice(0, 4)));
   // 3: Match gain on Bypass
-  const gain = p => p.evaluate(async () => { AE.bp = { eq: true }; AE.bpKey = AE.bpAsk = ''; AE.bpLast = 1; aeBypassGain(); for (let i = 0; i < 100; i++) { await new Promise(r => setTimeout(r, 100)); const g = aeBypassGain(); if (AE.bpKey) return g; } return null; });
+  const gain = p => p.evaluate(async () => { AE.d.bp = { eq: aeBpSig(AE.d, 'eq') }; AE.bpKey = AE.bpAsk = ''; AE.bpLast = 1; aeBypassGain(); for (let i = 0; i < 100; i++) { await new Promise(r => setTimeout(r, 100)); const g = aeBypassGain(); if (AE.bpKey) return g; } return null; });
   for (const p of [m, d]) await p.evaluate(() => { aeFx(fx => { fx.eq.on = true; fx.eq.bands = [{ type: 'peaking', f: 800, g: 6, q: 1, on: true }]; }); });
   for (const p of [m, d]) await p.waitForFunction(() => fxPeek(AE.d.fx), null, { timeout: 30000 });
   const ga = await gain(m), gc = await gain(d); ok('Match gain on Bypass: the same gain', ga != null && gc != null && Math.abs(ga - gc) < 0.002 && Math.abs(ga - 1) > 0.01, ga + ' / ' + gc);

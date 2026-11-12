@@ -1149,7 +1149,7 @@ async function exportWebCodecs(o, fps, dur, ctl, caps) {
   const rend = new Renderer(canvas, PageSource, { cap: 10 }); rend.resize(o.W, o.H);
   const fm = new FrameMaker(canvas, rend.gl, pr.handoff, o.W, o.H), qLimit = pr.pace === 'lockstep' ? 2 : 12;
   dbg('renderer created (' + o.W + '×' + o.H + '), using ' + profDesc(pr));
-  const dk = !!(S.audio && S.audio.disk), wr = dk ? diskWriter() : null; if (dk) { await DISK.fileOpen(); DISK.fxUse(S.set.fx); }          // a long recording: the file is written into the store as it is made
+  const dk = !!(S.audio && S.audio.disk), wr = dk ? diskWriter() : null; if (dk) { await DISK.fileOpen(); DISK.fxUse(soundSet().fx); }          // a long recording: the file is written into the store as it is made
   const mux = new Mp4Writer({ width: o.W, height: o.H, fps, codec: pr.family, sink: wr, audio: caps.audioConfig ? { sampleRate: caps.audioConfig.sampleRate, channels: caps.audioConfig.numberOfChannels, pcm: !!caps.audioConfig.pcm } : null });
   let encErr = null, vOut = 0, aOut = 0;
   const venc = new VideoEncoder({
@@ -1164,10 +1164,11 @@ async function exportWebCodecs(o, fps, dur, ctl, caps) {
     const pcm = !!(caps.audioConfig && caps.audioConfig.pcm);
     if (caps.audioConfig) {
       expUI('working', 'Processing', 0.02);
-      try { await fxGet(S.set.fx); } catch (e) { dbg('Processing failed: ' + (e && e.message || e)); }
-      if (S.set.normalize && S.set.normBy === 'loud') { expUI('working', 'Processing', 0.02); { const da = aeFromApp(); await loudEnsure(da); if (da.limiter) await limEnsure(da); } }
+      const hs = soundSet();          // what runs: the saved settings with the bypassed tools left out
+      try { await fxGet(hs.fx); } catch (e) { dbg('Processing failed: ' + (e && e.message || e)); }
+      if (hs.normalize && hs.normBy === 'loud') { expUI('working', 'Processing', 0.02); { await loudEnsure(hs); if (hs.limiter) await limEnsure(hs); } }
       const buf = dk ? null : outBuf(), sr = dk ? audSr() : buf.sampleRate, ch = caps.audioConfig.numberOfChannels, total0 = Math.ceil(dur * sr);
-      const mm = dk ? await aeMasterDisk(aeFromApp(), ch, false, null, { own: true, total: total0, gain: audioGain() }) : masterMaker(buf, ch, S.vStart, vEnd(), audioGain(), soundFadeAt, { total: total0, limit: limOn(S.set) ? LIM_CEIL : null }), total = mm.total;
+      const mm = dk ? await aeMasterDisk(hs, ch, false, null, { own: true, total: total0, gain: audioGain() }) : masterMaker(buf, ch, S.vStart, vEnd(), audioGain(), soundFadeFn(), { total: total0, limit: limOn(hs) ? LIM_CEIL : null }), total = mm.total;
       for (let pos = 0, n = 0; pos < total; pos += sr, n++) {          // the sound goes in untouched, one second at a time, 24-bit
         if (ctl.cancelled) break;
         const len = Math.min(sr, total - pos), data = new Float32Array(len * ch); await mm.fill(pos, len, data); mux.addPcm(pcm24be(data, len, ch), len); aOut++; if (dk) await mux.drain();
@@ -1236,7 +1237,7 @@ async function exportRealtime(o, fps, dur, ctl) {
     ac = ensureCtx();
     if (SAFARI && outBuf().sampleRate !== ac.sampleRate) { try { const own = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: outBuf().sampleRate }); await Promise.race([own.resume(), new Promise(r => setTimeout(r, 1500))]); if (own.state === 'running' && own.sampleRate === outBuf().sampleRate) { ac = own; exportAc = own; } else own.close(); } catch (e) {} }
     if (ac.state !== 'running') await ac.resume();
-    const dest = ac.createMediaStreamDestination(); try { await fxGet(S.set.fx); } catch (e) {}
+    const dest = ac.createMediaStreamDestination(); try { await fxGet(soundSet().fx); } catch (e) {}
     src = ac.createBufferSource(); src.buffer = outBuf();
     gainNode = ac.createGain(); src.connect(gainNode); gainNode.connect(dest);
     dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));

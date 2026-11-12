@@ -205,7 +205,7 @@ function normalizeTurns() {
   }
 }
 /* History for the settings: every setting that alters the video's result is part of a step. The audio ones (and the EQ and Imager) belong to the Audio Editor's steps, the page layout has its own field, and where you are in the app is never a step. */
-const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'fx', 'sysSplit'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsAt', 'creditsWithLast'];
+const HS_OWN = ['audioKey', 'aeView', 'pageLayout', 'fx', 'bp', 'sysSplit'], HS_STRUCT = ['firstAlone', 'creditsOn', 'creditsAt', 'creditsWithLast'];
 const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!HS_OWN.includes(k) && !AE_SET.includes(k)) o[k] = S.set[k]; }); return o; };
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
@@ -232,14 +232,14 @@ document.addEventListener('pointerdown', () => { hsClose(); }, true);
 document.addEventListener('keydown', e => { if (e.repeat) return; if (e.target.matches && e.target.matches(HS_TEXT)) { if (!HB.open) HB.base = lightSnap(); } else hsClose(); }, true);
 document.addEventListener('pointerup', () => { if (HB.open) setTimeout(hsClose, 0); });
 document.addEventListener('change', () => { if (HB.open) setTimeout(hsClose, 0); });
-const audSnap = () => { const o = { fx: fxClone(S.set.fx) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
+const audSnap = () => { const o = { fx: fxClone(S.set.fx), bp: Object.assign({}, S.set.bp) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
 const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap(), sys: S.pdf ? sysSnap() : null });
 function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
 function applySnapIn(h) {
   let struct = false;
   if (h.set) { const ch = Object.keys(h.set).filter(k => h.set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = h.set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
   const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
-  if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); saveSettings(); stageDirty = true; fxGet(S.set.fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
+  if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); S.set.bp = Object.assign({}, h.aud.bp); saveSettings(); stageDirty = true; fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
   if (struct && !layChanged && S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; }
   const sysCh = !!h.sys && !!S.pdf && sysRestore(h.sys); if (sysCh && !layChanged && !struct && sysOn()) S.spreads = buildSpreads();          // the hand marks come back too
@@ -370,7 +370,9 @@ function fadeEnv(s, vs, ve, t) {
 }
 const fadeAt = t => fadeEnv(S.set, S.vStart, vEnd(), t);
 /* the sound's fades are the Audio Editor's, in the video and in an exported audio file alike; the Fades panel on the page is for the picture only */
-const soundFadeAt = t => { const [li, lo] = aeFadeLens(S.set); return aeEnv(S.vStart, vEnd(), t, li, S.set.audioFadeShape, lo); };
+/* the sound's fades, read once from what is heard (the video and an exported audio file alike) */
+const soundFadeFn = () => { const h = soundSet(), [li, lo] = aeFadeLens(h), vs = S.vStart, ve = vEnd(); return t => aeEnv(vs, ve, t, li, h.audioFadeShape, lo); };
+const soundFadeAt = t => soundFadeFn()(t);
 /* Normalize volume: the loudest peak of the part you use is raised (or lowered) to -1 dB below full scale, so nothing can clip */
 /* the level of the sound: normalizing sets it from the loudest peak, otherwise Adjust gain (in dB) does */
 const levelFor = (on, db, from, to, pk, target) => on ? normGainFor(true, from, to, pk, target) : Math.pow(10, (+db || 0) / 20);
@@ -384,22 +386,22 @@ let normCache = { key: '', v: 1 };
 /* what Normalize measures for the video: the true peaks of the sound it uses, as the sound's fades leave them */
 let vpMemo = { k: '', pk: null };
 function videoPeaks() {
-  const src = outSrc(), tp = srcTp(src), s = S.set, fadesOn = s.audioFades !== false, vs = S.vStart, ve = vEnd();
+  const src = outSrc(), tp = srcTp(src), s = soundSet(), fadesOn = s.audioFades !== false, vs = S.vStart, ve = vEnd();
   if (!fadesOn) return tp;
   const key = [srcLen(src), tp.length, tp === src.peaks ? 0 : 1, vs, ve, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, TP_VER].join('|');
-  if (vpMemo.k !== key) { const o = new Float32Array(tp.length); for (let i = 0; i < tp.length; i++) o[i] = tp[i] * Math.max(soundFadeAt(i / 100), soundFadeAt((i + 1) / 100)); vpMemo = { k: key, pk: o }; }
+  if (vpMemo.k !== key) { const o = new Float32Array(tp.length); const sf = soundFadeFn(); for (let i = 0; i < tp.length; i++) o[i] = tp[i] * Math.max(sf(i / 100), sf((i + 1) / 100)); vpMemo = { k: key, pk: o }; }
   return vpMemo.pk;
 }
 let loudAppMemo = { k: '', g: 1 };
 function audioGain() {
-  const s = S.set;
+  const s = soundSet();
   if (s.normalize && s.normBy === 'loud') {
-    const k = [s.normLufs, s.limiter, fxKey(s.fx), S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, s.audioKey, TP_VER, LUC.size].join('|');
-    if (loudAppMemo.k !== k) { const i = aeLoudInfo(aeFromApp()); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(aeFromApp()).then(() => { const j = aeLoudInfo(aeFromApp()); if (j && j.ready) TL.staticDirty = true; }, () => {}); }
+    const k = [s.normLufs, s.limiter, fxKey(s.fx), S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, S.set.audioKey, TP_VER, LUC.size].join('|');
+    if (loudAppMemo.k !== k) { const i = aeLoudInfo(s); loudAppMemo = { k: i && i.ready ? k : '', g: i && i.g ? i.g : 1 }; if (!(i && i.ready)) loudEnsure(s).then(() => { const j = aeLoudInfo(s); if (j && j.ready) TL.staticDirty = true; }, () => {}); }
     return loudAppMemo.g;
   }
-  const key = [s.normalize, s.normPeakDb, s.gainDb, S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, TP_VER, S.audio ? S.audio.name + S.audio.duration + fxKey(S.set.fx) + (fxPeek(S.set.fx) ? 1 : 0) : ''].join('|');
-  if (normCache.key !== key) normCache = { key, v: levelFor(S.set.normalize, S.set.gainDb, S.vStart, vEnd()) };
+  const key = [s.normalize, s.normPeakDb, s.gainDb, S.vStart, vEnd(), s.audioFades, s.audioFadeLen, s.audioFadeOutLen, s.audioFadeShape, TP_VER, S.audio ? S.audio.name + S.audio.duration + fxKey(s.fx) + (fxPeek(s.fx) ? 1 : 0) : ''].join('|');
+  if (normCache.key !== key) normCache = { key, v: levelFor(s.normalize, s.gainDb, S.vStart, vEnd()) };
   return normCache.v;
 }
 function frameState(t) {
