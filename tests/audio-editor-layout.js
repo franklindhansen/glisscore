@@ -59,11 +59,9 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     }
     for (const row of pane.querySelectorAll('.foot-row')) { if (!shown(row)) continue; const card = row.closest('.ae-card'), cs = getComputedStyle(card), sw = row.querySelector('.switch') || row, rr = R(row), sr = R(sw), cr = R(card);
       out.foot.push({ id: row.id || row.className, above: rnd(sr.top - rr.top), below: rnd(cr.bottom - parseFloat(cs.borderBottomWidth) - sr.bottom) }); }
-    // what the ticket asks per tool: the content's left inset, a heading's offset from its card's top, the Level meter's bar and scale sizes, Emulate against the note, Fades' end labels against the picture, and the Mains hum sub-line
+    // what the ticket asks per tool: the content's left inset, the Level meter's bar and scale sizes, Emulate against the note, Fades' end labels against the picture, and the Mains hum sub-line
     const inset = c => { const k = [...c.children].find(k => shown(k) && R(k).width > 0 && getComputedStyle(k).position !== 'absolute'); return k ? rnd(R(k).left - R(c).left) : null; };
     out.inset = cards.map(c => ({ id: nm(c), v: inset(c) }));
-    const hOff = (sel, h) => { const c = document.querySelector(sel); if (!c || !shown(c)) return null; const hh = c.querySelector(h); return hh ? rnd(R(hh).top - R(c).top) : null; };
-    out.heads = { normalize: hOff('#aeNormCard', 'h4'), removal: hOff('#aeNrCtl', 'h4'), width: hOff('#aeWidthCard', 'h4'), gain: hOff('#aeGainCard', 'h4'), length: hOff('#aeFadeLenCard', 'h4') };
     const el = s => document.querySelector(s);
     if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view .em-note')).bottom) };
@@ -107,7 +105,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
       const { m } = await look(q, 'Level: ' + label), more = await q.evaluate(() => ({ clip: document.querySelector('#aeClip').classList.contains('on'), peakLeft: document.querySelector('#aeMeter .lv-read span').getBoundingClientRect().left, noteRows: [...document.querySelectorAll('#aeSum b')].length }));
       out.level.push({ label, clip: more.clip, peakLeft: more.peakLeft, cards: Object.fromEntries(m.cards.map(c => [c.id, c.h])) }); }
     out.strip = await q.evaluate(() => { const e = document.querySelector('#aeSum'), cols = getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat); return { cols, title: e.title, foot: !!document.querySelector('.lv-foot'), clipNote: !!document.querySelector('#aeClipNote, #aeLoudPk') }; });
-    out.guard = await q.evaluate(() => { const c = document.querySelector('#aeGainCard'); c.style.height = '80px'; c.style.flex = 'none'; const r = uiGuard.scan().filter(x => x[1] === 'card').map(x => x[2]); c.style.height = ''; c.style.flex = ''; return r; });
+    out.guard = await q.evaluate(() => { const c = document.querySelector('#aeMeter'); c.style.height = '80px'; c.style.flex = 'none';          // the Meter: a card on the tool's own rows (Normalize, Gain) takes its rows' height whatever height it is given, so it cannot be squeezed
+      const r = uiGuard.scan().filter(x => x[1] === 'card').map(x => x[2]); c.style.height = ''; c.style.flex = ''; return r; });
     await q.close();
   }));
   for (const h of heights) { const o = sweep[h], tag = '1440x' + h + ': ', main = o.frames[0], short = h < floor + 170 + chrome + 32;          // what the dialog needs: the floor, the picture at its one size (170px), and the rest of the dialog
@@ -123,7 +122,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok(tag + 'Imager: the scope card and the two control cards start and end on the same lines', Math.abs(o.imager.balBottom - o.imager.scopeBottom) < 1 && Math.abs(o.imager.widthTop - o.imager.scopeTop) < 1, JSON.stringify(o.imager));
     ok(tag + 'Noise reduction: the Removal card takes the shared card padding', o.noisePad[0] === o.noisePad[1], o.noisePad.join(' vs '));
     ok(tag + 'Level: the summary strip is two even columns, its tooltip reads "Measured after every module.", and the clip note, the peak line, and the foot note are gone', o.strip.cols.length === 2 && Math.abs(o.strip.cols[0] - o.strip.cols[1]) < 0.6 && o.strip.title === 'Measured after every module.' && !o.strip.foot && !o.strip.clipNote, JSON.stringify(o.strip));
-    ok(tag + 'uiGuard reports a card whose content passes its padding box', o.guard.length === 1 && /aeGainCard/.test(o.guard[0]), JSON.stringify(o.guard));
+    ok(tag + 'uiGuard reports a card whose content passes its padding box', o.guard.length === 1 && /aeMeter/.test(o.guard[0]), JSON.stringify(o.guard));
     const lv = o.level, pl = lv.map(l => l.peakLeft), ids = Object.keys(lv[0].cards), moved = ids.filter(id => lv.some(l => Math.abs(l.cards[id] - lv[0].cards[id]) > 0.5));
     ok(tag + 'Level: the Clip pill shows in some states and not in others, so the comparison means something', lv.some(l => l.clip) && lv.some(l => !l.clip), lv.map(l => l.label + '=' + l.clip).join(', '));
     ok(tag + 'Level: True peak keeps its place whether or not Clip shows', Math.max(...pl) - Math.min(...pl) < 0.5, pl.map(v => v.toFixed(1)).join(', '));
@@ -149,9 +148,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   for (const h of heights) { const o = sweep[h], sp = o.space, tag = '1440x' + h + ': ';
     const ins = sp.flatMap(f => f.inset.filter(x => x.v !== null && Math.abs(x.v - 17) > 0.6).map(x => f.label + ': ' + x.id + ' ' + x.v));
     ok(tag + 'one padding: every tool card starts its content 17px from its left edge (the card padding and border)', !ins.length, ins.slice(0, 5).join(' | '));
-    const plain = sp.flatMap(f => [f.heads.length].filter(v => v !== null && Math.abs(v - 13) > 1));
-    const seg = sp.flatMap(f => ['normalize', 'removal', 'width'].map(k => [f.label, k, f.heads[k]]).filter(([, , v]) => v !== null && Math.abs(v - 19) > 1).map(([l, k, v]) => l + ': ' + k + ' ' + v));
-    ok(tag + 'a heading beside a segmented control is centered on it (19px from the card\'s top), and a plain heading sits 13px from it', !seg.length && !plain.length, seg.slice(0, 5).join(' | ') + (plain.length ? ' plain ' + plain.join(',') : ''));
+    // where a heading's letters sit (13px under the card's top, a control on its row centered on them) is measured with the shared helper by audio-editor-grid-lines.js, in every tool and state
     const lv = sp.filter(f => f.meter), lvBad = lv.filter(f => Math.abs(f.meter.track - 14) > 0.5 || Math.abs(f.meter.scale - 16) > 0.5 || Math.abs(f.meter.bottom - f.meter.cardsBottom) > 1);
     ok(tag + 'Level: the bar keeps 14px and its scale 16px, and the Meter ends on the cards\' bottom line', lv.length > 0 && !lvBad.length, JSON.stringify(lv.map(f => f.meter)).slice(0, 300));
     const em = sp.filter(f => f.emulate);

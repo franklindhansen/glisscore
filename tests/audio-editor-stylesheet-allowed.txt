@@ -1,0 +1,203 @@
+# Today's id-based spacing rules inside a tool pane, and screen-width queries on the Audio Editor, in style.css: one per line. Checked by tests/audio-editor-stylesheet.js.
+# This list may only shrink. A new rule that is not here fails the check; a line whose rule is gone fails it too (delete the line). A tool's ticket deletes that tool's rules from style.css and their lines here.
+# id-spacing: a rule naming an element inside a tool pane by its id that sets margin, padding, or gap ({the spacing properties it sets}). screen-width: a width @media that styles the Audio Editor.
+id-spacing #aeBalCard .field {margin-bottom}
+id-spacing #aeBalCard .field {margin}
+id-spacing #aeEmCard {gap}
+id-spacing #aeEmGo.on::before {margin}
+id-spacing #aeFadeLenCard .seg {margin}
+id-spacing #aeFadeLenCard {gap}
+id-spacing #aeFadeLenField {margin-top}
+id-spacing #aeFadeShape label {padding}
+id-spacing #aeGainBig {margin}
+id-spacing #aeGainField {margin-top}
+id-spacing #aeMatch .mt-chip {padding-bottom,padding-top}
+id-spacing #aeMeter {row-gap}
+id-spacing #aeNormCard .fa.open>.fa-in {margin,padding}
+id-spacing #aeNrCtl .field {margin-bottom}
+id-spacing #aeNrCtl .field:last-of-type {margin-bottom}
+id-spacing #aeNrCtl .nr-prog {margin}
+id-spacing #aeNrCtl .nr-prog {margin}
+id-spacing #aeNrCtl .sub {gap,margin-left,padding-left}
+id-spacing #aeNrCtl .sub>.field {margin}
+id-spacing #aeNrCtl {gap}
+id-spacing #aeNrLearnStep .mt-n {margin-top}
+id-spacing #aeNrSample .mt-pick {row-gap}
+id-spacing #aeNrSample .mt-steps {gap}
+id-spacing #aeNrSample {gap}
+id-spacing #aeNrSub.open>.fa-in {padding}
+id-spacing #aePaneEq .eq-band.ae-card {margin-top}
+id-spacing #aePaneEq .eq-match {margin-top}
+id-spacing #aePaneEq .eq-top {margin-bottom}
+id-spacing #aePaneEq .mt-steps.two {gap}
+id-spacing #aeSum b {margin-top}
+id-spacing #aeSum {margin-top,padding-top}
+id-spacing #aeSum>div {column-gap,row-gap}
+id-spacing #aeSum>div {gap}
+id-spacing #aeWidthCard {gap}
+id-spacing #spAmtF.open>.fa-in {padding}
+id-spacing .nr-grid.pre #aeNrLearnStep {margin-top}
+id-spacing :is(.sp-card,#aeNrCtl,#aeShapeCard,.fd-shape,.em-view)>.t-head {margin-bottom}
+id-spacing @container level (max-width:399px) #aeNormCard:not(:has(.fa-stack>.fa.open)) .lv-head {margin-bottom}
+id-spacing @container level (max-width:519px) #aeNormMode {margin-left}
+id-spacing @container level (max-width:659px) #audioDlg #aeNormMode span {padding}
+id-spacing @media (max-width:420px) #aeWidthCard .im-head {row-gap}
+id-spacing @media (max-width:420px),(min-width:601px) and (max-width:760px) #aeNrCtl .nr-head {row-gap}
+id-spacing @media (max-width:600px) .nr-grid.pre #aeNrLearnStep {margin-top}
+id-spacing @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep {margin-top}
+id-spacing @media (min-width:700px) #aeFadeShape label {padding}
+screen-width @media (max-width:340px) #aeBassCard .im-lowf
+screen-width @media (max-width:340px) #aeBassCard
+screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar .ae-view label
+screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar
+screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-times
+screen-width @media (max-width:420px) #aeWidthCard .im-head .seg
+screen-width @media (max-width:420px) #aeWidthCard .im-head
+screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-ic
+screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-lb
+screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .btn
+screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-rail-cur span
+screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-rail-cur
+screen-width @media (max-width:420px) #audioDlg:not(.afull) .eq-band.ae-card
+screen-width @media (max-width:420px) #audioDlg:not(.afull) .eq-bn
+screen-width @media (max-width:420px) #spShape svg
+screen-width @media (max-width:420px) .ae-pt .ae-sub
+screen-width @media (max-width:420px) .sp-seg label span
+screen-width @media (max-width:420px),(min-width:601px) and (max-width:760px) #aeNrCtl .nr-head
+screen-width @media (max-width:520px) .ae-export
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-main
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-pane
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-pbody
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-wave
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-wave
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-win
+screen-width @media (max-width:520px) html #audioDlg:not(.afull) .dlg.editor.ae
+screen-width @media (max-width:560px) #audioDlg:not(.afull) #aeSilence .ae-ic
+screen-width @media (max-width:560px) #audioDlg:not(.afull) #aeSilence .ae-lb
+screen-width @media (max-width:560px) #audioDlg:not(.afull) #aeSilence
+screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times b
+screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times span
+screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times
+screen-width @media (max-width:560px) .sp-tools
+screen-width @media (max-width:600px) .nr-grid
+screen-width @media (max-width:600px) .nr-grid
+screen-width @media (max-width:600px) .nr-grid.pre #aeNrLearnStep
+screen-width @media (max-width:600px) .nr-grid.pre #aeNrSample
+screen-width @media (max-width:600px) .nr-grid.pre .mt-steps
+screen-width @media (max-width:600px) .nr-grid.pre .nr-stage canvas
+screen-width @media (max-width:600px) .nr-grid.pre>*
+screen-width @media (max-width:600px) .nr-grid>*
+screen-width @media (max-width:600px) .nr-grid>.nr-stage
+screen-width @media (max-width:760px) #aeBassCard .im-lowf
+screen-width @media (max-width:760px) #aeBassCard
+screen-width @media (max-width:760px) #audioDlg.afull .ae-main
+screen-width @media (max-width:760px) #audioDlg.afull .ae-main
+screen-width @media (max-width:760px) #audioDlg.afull .ae-pbody
+screen-width @media (max-width:760px) #audioDlg.afull>.dlg.editor.ae
+screen-width @media (max-width:760px) #audioDlg.afull[data-tool=spec] .ae-main
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-bar .ae-abs
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-bar
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-cur output
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-cur svg
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-cur
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rail-cur
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-rule
+screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-top
+screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-main
+screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-rail
+screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-win
+screen-width @media (max-width:760px) #audioDlg:not(.afull) #aePaneEq .eq-stage
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .btn
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .icon-btn:not(.play)
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .seg
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-main
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-pbody
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-times
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-wave
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-win
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .dlg.editor.ae
+screen-width @media (max-width:760px) #audioDlg:not(.afull) .dlg.editor.ae
+screen-width @media (max-width:760px) .ae-bar
+screen-width @media (max-width:760px) .ae-jack
+screen-width @media (max-width:760px) .ae-main
+screen-width @media (max-width:760px) .ae-main
+screen-width @media (max-width:760px) .ae-pane
+screen-width @media (max-width:760px) .ae-panes
+screen-width @media (max-width:760px) .ae-pbody
+screen-width @media (max-width:760px) .ae-pbody
+screen-width @media (max-width:760px) .ae-phead
+screen-width @media (max-width:760px) .ae-procs
+screen-width @media (max-width:760px) .ae-procs
+screen-width @media (max-width:760px) .ae-ptl
+screen-width @media (max-width:760px) .ae-rail
+screen-width @media (max-width:760px) .ae-rail
+screen-width @media (max-width:760px) .ae-rail-body
+screen-width @media (max-width:760px) .ae-rail-cur b
+screen-width @media (max-width:760px) .ae-rail-cur output
+screen-width @media (max-width:760px) .ae-rail-cur output:empty+svg
+screen-width @media (max-width:760px) .ae-rail-cur span
+screen-width @media (max-width:760px) .ae-rail-cur svg
+screen-width @media (max-width:760px) .ae-rail-cur
+screen-width @media (max-width:760px) .ae-rail-h
+screen-width @media (max-width:760px) .ae-rail-h
+screen-width @media (max-width:760px) .ae-rail-in
+screen-width @media (max-width:760px) .ae-rail.open .ae-rail-body
+screen-width @media (max-width:760px) .ae-rail.open .ae-rail-cur svg
+screen-width @media (max-width:760px) .ae-rail.open .ae-rail-in
+screen-width @media (max-width:760px) .ae-tool
+screen-width @media (max-width:760px) .ae-tool
+screen-width @media (max-width:760px) .ae-top
+screen-width @media (max-width:760px) .ae-win .ae-phead
+screen-width @media (max-width:760px) .ae-win
+screen-width @media (max-width:760px) .ae-win
+screen-width @media (max-width:760px) .em-grid
+screen-width @media (max-width:760px) .em-stage
+screen-width @media (max-width:760px) .eq-band .field
+screen-width @media (max-width:760px) .eq-band select
+screen-width @media (max-width:760px) .eq-band
+screen-width @media (max-width:760px) .eq-band.ae-card
+screen-width @media (max-width:760px) .eq-bn
+screen-width @media (max-width:760px) .fd-grid
+screen-width @media (max-width:760px) .fd-grid
+screen-width @media (max-width:760px) .fd-shape canvas
+screen-width @media (max-width:760px) .im-cols
+screen-width @media (max-width:760px) .im-cols
+screen-width @media (max-width:760px) .im-cols
+screen-width @media (max-width:760px) .im-low
+screen-width @media (max-width:760px) .im-lowf
+screen-width @media (max-width:760px) .mt-head .btn
+screen-width @media (max-width:760px) .mt-steps.two
+screen-width @media (max-width:760px) .sp-grid
+screen-width @media (max-width:760px) .sp-lcard
+screen-width @media (max-width:760px) .sp-list
+screen-width @media (min-width:1000px) #aeFadeShape label
+screen-width @media (min-width:521px) and (max-width:760px) #audioDlg:not(.afull) .fd-grid
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid #aeNrCtl
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid #aeNrSample
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre .mt-steps
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre .nr-stage canvas
+screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid>.nr-stage
+screen-width @media (min-width:700px) #aeFadeShape label
+screen-width @media (min-width:761px) #aePaneEmu .em-grid
+screen-width @media (min-width:761px) #aePaneEmu:not([hidden])
+screen-width @media (min-width:761px) #audioDlg.afull .ae-pane
+screen-width @media (min-width:761px) #audioDlg.afull .ae-pbody
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar .btn
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar .icon-btn:not(.play)
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar .seg
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar::before
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-main
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-rail
+screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-wave
+screen-width @media (min-width:761px) #audioDlg[data-tool=level] #aePaneLevel.ae-pane
+screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pane
+screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pbody
+screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-band .eq-cell
+screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-band.ae-card
+screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-bn
+screen-width @media (min-width:761px) and (max-width:980px) .ae-pbody

@@ -4,13 +4,14 @@
 // 2) In dark mode the scope's grid lines and the EQ's grid lines can be told apart from the fill behind them, as they can in light mode.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-edge-space.js
 const { chromium } = require('playwright-core');
+const { install } = require('./lib/measure.js');          // text is centered by its letters (cap top to baseline), measured by the shared helper
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 (async () => {
   const b = await chromium.launch(), errs = [], heights = [900, 800, 796, 790, 785, 770, 760, 740];
   const open = async (w, h, theme) => { const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push(e.message));
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3');
     await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); if (theme) await p.evaluate(t => document.documentElement.setAttribute('data-theme', t), theme);
-    await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); return p; };
+    await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); await p.evaluate(install); return p; };
   const measure = () => {
     const R = e => e.getBoundingClientRect(), shown = e => { for (let n = e; n && n.id !== 'audioDlg'; n = n.parentElement) { const cs = getComputedStyle(n); if (n.hidden || n.inert || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05) return false; if (n.matches('.fa:not(.open)>.fa-in, .eq-fold.shut, .im-view.off')) return false; } return true; };
     const pane = document.querySelector('.ae-pane:not([hidden])'), body = document.querySelector('.ae-pbody'), br = R(body);
@@ -42,7 +43,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   { const p = await open(1440, 900);
     const sw = await p.evaluate(async () => { const bad = [], rows = {};
       const align = () => { for (const s of document.querySelectorAll('input.switch')) { const r = s.getBoundingClientRect(); if (r.width < 2 || !s.offsetParent) continue; const row = s.closest('label, .foot-row, .nr-hum') || s.parentElement, sp = [...row.querySelectorAll('span')].find(e => e.textContent.trim() && !e.contains(s) && e.getBoundingClientRect().height > 0); if (!sp) continue;
-        const g = document.createRange(); g.selectNodeContents(sp); const t = g.getBoundingClientRect(), d = Math.abs((r.top + r.bottom) / 2 - (t.top + t.bottom) / 2); if (d > 1) bad.push((s.id || '?') + ' off by ' + d.toFixed(1)); } };
+        const l = __mk.letters(sp), d = Math.abs((r.top + r.bottom) / 2 - (l.capTop + l.base) / 2); if (d > 1) bad.push((s.id || '?') + ' off by ' + d.toFixed(1)); } };
       for (const t of ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu']) { aeTool(t); await new Promise(r => setTimeout(r, 500)); align(); if (t === 'noise') {
         const hum = document.querySelector('#aeNrHumRow'), only = document.querySelector('.nr-listen'), val = document.querySelector('#aeNrHumVal');
         for (const st of ['', 'on', 'none']) { hum.classList.remove('on', 'none'); if (st) hum.classList.add(st); val.textContent = st ? (st === 'on' ? '60Hz' : 'No hum found') : ''; await new Promise(r => setTimeout(r, 300)); align(); rows[st || 'idle'] = [Math.round(hum.getBoundingClientRect().height * 10) / 10, Math.round(only.getBoundingClientRect().height * 10) / 10];
@@ -52,12 +53,12 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok('every switch is centered on its label, in every tool', !sw.bad.length, sw.bad.join(', '));
     ok('Mains hum is as tall as Noise only, idle, found, and none', Object.values(sw.rows).every(([a, c]) => Math.abs(a - c) <= 0.5), JSON.stringify(sw.rows)); await p.close(); }
   // pieces that belong together are lined up: headings, their (i) and control, step numbers with their first line, a slider with its value and its end labels, and the Meter's bar with its scale
-  { const p = await open(1440, 900); const bad = await p.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), q = s => document.querySelector(s), R = e => e.getBoundingClientRect(), cy = e => { const r = R(e); return (r.top + r.bottom) / 2; }, txt = e => { const g = document.createRange(); g.selectNodeContents(e); return cy(g); }, bad = [];
+  { const p = await open(1440, 900); const bad = await p.evaluate(async () => { const w = ms => new Promise(r => setTimeout(r, ms)), q = s => document.querySelector(s), R = e => e.getBoundingClientRect(), cy = e => { const r = R(e); return (r.top + r.bottom) / 2; }, txt = e => { const l = __mk.letters(e); return (l.capTop + l.base) / 2; }, bad = [];
       const same = (n, a, b, tol = 1) => { if (a == null || b == null || Math.abs(a - b) > tol) bad.push(n + ' ' + (a && a.toFixed(1)) + ' vs ' + (b && b.toFixed(1))); };
-      aeTool('level'); await w(600); same('Normalize heading and its (i)', cy(q('#aeNormCard h4')), cy(q('#aeNormCard .info-i'))); same('Normalize heading and its control', cy(q('#aeNormCard h4')), cy(q('#aeNormMode'))); same('Gain heading and Normalize heading', cy(q('#aeGainCard h4')), cy(q('#aeNormCard h4')));
+      aeTool('level'); await w(600); same('Normalize heading and its (i)', txt(q('#aeNormCard h4')), cy(q('#aeNormCard .info-i'))); same('Normalize heading and its control', txt(q('#aeNormCard h4')), cy(q('#aeNormMode'))); same('Gain heading and Normalize heading', txt(q('#aeGainCard h4')), txt(q('#aeNormCard h4')));
       const gap = (a, b) => R(b).top - R(a).bottom; { const g = gap(q('#aeMeter .lv-track'), q('#aeMeter .lv-scale')); if (g < 0 || g > 10) bad.push('the Meter scale is ' + g.toFixed(1) + 'px under its bar'); const g2 = R(q('#aeGainField .sl-ends')).top - R(q('#aeGain')).bottom; if (g2 > 8) bad.push('the Gain labels are ' + g2.toFixed(1) + 'px under the slider'); }
-      aeTool('imager'); await w(600); same('Width heading and its control', cy(q('#aeWidthCard h4')), cy(q('#aeWidthMode'))); same('Width value and its slider', cy(q('#aeWidthVal')), cy(q('#aeWidth'))); if (R(q('#aeWidthVal')).right < R(q('#aeWidth')).right) bad.push('the Width value is not at the end of the slider row');
-      aeTool('noise'); await w(600); const n1 = q('#aeNrSample .mt-step .mt-n'), n2 = q('#aeNrLearnStep .mt-n'); same('step 1 number and Select noise', cy(n1), txt(q('#aeNrSample .mt-title'))); same('step 2 number and Learn noise', cy(n2), cy(q('#aeNrLearn'))); same('Removal heading and its control', cy(q('#aeNrCtl h4')), cy(q('#aeNrMode')));
+      aeTool('imager'); await w(600); same('Width heading and its control', txt(q('#aeWidthCard h4')), cy(q('#aeWidthMode'))); same('Width value and its slider', cy(q('#aeWidthVal')), cy(q('#aeWidth'))); if (R(q('#aeWidthVal')).right < R(q('#aeWidth')).right) bad.push('the Width value is not at the end of the slider row');
+      aeTool('noise'); await w(600); const n1 = q('#aeNrSample .mt-step .mt-n'), n2 = q('#aeNrLearnStep .mt-n'); same('step 1 number and Select noise', cy(n1), txt(q('#aeNrSample .mt-title'))); same('step 2 number and Learn noise', cy(n2), cy(q('#aeNrLearn'))); same('Removal heading and its control', txt(q('#aeNrCtl h4')), cy(q('#aeNrMode')));
       aeTool('emu'); await w(600); for (const st of document.querySelectorAll('#aePaneEmu .mt-step, #aeEmCard .mt-step')) { const n = st.querySelector('.mt-n'), t = st.querySelector('.mt-title'); if (n && t && R(t).height > 0) same('Emulator step ' + n.textContent + ' number and title', cy(n), txt(t)); }
       return bad; });
     ok('headings, step numbers, slider values, end labels, and the Meter scale are lined up with what they belong to', !bad.length, bad.join(' | ')); await p.close(); }

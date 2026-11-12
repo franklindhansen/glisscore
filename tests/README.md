@@ -17,6 +17,15 @@ Run it from the project folder, as the whole command: no `cd` before it and no `
 
 Every check prints PASS or FAIL. The layout script checks four window sizes at once; add `SHOTS=1` to also save a screenshot of each tool window, and look at them now and then, because the numbers do not catch everything.
 
+## Audio Editor layout lines
+
+Three checks hold the Audio Editor's layout system in place. They share one measuring helper, `tests/lib/measure.js`: letter edges come from font metrics (never a marker element), buttons by their border box, sliders by their thumb. `audio-editor-measure` proves the helper against a screenshot's pixels.
+
+- `audio-editor-grid-lines` measures every tool, in every state that changes a card, at seven window sizes and in full screen, with the rules in `tests/lib/layout-lines.js`. It names no card. Today's failures are listed one per line in `tests/audio-editor-layout-expected.txt` ("tool state size rule element"); the list may only shrink. The check fails on a failure that is not listed, and on a listed failure that now passes (it names the line to delete). Card heights at 1440x900 are in `tests/audio-editor-card-heights.txt`.
+- `audio-editor-stylesheet` reads `style.css` and fails on a new id-based spacing rule inside a tool pane or a new width media query on the Audio Editor, against `tests/audio-editor-stylesheet-allowed.txt`, which may only shrink the same way.
+
+To list a new set of failures, run the check with `-o FILE`: every new failure is one line in the file.
+
 ## PDF Editor checks
 
 `tests/pdf-editor-*.js` run the PDF Editor in Chromium:
