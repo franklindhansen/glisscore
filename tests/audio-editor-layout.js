@@ -38,15 +38,39 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     win: document.querySelector('#aeWin').getBoundingClientRect().bottom, stat: document.querySelector('.ae-stat').getBoundingClientRect().bottom, statH: document.querySelector('.ae-stat').getBoundingClientRect().height, statFrac: [...document.querySelectorAll('.ae-stat, .ae-stat *')].filter(e => { const r = e.getBoundingClientRect(); return r.height > 0 && (Math.abs(r.top - Math.round(r.top)) > 0.03 || Math.abs(r.height - Math.round(r.height)) > 0.03); }).length,
     body: document.querySelector('.ae-pbody').clientHeight, scrolls: document.querySelector('.ae-pbody').scrollHeight - document.querySelector('.ae-pbody').clientHeight, railScrolls: document.querySelector('.ae-rail').scrollHeight - document.querySelector('.ae-rail').clientHeight,
     wave: document.querySelector('.ae-wave').getBoundingClientRect().height });
+  // the spacing read in every state: the gap between cards, the space at the top and bottom of each card, and each footer row's space above and below its switch
+  const spaceOf = () => {
+    const R = e => e.getBoundingClientRect(), rnd = v => Math.round(v * 10) / 10;
+    const shown = e => { for (let n = e; n && n.id !== 'audioDlg'; n = n.parentElement) { const cs = getComputedStyle(n); if (n.hidden || n.inert || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05) return false; if (n.matches('.fa:not(.open)>.fa-in, .eq-fold.shut, .im-view.off')) return false; } return true; };
+    const pane = document.querySelector('.ae-pane:not([hidden])');
+    const cards = [...pane.querySelectorAll('.ae-card, .sp-card, .lv-meter')].filter(c => shown(c) && !c.parentElement.closest('.ae-card, .sp-card'));
+    const nm = c => c.id || c.className.split(' ')[0];
+    const out = { cards: [], gaps: [], foot: [] };
+    for (const c of cards) {
+      const r = R(c), cs = getComputedStyle(c), inner = { t: r.top + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop), b: r.bottom - parseFloat(cs.borderBottomWidth) - parseFloat(cs.paddingBottom) };
+      let top = Infinity, bot = -Infinity;
+      for (const k of c.children) { if (!shown(k) || getComputedStyle(k).position === 'absolute') continue; const kr = R(k); if (kr.height < 1) continue; top = Math.min(top, kr.top); bot = Math.max(bot, kr.bottom); }
+      out.cards.push({ id: nm(c), cls: c.className, h: rnd(r.height), top: rnd(top - inner.t), bottom: rnd(inner.b - bot), foot: !!c.querySelector('.foot-row') });
+    }
+    for (let i = 0; i < cards.length; i++) for (let j = i + 1; j < cards.length; j++) {
+      const a = R(cards[i]), b = R(cards[j]), hO = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top), vO = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      if (hO > 0 && vO <= 0) out.gaps.push(nm(cards[i]) + '|' + nm(cards[j]) + ' side ' + rnd(Math.max(a.left, b.left) - Math.min(a.right, b.right)));
+      if (vO > 0 && hO <= 0) out.gaps.push(nm(cards[i]) + '|' + nm(cards[j]) + ' stack ' + rnd(Math.max(a.top, b.top) - Math.min(a.bottom, b.bottom)));
+    }
+    for (const row of pane.querySelectorAll('.foot-row')) { if (!shown(row)) continue; const card = row.closest('.ae-card'), cs = getComputedStyle(card), sw = row.querySelector('.switch') || row, rr = R(row), sr = R(sw), cr = R(card);
+      out.foot.push({ id: row.id || row.className, above: rnd(sr.top - rr.top), below: rnd(cr.bottom - parseFloat(cs.borderBottomWidth) - sr.bottom) }); }
+    return out;
+  };
   const sweep = {}, heights = [680, 720, 760, 800, 900];
   const [floor, chrome] = (await (async () => { const p = await b.newPage(); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); const v = await p.evaluate(() => { const c = getComputedStyle(document.documentElement); return c.getPropertyValue('--ae-floor') + ',' + c.getPropertyValue('--ae-chrome'); }); await p.close(); return v; })()).split(',').map(parseFloat);
   await Promise.all(heights.map(async h => {
-    const out = sweep[h] = { frames: [], pass: [], body: [], level: [], notes: [] };
+    const out = sweep[h] = { frames: [], pass: [], body: [], level: [], notes: [], space: [] };
     const mk = async file => { const p = await b.newPage({ viewport: { width: 1440, height: h } }); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push('1440x' + h + ': ' + e.message));
       await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/' + file);
       await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); return p; };
     const look = async (p, label) => { const f = await p.evaluate(frame), m = await p.evaluate(fitMeasure, { card: '.ae-card, .nr-stage', body: '.ae-pbody', root: '.ae-pane:not([hidden])' });
-      out.frames.push({ label, ...f }); m.pass.forEach(x => out.pass.push(label + ': ' + x)); if (!f.scrolls) m.body.forEach(x => out.body.push(label + ': ' + x)); return { f, m }; };
+      out.frames.push({ label, ...f }); m.pass.forEach(x => out.pass.push(label + ': ' + x)); if (!f.scrolls) m.body.forEach(x => out.body.push(label + ': ' + x));
+      out.space.push({ label, ...(await p.evaluate(spaceOf)) }); return { f, m }; };
     const p = await mk('loud.mp3'), tools = ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu'];
     for (const t of tools) { await p.evaluate(t => aeTool(t), t); await p.waitForTimeout(700); await look(p, t);
       if (t === 'imager') out.imager = await p.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { balBottom: r('#aeBalCard').bottom, scopeBottom: r('.im-scope').bottom, widthTop: r('#aeWidthCard').top, scopeTop: r('.im-scope').top, widthH: r('#aeWidthCard').height, balH: r('#aeBalCard').height }; });
@@ -86,6 +110,19 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok(tag + 'Level: the Clip pill shows in some states and not in others, so the comparison means something', lv.some(l => l.clip) && lv.some(l => !l.clip), lv.map(l => l.label + '=' + l.clip).join(', '));
     ok(tag + 'Level: True peak keeps its place whether or not Clip shows', Math.max(...pl) - Math.min(...pl) < 0.5, pl.map(v => v.toFixed(1)).join(', '));
     ok(tag + 'Level: no card changes height when a pill, note, or fold appears', !moved.length && ids.length >= 3, moved.join(', ') + ' ' + JSON.stringify(lv.map(l => l.cards)).slice(0, 300)); }
+  // cards are 10px apart in both directions, every card has equal space at its top and bottom (within 4px) unless a footer row pins to its bottom, and each footer row's space above and below its switch is equal (within 1px)
+  for (const h of heights) { const sp = sweep[h].space, tag = '1440x' + h + ': ';
+    const gaps = sp.flatMap(f => f.gaps.filter(g => Math.abs(+g.split(' ').pop() - 10) > 0.6).map(g => f.label + ': ' + g));
+    ok(tag + 'every tool: cards are 10px apart, side by side and top to bottom', !gaps.length, gaps.slice(0, 4).join(' | '));
+    // reserved: the 12px gap under Spectra's Select row and under the EQ band's row is the space held for a closed fold (Reduce by, Dynamic), so those two keep their rows and stay unticked in the ticket
+    const reserved = c => /sp-sel|aeEqBand/.test(c.id + ' ' + c.cls);
+    const edge = sp.flatMap(f => f.cards.filter(c => !c.foot && !reserved(c) && Math.abs(c.top - c.bottom) > 4).map(c => f.label + ': ' + c.id + ' top ' + c.top + ' bottom ' + c.bottom));
+    ok(tag + 'every tool: a card has the same space at its top and bottom (4px at most), or a footer row pins to its bottom', !edge.length, edge.slice(0, 5).join(' | '));
+    const foot = sp.flatMap(f => f.foot.filter(x => Math.abs(x.above - x.below) > 1).map(x => f.label + ': ' + x.id + ' above ' + x.above + ' below ' + x.below));
+    ok(tag + 'footer rows: the space above each switch and below it is equal (1px)', !foot.length, foot.slice(0, 5).join(' | '));
+  }
+  const feet = new Set(sweep[heights[0]].space.flatMap(f => f.foot.map(x => x.id)));
+  ok('footer rows: Mains hum, Noise only, Limiter, and Center low notes all use the footer row', ['aeNrHumRow', 'nr-listen', 'aeLimRow', 'aeBassCard'].every(id => [...feet].some(x => x.includes(id))), [...feet].join(', '));
   const ih = heights.map(h => sweep[h].imager.widthH.toFixed(1) + '/' + sweep[h].imager.balH.toFixed(1));
   ok('Imager: Width and Balance keep their natural height at every screen height', new Set(ih).size === 1, ih.join(' '));
   ok('no page errors', !errs.length, errs.slice(0, 2).join(' | '));

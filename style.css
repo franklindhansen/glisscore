@@ -20,6 +20,7 @@
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px;   /* the spacing scale (2, 4, 8, 12, 16): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
+  --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:30px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
@@ -1087,7 +1088,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
   #audioDlg:not(.afull) .fd-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
   #audioDlg:not(.afull) .nr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto}
   #audioDlg:not(.afull) .nr-grid>.nr-stage{grid-area:1/1/2/3;height:104px}
-  #audioDlg:not(.afull) .nr-grid #aeNrSample{grid-area:2/1;background:var(--panel);border-color:var(--line);padding:12px 14px}
+  #audioDlg:not(.afull) .nr-grid #aeNrSample{grid-area:2/1;background:var(--panel);border-color:var(--line)}
   #audioDlg:not(.afull) .nr-grid #aeNrCtl{grid-area:2/2}
   #audioDlg:not(.afull) .nr-grid.pre .nr-stage canvas{opacity:1}
   #audioDlg:not(.afull) .nr-grid.pre .mt-steps{flex-direction:column;gap:10px}
@@ -1128,7 +1129,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-read b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
 /* ----- Cards, folding windows, Fades and Level ----- */
-.ae-card{padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
+.ae-card{padding:var(--gap-set) var(--gap-field);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
 .ae-card h4{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-card .field{margin-bottom:0}
 .ae-card.dim{opacity:.55}
@@ -1274,12 +1275,10 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-prog b{display:block;width:0;height:100%;background:var(--accent);transition:width .25s linear}
 .ae-tool{padding:8px 8px;white-space:nowrap}
 #aeNrCtl .field:last-of-type{margin-bottom:0}
-.nr-listen{margin-top:14px;padding-top:12px;border-top:1px solid var(--hairline)}
-.nr-hum{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:10px;border-top:1px solid var(--hairline);font-size:14px}
+.nr-hum{display:flex;align-items:center;gap:10px;font-size:14px}
 .nr-hum{position:relative}
 .nr-hum-l{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;cursor:pointer}
-.nr-hum-l small{font-size:12px;--lh:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}
-.nr-hum-l small:empty{display:none}
+.nr-hum-l small{min-height:16px;font-size:12px;--lh:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}          /* its line is always there, empty or not, so the row keeps its height and the switch never moves */
 .nr-hum.on small,.nr-hum.busy small{color:var(--accent)}
 .nr-hum.none small{color:var(--turn-ink)}
 .nr-hum-bar{position:absolute;left:0;right:0;bottom:-7px;height:3px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
@@ -1318,7 +1317,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .w-plug.drag{fill:var(--accent);opacity:1}
 .w-front.drag{stroke-dasharray:none;opacity:.9}
 /* EQ: every control sits on the same two lines, a small label above and the control below */
-.eq-band.ae-card{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 20px;align-items:start;padding:12px 18px 14px}
+.eq-band.ae-card{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 20px;align-items:start}
 .eq-cell{display:flex;flex-direction:column;gap:var(--gap-label);min-width:0}
 .eq-lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;font-weight:500;color:var(--muted)}
 .eq-lbl output{color:var(--ink);font-variant-numeric:tabular-nums}
@@ -1334,7 +1333,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .eq-ctl .seg{width:100%;font-size:12.5px}
 .eq-top select{flex:0 0 auto;width:104px;min-width:0}
 /* EQ Match fits beside the curve without growing the window */
-.eq-match{padding:12px 18px 14px;margin-top:12px}
+.eq-match{margin-top:12px}
 .mt-steps.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px 22px}
 /* Noise reduction steps */
 .nr-learn{display:flex;align-items:center;gap:8px 10px}
@@ -1389,7 +1388,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-grid #aeNrCtl{grid-area:2/2;min-height:0}
 .nr-stage{background:color-mix(in srgb,var(--ink) 6%,var(--panel2));border:1px solid var(--line);border-radius:var(--r-card)}
 .nr-stage canvas{transition:opacity .5s var(--ease-ui)}
-.nr-grid.pre #aeNrSample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent;padding:10px 22px}
+.nr-grid.pre #aeNrSample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent}
 .nr-grid.pre #aeNrCtl{grid-area:2/1/3/3}
 .nr-grid.pre .nr-stage canvas{opacity:0}
 .nr-grid.pre .mt-steps{flex-direction:row;gap:32px}
@@ -1400,14 +1399,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .nr-grid{grid-template-columns:1fr}
   .nr-grid>*,.nr-grid.pre>*{grid-area:auto!important}
   .nr-grid>.nr-stage{height:116px}
-  .nr-grid.pre #aeNrSample{background:var(--panel);border-color:var(--line);padding:12px 18px}
+  .nr-grid.pre #aeNrSample{background:var(--panel);border-color:var(--line)}
   .nr-grid.pre .nr-stage canvas{opacity:1}
   .nr-grid.pre .mt-steps{flex-direction:column;gap:12px}
 }
 
 /* Noise reduction: rows size to their content; even spacing around Noise only */
 #aeNrCtl{position:relative;overflow:hidden}
-#aeNrCtl .nr-listen{border-top:1px solid var(--hairline)}
 #aeNrCtl .nr-prog{left:0;right:0;bottom:0;margin:0;height:3px;border-radius:0}
 #aeNrSample .mt-pick{row-gap:6px}
 @media (max-width:760px){.nr-grid{grid-template-rows:auto}}
@@ -1425,7 +1423,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-view{grid-area:1/1;transition:opacity .35s var(--ease-ui),transform .45s var(--ease-out)}
 .im-view.off{opacity:0;transform:translateY(6px);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--ease-out),visibility 0s .35s}.im-view .field:last-child{margin-bottom:0}
 .hz{font-style:normal;color:var(--muted);font-size:11.5px;margin-left:4px}
-.im-low{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--hairline)}
+.im-low{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 .im-low .check{white-space:nowrap}
 .im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity .3s var(--ease-ui)}
 .im-lowf.dim{opacity:.45}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1439,7 +1437,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .field.row3 label span{order:1;margin:0;white-space:nowrap}
 .field.row3 input{order:2;margin:0}
 .field.row3 output{order:3;text-align:right}
-#aeWidthCard,#aeBalCard{padding:14px 18px}
 .ae-abs{display:flex;align-items:center;gap:6px}
 #aeABm{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 /* the noise window stays within the same height as every other tool */
@@ -1654,7 +1651,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.lv-note.busy{animation:none}}
 
 /* ----- Limiter row ----- */
-.lv-limrow{margin-top:8px;padding:0}
 .lv-noterow{grid-column:1/-1;display:flex;gap:4px 12px;min-width:0;height:16px}
 .lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:16px;line-height:16px}
 .lv-limrow .check-row{position:relative}
@@ -1689,7 +1685,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-chain svg{flex:none;width:12px;height:12px;opacity:.7}
 .ae-net{margin-left:auto;flex:none;font-variant-numeric:tabular-nums}
 .ae-net b{color:var(--ink);font-weight:500}
-.ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2));padding:var(--gap-set) 14px;gap:var(--gap-set)}
+.ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2));gap:var(--gap-set)}
 .ae-card h4{min-height:22px}
 /* the picture, with the transport floating over its lower edge as glass (the picture keeps its drawing above it) */
 @media (min-width:761px){
@@ -1726,9 +1722,27 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeNrCtl .field{margin-bottom:0}
 #aeNrCtl .sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
 #aeNrCtl .sub>.field{margin:0}
-#aeNrCtl .nr-listen{padding-top:var(--gap-head)}
 /* Spectra: the tools sit in one roomy row, the edits fill the rest */
-.sp-grid{display:flex;flex-direction:column;gap:10px;height:100%}
+/* ----- The footer row (shared): a label and a switch on one row, under a hairline, pinned to the bottom of its card. The space above the switch (hairline to switch) and below it (switch to the card's padding edge) is the same: --gap-set, the card's own padding. ----- */
+.foot-row{margin-top:auto;padding-top:var(--gap-set);border-top:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
+#aeLimRow>.check-row{flex:1;min-width:0}
+/* a card held taller than its content: a footer row pins to the bottom; otherwise its groups spread evenly; a card with one row centers it */
+#aeNrSample{display:flex;flex-direction:column;gap:0}
+#aeNrSample .mt-steps{flex:1;justify-content:space-between}
+#aeFadeLenCard{display:flex;flex-direction:column;gap:0}
+#aeFadeLenField{margin-top:auto}
+#aeEmCard{display:flex;flex-direction:column;gap:0}
+#aeEmCard>.mt-steps{flex:1;justify-content:space-between}
+#aeMeter{display:flex;flex-direction:column;gap:0;min-height:0}
+#aeMeter .lv-track{margin-top:0}          /* a flex column does not collapse margins: the heading keeps its --gap-head to the bar */
+#aeMeter .lv-scale{margin-top:auto}          /* the spare height sits under the bar, above its scale */
+#aeWidthCard{gap:0}
+/* Level: the folds take the card's spare height, so the Limiter's footer row pins to the bottom of Normalize in Loudness */
+#aeNormCard>.fa-stack{flex:1 1 auto}
+#aeNormCard .fa-stack>.fa{align-self:stretch}
+#aeNormCard .fa.open>.fa-in{height:100%}
+#aeNormCard .lv-loud{height:100%}
+.sp-grid{display:flex;flex-direction:column;gap:var(--gap-card);height:100%}
 .sp-sel{flex:none}
 .sp-tools{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
 .sp-tools .btn,.sp-tools .seg{height:34px;box-sizing:border-box}
@@ -1746,15 +1760,15 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aePaneEq .eq-top{flex:none;margin-bottom:8px}
 #aePaneEq .eq-stage{flex:1 1 0;min-height:64px;height:auto}
 #aePaneEq .eq-fold{flex:none}
-#aePaneEq .eq-band.ae-card{flex:none;margin-top:10px;padding:10px 14px}
-#aePaneEq .eq-match{flex:none;margin-top:10px;padding:10px 14px}
+#aePaneEq .eq-band.ae-card{flex:none;margin-top:10px}
+#aePaneEq .eq-match{flex:none;margin-top:10px}
 #aePaneEq .mt-steps.two{gap:6px 20px}
 /* Imager: both columns end together */
-.im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:10px;align-items:stretch}
+.im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:var(--gap-card);align-items:stretch}
 @media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
-.im-ctl{display:flex;flex-direction:column;justify-content:space-between;gap:8px;min-height:0}          /* Width and Balance keep their height; spare height is space between them, so the column ends where the scope card does */
-#aeWidthCard{flex:none;padding:10px 14px}
-#aeBalCard{flex:none;min-height:0;padding:10px 14px;align-content:space-between}
+.im-ctl{display:flex;flex-direction:column;gap:var(--gap-card);min-height:0}          /* Balance keeps its height and sits on the scope's bottom line; Width takes the spare height, and its footer row pins to the bottom of its card */
+#aeWidthCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+#aeBalCard{flex:none;min-height:0;align-content:space-between}
 .im-views{display:grid;align-content:center;height:64px}
 .im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:12px;align-items:center}
 .im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
@@ -1768,14 +1782,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-slrow input{margin:0}
 .im-view .field{margin:0}
 .field.row3{margin-bottom:2px}
-.im-low{margin-top:4px;padding-top:6px}
 .bal-say{margin-left:auto;display:inline-flex;align-items:center;white-space:nowrap}
 .bal-say.auto{color:var(--accent);font-weight:600}
 .bal-say.auto::before{content:'';flex:none;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 30%,transparent);animation:bal-pulse 1.8s var(--ease-ui) infinite}
 @keyframes bal-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 0%,transparent)}}
 #aeBalAuto.on,#aeBandThrAuto.on,#aeNrFind.on,#aeNrHum.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
 #aeBalCard .field{margin:0}
-.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:2px 0 8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
+.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
 .bal-meter.none{opacity:.35}
 .bm-name{min-width:34px}
 .bm-val{min-width:64px;text-align:right;color:var(--ink);font-weight:500}
@@ -1787,10 +1800,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .bal-foot output{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
 .bal-foot .bal-say{margin-left:0}
 .bal-say.even{color:var(--ink)}
-.im-scope{padding:10px 12px;min-height:0;gap:10px}
+.im-scope{min-height:0;gap:10px}
 .im-scope canvas{flex:1 1 0;min-height:0;aspect-ratio:auto;height:auto}
 /* Level: the meter sits at the bottom, the two cards above it share what is left */
-.lv-grid{height:100%;align-content:space-between;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto auto;gap:10px}          /* no picture here: the cards keep their natural heights and spare height is even space between the rows */
+.lv-grid{height:100%;align-content:stretch;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--gap-card)}          /* no picture here: the two cards above keep their natural heights, and the Meter takes the spare height and spreads its rows inside its card (a card never holds the spare height as space between cards) */
 #aeNormCard{overflow:hidden}
 #aeNormCard>*{flex:none}
 #aeGainCard{display:flex;flex-direction:column}          /* the row is as tall as Normalize in Loudness: the Gain slider sits at the foot and the number under the heading, so nothing in the card stretches */
@@ -1798,14 +1811,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-loud>.lv-note,.lv-loud>.lv-limrow,.lv-loud>.fa{grid-column:1/-1}
 .lv-loud .lv-trow{margin-top:0}
 .lv-loud .lv-note{margin:0}
-.lv-loud .lv-limrow{margin-top:0}
 .lv-meter{margin-top:0}
 .lv-mh{gap:14px;justify-content:flex-start;margin-bottom:8px}
 .lv-read{display:flex;align-items:baseline;gap:6px 14px;margin:0 0 0 auto;font-size:12.5px}
 .lv-meter .lv-scale{margin-top:5px}
 .ae-card .lv-big,.ae-card .field>.lv-big{margin:0 0 8px}
 /* Fades: the controls and the shape end together */
-.fd-grid{height:100%;gap:10px;grid-template-rows:minmax(0,1fr) auto}
+.fd-grid{height:100%;gap:var(--gap-card);grid-template-rows:minmax(0,1fr) auto}
 .fd-shape{min-height:0}
 
 /* … in loading messages: three dots that bounce one after another */
@@ -2292,7 +2304,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .mt-head .mt-acts .btn{margin-left:0}
 
 /* Emulator: the three steps on the left, the picture of both tones and the reference's numbers on the right */
-.em-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:14px;align-items:stretch}
+.em-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:var(--gap-card);align-items:stretch}
 .em-take{display:flex;flex-wrap:wrap;gap:6px}
 #aeEmChip{width:fit-content}
 @media (min-width:761px){#aePaneEmu:not([hidden]){display:flex;flex-direction:column;height:100%}#aePaneEmu .em-grid{flex:1 1 auto;min-height:0}}

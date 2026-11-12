@@ -18,7 +18,7 @@ const file = path.join(os.tmpdir(), 'kf-hum-none.wav'); fs.writeFileSync(file, w
     await sleep(6000); o.later = small.textContent; o.laterShown = getComputedStyle(small).display !== 'none';
     document.querySelector('#aeNrHum').click(); await sleep(60); o.again = small.textContent; return o;
   });
-  ok('before a press the Mains hum row has no sub-line', !r.before.txt && !r.before.shown, JSON.stringify(r.before));
+  ok('before a press the Mains hum sub-line is empty (its line is kept, so the row does not move)', !r.before.txt, JSON.stringify(r.before));
   ok('a press with no hum takes at least 400ms', r.took >= 400, r.took.toFixed(0) + 'ms');
   ok('it says "No hum found" in the row and nowhere else', r.after === 'No hum found' && !r.toast, JSON.stringify({ after: r.after, toast: r.toast }));
   ok('the message is still there 6s later', r.later === 'No hum found' && r.laterShown, r.later);

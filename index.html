@@ -760,14 +760,14 @@
                 <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Select noise</div><div class="mt-pick" id="aeNrPick"><button class="btn small" id="aeNrFind" type="button" aria-pressed="false" title="Works out the noise from the whole recording. No quiet gap is needed.">Auto</button><button class="btn small" id="aeNrHand" type="button" aria-pressed="false" title="Then drag across the waveform">Manual</button><span id="aeNrSelTxt"></span></div></div></div>
                 <div class="mt-step" id="aeNrLearnStep"><span class="mt-n">2</span><div class="mt-body"><div class="nr-learn"><button class="btn small primary" id="aeNrLearn" type="button">Learn noise</button><div class="mt-chip" id="aeNrChip" hidden><b id="aeNrChipTxt"></b><button id="aeNrClear" type="button" aria-label="Forget the noise" title="Forget the noise"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div></div></div></div>
               </div>
-              <div class="nr-hum" id="aeNrHumRow"><label class="nr-hum-l" for="aeNrHum"><span>Mains hum</span><small id="aeNrHumVal"></small></label><input type="checkbox" class="switch" id="aeNrHum" title="Finds a steady 50 or 60Hz hum and its overtones, and takes out just those"><i class="nr-hum-bar" aria-hidden="true"><b id="aeNrHumBar"></b></i></div>
+              <div class="nr-hum foot-row" id="aeNrHumRow"><label class="nr-hum-l" for="aeNrHum"><span>Mains hum</span><small id="aeNrHumVal"></small></label><input type="checkbox" class="switch" id="aeNrHum" title="Finds a steady 50 or 60Hz hum and its overtones, and takes out just those"><i class="nr-hum-bar" aria-hidden="true"><b id="aeNrHumBar"></b></i></div>
             </div>
             <div class="ae-card dim" id="aeNrCtl">
               <div class="im-head nr-head t-head"><h4><span class="mt-n inl">3</span>Removal</h4><div class="seg" id="aeNrMode" role="radiogroup" aria-label="Method" title="Natural leaves the remaining hiss steady. Classic is the earlier method."><label><input type="radio" name="aeNrMode" value="natural" checked disabled><span>Natural</span></label><label><input type="radio" name="aeNrMode" value="classic" disabled><span>Classic</span></label></div></div>
               <div class="field"><label for="aeNrRed"><span>Reduction</span><output id="aeNrRedVal">12dB</output></label><input type="range" id="aeNrRed" min="0" max="30" step="1" value="12" data-default="12" disabled></div>
               <div class="fa open" id="aeNrSub"><div class="fa-in"><div class="sub"><div class="field" id="aeNrSensF"><label for="aeNrSens"><span>Sensitivity</span><output id="aeNrSensVal">50%</output></label><input type="range" id="aeNrSens" min="0" max="100" step="1" value="50" data-default="50" disabled></div>
               <div class="field" id="aeNrSmoothF"><label for="aeNrSmooth"><span>Smoothing</span><output id="aeNrSmoothVal">50%</output></label><input type="range" id="aeNrSmooth" min="0" max="100" step="1" value="50" data-default="50" disabled></div></div></div></div>
-              <label class="check nr-listen"><span>Noise only</span><input type="checkbox" class="switch" id="aeNrListen" disabled></label>
+              <label class="check nr-listen foot-row"><span>Noise only</span><input type="checkbox" class="switch" id="aeNrListen" disabled></label>
               <div class="nr-prog" id="aeNrProgBar"><span class="nr-prog-l">Processing<span class="nr-pct" id="aeNrPct"></span><button class="info-i" type="button" aria-label="About processing" aria-expanded="false">i</button><span class="tip" role="tooltip">Rebuilding the audio without the noise. The new version takes over when this finishes.</span></span><i class="nr-prog-t"><b id="aeNrProg"></b></i></div>
             </div>
           </div>
@@ -852,7 +852,7 @@
                     <div class="field row3"><label for="aeBwHi"><span>High<i class="hz">&gt; 4kHz</i></span><output id="aeBwHiVal">0</output></label><input type="range" class="bi" id="aeBwHi" min="-100" max="100" step="1" value="0" data-default="0"></div>
                   </div>
                 </div>
-                <div class="im-low" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
+                <div class="im-low foot-row" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
               </div>
               <div class="ae-card" id="aeBalCard">
                 <div class="im-head t-head"><h4>Balance</h4><div class="bal-foot"><span class="t-note inline bal-say" id="aeBalSay" aria-live="polite"></span><output id="aeBalVal">No shift</output></div><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Makes left and right equally loud. Press again to undo.">Auto</button></div>
@@ -875,7 +875,7 @@
                 <div class="lv-loud">
                   <select id="aeLoudPreset" aria-label="Loudness target"></select><label class="lv-target lv-trow" for="aeLoudDb" title="Target loudness"><span class="num"><input type="number" id="aeLoudDb" min="-36" max="-6" step="0.1" inputmode="decimal"><em>LUFS</em></span></label>
                   <div class="lv-noterow"><p class="t-note lv-note" id="aeLoudNote" aria-live="polite"></p></div>
-                  <div class="lv-limrow" id="aeLimRow"><label class="check-row" for="aeLimiter"><span>Limiter</span><span class="lv-tip-warn" id="aeLimTip" style="visibility:hidden">Turn on to stop clipping</span><input type="checkbox" class="switch" id="aeLimiter"></label></div>
+                  <div class="lv-limrow foot-row" id="aeLimRow"><label class="check-row" for="aeLimiter"><span>Limiter</span><span class="lv-tip-warn" id="aeLimTip" style="visibility:hidden">Turn on to stop clipping</span><input type="checkbox" class="switch" id="aeLimiter"></label></div>
                   
                 </div>
               </div></div></div>
