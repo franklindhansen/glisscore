@@ -119,8 +119,18 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       o.newFile = JSON.stringify(S.set.bp) === '{"level":true}';
       await importSettings(new File([JSON.stringify({ glisscore: 1, settings: { bp: { eq: true } } })], 'eq.txt')); await sleep(200);
       openAudioEditor(); await sleep(400); aeReset(); await sleep(100); o.reset = !aeBpAny() && aeHasMatch() === false;
-      closeAudioEditor(); return o;
+      aeTool('eq'); await sleep(300); aePush(); AE.d.fx.eq.on = true; AE.d.fx.eq.bands = [{ type: 'peaking', f: 1000, g: 6, q: 1, on: true }]; aeRefresh(); await sleep(200);
+      aeToggleBypass(); await sleep(200); o.dropBypassed = aeBpTool('eq');
+      AE.d.fx.eq.on = false; aeRefresh(); await sleep(200); o.eqDropped = AE.d.bp.eq === undefined && !aeBpAny();          // the EQ stops doing anything: its bypass is let go
+      aeTool('level'); await sleep(300); AE.d.gainDb = 3; aeRefresh(); await sleep(200); aeToggleBypass(); await sleep(200); o.levelBypassed = aeBpTool('level');
+      AE.d.gainDb = 0; aeRefresh(); await sleep(200); o.levelDropped = AE.d.bp.level === undefined;
+      closeAudioEditor(); await sleep(300);
+      o.outsideRuns = !fxActive(soundSet().fx, fxChannels()).includes('eq') && S.set.bp.eq === true;          // what the video and export play leaves the bypassed EQ out
+      o.outsideDom = [...document.querySelectorAll('.bp, .ae-bypill, .ae-proc.bp, #aeChain b.bp')].every(e => e.closest('#audioDlg'));          // no list outside the editor marks a tool as bypassed or running
+      return o;
     });
+    ok('a tool that stops doing anything drops its bypass (EQ and Level)', s.eqDropped && s.levelBypassed && s.levelDropped && s.dropBypassed, JSON.stringify(s));
+    ok('nothing outside the editor lists a bypassed tool as running: the sound leaves it out, and no bypass mark sits outside the editor', s.outsideRuns && s.outsideDom, JSON.stringify(s));
     ok('Bypass is one History step named for the tool, Undo and Redo bring it back, and an edit switches it on in its own step', s.oneStep && s.undoOff && s.redoOn, JSON.stringify(s));
     ok('an edit to a bypassed EQ switches it back on in the same step: one Undo restores the old setting and the bypass', s.editOn && s.editStep && s.undoEdit && s.redoEdit, JSON.stringify(s));
     ok('Done saves the bypass, and reopening the editor shows it', s.saved && s.reopen, JSON.stringify(s));
