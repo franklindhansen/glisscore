@@ -59,24 +59,39 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     }
     for (const row of pane.querySelectorAll('.foot-row')) { if (!shown(row)) continue; const card = row.closest('.ae-card'), cs = getComputedStyle(card), sw = row.querySelector('.switch') || row, rr = R(row), sr = R(sw), cr = R(card);
       out.foot.push({ id: row.id || row.className, above: rnd(sr.top - rr.top), below: rnd(cr.bottom - parseFloat(cs.borderBottomWidth) - sr.bottom) }); }
+    // what the ticket asks per tool: the content's left inset, a heading's offset from its card's top, the Level meter's bar and scale sizes, Emulate against the note, Fades' end labels against the picture, and the Mains hum sub-line
+    const inset = c => { const k = [...c.children].find(k => shown(k) && R(k).width > 0 && getComputedStyle(k).position !== 'absolute'); return k ? rnd(R(k).left - R(c).left) : null; };
+    out.inset = cards.map(c => ({ id: nm(c), v: inset(c) }));
+    const hOff = (sel, h) => { const c = document.querySelector(sel); if (!c || !shown(c)) return null; const hh = c.querySelector(h); return hh ? rnd(R(hh).top - R(c).top) : null; };
+    out.heads = { normalize: hOff('#aeNormCard', 'h4'), removal: hOff('#aeNrCtl', 'h4'), width: hOff('#aeWidthCard', 'h4'), gain: hOff('#aeGainCard', 'h4'), length: hOff('#aeFadeLenCard', 'h4') };
+    const el = s => document.querySelector(s);
+    if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
+    if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view .em-note')).bottom) };
+    if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('.fd-shape canvas')).bottom) };
     return out;
   };
   const sweep = {}, heights = [680, 720, 760, 800, 900];
   const [floor, chrome] = (await (async () => { const p = await b.newPage(); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); const v = await p.evaluate(() => { const c = getComputedStyle(document.documentElement); return c.getPropertyValue('--ae-floor') + ',' + c.getPropertyValue('--ae-chrome'); }); await p.close(); return v; })()).split(',').map(parseFloat);
   await Promise.all(heights.map(async h => {
-    const out = sweep[h] = { frames: [], pass: [], body: [], level: [], notes: [], space: [] };
+    const out = sweep[h] = { frames: [], pass: [], body: [], level: [], notes: [], space: [], uig: [], hum: null, narrowFoot: [] };
     const mk = async file => { const p = await b.newPage({ viewport: { width: 1440, height: h } }); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push('1440x' + h + ': ' + e.message));
       await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/' + file);
       await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); return p; };
     const look = async (p, label) => { const f = await p.evaluate(frame), m = await p.evaluate(fitMeasure, { card: '.ae-card, .nr-stage', body: '.ae-pbody', root: '.ae-pane:not([hidden])' });
       out.frames.push({ label, ...f }); m.pass.forEach(x => out.pass.push(label + ': ' + x)); if (!f.scrolls) m.body.forEach(x => out.body.push(label + ': ' + x));
-      out.space.push({ label, ...(await p.evaluate(spaceOf)) }); return { f, m }; };
+      out.space.push({ label, ...(await p.evaluate(spaceOf)) });
+      const g = await p.evaluate(() => uiGuard.scan().map(x => x.join(' '))); g.forEach(x => out.uig.push(label + ': ' + x));
+      return { f, m }; };
     const p = await mk('loud.mp3'), tools = ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu'];
     for (const t of tools) { await p.evaluate(t => aeTool(t), t); await p.waitForTimeout(700); await look(p, t);
       if (t === 'imager') out.imager = await p.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { balBottom: r('#aeBalCard').bottom, scopeBottom: r('.im-scope').bottom, widthTop: r('#aeWidthCard').top, scopeTop: r('.im-scope').top, widthH: r('#aeWidthCard').height, balH: r('#aeBalCard').height }; });
       if (t === 'noise') out.noisePad = await p.evaluate(() => [getComputedStyle(document.querySelector('#aeNrCtl')).padding, getComputedStyle(document.querySelector('#aeGainCard')).padding]); }
     await p.evaluate(() => aeTool('noise')); await p.waitForTimeout(500);
     await p.evaluate(async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(300); }); await look(p, 'noise found by Auto');
+    // the Mains hum row: the switch and the card hold their places from idle, through busy, to done, and back off
+    out.hum = await p.evaluate(async () => { const pos = () => { const s = document.querySelector('#aeNrHum').getBoundingClientRect(), c = document.querySelector('#aeNrSample').getBoundingClientRect(), r = document.querySelector('#aeNrHumRow').getBoundingClientRect(); return { sw: Math.round(s.top * 10) / 10, card: Math.round(c.height * 10) / 10, row: Math.round(r.height * 10) / 10, sub: document.querySelector('#aeNrHumVal').textContent }; };
+      aeTool('noise'); await sleep(300); const rec = { idle: pos() }; document.querySelector('#aeNrHum').click(); await sleep(60); rec.busy = pos(); for (let i = 0; i < 400 && AE.humBusy; i++) await sleep(25); await sleep(300); rec.done = pos();
+      document.querySelector('#aeNrHum').click(); await sleep(300); rec.off = pos(); return rec; });
     await p.evaluate(() => aeTool('eq')); await p.waitForTimeout(600); await p.evaluate(() => document.querySelector('#aeMatchBtn').click()); await p.waitForTimeout(900); await look(p, 'EQ Match open');
     await p.close();
     const q = await mk('f32over.wav'); await q.evaluate(() => aeTool('level')); await q.waitForTimeout(700);
@@ -121,6 +136,33 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const foot = sp.flatMap(f => f.foot.filter(x => Math.abs(x.above - x.below) > 1).map(x => f.label + ': ' + x.id + ' above ' + x.above + ' below ' + x.below));
     ok(tag + 'footer rows: the space above each switch and below it is equal (1px)', !foot.length, foot.slice(0, 5).join(' | '));
   }
+  // the Imager at phone and narrow widths: Center low notes' row may wrap, and its switch keeps equal space above and below
+  const narrowFoot = [];
+  for (const [w, h] of [[390, 800], [700, 900]]) { const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(90000);
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3');
+    await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400);
+    await p.evaluate(() => aeTool('imager')); await p.waitForTimeout(800);
+    narrowFoot.push({ w, sp: await p.evaluate(spaceOf) }); await p.close(); }
+  for (const h of heights) { const o = sweep[h], sp = o.space, tag = '1440x' + h + ': ';
+    const ins = sp.flatMap(f => f.inset.filter(x => x.v !== null && Math.abs(x.v - 17) > 0.6).map(x => f.label + ': ' + x.id + ' ' + x.v));
+    ok(tag + 'one padding: every tool card starts its content 17px from its left edge (the card padding and border)', !ins.length, ins.slice(0, 5).join(' | '));
+    const plain = sp.flatMap(f => [f.heads.gain, f.heads.length].filter(v => v !== null && Math.abs(v - 13) > 1));
+    const seg = sp.flatMap(f => ['normalize', 'removal', 'width'].map(k => [f.label, k, f.heads[k]]).filter(([, , v]) => v !== null && Math.abs(v - 13) > 1).map(([l, k, v]) => l + ': ' + k + ' ' + v));
+    ok(tag + 'a heading beside a segmented control sits as far from its card\'s top as a plain heading (13px)', !seg.length && !plain.length, seg.slice(0, 5).join(' | ') + (plain.length ? ' plain ' + plain.join(',') : ''));
+    const lv = sp.filter(f => f.meter), lvBad = lv.filter(f => Math.abs(f.meter.track - 14) > 0.5 || Math.abs(f.meter.scale - 16) > 0.5 || Math.abs(f.meter.bottom - f.meter.cardsBottom) > 1);
+    ok(tag + 'Level: the bar keeps 14px and its scale 16px, and the Meter ends on the cards\' bottom line', lv.length > 0 && !lvBad.length, JSON.stringify(lv.map(f => f.meter)).slice(0, 300));
+    const em = sp.filter(f => f.emulate);
+    ok(tag + 'Emulator: Emulate sits level with the bottom of the graph card\'s note', em.length > 0 && em.every(f => Math.abs(f.emulate.go - f.emulate.note) <= 1), JSON.stringify(em.map(f => f.emulate)).slice(0, 200));
+    const fd = sp.filter(f => f.fades);
+    ok(tag + 'Fades, Length: its end labels end on the bottom line of the Shape picture', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
+    const curve = sp.flatMap(f => f.cards.filter(c => c.id === 'aeShapeCard' && Math.abs(c.top - c.bottom) > 1).map(c => f.label + ' ' + c.top + '/' + c.bottom));
+    ok(tag + 'Fades, Curve: the row is centered in its card', !curve.length, curve.slice(0, 3).join(' | '));
+    const hm = o.hum, moved = Object.entries(hm).filter(([k, x]) => Math.abs(x.sw - hm.idle.sw) > 1 || Math.abs(x.card - hm.idle.card) > 1 || Math.abs(x.row - hm.idle.row) > 1).map(([k]) => k);
+    ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
+    ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));
+  }
+  for (const n of narrowFoot) { const bad = n.sp.foot.filter(x => Math.abs(x.above - x.below) > 1);
+    ok('Imager at ' + n.w + 'px: the footer row (Center low notes) keeps equal space above and below its switch', n.sp.foot.length > 0 && !bad.length, JSON.stringify(n.sp.foot)); }
   const feet = new Set(sweep[heights[0]].space.flatMap(f => f.foot.map(x => x.id)));
   ok('footer rows: Mains hum, Noise only, Limiter, and Center low notes all use the footer row', ['aeNrHumRow', 'nr-listen', 'aeLimRow', 'aeBassCard'].every(id => [...feet].some(x => x.includes(id))), [...feet].join(', '));
   const ih = heights.map(h => sweep[h].imager.widthH.toFixed(1) + '/' + sweep[h].imager.balH.toFixed(1));

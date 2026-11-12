@@ -1738,6 +1738,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeMeter .lv-scale{margin-top:auto}          /* the spare height sits under the bar, above its scale */
 #aeWidthCard{gap:0}
 /* Level: the folds take the card's spare height, so the Limiter's footer row pins to the bottom of Normalize in Loudness */
+/* a heading beside a segmented control starts at the card's top, as a plain heading does (the control is taller, so it is not centered on the heading) */
+#aeNormCard .lv-head,#aeWidthCard .im-head,#aeNrCtl .nr-head{align-items:flex-start}
+/* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
+@media (max-width:760px){#aeBassCard{flex-wrap:nowrap}#aeBassCard .im-lowf{flex-basis:auto;max-width:none}}
 #aeNormCard>.fa-stack{flex:1 1 auto}
 #aeNormCard .fa-stack>.fa{align-self:stretch}
 #aeNormCard .fa.open>.fa-in{height:100%}
