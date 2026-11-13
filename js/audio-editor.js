@@ -1938,11 +1938,11 @@ function aeSetView(v, dir) {
   AE.view = v; $('#audioDlg').dataset.view = v; const r = document.querySelector('input[name=aeView][value=' + v + ']'); if (r) { r.checked = true; const sg = $('#aeView'); if (sg._place) sg._place(true); }
   hsGet('ae-vt', v === 'spec' ? 1 : 0); if (v === 'spec') specStart(); aeAnim();          // the target is set first, so the animation loop sees something moving
 }
-const AE_NAMES = { noise: 'Noise reduction', spec: 'Spectra', eq: 'EQ', imager: 'Imager', level: 'Level', fades: 'Fades', emu: 'Emulator (beta)' };
-const AE_SUBS = { noise: 'Banish hiss, hum, or room tone.', spec: 'Heals or turns down a blip, a hum, or a squeak you can see.', eq: 'Shapes the tone, band by band.', imager: 'Stereo width and balance.', level: 'Gain, and how loud the finished audio is.', fades: 'Eases the start in and the end out.', emu: 'Borrows the sound of another recording.' };
+const AE_NAMES = { noise: 'Noise reduction', spec: 'Spectra', eq: 'EQ', imager: 'Imager', level: 'Level', fades: 'Fades', emu: 'Emulator' };
+const AE_SUBS = { noise: 'Banish hiss, hum, or room tone.', spec: 'Heal or turn down a blip, a hum, or a squeak you can see.', eq: 'Shape the tone, band by band.', imager: 'Widen, narrow, or re-center the sound.', level: 'Set the finished audio\'s volume.', fades: 'Ease the start and end.', emu: 'Borrow the sound of another recording.' };
 /* the head, the tool window and the line between them travel together: the old ones leave, the new ones come in from the same side */
 function aeHead(name, dir) {
-  const top = $('#aeTop'), head = $('#aeHead'), win = $('#aeWin'), set = () => { $('#aePaneTitle').textContent = AE_NAMES[name]; $('#aePaneSub').textContent = AE_SUBS[name]; };
+  const top = $('#aeTop'), head = $('#aeHead'), win = $('#aeWin'), set = () => { $('#aePaneTitle').textContent = AE_NAMES[name]; $('#aePaneSub').textContent = AE_SUBS[name]; $('#aePaneBeta').hidden = name !== 'emu'; };
   win.querySelectorAll('.ae-ghost').forEach(n => n.remove()); const was = head._slide ? paneNow(head) : null; (head._slide || []).forEach(a => a.cancel());
   if (!dir || reducedMotion() || !top.offsetHeight || $('#audioDlg').hidden) { set(); return; }
   const ghost = head.cloneNode(true), lift = AE_LIFT, f = was || { o: 1, y: 0 };
@@ -1957,15 +1957,16 @@ function aeTool(name) {
   const order = railOrder('#aeRail .ae-tool'), dir = prev && prev !== name ? (order.indexOf(name) > order.indexOf(prev) ? 1 : -1) : 0;
   aeSlidePane(panes, prev, name);
   document.querySelectorAll('#aeRail .ae-tool').forEach(b => { const on = b.dataset.tool === name; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-  $('#aeRailName').textContent = AE_NAMES[name]; aeHead(name, dir); $('#aeAB').classList.remove('gone'); $('#aeABm').classList.remove('gone'); aeSetView(name === 'spec' ? 'spec' : 'wave', prev ? dir : 0); aeRailOpen(false); aeRailSel(!!prev); if (AE.d) aeBpUi();
+  $('#aeRailName').textContent = AE_NAMES[name]; $('#aeRailBeta').hidden = name !== 'emu'; aeHead(name, dir); $('#aeAB').classList.remove('gone'); $('#aeABm').classList.remove('gone'); aeSetView(name === 'spec' ? 'spec' : 'wave', prev ? dir : 0); aeRailOpen(false); aeRailSel(!!prev); if (AE.d) aeBpUi();
   requestAnimationFrame(aeAlignView); requestAnimationFrame(() => { if (name === 'imager') aeScopeDraw(); if (name === 'eq') aeEqDraw(); if (name === 'fades') aeFadeDraw(); if (name === 'noise') { aeNrHolds(); aeNrDraw(); } if (name === 'emu') aeEmUi(); });
 }
 /* on a narrow window the tool list folds into one line that opens like a menu */
 function aeRailSel(animate) {
   const sel = $('#aeRailSel'), root = $('#aeRailIn'), btn = document.querySelector('#aeRail .ae-tool.on'); if (!sel || !btn || !btn.offsetWidth) { if (sel) sel.style.opacity = '0'; return; }
-  let x = 0, y = 0, n = btn; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+  let x = 0, y = 0, n = btn; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; if (n && n !== root) { x += n.clientLeft; y += n.clientTop; } }          // a row inside a part with a border (the Emulator's hairline) is placed from that part's padding edge
   if (!animate || reducedMotion() || sel.style.opacity !== '1') sel.style.transition = 'none';
-  sel.style.width = btn.offsetWidth + 'px'; sel.style.height = btn.offsetHeight + 'px'; sel.style.transform = 'translate(' + x + 'px,' + y + 'px)'; sel.style.opacity = '1';
+  const br = btn.getBoundingClientRect(), m = new DOMMatrix(getComputedStyle(btn).transform), w = btn.offsetWidth ? br.width / (m.a || 1) : 0, h = btn.offsetHeight ? br.height / (m.d || 1) : 0;          // the button's own size, to a fraction of a pixel (a name's width is not whole), undone from a press's shrink
+  sel.style.width = w + 'px'; sel.style.height = h + 'px'; sel.style.transform = 'translate(' + x + 'px,' + y + 'px)'; sel.style.opacity = '1';
   if (sel.style.transition === 'none') { void sel.offsetWidth; sel.style.transition = ''; }
 }
 function aeRailOpen(on) { const r = $('#aeRail'); r.classList.toggle('open', !!on); $('#aeRailCur').setAttribute('aria-expanded', !!on); }
@@ -1974,7 +1975,8 @@ function aeLit(d) {
   const nch = fxChannels(), fx = d.fx;
   return { noise: !!fx.noise.on, spec: !!fx.spec.on, eq: !!fx.eq.on && eqHas(fx), imager: !!fx.imager.on && nch === 2, level: !!d.normalize || d.gainDb !== 0, fades: d.audioFades !== false };
 }
-const aeChainOrder = d => ['noise', 'spec'].concat(d.fx.order, ['fades', 'level']);          // the tool list's order: Fades sits above Level
+const aeChainOrder = d => ['noise', 'spec'].concat(d.fx.order, ['fades', 'level']);          // every tool that works on the sound, in the order it runs (the status bar's "Runs" line)
+const aeWireOrder = d => d.fx.order.concat(['fades', 'level']);          // the cable's route from In to Out: Noise reduction and Spectra rewrite the recording itself, so they are lit but not on the cable
 function aeRailSync() {
   const procs = $('#aeProcs'), want = AE.d.fx.order, cur = Array.from(procs.children).map(e => e.dataset.tool), d = AE.d, fx = d.fx, nch = fxChannels(), lit = aeLit(d);
   if (want.join() !== cur.join()) {
@@ -2018,6 +2020,10 @@ function wireStep(r) {
     }
   }
   pin(0, r.pa); pin(n - 1, r.pb);
+  if (!r.dying && !r.pa.free && !r.pb.free) {
+    const top = Math.min(r.pa.y, r.pb.y), bottom = Math.max(r.pa.y, r.pb.y);
+    P.forEach(p => { const y = clamp(p.y, top, bottom); if (y !== p.y) { p.y = y; p.py = y; } });          // a connected cable stays between its sockets; slack bows sideways instead of hanging past Out
+  }
   P.forEach(p => { if (p.x < WR.EDGE) { p.x = WR.EDGE; p.px = p.x; } });
 }
 function wireMake(a, b, s, e, settled) {
@@ -2049,11 +2055,11 @@ function wireLoop(now) {
 }
 function aeWiresDraw(force) {
   const svg = $('#aeWires'), root = $('#aeRailIn'); if (!svg || !root || !AE.d || !root.offsetWidth) return;
-  const rr = root.getBoundingClientRect(), lit = aeLit(AE.d), W0 = Math.round(rr.width), H0 = Math.round(rr.height), sig = aeChainOrder(AE.d).filter(k => lit[k]).join() + '|' + W0 + 'x' + H0 + '|' + (reducedMotion() ? 1 : 0);
+  const rr = root.getBoundingClientRect(), lit = aeLit(AE.d), W0 = Math.round(rr.width), H0 = Math.round(rr.height), sig = aeWireOrder(AE.d).filter(k => lit[k]).join() + '|' + W0 + 'x' + H0 + '|' + (reducedMotion() ? 1 : 0);
   if (!force && !AE.wire && AE.wSig === sig && AE.wr) return; AE.wSig = sig;          // nothing about the cables has changed (a slider moved): leave them be
   svg.setAttribute('width', W0); svg.setAttribute('height', H0);
   const at = {}; [AE_LEDS, AE_JACKS].forEach(o => Object.keys(o).forEach(k => { const el = $(o[k]).getBoundingClientRect(); at[k] = [Math.round((el.left + el.width / 2 - rr.left) * 10) / 10, Math.round((el.top + el.height / 2 - rr.top) * 10) / 10]; }));
-  const rawChain = ['in'].concat(aeChainOrder(AE.d).filter(k => lit[k]), ['out']); let chain = rawChain;
+  const rawChain = ['in'].concat(aeWireOrder(AE.d).filter(k => lit[k]), ['out']); let chain = rawChain;
   if (!AE.wc || !AE.wr) { AE.wc = rawChain; clearTimeout(AE.wcT); }
   else if (rawChain.join() !== AE.wc.join()) {
     const sameSet = rawChain.slice().sort().join() === AE.wc.slice().sort().join();
@@ -2423,9 +2429,9 @@ function aeMatchBind() {
   $('#aeMatchAmt').addEventListener('change', () => { AE.sliding = false; });
 }
 /* ---------------- Audio Editor: the Emulator ----------------
-   An assistant, not a stage in the chain. It measures another recording (its tone, how wide it is in the low, middle, and high notes, how loud
-   it is) and sets the EQ's free curve, the Imager's widths and Level's loudness target to bring yours there. It is one undo step, Amount scales
-   the tone and the width, and Bypass with Match gain compares before and after. Noise reduction, Spectra, the trim and the fades are left alone. */
+   Outside the processing chain, it measures another recording (its tone, how wide it is in the low, middle, and high notes, how loud
+   it is) and sets the EQ's free curve, the Imager's widths, and Level's loudness target to bring yours there. It is one undo step, Amount scales
+   the tone and the width, and Bypass with Match gain compares before and after. Noise reduction, Spectra, the trim, and the fades are left alone. */
 /* what is measured: the tone as EQ Match measures it, and in each of the Imager's three bands how far the side lies under the mid (dB).
    `read(pos, n)` gives the channels of n samples from pos (at once or as a promise), so a recording in memory, one on the store and a reference all go through here */
 async function emPrint(read, from, to, sr, nch, alive, prog) {
@@ -2516,7 +2522,7 @@ function aeEmUi() {
   const t = emTake(), go = $('#aeEmGo'); btnHold(go, ['Emulate', 'Emulated', 'Processing 100%']); go.disabled = !has || busy || !(t.tone || t.width || t.loud); go.classList.toggle('on', live && !busy); go.setAttribute('aria-pressed', String(live && !busy));
   go.classList.toggle('loading', busy); if (busy) { const pc = Math.round(clamp(em.prog || 0, 0, 1) * 100); go.style.setProperty('--p', pc + '%'); go.textContent = 'Processing ' + pc + '%'; } else { go.style.removeProperty('--p'); go.textContent = live ? 'Emulated' : 'Emulate'; }
   const w = [t.tone && 'the EQ', t.width && 'the Imager', t.loud && 'Level'].filter(Boolean); $('#aeEmSay').textContent = live && w.length ? 'Press again to put ' + (w.length > 1 ? 'them' : 'it') + ' back.' : '';
-  $('#aeEmBadge').textContent = live ? amt.value + '%' : '';
+  $('#aeEmBadge').textContent = live ? amt.value + '%' : ''; $('#aeRail .ae-proc[data-tool=emu]').classList.toggle('off', !live);          // the row is lit only while the Emulator's result is applied, as a tool that does nothing is dimmed
   emSum(); $('#aeEmEmptyMsg').hidden = has; $('#aeEmBar').hidden = !busy; if (busy) emBar(em, em.prog || 0); aeRingSync(); aeAnim();
 }
 /* the measuring bar: the share of the sound read so far */

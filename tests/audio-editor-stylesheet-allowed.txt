@@ -124,14 +124,10 @@ screen-width @media (max-width:760px) .ae-rail-cur output:empty+svg
 screen-width @media (max-width:760px) .ae-rail-cur span
 screen-width @media (max-width:760px) .ae-rail-cur svg
 screen-width @media (max-width:760px) .ae-rail-cur
-screen-width @media (max-width:760px) .ae-rail-h
-screen-width @media (max-width:760px) .ae-rail-h
 screen-width @media (max-width:760px) .ae-rail-in
 screen-width @media (max-width:760px) .ae-rail.open .ae-rail-body
 screen-width @media (max-width:760px) .ae-rail.open .ae-rail-cur svg
 screen-width @media (max-width:760px) .ae-rail.open .ae-rail-in
-screen-width @media (max-width:760px) .ae-tool
-screen-width @media (max-width:760px) .ae-tool
 screen-width @media (max-width:760px) .ae-top
 screen-width @media (max-width:760px) .ae-win .ae-phead
 screen-width @media (max-width:760px) .ae-win

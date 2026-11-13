@@ -620,13 +620,13 @@
       <section><h3>Audio</h3><p>Your browser reads the audio, and the waveform is measured on your device. What you hear while editing is what you export. Long recordings are kept in your browser’s private file storage, so they don’t have to fit in memory.</p>
         <details class="how-d"><summary>How the Audio Editor works</summary><div class="how-in">
           <p>Click the file’s name at the top to open it. Make your changes, then press <span class="hb primary">Done</span> to apply them. Sound runs through the modules from top to bottom. A lit module is active. <span class="hb sw">Bypass</span> takes out only the open module, and it stays out of the saved sound and the exports until you switch it back on.</p>
-          <h4>Noise reduction</h4><p><span class="hb primary">Learn noise</span> from a stretch with only hiss in it. <span class="hb">Auto</span> finds that stretch for you. <span class="hb">Manual</span> lets you pick it.</p>
+          <h4>Noise reduction</h4><p><span class="hb primary">Learn</span> from a stretch with only hiss in it. <span class="hb">Auto</span> finds that stretch for you. <span class="hb">Manual</span> lets you pick it.</p>
           <h4>Spectra</h4><p>Press <span class="hb">Draw</span>, then mark a <span class="hb">Box</span>, <span class="hb">Band</span>, or <span class="hb">Moment</span> on the spectrogram. <span class="hb">Heal</span> fills it in from the sound around it. <span class="hb">Reduce</span> turns it down.</p>
           <h4>EQ</h4><p>Bands can be Bell, Low shelf, High shelf, High-pass, Low-pass, or Notch. <span class="hb">EQ Match</span> fits bands to the difference between your recording and a reference.</p>
           <h4>Imager</h4><p>Width makes the stereo image wider or narrower.</p>
           <h4>Level</h4><p>Gain changes the volume. Normalize sets a target loudness. The <span class="hb sw">Limiter</span> keeps peaks under the ceiling, so nothing clips.</p>
           <h4>Fades</h4><p>Eases the sound in at the start and out at the end. Length sets how long each lasts. The curve is <span class="hb">Gradual</span>, which rises quickly and settles, or <span class="hb">Straight</span>, a steady line.</p>
-          <h4>Emulator (beta)</h4><p>Measures another recording’s tone and loudness, then moves your EQ, width, and level toward it.</p>
+          <h4>Emulator</h4><p>Measures another recording’s tone and loudness, then moves your EQ, width, and level toward it.</p>
         </div></details></section>
       <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold Shift and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. Style chooses between <span class="hb">Turn</span>, <span class="hb">Slide</span>, and <span class="hb">Cut</span>.</p></section>
       <section><h3>Video</h3><p>Your browser renders and encodes every frame. Unless you pick Real-time recording, the sound is stored losslessly (24-bit) and the video goes into a MOV file. Real-time recording compresses the sound and saves an MP4 or WebM file. On Automatic, if fast export isn’t available, the video is recorded in real time instead.</p></section>
@@ -729,26 +729,24 @@
     </div>
     <div class="ae-main">
       <nav class="ae-rail" id="aeRail" aria-label="Tools">
-        <div class="ae-rail-bar"><button class="ae-rail-cur" id="aeRailCur" type="button" aria-expanded="false" aria-controls="aeRailBody"><span>Tool</span><b id="aeRailName">Noise reduction</b><output id="aeRailBadge"></output><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
+        <div class="ae-rail-bar"><button class="ae-rail-cur" id="aeRailCur" type="button" aria-expanded="false" aria-controls="aeRailBody"><span>Tool</span><b id="aeRailName">Noise reduction</b><small class="beta-chip" id="aeRailBeta" hidden>Beta</small><output id="aeRailBadge"></output><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>
         <div class="ae-rail-body" id="aeRailBody"><div class="ae-rail-in" id="aeRailIn"><i class="ae-sel" id="aeRailSel" aria-hidden="true"></i><svg class="ae-wires" id="aeWires" aria-hidden="true"></svg>
-          <div class="ae-end" id="aeJackIn"><i aria-hidden="true"></i><span>In</span></div>
-          <div class="ae-rail-h" title="Runs from top to bottom. Drag a light onto another lit light to swap their order.">Processing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></div>
           <div class="ae-procs"><div class="ae-proc" data-tool="noise"><button class="ae-jack lockd" type="button" data-tool="noise" aria-label="Noise reduction light" title="Always runs first, so it hears the noise as you learned it"><i class="led" id="aeNrLed"></i></button><button class="ae-tool" type="button" data-tool="noise" aria-pressed="false"><span class="ae-tn">Noise reduction</span></button><output class="ae-badge" id="aeNrBadge"></output></div><div class="ae-proc" data-tool="spec"><button class="ae-jack lockd" type="button" data-tool="spec" aria-label="Spectra light" title="Runs right after Noise reduction"><i class="led" id="aeSpLed"></i></button><button class="ae-tool" type="button" data-tool="spec" aria-pressed="false"><span class="ae-tn">Spectra</span></button><output class="ae-badge" id="aeSpBadge"></output></div></div>
+          <div class="ae-end" id="aeJackIn"><i aria-hidden="true"></i><span>In</span></div>
           <div class="ae-procs" id="aeProcs">
             <div class="ae-proc" data-tool="eq"><button class="ae-jack" type="button" data-tool="eq" aria-label="EQ light. Drag its wire to another lit light to swap their order" title="Drag to another lit light to swap order"><i class="led" id="aeEqLed"></i></button><button class="ae-tool" type="button" data-tool="eq" aria-pressed="false"><span class="ae-tn">EQ</span></button><output class="ae-badge" id="aeEqBadge"></output></div>
             <div class="ae-proc" data-tool="imager"><button class="ae-jack" type="button" data-tool="imager" aria-label="Imager light. Drag its wire to another lit light to swap their order" title="Drag to another lit light to swap order"><i class="led" id="aeImLed"></i></button><button class="ae-tool" type="button" data-tool="imager" aria-pressed="false"><span class="ae-tn">Imager</span></button><output class="ae-badge" id="aeImBadge"></output></div>
           </div>
-          <div class="ae-rail-h">Output</div>
           <div class="ae-procs">
             <div class="ae-proc" data-tool="fades"><span class="ae-jack fixed"><i class="led" id="aeFdLed"></i></span><button class="ae-tool" type="button" data-tool="fades" aria-pressed="false"><span class="ae-tn">Fades</span></button><output class="ae-badge" id="aeFdBadge"></output></div>
             <div class="ae-proc" data-tool="level"><span class="ae-jack fixed"><i class="led" id="aeLvLed"></i></span><button class="ae-tool" type="button" data-tool="level" aria-pressed="false"><span class="ae-tn">Level</span></button><output class="ae-badge" id="aeLvBadge"></output></div>
           </div>
           <div class="ae-end" id="aeJackOut"><i aria-hidden="true"></i><span>Out</span></div>
-          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager, and Level for you"><div class="ae-proc" data-tool="emu"><span class="ae-jack fixed" data-tool="emu" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator (beta)</span></button><output class="ae-badge" id="aeEmBadge"></output></div></div>
+          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager, and Level for you"><div class="ae-proc off" data-tool="emu"><span class="ae-jack fixed" data-tool="emu" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator</span></button><span class="beta-chip">Beta</span><output class="ae-badge" id="aeEmBadge"></output></div></div>
         </div></div>
       </nav>
       <div class="ae-panes ae-win" id="aeWin">
-        <div class="ae-top" id="aeTop"><div class="ae-phead" id="aeHead"><div class="ae-pt t-block tool"><div class="ae-ptl"><h3 id="aePaneTitle">Noise reduction</h3><span class="ae-bypill" aria-hidden="true">Bypassed</span></div><p class="ae-sub t-sub" id="aePaneSub"></p></div><div class="ae-abs"><button class="btn small" id="aeABm" type="button" aria-pressed="false" title="Plays Bypass at the same loudness, so the comparison is fair." aria-label="Match gain"><svg class="ae-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg><span class="ae-lb">Match gain</span></button><button class="btn small" id="aeAB" type="button" aria-pressed="false" title="Hear the sound without the EQ and Imager (B)" aria-label="Bypass" disabled><svg class="ae-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg><span class="ae-lb">Bypass</span></button></div></div></div>
+        <div class="ae-top" id="aeTop"><div class="ae-phead" id="aeHead"><div class="ae-pt t-block tool"><div class="ae-ptl"><h3 id="aePaneTitle">Noise reduction</h3><span class="beta-chip" id="aePaneBeta" hidden>Beta</span><span class="ae-bypill" aria-hidden="true">Bypassed</span></div><p class="ae-sub t-sub" id="aePaneSub"></p></div><div class="ae-abs"><button class="btn small" id="aeABm" type="button" aria-pressed="false" title="Plays Bypass at the same loudness, so the comparison is fair." aria-label="Match gain"><svg class="ae-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg><span class="ae-lb">Match gain</span></button><button class="btn small" id="aeAB" type="button" aria-pressed="false" title="Hear the sound without the EQ and Imager (B)" aria-label="Bypass" disabled><svg class="ae-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg><span class="ae-lb">Bypass</span></button></div></div></div>
         <i class="ae-rule" id="aeRule" aria-hidden="true"></i>
         <div class="ae-pbody" id="aeBody">
         <section class="ae-pane" id="aePaneNoise">
@@ -1024,7 +1022,7 @@
             </div>
           </div>
           <div class="pe-tv" id="peViewClean" data-tool="clean" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Clean</h3><p class="pe-sub t-sub">Whitens the paper and takes the specks out of scans.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Clean</h3><p class="pe-sub t-sub">Whiten the paper and take the specks out of scans.</p></div>
               <div class="pe-acts"><span class="pe-status t-note inline" id="peCleanStatus" aria-live="polite"></span><button class="btn small" id="peCleanClear" type="button">Revert</button><button class="btn small primary" id="peCleanGo" type="button">Clean</button></div></div>
             <div class="pe-opts">
               <div class="pe-og"><span class="pe-st t-lbl" id="peClBgL">Paper</span><div class="seg" role="radiogroup" aria-labelledby="peClBgL"><label><input type="radio" name="peClBg" value="1" checked><span>White</span></label><label><input type="radio" name="peClBg" value="2"><span>Page color</span></label></div></div>
@@ -1032,11 +1030,11 @@
             </div>
           </div>
           <div class="pe-tv" id="peViewSkew" data-tool="skew" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-kilter</h3><p class="pe-sub t-sub">Levels tilted, slanted, and curved scans, page by page.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-kilter</h3><p class="pe-sub t-sub">Level tilted, slanted, and curved scans.</p></div>
               <div class="pe-acts"><span class="pe-status t-note inline" id="peSkewStatus" aria-live="polite"></span><button class="btn small" id="peSkewClear" type="button">Revert</button><button class="btn small primary" id="peSkewGo" type="button">Re-kilter</button></div></div>
           </div>
           <div class="pe-tv" id="peViewCrop" data-tool="crop" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Crop</h3><p class="pe-sub t-sub" id="peCropSub" data-normal="Finds the music on the ticked pages and trims the extra margins.">Finds the music on the ticked pages and trims the extra margins.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Crop</h3><p class="pe-sub t-sub" id="peCropSub" data-normal="Find the music on the ticked pages and trim the extra margins.">Find the music on the ticked pages and trim the extra margins.</p></div>
               <div class="pe-acts"><span class="pe-status t-note inline" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropClear" type="button">Revert</button><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary" id="peCropAuto" type="button">Crop</button></div></div>
             <div class="pe-opts">
               <div class="seg pe-cmode" role="radiogroup" aria-label="Frame"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div>
@@ -1049,19 +1047,19 @@
               <div class="pe-acts"><span class="pe-status t-note inline" id="peDimStatus" aria-live="polite"></span><button class="btn small" id="peDimClear" type="button">Revert</button></div></div>
           </div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Split spreads</h3><p class="pe-sub t-sub">Cuts two pages scanned side by side into single pages.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Split spreads</h3><p class="pe-sub t-sub">Split two-page spreads into single pages.</p></div>
               <div class="pe-acts"><span class="pe-status t-note inline" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary" id="peSplitGo" type="button">Split</button></div></div>
             <p class="pe-notice" id="peSplitNote"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg><span id="peSplitMsg">Looking for spreads…</span></p>
           </div>
           <div class="pe-tv pe-rz" id="peViewResize" data-tool="resize" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-size</h3><p class="pe-sub t-sub">Fits every page to one paper size.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-size</h3><p class="pe-sub t-sub">Fit every page to one size.</p></div>
               <div class="pe-acts"><p class="rz-now" id="peRzNow"><b id="peRzFrom"></b><span class="norm-to" id="peRzTo"><svg class="norm-arrow" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12h14" pathLength="1"/><path d="m12 5 7 7-7 7" pathLength="1"/></svg><b id="peRzNew"></b></span> <span class="rz-unit">in</span></p>
                 <div class="rz-custom" id="peRzCustom"><input type="number" id="peRzW" min="2" max="60" step="0.01" inputmode="decimal" aria-label="Width in inches"><span aria-hidden="true">×</span><input type="number" id="peRzH" min="2" max="60" step="0.01" inputmode="decimal" aria-label="Height in inches"><span class="rz-in">in</span></div><button class="btn small primary" id="peRzGo" type="button">Re-size</button></div></div>
             <div class="rz-grid" id="peRzGrid" role="radiogroup" aria-label="Page size"></div>
             <div class="rz-grid rz-shapes" id="peRzShape" role="radiogroup" aria-label="Page shape"></div>
           </div>
           <div class="pe-tv pe-wm" id="peViewWm" data-tool="wm" hidden>
-            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Watermark</h3><p class="pe-sub t-sub">Prints text across the pages you pick.</p></div>
+            <div class="pe-phead"><div class="pe-pt t-block tool"><h3>Watermark</h3><p class="pe-sub t-sub">Print text across the pages you pick.</p></div>
               <div class="pe-acts"><button class="btn small" id="peWmRemove" type="button" hidden>Remove</button><button class="btn small primary" id="peWmAdd" type="button">Watermark</button></div></div>
             <div class="pe-wm-grid">
               <label class="pe-wl t-lbl" for="peWmText">Text</label>

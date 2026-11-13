@@ -1036,9 +1036,8 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .ae-main{display:grid;gap:22px}
 .ae-pane[hidden]{display:none}
 .ae-rail{display:flex;flex-direction:column}
-.ae-rail-h{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .ae-procs{display:flex;flex-direction:column;gap:4px;position:relative}
-.ae-tool{display:flex;align-items:center;flex:1;min-width:0;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.ae-tool{display:flex;align-items:center;flex:0 1 auto;min-width:0;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .ae-tool:not(:disabled):active{transform:scale(.98)}
 @media (prefers-reduced-motion:reduce){.ae-tool:not(:disabled):active{transform:none}}
 .ae-proc{display:flex;align-items:center;gap:4px;border-radius:var(--r-ctl)}
@@ -1097,8 +1096,6 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 }
 
 /* ----- Tool list: output tools, bypass, bipolar sliders, level meter ----- */
-.ae-rail-h{display:flex;align-items:center;gap:5px}
-.ae-rail-h svg{width:12px;height:12px;opacity:.7}
 .ae-badge{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);transition:opacity .2s var(--ease-ui)}
 .ae-badge:empty{opacity:0}
 .ae-proc .ae-tn{transition:opacity .3s var(--ease-ui)}
@@ -1125,12 +1122,10 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-card h4{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-card .field{margin-bottom:0}
 .ae-card.dim{opacity:.55}
-.ae-rail{padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);gap:0}
+.ae-rail{--rail-pad:8px;padding:var(--rail-pad);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);gap:0}
 .ae-rail-cur{display:none}
-.ae-rail-body{display:block}
-.ae-rail-in{display:flex;flex-direction:column;gap:4px}
-.ae-rail-h{margin:8px 0 2px 8px}
-.ae-procs+.ae-rail-h{margin-top:14px}
+.ae-rail-body{display:flex;flex-direction:column;flex:1 0 auto}
+.ae-rail-in{display:flex;flex-direction:column;gap:4px;flex:1 0 auto}
 .ae-panes{display:flex;flex-direction:column}
 .lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
 .im-scope{display:flex;flex-direction:column}
@@ -1155,9 +1150,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
   .ae-rail.open .ae-rail-body{grid-template-rows:1fr}
   .ae-rail-in{overflow:hidden;min-height:0;padding:0 8px;flex-direction:column}
   .ae-rail.open .ae-rail-in{padding:0 8px 10px}
-  .ae-rail-h{display:flex}
   .ae-procs{flex-direction:column;flex-wrap:nowrap}
-  .ae-tool{flex:1}
   .im-cols{grid-template-columns:1fr}
 }
 .eq-top{flex-wrap:wrap}
@@ -1177,7 +1170,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .led{position:relative;display:block;border-radius:50%;background:var(--hairline);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(0,0,0,.12)}
 .led::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ecfff3 0,#7defa6 30%,var(--ok) 70%,#17894c 100%);box-shadow:0 0 0 .5px rgba(23,137,76,.5),0 0 8px 1px rgba(47,184,114,.6),0 0 16px 3px rgba(47,184,114,.22),inset 0 1px 1px rgba(255,255,255,.8);opacity:0;transform:scale(.55);transition:opacity .4s var(--ease-out),transform .55s var(--spring-press)}
 .led.on::after{opacity:1;transform:none}
-.ae-badge{margin-right:6px}
 /* slider labels that are also buttons */
 .sl-ends{margin-top:0}          /* the end labels sit directly under their slider (the field's own gap is the space between them) */
 .sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
@@ -1230,7 +1222,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-tool:hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}
 .ae-tool.on{background:none;border-color:transparent;color:var(--accent)}
 .ae-tool{border-color:transparent}
-.ae-badge{flex:none;margin:0 2px 0 0;text-align:right}
+.ae-badge{flex:none;margin:0 2px 0 auto;text-align:right}          /* the note sits at the row's right end, as wide as its words */
 .ae-proc .switch{flex:none;margin:0 2px 0 6px}
 .field>.lv-big{margin:0 0 14px}
 
@@ -1241,7 +1233,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-prog{display:block;height:3px;margin-top:14px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;transition:opacity .3s var(--ease-ui)}
 .nr-prog.on{opacity:1}
 .nr-prog b{display:block;width:0;height:100%;background:var(--accent);transition:width .25s linear}
-.ae-tool{padding:8px 8px;white-space:nowrap}
+.ae-tool{--row-px:8px;--row-py:8px;padding:0 var(--row-px);height:calc(1lh + 2 * var(--row-py) + 2px);white-space:nowrap}          /* the highlight is the button, so it hugs the name: the same space before and after it (the name is trimmed to its letters, so the height is set here) */
 #aeNrCtl .field:last-of-type{margin-bottom:0}
 .nr-hum{display:flex;align-items:center;gap:10px;font-size:14px}
 .nr-hum{position:relative}
@@ -1256,7 +1248,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* a pressed primary button stays readable: solid with its own ink */
 .btn.primary[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 #aeEmGo.on::before{content:'';display:inline-block;width:12px;height:12px;margin:0 6px -1px 0;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat}
-@media (max-width:760px){.ae-tool{white-space:normal}}
 
 /* ----- One window per tool, wires between lit lights, zoom, live meter ----- */
 .ae-main{grid-template-columns:226px minmax(0,1fr);align-items:stretch}
@@ -1273,7 +1264,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .led.tgt{box-shadow:0 0 0 3px var(--accent-soft),0 0 0 4.5px var(--accent),inset 0 1px 1px rgba(255,255,255,.55)}
 .led.shake{animation:ledshake .4s var(--ease-out)}
 @keyframes ledshake{20%{transform:translateX(-3px)}45%{transform:translateX(3px)}70%{transform:translateX(-2px)}100%{transform:none}}
-.ae-badge{width:52px}
 .ae-proc.off .ae-tn{opacity:.6}
 .ae-proc.bp .ae-tn{opacity:.45}
 .ae-wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
@@ -1470,16 +1460,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* Imager: the toggle sits on the same line as its words, on the right like every other toggle */
 .im-low .check{display:flex;align-items:center;gap:12px;font-size:14px;--lh:1;margin:0}
 .im-low .check .switch{flex:none;margin:0}
-/* the rail's headings stay clear of the wires that run down the lights */
-.ae-rail-h{margin-left:36px}
-@media (max-width:760px){.ae-rail-h{margin-left:10px}}
 /* the bar: a hidden button takes no room, and on a phone the buttons stay in one row */
 #aeDock.gone{display:none}
 @media (max-width:760px){.ae-bar{gap:10px}#aeSilence{margin-left:auto}}
 /* the tools dock is as tall as its tool needs (the Spectra stays small, so the picture stays big), and eases between heights */
 #audioDlg.afull .ae-main{transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),max-height .35s var(--ease-out)}
 #audioDlg.afull[data-tool=eq] .ae-main,#audioDlg.afull[data-tool=imager] .ae-main,#audioDlg.afull[data-tool=noise] .ae-main{max-height:min(440px,50dvh)}
-#audioDlg.afull .ae-rail-h{margin-top:2px}
 #audioDlg.afull .ae-main{max-height:min(440px,50dvh)}
 
 /* EQ: bands are added and removed from one small pill, an icon and a divider, then + and - */
@@ -1499,7 +1485,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull .ae-main,#audioDlg.afull[data-tool=eq] .ae-main,#audioDlg.afull[data-tool=imager] .ae-main,#audioDlg.afull[data-tool=noise] .ae-main{max-height:calc(100dvh - 232px)}
 #audioDlg.afull[data-tool=spec] .ae-pbody{min-height:0}
 #audioDlg.afull[data-tool=spec] .ae-main{max-height:min(300px,34dvh)}
-#audioDlg.afull .ae-tool{padding:5px 10px}
+#audioDlg.afull .ae-tool{--row-px:10px;--row-py:5px}
 @media (max-width:760px){#audioDlg.afull .ae-main,#audioDlg.afull[data-tool=spec] .ae-main{max-height:50dvh}#audioDlg.afull .ae-pbody{min-height:0}}
 /* narrow, not full screen: the dialog keeps one fixed height and never scrolls, so Done and Cancel always show. The picture gives way first (down to 64px), then the tool body scrolls inside the window. */
 @media (max-width:760px){
@@ -2300,7 +2286,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-empty{position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:0 12px;font-size:13px;color:var(--muted);text-align:center}
 .em-empty[hidden]{display:none}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
-.ae-procs.ae-apart{margin-top:3px;padding-top:3px;border-top:1px solid var(--hairline)}
+.ae-procs.ae-apart{margin-top:auto;padding-top:var(--rail-pad);border-top:1px solid var(--hairline)}          /* pinned to the list's bottom at any height; the space from the hairline to the name equals the space from the name to the list's border (the rail's own padding), so the name is centered */
 @media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
 .ae-chain b.bp{background:transparent;color:var(--muted);text-decoration:line-through;box-shadow:inset 0 0 0 1px var(--hairline)}          /* a hairline edge in place of the fill, so the pill still reads on the status bar; same box as the others */
 
@@ -2529,6 +2515,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
 #audioDlg .ae-card :is(h4,.field>label>:is(span,output):not(.mt-title),.bal-meter>span){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 #audioDlg .ae-card .eq-lbl{margin-block:var(--cut-t) var(--cut-b)}
+#audioDlg .ae-tool .ae-tn{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a tool's name in the list is its letters, so the row can be centered by what you see */
+/* a tag after a name: its own element, a pill with the same space on each side of its word */
+.beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:11.5px;font-weight:600;--lh:1;white-space:nowrap}
+.beta-chip[hidden]{display:none}
+.ae-proc .beta-chip{margin-left:2px}
 #audioDlg .ae-card input[type=range]{margin-block:-1px}          /* a slider's box is its thumb and ring (the input is 20px tall around an 18px thumb) */
 #audioDlg .ae-card .sl-end{text-box:trim-both cap alphabetic;box-sizing:content-box;height:var(--trim-h);padding:2px 4px;margin:calc(var(--trim-t) - 2px) -4px calc(var(--trim-b) - 2px)}          /* a scale label's box is its letters; the 2px and 4px around them are its click area, taken back by the margin */
 
