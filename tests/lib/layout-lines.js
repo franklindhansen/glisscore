@@ -12,7 +12,8 @@
 //   mid-tick           the middle label of a three-label scale is centered under the thumb at the middle value
 //   label-row          a label beside a switch is centered on it; beside a control with words it shares its baseline
 //   label-size         ... and it is 13px
-//   left-line, right-line   cards that share a row start on the tool window's left line and end on its right line
+//   left-line, right-line   cards that share a row start on the tool window's left line and end on its right line, and so do the tool's name and buttons in the head and the status bar's content
+//   picture-border    a picture (canvas or image) in a card has no border of its own
 //   clipped            nothing passes its card's padding box, and nothing in the tool scrolls sideways
 //   scroll             (main size) the tool body, the dialog, and the page do not scroll
 // A pane on the tool grid (.tool-grid) also keeps the grid rules: grid-edge, row-top, row-bottom, row-heading, row-body, row-gap, card-padding, part-edge, first-part, last-part, row-controls.
@@ -25,6 +26,9 @@ exports.lines = function (ctx) {
   const pane = document.querySelector('.ae-pane:not([hidden])');
   const cards = [...pane.querySelectorAll('.ae-card')].filter(c => mk.shown(c) && !c.parentElement.closest('.ae-card'));
   const noBody = c => c.querySelector('.sp-list, .nr-stage, .im-scope, canvas');          // a picture or a list that takes the rest of the card has no body to center
+  // body-balance is equal space within 0.5px. When the space above and below together is an odd whole number of pixels, exactly equal is impossible on whole pixels (a control must sit on a whole pixel, tests/control-pixels.js),
+  // so a difference of at most 1px is accepted there; the app rounds every body to whole pixels (aeSnapBodies in js/audio-editor.js).
+  const odd = t => Math.abs(t - Math.round(t)) < 0.02 && Math.round(t) % 2 === 1;
   const mid = l => (l.capTop + l.base) / 2;
   const inner = c => { const r = R(c), cs = getComputedStyle(c), n = k => parseFloat(cs[k]); return { bt: r.top + n('borderTopWidth'), bb: r.bottom - n('borderBottomWidth'), t: r.top + n('borderTopWidth') + n('paddingTop'), b: r.bottom - n('borderBottomWidth') - n('paddingBottom'), l: r.left + n('borderLeftWidth') + n('paddingLeft'), r: r.right - n('borderRightWidth') - n('paddingRight') }; };
   for (const c of cards) {
@@ -41,13 +45,16 @@ exports.lines = function (ctx) {
         chk('head-ctl-center', cn + '>' + en, near((r.top + r.bottom) / 2, mid(hl)), 'its center is ' + f((r.top + r.bottom) / 2 - mid(hl)) + 'px off the heading letters\' middle');
       }
       if (ctrls.length) { const last = ctrls.reduce((a, e) => R(e).right > R(a).right ? e : a); chk('head-ctl-right', cn + '>' + name(last), near(R(last).right, ci.r), 'ends ' + f(R(last).right - ci.r) + 'px from the card\'s right content line'); }
-      headBottom = Math.max(hl.base, ...ctrls.map(e => R(e).bottom));
+      headBottom = Math.max(hl.base, ...[...row.querySelectorAll('.btn, .seg, select')].filter(e => mk.shown(e) && !e.parentElement.closest('.seg')).map(e => R(e).bottom));          // the row's lowest visible edge: a choice or button that wrapped onto the row's second line counts too
     }
+    // a picture in a card has no border of its own: the card's line is the only one
+    for (const pic of c.querySelectorAll('canvas, img')) if (mk.shown(pic)) chk('picture-border', cn + '>' + name(pic), ['Top', 'Right', 'Bottom', 'Left'].every(s => parseFloat(getComputedStyle(pic)['border' + s + 'Width']) === 0), 'has a border of its own inside the card');
     // the balanced body
     if (!noBody(c)) {
-      const body = mk.inkOf(c, e => e === row || ctrls.some(k => k === e || k.contains(e)) || e.matches('.foot-row')), foot = [...c.querySelectorAll('.foot-row')].filter(e => mk.shown(e)).map(R).sort((a, b) => a.top - b.top)[0];
+      const isFoot = e => e.matches('.foot-row') || (e.parentElement === c && e !== row && !mk.isControl(e) && parseFloat(getComputedStyle(e).borderTopWidth) > 0 && getComputedStyle(e).borderTopStyle !== 'none');          // a footer row: the shared one, or any last part of the card that has a line on its top
+      const body = mk.inkOf(c, e => e === row || ctrls.some(k => k === e || k.contains(e)) || isFoot(e)), foot = [...c.children].filter(e => isFoot(e) && mk.shown(e)).concat([...c.querySelectorAll('.foot-row')].filter(e => mk.shown(e) && e.parentElement !== c)).map(R).sort((a, b) => a.top - b.top)[0];
       if (body) { const above = body.top - (headBottom != null ? headBottom : ci.bt), line = foot ? foot.top : ci.bb, below = line - body.bottom;
-        chk('body-balance', cn, near(above, below), 'space above the body ' + f(above) + 'px, below ' + f(below) + 'px'); }
+        chk('body-balance', cn, near(above, below, odd(above + below) ? 1 : 0.5), 'space above the body ' + f(above) + 'px, below ' + f(below) + 'px'); }
     }
   }
   // gaps between neighbors
@@ -92,6 +99,14 @@ exports.lines = function (ctx) {
       const hasLeft = cards.some(o => o !== c && R(o).right <= R(c).left + 0.5 && lap(o, c)), hasRight = cards.some(o => o !== c && R(o).left >= R(c).right - 0.5 && lap(o, c));
       chk('left-line', name(c), hasLeft || near(R(c).left, L), 'starts ' + f(R(c).left - L) + 'px off the shared left line'); chk('right-line', name(c), hasRight || near(R(c).right, Rt), 'ends ' + f(R(c).right - Rt) + 'px off the shared right line'); }
   }
+  // the tool window's one left and one right line: the tool's name and buttons in the head and the status bar's content sit on the same lines as the cards
+  if (cards.length) { const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), head = document.querySelector('.ae-phead'), stat = document.querySelector('.ae-stat');
+    if (head && mk.shown(head)) { const kids = [...head.children].filter(e => mk.shown(e)), first = kids[0], last = kids[kids.length - 1];
+      if (first) chk('left-line', 'head', near(R(first).left, L), 'the tool\'s name starts at ' + f(R(first).left) + ', the cards\' left line is ' + f(L));
+      if (last) chk('right-line', 'head', near(R(last).right, Rt), 'the tool\'s buttons end at ' + f(R(last).right) + ', the cards\' right line is ' + f(Rt)); }
+    if (stat && mk.shown(stat)) { const kids = [...stat.children].filter(e => mk.shown(e)), first = kids[0], last = kids[kids.length - 1];
+      if (first) chk('left-line', 'status', near(R(first).left, L), 'the status text starts at ' + f(R(first).left) + ', the cards\' left line is ' + f(L));
+      if (last) chk('right-line', 'status', near(R(last).right, Rt), 'the status text ends at ' + f(R(last).right) + ', the cards\' right line is ' + f(Rt)); } }
   // scrolling
   chk('clipped', name(pane) + '.sideways', pane.scrollWidth - pane.clientWidth <= 1, 'the tool scrolls sideways by ' + (pane.scrollWidth - pane.clientWidth) + 'px');
   if (ctx.main) { const pb = document.querySelector('.ae-pbody'), dlg = document.querySelector('#audioDlg .dlg'), de = document.documentElement;

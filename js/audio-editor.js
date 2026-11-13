@@ -596,7 +596,7 @@ function aePeakMorph(pk) {
   AE.pkShown = o; return o;
 }
 /* the transport floats over the lower edge of the picture; everything that is drawn for the eye stays above it (full screen has its own rows, so no room is kept there) */
-const aeInsetNow = () => { const dlg = $('#audioDlg'); if (dlg.classList.contains('afull') || window.innerWidth <= 760) return 0; const bar = dlg.querySelector('.ae-bar'); return bar && bar.offsetHeight ? bar.offsetHeight + 8 : 0; };
+const aeInsetNow = () => { const dlg = $('#audioDlg'); if (dlg.classList.contains('afull')) return 0; const bar = dlg.querySelector('.ae-bar'); return bar && bar.offsetHeight ? bar.offsetHeight + 8 : 0; };
 const aeHc = () => { const cv = $('#aeCanvas'); return Math.max(60, cv.clientHeight - aeInsetNow()); };
 /* the columns of the picture: the loudest peak under each pixel (worked out once per picture, not once per pass) */
 function aeColumns(src, lo, hi, W, L) {
@@ -1668,7 +1668,7 @@ function aeEqPanel() {
     $('#aeBandGField').classList.toggle('dim', eqNoGain(b.type)); row.disabled = eqNoGain(b.type);
     $('#aeBandQField').classList.toggle('dim', fixed); q.disabled = fixed;
     { const ok = KFX.eqDynOk(b.type), d = ok && b.dyn; $('#aeBandDyn').setAttribute('aria-pressed', !!d); $('#aeBandDyn').disabled = !ok; foldSet('#aeBandDynFold', !!d);
-      if (d) { aeSlide($('#aeBandThr'), b.dyn.thr); aeSlide($('#aeBandRange'), b.dyn.range); $('#aeBandThrVal').textContent = (b.dyn.thr < 0 ? '−' : '') + Math.abs(b.dyn.thr) + 'dB'; { const a = $('#aeBandThrAuto'), on = b.dyn.auto != null && b.dyn.thr === b.dyn.auto; a.setAttribute('aria-pressed', on); a.classList.toggle('on', on); } $('#aeBandRangeVal').textContent = (b.dyn.range > 0 ? '+' : b.dyn.range < 0 ? '−' : '') + Math.abs(b.dyn.range) + 'dB'; } }
+      if (d) { aeSlide($('#aeBandThr'), b.dyn.thr); aeSlide($('#aeBandRange'), b.dyn.range); $('#aeBandThrVal').textContent = (b.dyn.thr < 0 ? '−' : '') + Math.abs(b.dyn.thr) + 'dB'; { const a = $('#aeBandThrAuto'), on = b.dyn.auto != null && b.dyn.thr === b.dyn.auto; a.setAttribute('aria-pressed', on); btnHold(a, ['Auto', 'Processing 100%']); } $('#aeBandRangeVal').textContent = (b.dyn.range > 0 ? '+' : b.dyn.range < 0 ? '−' : '') + Math.abs(b.dyn.range) + 'dB'; } }
     $('#aeBandPlace').hidden = fxChannels() !== 2; document.querySelectorAll('input[name=aeBandPlace]').forEach(r => { r.disabled = false; }); { const r = document.querySelector('input[name=aeBandPlace][value="' + (b.place || 'st') + '"]'); if (r && !r.checked) r.checked = true; const sg = $('#aeBandPlace'); if (sg._place) sg._place(false); }
     const cut = b.type === 'highpass' || b.type === 'lowpass'; $('#aeBandQField').hidden = cut; $('#aeBandSField').hidden = !cut;          // a high-pass or low-pass has a slope where the others have a width
     if (cut) { const r = document.querySelector('input[name=aeBandSlope][value="' + eqSlope(b) + '"]'); if (r && !r.checked) r.checked = true; const sg = $('#aeBandSlope'); if (sg._place) sg._place(false); }
@@ -1798,8 +1798,8 @@ function aeImPanel() {
     $('#aeBalLb').style.width = pct(nl) + '%'; $('#aeBalRb').style.width = pct(nr) + '%';
     $('#aeBalL').textContent = dbf(nl); $('#aeBalR').textContent = dbf(nr); lr.classList.toggle('even', even);
     say.textContent = even ? 'Even' : (diff > 0 ? 'Left' : 'Right') + ' louder by ' + Math.abs(diff).toFixed(1) + 'dB'; say.classList.toggle('even', even);
-    ab.setAttribute('aria-pressed', auto); ab.classList.toggle('on', auto);
-  } else { say.textContent = ''; say.classList.remove('even'); ab.setAttribute('aria-pressed', 'false'); ab.classList.remove('on'); ['#aeBalL', '#aeBalR'].forEach(i => { $(i).textContent = ''; }); }
+    ab.setAttribute('aria-pressed', auto);
+  } else { say.textContent = ''; say.classList.remove('even'); ab.setAttribute('aria-pressed', 'false'); ['#aeBalL', '#aeBalR'].forEach(i => { $(i).textContent = ''; }); }
   [w, $('#aeMonoBass'), f, $('#aeBal'), $('#aeBalAuto'), $('#aeBwLo'), $('#aeBwMid'), $('#aeBwHi')].forEach(el => { el.disabled = mono || (el === f && !(im.monoBass > 0)); });
   $('#aeWidthCard').classList.toggle('dim', mono); $('#aeBalCard').classList.toggle('dim', mono);
   document.querySelectorAll('input[name=aeListen]').forEach(x => { x.disabled = mono; x.checked = x.value === (AE.imListen || ''); }); const lsg = $('#aeListen'); if (lsg._place) lsg._place(false);
@@ -1958,9 +1958,19 @@ function aeTool(name) {
   aeSlidePane(panes, prev, name);
   document.querySelectorAll('#aeRail .ae-tool').forEach(b => { const on = b.dataset.tool === name; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   $('#aeRailName').textContent = AE_NAMES[name]; aeHead(name, dir); $('#aeAB').classList.remove('gone'); $('#aeABm').classList.remove('gone'); aeSetView(name === 'spec' ? 'spec' : 'wave', prev ? dir : 0); aeRailOpen(false); aeRailSel(!!prev); if (AE.d) aeBpUi();
-  requestAnimationFrame(aeAlignView); requestAnimationFrame(() => { if (name === 'imager') aeScopeDraw(); if (name === 'eq') aeEqDraw(); if (name === 'fades') aeFadeDraw(); if (name === 'noise') aeNrDraw(); if (name === 'emu') aeEmUi(); });
+  requestAnimationFrame(aeAlignView); requestAnimationFrame(() => { if (name === 'imager') aeScopeDraw(); if (name === 'eq') aeEqDraw(); if (name === 'fades') aeFadeDraw(); if (name === 'noise') { aeNrHolds(); aeNrDraw(); } if (name === 'emu') aeEmUi(); });
 }
 /* on a narrow window the tool list folds into one line that opens like a menu */
+// Balanced bodies on whole pixels. A card centers its body with flex auto margins (style.css, "the balanced body"), and an odd spare height leaves the body on a half pixel, where a control's letters draw up to a pixel
+// off center. After a layout change, each body part's top margin is read and set to its whole pixels (the last part's bottom margin takes what is left): one rule for every card, no numbers of its own.
+let aeSnapRaf = 0;
+function aeSnapLater() { if (!aeSnapRaf) aeSnapRaf = requestAnimationFrame(() => { aeSnapRaf = 0; if (!$('#audioDlg').hidden) aeSnapBodies(); }); }
+function aeSnapBodies() {
+  const parts = [...document.querySelectorAll('#audioDlg .ae-card > *')].filter(e => getComputedStyle(e).getPropertyValue('--body').trim() === '1');
+  parts.forEach(e => e.style.removeProperty('--snap-t'));
+  const top = parts.map(e => parseFloat(getComputedStyle(e).marginTop));
+  parts.forEach((e, i) => { const m = top[i]; if (m > 0 && Math.abs(m - Math.round(m)) > 0.01) e.style.setProperty('--snap-t', Math.round(m) + 'px'); });
+}
 function aeRailSel(animate) {
   const sel = $('#aeRailSel'), root = $('#aeRailIn'), btn = document.querySelector('#aeRail .ae-tool.on'); if (!sel || !btn || !btn.offsetWidth) { if (sel) sel.style.opacity = '0'; return; }
   let x = 0, y = 0, n = btn; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
@@ -2197,7 +2207,13 @@ function aeMove(tool, dir) {
   const o = AE.d.fx.order, i = o.indexOf(tool), j = i + dir; if (i < 0 || j < 0 || j >= o.length) return false;
   aeFx(fx => { const t = fx.order[i]; fx.order[i] = fx.order[j]; fx.order[j] = t; }); edSay('ae', 'order'); return true;
 }
+function aeHeadPlace() {          // 760px and under, Match gain and Bypass sit on the tool heading's own line (the tool bar); wider, they stay in the pane's head
+  const narrow = matchMedia('(max-width: 760px)').matches, abs = $('#aeHead .ae-abs, .ae-rail-bar .ae-abs'), bar = $('.ae-rail-bar');
+  if (!abs) return; if (narrow && abs.parentNode !== bar) bar.appendChild(abs); else if (!narrow && abs.parentNode === bar) $('#aeHead').appendChild(abs);
+  $('#audioDlg').classList.toggle('head-in-bar', narrow);
+}
 function aeToolsBind() {
+  aeHeadPlace(); matchMedia('(max-width: 760px)').addEventListener('change', aeHeadPlace);
   document.querySelectorAll('#aeRail .ae-tool').forEach(b => b.addEventListener('click', () => aeTool(b.dataset.tool)));
   $('#aeRailCur').addEventListener('click', () => aeRailOpen(!$('#aeRail').classList.contains('open')));
   $('#aeAB').addEventListener('click', aeToggleBypass);
@@ -2235,6 +2251,7 @@ function aeToolsBind() {
   $('#aeFadeShape').addEventListener('change', e => { aePush(); AE.d.audioFadeShape = e.target.value; if (AE.d.audioFades === false) { AE.d.audioFades = true; AE.d.audioFadeLen = AE.d.audioFadeLen || AE_FADE; AE.d.audioFadeOutLen = null; } aeRefresh(); });
   document.querySelectorAll('input[name=aeFadeSide]').forEach(r => r.addEventListener('change', e => { aeFadeSide(e.target.value); }));
   if (window.ResizeObserver) { new ResizeObserver(() => { aeRailSel(false); aeWiresDraw(true); }).observe($('#aeRailIn')); new ResizeObserver(() => { if (AE.d && !$('#audioDlg').hidden) { aeSize(); aeDraw(); } }).observe($('#aeCanvas')); new ResizeObserver(() => { if (AE.full) aeFsLayout(); }).observe($('#audioDlg .ae-main')); { const ro = new ResizeObserver(() => { if (AE.d && !$('#audioDlg').hidden) aeToolLive(); }); ['#aeEqCv', '#aeNrCv', '#aeFadeCv', '#aeScope'].forEach(id => ro.observe($(id))); } }          // a picture that gets more or less room (EQ Match opening, the window growing) redraws to fit
+  if (window.ResizeObserver) { const ro = new ResizeObserver(aeSnapLater); document.querySelectorAll('#audioDlg .ae-card, #audioDlg .ae-card > *').forEach(e => ro.observe(e)); }
   aeEqBind(); aeImBind();
   window.addEventListener('resize', () => { if (AE.d && !$('#audioDlg').hidden) aeToolLive(); });
 }
@@ -2569,7 +2586,7 @@ function nrFindQuiet() {
 function aeNrLearn() {
   const sel = AE.nsel; if (!sel || sel.b - sel.a < NR_MIN || AE.nrLearning) return;
   AE.nrLearning = true; const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => { btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; };          // as Auto: the button is the bar
-  btn.disabled = true; btnHold(btn, [btn.textContent, 'Learn noise', 'Learn again', 'Processing 100%']); btn.classList.add('loading'); show(0); aeNrHumUi(); NRJ.onProg(0);          // the bar shows at once; the analysis runs after one frame has painted
+  btn.disabled = true; btnHold(btn, NR_HOLD['#' + btn.id]); btn.classList.add('loading'); show(0); aeNrHumUi(); NRJ.onProg(0);          // the bar shows at once; the analysis runs after one frame has painted
   requestAnimationFrame(() => setTimeout(async () => {
     try {
       const sr = audSr(), d0 = AE.d, hc = humCoefs(d0.fx.noise.hum, sr), a0 = Math.floor(sel.a * sr), lead = hc ? Math.min(a0, sr) : 0; let from = lead, to = lead + Math.floor(sel.b * sr) - a0;          // only the picked stretch is read (with a second ahead of it for the notches to settle, when a hum is being removed): the learning looks at nothing outside it
@@ -2586,7 +2603,7 @@ function aeNrLearn() {
 async function aeNrAuto() {
   const d = AE.d; if (!d || !S.audio || AE.nrAutoBusy || AE.humBusy || AE.nrLearning) return; const nz = d.fx.noise;
   if (nz.auto && nz.profile) { const pv = AE.nrPrev; AE.nrPrev = null; aeFx(fx => { fx.noise.profile = pv ? pv.profile : null; fx.noise.dur = pv ? pv.dur : 0; fx.noise.auto = false; }); return; }
-  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.classList.remove('on'); btnHold(btn, [btn.textContent, 'Auto', 'Processing 100%']); btn.classList.add('loading'); aeNrHumUi(); show(0);
+  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.setAttribute('aria-pressed', 'false'); btnHold(btn, NR_HOLD['#' + btn.id]); btn.classList.add('loading'); aeNrHumUi(); show(0);
   try {
     const prof = await nrFloor(d, nz.hum, v => show(Math.round(v * 100))); if (prof === undefined) return;
     show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent)); if (AE.d !== d) return;          // a short recording is read in a blink; the bar stays long enough to be seen
@@ -2637,6 +2654,9 @@ function aeNrHumUi() {
   const txt = busy ? (AE.humPhase || 'Looking for a hum') + '… ' + (AE.humPc || 0) + '%' : aeHumOn(nz) ? aeHumTxt(nz) : AE.d.humNote || ''; if (t.textContent !== txt) t.textContent = txt;
 }
 /* what shows beside the waveform and in the pane follows the draft */
+/* Auto and Learn show their progress inside the button, so each keeps one width from the first layout for every text it can carry (btnHold), and never jumps when it starts to work */
+const NR_HOLD = { '#aeNrFind': ['Auto', 'Processing 100%'], '#aeNrLearn': ['Learn noise', 'Learn again', 'Processing 100%'] };
+function aeNrHolds() { Object.entries(NR_HOLD).forEach(([id, texts]) => btnHold($(id), texts)); }
 function aeNrPanel() {
   const d = AE.d, nz = d.fx.noise, has = !!nz.profile, sel = AE.nsel, short = sel && sel.b - sel.a < NR_MIN;
   aeSlide($('#aeNrRed'), nz.reduction); aeSlide($('#aeNrSens'), nz.sensitivity); aeSlide($('#aeNrSmooth'), nz.smoothing);
@@ -2647,7 +2667,7 @@ function aeNrPanel() {
   aeNrLayout(has); foldSet('#aeNrSub', has && nz.reduction > 0);
   $('#aeNrChip').hidden = !has; $('#aeNrChipTxt').textContent = has ? (nz.auto ? 'Whole recording' : 'Learned ' + nz.dur.toFixed(1) + 's') : '';
   aeNrHumUi();
-  { const a = $('#aeNrFind'), on = has && !!nz.auto; if (!AE.nrAutoBusy) { a.setAttribute('aria-pressed', on); a.classList.toggle('on', on); } }          // as every Auto that sets a value: solid while the profile is the one it measured
+  { const a = $('#aeNrFind'), on = has && !!nz.auto; if (!AE.nrAutoBusy) a.setAttribute('aria-pressed', on); }          // as every Auto that sets a value: pressed (the shared pressed look) while the profile is the one it measured
   $('#aeNrSelTxt').textContent = sel ? (short ? 'Too short. Needs ' + NR_MIN + 's.' : (sel.b - sel.a).toFixed(1) + 's selected') : ''; $('#aeNrSelTxt').classList.toggle('bad', !!short);
   if (!AE.nrLearning) { $('#aeNrLearn').disabled = !sel || short; $('#aeNrLearn').textContent = has && !nz.auto ? 'Learn again' : 'Learn noise'; } $('#aeNrLearnStep').classList.toggle('dim', !sel && !has);
 }

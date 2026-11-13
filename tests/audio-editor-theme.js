@@ -97,6 +97,19 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
     });
     ok('the greyed Gain track is 1.3 or more against its card, and the slider is not dimmed as a whole (' + t + ')', r.disabled && r.inputOpacity === '1' && r.ratio >= 1.3, JSON.stringify(r));
   }
+  // 7. the one pressed look: Balance's Auto, a band's Threshold Auto, Noise reduction's Auto, and Auto gain look the same when pressed (a soft accent fill, an accent edge and text), in both themes; solid blue is only the primary button
+  for (const t of ['light', 'dark']) {
+    await p.evaluate(t => flip(t, null), t); await settle();
+    const r = await p.evaluate(() => {
+      const ids = ['#aeBalAuto', '#aeBandThrAuto', '#aeNrFind', '#aeAutoBtn'], look = e => { const c = getComputedStyle(e); return [c.backgroundColor, c.borderTopColor, c.color, c.fontWeight].join(' | '); };
+      const was = ids.map(i => document.querySelector(i).getAttribute('aria-pressed')); ids.forEach(i => document.querySelector(i).setAttribute('aria-pressed', 'true'));
+      const looks = ids.map(i => look(document.querySelector(i))), prim = getComputedStyle(document.querySelector('#aeDone')), solid = prim.backgroundColor;
+      ids.forEach((i, k) => { if (was[k] == null) document.querySelector(i).removeAttribute('aria-pressed'); else document.querySelector(i).setAttribute('aria-pressed', was[k]); });
+      const accent = K.rgba(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#000');
+      return { looks, same: looks.every(l => l === looks[0]), solid, pressedBg: looks[0].split(' | ')[0], pressedText: looks[0].split(' | ')[2], accentOk: K.rgba(looks[0].split(' | ')[2]).join() === accent.join() };
+    });
+    ok('the four Auto buttons share one pressed look, a soft fill with accent text, not the primary button\'s solid blue (' + t + ')', r.same && r.pressedBg !== r.solid && r.accentOk, JSON.stringify(r));
+  }
   {          // a theme change redraws every picture in the same task, stopped or playing, in both directions; the timeline and the PDF Editor's pictures too
     await p.evaluate(() => { openAudioEditor(); }); await settle();
     const spyOn = (names, fn) => p.evaluate(([names, fn]) => {

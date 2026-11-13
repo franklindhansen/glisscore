@@ -42,8 +42,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       aeTool('noise'); await sleep(800); out.noise = ['#aeNrFind', '#aeNrHand', '#aeNrLearn'].map(ht); out.noiseSeg = ht('#aeNrMode');
       aeTool('level'); await sleep(800); out.level = [ht('#aeNormMode'), ht('#aeLoudPreset')]; aeTool('fades'); await sleep(800); out.fades = [ht('#aeFadeSide'), ht('#aeFadeShape')]; return out; });
     ok('The EQ toolbar and band row controls are all 30px, + and − included', h.eqTop.every(v => v === 30) && h.eqBand.every(v => v === 30), JSON.stringify(h));
-    ok('Noise reduction buttons are 30px and its method choice 34px', h.noise.every(v => v === 30) && h.noiseSeg === 34, JSON.stringify(h));
-    ok('Stand-alone segmented controls and menus are 34px, and the loudness preset menu is 36px like its number box', h.level[0] === 34 && h.level[1] === 36 && h.fades.every(v => v === 34), JSON.stringify(h));
+    ok('Noise reduction buttons are 30px, and so is its method choice, which sits on the Removal heading row (a choice or button on a heading row is 30px)', h.noise.every(v => v === 30) && h.noiseSeg === 30, JSON.stringify(h));
+    ok('Stand-alone segmented controls and menus are 34px, a choice on a heading row (Normalize) is 30px, and the loudness preset menu is 36px like its number box', h.level[0] === 30 && h.level[1] === 36 && h.fades.every(v => v === 34), JSON.stringify(h));
     await p.close(); }
   ok('No script errors', errs.length === 0, errs.join(' | '));
   await b.close();

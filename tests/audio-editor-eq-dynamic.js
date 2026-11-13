@@ -30,7 +30,7 @@ function wav(secs, amp, skew) { const sr = 48000, n = sr * secs, ch = 2, bytes =
   const au = await m.evaluate(async () => { aeFx(fx => { fx.eq.bands = [{ type: 'peaking', f: 6000, g: 0, q: 2, on: true }]; }); AE.band = 0; aeEqPanel(); await sleep(200);
     const btn = document.querySelector('#aeBandThrAuto'), o = {}; let sawBar = false; const watch = setInterval(() => { if (btn.classList.contains('loading') && /Processing \d+%/.test(btn.textContent) && btn.style.getPropertyValue('--p')) sawBar = true; }, 5);
     document.querySelector('#aeBandDyn').click(); await sleep(2500); clearInterval(watch); o.bar = sawBar; o.end = !btn.classList.contains('loading') && btn.textContent === 'Auto';
-    const d = () => AE.d.fx.eq.bands[0].dyn, pressed = () => btn.getAttribute('aria-pressed') === 'true' && btn.classList.contains('on');
+    const d = () => AE.d.fx.eq.bands[0].dyn, pressed = () => btn.getAttribute('aria-pressed') === 'true';
     o.on = pressed() && d().thr === d().auto && d().prev === -30; const measured = d().thr;
     const sl = document.querySelector('#aeBandThr'); sl.value = -40; sl.dispatchEvent(new Event('input', { bubbles: true })); sl.dispatchEvent(new Event('change', { bubbles: true })); await sleep(200); o.freed = !pressed() && d().thr === -40;
     btn.click(); await sleep(2500); o.again = pressed() && d().thr === measured && d().prev === -40;

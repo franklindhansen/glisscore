@@ -8,7 +8,8 @@ exports.textScan = function (where) {
   const prevEl = e => { let p = e.previousElementSibling; while (p && !shown(p)) p = p.previousElementSibling; return p; };
   const nextEl = e => { let p = e.nextElementSibling; while (p && !shown(p)) p = p.nextElementSibling; return p; };
   const below = (a, b) => b.top >= a.bottom - 0.5 && b.left < a.right && b.right > a.left;          // b sits under a
-  const gap = (a, b, want, what, e, tol) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); if (!below(ra, rb)) return false; const g = rb.top - ra.bottom; if (!near(g, want, tol)) bad.push(where + ': ' + what + ' of ' + name(e) + ' is ' + g.toFixed(2) + 'px, not ' + want + 'px'); return true; };
+  const mg = (e, k) => e.matches('input[type=range], .eq-lbl') ? Math.min(0, parseFloat(getComputedStyle(e)[k]) || 0) : 0;          // a slider and a label whose box is trimmed to what is drawn (by a negative margin) are measured to the edge of what is drawn: the box less its negative margin
+  const gap = (a, b, want, what, e, tol) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); if (!below(ra, rb)) return false; const g = (rb.top - mg(b, 'marginTop')) - (ra.bottom + mg(a, 'marginBottom')); if (!near(g, want, tol)) bad.push(where + ': ' + what + ' of ' + name(e) + ' is ' + g.toFixed(2) + 'px, not ' + want + 'px'); return true; };
   // title blocks
   document.querySelectorAll('.t-block').forEach(b => { if (!shown(b)) return; n.block++; const kids = [...b.children].filter(shown), title = kids[0], sub = kids.find(k => k.matches('.t-sub')), br = b.getBoundingClientRect();
     if (frac(br.top) || frac(br.height)) bad.push(where + ': the title block ' + name(b) + ' is on a half pixel (top ' + br.top.toFixed(2) + ', height ' + br.height.toFixed(2) + ')');
@@ -30,7 +31,11 @@ exports.textScan = function (where) {
     const s = getComputedStyle(l); if (parseFloat(s.fontSize) !== 13) bad.push(where + ': the label ' + name(l) + ' is ' + s.fontSize + ', not 13px');
     if (gap(l, k, T.label, 'the gap from the label to its control', l, 0.6)) { const a = l.getBoundingClientRect(), b = k.getBoundingClientRect(); if (!near(a.left, b.left, 0.6)) bad.push(where + ': the label ' + name(l) + ' and its control do not share a left edge (' + a.left.toFixed(1) + ' vs ' + b.left.toFixed(1) + ')'); } });
   // headings of cards and groups
-  document.querySelectorAll('.t-head').forEach(h => { if (!shown(h)) return; const k = nextEl(h); if (!k) return; n.head++; gap(h, k, T.head, 'the gap from the heading to its content', h, 0.6); });
+  // Outside an Audio Editor card, the heading to its content is --gap-head. A heading row directly inside an Audio Editor card (.ae-card > .t-head) follows the balanced-body rule instead (the spec's "The balanced body"): the body is centered
+  // between the heading row's lowest visible edge and the next line, so the space under the heading row is whatever that leaves, never less than --gap-set. The balance itself is measured by tests/lib/layout-lines.js (body-balance); here the least space is asserted.
+  document.querySelectorAll('.t-head').forEach(h => { if (!shown(h)) return; const k = nextEl(h); if (!k) return; n.head++;
+    if (h.parentElement.matches('.ae-card')) { const ra = h.getBoundingClientRect(), rb = k.getBoundingClientRect(); if (below(ra, rb) && rb.top - mg(k, 'marginTop') - (ra.bottom + mg(h, 'marginBottom')) < T.set - 0.6) bad.push(where + ': the space under the heading row of ' + name(h) + ' is ' + (rb.top - mg(k, 'marginTop') - (ra.bottom + mg(h, 'marginBottom'))).toFixed(2) + 'px, less than the ' + T.set + 'px a card keeps under it at the least'); return; }
+    gap(h, k, T.head, 'the gap from the heading to its content', h, 0.6); });
   // one setting to the next
   document.querySelectorAll('.field').forEach(f => { if (!shown(f)) return; const k = nextEl(f); if (!k || !k.matches('.field') || !below(f.getBoundingClientRect(), k.getBoundingClientRect())) return; if (f.closest('.tag-grid, .tl-bar')) return;
     const want = f.closest('.ae-card, .eq-band, .eq-match, .pe-top') ? T.set : T.field; if (k.matches('.sub, #firstAloneField, #inkField')) return; n.set++; const pv = e => parseFloat(getComputedStyle(e).paddingBottom), pt = e => parseFloat(getComputedStyle(e).paddingTop), g = (k.getBoundingClientRect().top + pt(k)) - (f.getBoundingClientRect().bottom - pv(f)); if (!near(g, want, 0.6)) bad.push(where + ': the gap from ' + name(f) + ' to the next setting is ' + g.toFixed(2) + 'px, not ' + want + 'px'); });

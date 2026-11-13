@@ -3,10 +3,8 @@
 # id-spacing: a rule naming an element inside a tool pane by its id that sets margin, padding, or gap ({the spacing properties it sets}). screen-width: a width @media that styles the Audio Editor.
 id-spacing #aeBalCard .field {margin-bottom}
 id-spacing #aeBalCard .field {margin}
-id-spacing #aeEmCard {gap}
 id-spacing #aeEmGo.on::before {margin}
 id-spacing #aeFadeLenCard .seg {margin}
-id-spacing #aeFadeLenCard {gap}
 id-spacing #aeFadeLenField {margin-top}
 id-spacing #aeFadeShape label {padding}
 id-spacing #aeGainBig {margin}
@@ -20,11 +18,9 @@ id-spacing #aeNrCtl .nr-prog {margin}
 id-spacing #aeNrCtl .nr-prog {margin}
 id-spacing #aeNrCtl .sub {gap,margin-left,padding-left}
 id-spacing #aeNrCtl .sub>.field {margin}
-id-spacing #aeNrCtl {gap}
 id-spacing #aeNrLearnStep .mt-n {margin-top}
 id-spacing #aeNrSample .mt-pick {row-gap}
 id-spacing #aeNrSample .mt-steps {gap}
-id-spacing #aeNrSample {gap}
 id-spacing #aeNrSub.open>.fa-in {padding}
 id-spacing #aePaneEq .eq-band.ae-card {margin-top}
 id-spacing #aePaneEq .eq-match {margin-top}
@@ -34,15 +30,10 @@ id-spacing #aeSum b {margin-top}
 id-spacing #aeSum {margin-top,padding-top}
 id-spacing #aeSum>div {column-gap,row-gap}
 id-spacing #aeSum>div {gap}
-id-spacing #aeWidthCard {gap}
-id-spacing #spAmtF.open>.fa-in {padding}
 id-spacing .nr-grid.pre #aeNrLearnStep {margin-top}
-id-spacing :is(.sp-card,#aeNrCtl,#aeShapeCard,.fd-shape,.em-view)>.t-head {margin-bottom}
 id-spacing @container level (max-width:399px) #aeNormCard:not(:has(.fa-stack>.fa.open)) .lv-head {margin-bottom}
 id-spacing @container level (max-width:519px) #aeNormMode {margin-left}
 id-spacing @container level (max-width:659px) #audioDlg #aeNormMode span {padding}
-id-spacing @media (max-width:420px) #aeWidthCard .im-head {row-gap}
-id-spacing @media (max-width:420px),(min-width:601px) and (max-width:760px) #aeNrCtl .nr-head {row-gap}
 id-spacing @media (max-width:600px) .nr-grid.pre #aeNrLearnStep {margin-top}
 id-spacing @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep {margin-top}
 id-spacing @media (min-width:700px) #aeFadeShape label {padding}
@@ -52,7 +43,6 @@ screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar .ae-view lab
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-times
 screen-width @media (max-width:420px) #aeWidthCard .im-head .seg
-screen-width @media (max-width:420px) #aeWidthCard .im-head
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-ic
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-lb
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .btn
@@ -63,7 +53,6 @@ screen-width @media (max-width:420px) #audioDlg:not(.afull) .eq-bn
 screen-width @media (max-width:420px) #spShape svg
 screen-width @media (max-width:420px) .ae-pt .ae-sub
 screen-width @media (max-width:420px) .sp-seg label span
-screen-width @media (max-width:420px),(min-width:601px) and (max-width:760px) #aeNrCtl .nr-head
 screen-width @media (max-width:520px) .ae-export
 screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-main
 screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-pane

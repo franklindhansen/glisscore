@@ -187,11 +187,11 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       o.noClone = cl === 0; o.perCallTime = +ms.toFixed(4);
       o.readiness = outSrc() === (aeFxPeek(soundSet().fx) || S.audio);          // the video and the editor agree on whether the sound is ready
       aeTool('fades'); await sleep(500);          // the Curve card: its heading and row sit in the middle, the spare height split evenly (Decision 9)
-      { const cc = $('#aeShapeCard').getBoundingClientRect(), hd = $('#aeShapeCard .t-head').getBoundingClientRect(), sg = $('#aeFadeShape').getBoundingClientRect(); o.curveTop = hd.top - cc.top; o.curveBottom = cc.bottom - sg.bottom; }
+      { const cc = $('#aeShapeCard').getBoundingClientRect(), hd = $('#aeShapeCard .t-head').getBoundingClientRect(), sg = $('#aeFadeShape').getBoundingClientRect(); o.curveTop = sg.top - hd.bottom; o.curveBottom = cc.bottom - sg.bottom; }
       closeAudioEditor(); await sleep(200);
       return o;
     });
-    ok('the Fades Curve card centers its heading and row: the space above and below is equal', Math.abs(r.curveTop - r.curveBottom) <= 1.5, JSON.stringify([r.curveTop, r.curveBottom]));
+    ok('the Fades Curve card centers its row between the heading row and the card\'s bottom edge: the space above and below is equal (the balanced body)', Math.abs(r.curveTop - r.curveBottom) <= 1.5, JSON.stringify([r.curveTop, r.curveBottom]));
     ok('the EQ bypass stopped reads within 0.5dB of the playing reading and of the EQ switched off', r.stoppedVsPlaying, JSON.stringify(r));
     ok('the waveform redraws on Bypass for the EQ, the Imager, Noise reduction, and Spectra', r.wave.eq && r.wave.imager && r.wave.noise && r.wave.spec, JSON.stringify([r.wave, r.nrInfo]));
     ok('Level bypassed: the wave loses its lift, True peak and the Clip light follow, and the Gain number keeps its setting with Net gain at 0dB', r.clipBefore && r.clipAfter && r.clipLight && r.liftBefore > 1 && r.liftAfter && r.gainShown && r.netZero, JSON.stringify(r));

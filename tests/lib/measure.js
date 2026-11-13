@@ -18,6 +18,7 @@ exports.install = function () {
       if (n.matches('.fa:not(.open)>.fa-in, .eq-fold.shut, .im-view.off, .line-fold:not(.open)>.fa-in')) return false;
       if (n === top) break;
     }
+    if (getComputedStyle(e).display === 'contents') return true;          // a wrapper with no box of its own is shown when what it holds is
     const r = R(e); return r.width > 0 && r.height > 0;
   };
   const metrics = (el, ch) => { const cs = getComputedStyle(el); cv.font = [cs.fontStyle, cs.fontWeight, cs.fontSize, cs.fontFamily].join(' '); cv.letterSpacing = cs.letterSpacing === 'normal' ? '0px' : cs.letterSpacing; return cv.measureText(ch); };
@@ -28,7 +29,7 @@ exports.install = function () {
     if (!nodes.length) return null;
     const node = nodes[0], rg = document.createRange(); rg.selectNodeContents(node);
     const rects = [...rg.getClientRects()].filter(r => r.width > 0), first = rects[0] || R(node.parentElement), host = node.parentElement;
-    const asc = metrics(host, 'H').fontBoundingBoxAscent, cap = metrics(host, 'H').actualBoundingBoxAscent;
+    const asc = metrics(host, 'H').fontBoundingBoxAscent, cap = Math.round(metrics(host, 'H').actualBoundingBoxAscent);          // the capital's height on whole pixels, as the page draws and trims it (--trim-*, --cut-* round it the same way)
     const base = first.top + asc;
     return { capTop: base - cap, base, left: first.left, right: first.right, el: host };
   };
@@ -43,6 +44,7 @@ exports.install = function () {
     if (isControl(el)) return { ...box(el), kind: 'box' };
     const l = letters(el); return l ? { top: l.capTop, bottom: l.base, left: l.left, right: l.right, kind: 'letters' } : null;
   };
+  const filled = el => { const cs = getComputedStyle(el); return !/rgba\(\s*0,\s*0,\s*0,\s*0\)|transparent/.test(cs.backgroundColor) || cs.backgroundImage !== 'none' || ['Top', 'Right', 'Bottom', 'Left'].some(s => parseFloat(cs['border' + s + 'Width']) > 0 && cs['border' + s + 'Style'] !== 'none'); };
   const SKIP = '.tip, .info-i, .lv-hold, .lv-orig, .lv-fill, .lv-zone, .lv-ceil, .mt-spin, .im-view.off, .sr-only, option, script, style';
   // the top and bottom of everything a person sees in root: letters (cap top to baseline), the border box of a control, a slider's thumb, a bar or picture with a fill or border
   const inkOf = (root, skip) => {
@@ -50,10 +52,11 @@ exports.install = function () {
     const take = i => { if (!i) return; top = Math.min(top, i.top); bottom = Math.max(bottom, i.bottom); n++; };
     const walk = e => {
       for (const c of e.children) {
-        if (c.matches(SKIP) || (skip && skip(c)) || !shown(c) || getComputedStyle(c).position === 'absolute') continue;
+        if (c.matches(SKIP) || (skip && skip(c)) || !shown(c) || (getComputedStyle(c).position === 'absolute' && e === root)) continue;          // a part laid over the whole root (a progress bar) is not seen as part of it; a label placed inside a part (a scale's numbers) is
         if (c.matches('input[type=range]') || isControl(c)) { if (c.matches('canvas')) fills = true; take(ink(c)); continue; }
         const direct = [...c.childNodes].some(x => x.nodeType === 3 && x.textContent.trim()), before = n;
         if (direct) take(ink(c));
+        if (direct && !isControl(c) && c.children.length === 0 && filled(c)) take(box(c));          // a text on a fill or a border of its own (a step's number in its circle, a chip) is seen as that shape
         if (c.children.length) walk(c);
         if (n === before) { const cs = getComputedStyle(c); if (R(c).width >= 1 && R(c).height >= 1 && (!/rgba\(\s*0,\s*0,\s*0,\s*0\)|transparent/.test(cs.backgroundColor) || cs.backgroundImage !== 'none' || parseFloat(cs.borderTopWidth) > 0)) take(box(c)); }          // a bar or a picture with a fill or a border (a track whose parts are left out above is still the bar)
       }
