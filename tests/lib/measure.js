@@ -29,7 +29,7 @@ exports.install = function () {
     if (!nodes.length) return null;
     const node = nodes[0], rg = document.createRange(); rg.selectNodeContents(node);
     const rects = [...rg.getClientRects()].filter(r => r.width > 0), first = rects[0] || R(node.parentElement), host = node.parentElement;
-    const asc = metrics(host, 'H').fontBoundingBoxAscent, cap = Math.round(metrics(host, 'H').actualBoundingBoxAscent);          // the capital's height on whole pixels, as the page draws and trims it (--trim-*, --cut-* round it the same way)
+    const asc = metrics(host, 'H').fontBoundingBoxAscent, cap = metrics(host, 'H').actualBoundingBoxAscent;
     const base = first.top + asc;
     return { capTop: base - cap, base, left: first.left, right: first.right, el: host };
   };

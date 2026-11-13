@@ -11,7 +11,6 @@ id-spacing #aeGainBig {margin}
 id-spacing #aeGainField {margin-top}
 id-spacing #aeMatch .mt-chip {padding-bottom,padding-top}
 id-spacing #aeMeter {row-gap}
-id-spacing #aeNormCard .fa.open>.fa-in {margin,padding}
 id-spacing #aeNrCtl .field {margin-bottom}
 id-spacing #aeNrCtl .field:last-of-type {margin-bottom}
 id-spacing #aeNrCtl .nr-prog {margin}

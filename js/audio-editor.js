@@ -1961,16 +1961,6 @@ function aeTool(name) {
   requestAnimationFrame(aeAlignView); requestAnimationFrame(() => { if (name === 'imager') aeScopeDraw(); if (name === 'eq') aeEqDraw(); if (name === 'fades') aeFadeDraw(); if (name === 'noise') { aeNrHolds(); aeNrDraw(); } if (name === 'emu') aeEmUi(); });
 }
 /* on a narrow window the tool list folds into one line that opens like a menu */
-// Balanced bodies on whole pixels. A card centers its body with flex auto margins (style.css, "the balanced body"), and an odd spare height leaves the body on a half pixel, where a control's letters draw up to a pixel
-// off center. After a layout change, each body part's top margin is read and set to its whole pixels (the last part's bottom margin takes what is left): one rule for every card, no numbers of its own.
-let aeSnapRaf = 0;
-function aeSnapLater() { if (!aeSnapRaf) aeSnapRaf = requestAnimationFrame(() => { aeSnapRaf = 0; if (!$('#audioDlg').hidden) aeSnapBodies(); }); }
-function aeSnapBodies() {
-  const parts = [...document.querySelectorAll('#audioDlg .ae-card > *')].filter(e => getComputedStyle(e).getPropertyValue('--body').trim() === '1');
-  parts.forEach(e => e.style.removeProperty('--snap-t'));
-  const top = parts.map(e => parseFloat(getComputedStyle(e).marginTop));
-  parts.forEach((e, i) => { const m = top[i]; if (m > 0 && Math.abs(m - Math.round(m)) > 0.01) e.style.setProperty('--snap-t', Math.round(m) + 'px'); });
-}
 function aeRailSel(animate) {
   const sel = $('#aeRailSel'), root = $('#aeRailIn'), btn = document.querySelector('#aeRail .ae-tool.on'); if (!sel || !btn || !btn.offsetWidth) { if (sel) sel.style.opacity = '0'; return; }
   let x = 0, y = 0, n = btn; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
@@ -2251,7 +2241,6 @@ function aeToolsBind() {
   $('#aeFadeShape').addEventListener('change', e => { aePush(); AE.d.audioFadeShape = e.target.value; if (AE.d.audioFades === false) { AE.d.audioFades = true; AE.d.audioFadeLen = AE.d.audioFadeLen || AE_FADE; AE.d.audioFadeOutLen = null; } aeRefresh(); });
   document.querySelectorAll('input[name=aeFadeSide]').forEach(r => r.addEventListener('change', e => { aeFadeSide(e.target.value); }));
   if (window.ResizeObserver) { new ResizeObserver(() => { aeRailSel(false); aeWiresDraw(true); }).observe($('#aeRailIn')); new ResizeObserver(() => { if (AE.d && !$('#audioDlg').hidden) { aeSize(); aeDraw(); } }).observe($('#aeCanvas')); new ResizeObserver(() => { if (AE.full) aeFsLayout(); }).observe($('#audioDlg .ae-main')); { const ro = new ResizeObserver(() => { if (AE.d && !$('#audioDlg').hidden) aeToolLive(); }); ['#aeEqCv', '#aeNrCv', '#aeFadeCv', '#aeScope'].forEach(id => ro.observe($(id))); } }          // a picture that gets more or less room (EQ Match opening, the window growing) redraws to fit
-  if (window.ResizeObserver) { const ro = new ResizeObserver(aeSnapLater); document.querySelectorAll('#audioDlg .ae-card, #audioDlg .ae-card > *').forEach(e => ro.observe(e)); }
   aeEqBind(); aeImBind();
   window.addEventListener('resize', () => { if (AE.d && !$('#audioDlg').hidden) aeToolLive(); });
 }

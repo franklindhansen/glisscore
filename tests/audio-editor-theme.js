@@ -52,7 +52,7 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
   for (const t of ['light', 'dark']) {
     await p.evaluate(t => flip(t, null), t); await settle();
     const tok = await tokenOf();
-    const seen = await p.evaluate(() => ['.nr-hum', '.nr-listen', '.im-low', '.lv-sum', '.ae-procs.ae-apart'].map(s => { const el = document.querySelector(s); return el ? getComputedStyle(el).borderTopColor : 'missing'; }).concat([getComputedStyle(document.querySelector('#aeRule')).backgroundColor]));
+    const seen = await p.evaluate(() => ['.nr-hum', '.nr-listen', '.im-low', '.lv-sum', '.ae-procs.ae-apart'].map(s => { const el = document.querySelector(s); if (!el) return 'missing'; const cs = getComputedStyle(el); return parseFloat(cs.borderTopWidth) > 0 ? cs.borderTopColor : (cs.boxShadow.match(/^(color\([^)]*\)|rgba?\([^)]*\))/) || [])[1]; }).concat([getComputedStyle(document.querySelector('#aeRule')).backgroundColor]));
     const led = await p.evaluate(() => getComputedStyle(document.querySelector('#aeLvLed')).backgroundColor);
     ok('the dividers and the unlit light use the hairline token (' + t + ')', seen.every(c => c === tok) && led === tok, JSON.stringify({ tok, seen, led }));
   }

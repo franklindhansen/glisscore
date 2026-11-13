@@ -7,6 +7,7 @@
 //   head-ctl-center    ... centered on the heading's letters (the middle of the cap height)
 //   head-ctl-right     ... and the row's last one ends on the card's right content line
 //   body-balance       the body (letters, control edges, slider thumbs) has equal space above, from the heading row's lowest visible edge, and below, to the footer row's line or the card's bottom edge
+//   heading-gap        a display or list starts at least --gap-set below its heading row's lowest visible edge
 //   card-gap           two cards side by side or one above the other are --gap-card apart
 //   scale-gap          the labels under a slider or bar start --gap-label under its thumb or edge
 //   mid-tick           the middle label of a three-label scale is centered under the thumb at the middle value
@@ -26,9 +27,6 @@ exports.lines = function (ctx) {
   const pane = document.querySelector('.ae-pane:not([hidden])');
   const cards = [...pane.querySelectorAll('.ae-card')].filter(c => mk.shown(c) && !c.parentElement.closest('.ae-card'));
   const noBody = c => c.querySelector('.sp-list, .nr-stage, .im-scope, canvas');          // a picture or a list that takes the rest of the card has no body to center
-  // body-balance is equal space within 0.5px. When the space above and below together is an odd whole number of pixels, exactly equal is impossible on whole pixels (a control must sit on a whole pixel, tests/control-pixels.js),
-  // so a difference of at most 1px is accepted there; the app rounds every body to whole pixels (aeSnapBodies in js/audio-editor.js).
-  const odd = t => Math.abs(t - Math.round(t)) < 0.02 && Math.round(t) % 2 === 1;
   const mid = l => (l.capTop + l.base) / 2;
   const inner = c => { const r = R(c), cs = getComputedStyle(c), n = k => parseFloat(cs[k]); return { bt: r.top + n('borderTopWidth'), bb: r.bottom - n('borderBottomWidth'), t: r.top + n('borderTopWidth') + n('paddingTop'), b: r.bottom - n('borderBottomWidth') - n('paddingBottom'), l: r.left + n('borderLeftWidth') + n('paddingLeft'), r: r.right - n('borderRightWidth') - n('paddingRight') }; };
   for (const c of cards) {
@@ -49,12 +47,18 @@ exports.lines = function (ctx) {
     }
     // a picture in a card has no border of its own: the card's line is the only one
     for (const pic of c.querySelectorAll('canvas, img')) if (mk.shown(pic)) chk('picture-border', cn + '>' + name(pic), ['Top', 'Right', 'Bottom', 'Left'].every(s => parseFloat(getComputedStyle(pic)['border' + s + 'Width']) === 0), 'has a border of its own inside the card');
+    // A display or list fills its available space rather than centering its ink. Measure its first in-flow content box, so a centered empty-list note cannot hide a list touching the heading.
+    if (noBody(c) && headBottom != null) {
+      const first = [...c.children].find(e => e !== row && mk.shown(e) && !e.matches('.tip,.nr-prog,.foot-row') && !['absolute', 'fixed'].includes(getComputedStyle(e).position));
+      if (first) { const gap = R(first).top - headBottom; chk('heading-gap', cn, gap >= tok('--gap-set') - 0.5, 'space under the heading row ' + f(gap) + 'px, less than ' + tok('--gap-set')); }
+    }
     // the balanced body
     if (!noBody(c)) {
-      const isFoot = e => e.matches('.foot-row') || (e.parentElement === c && e !== row && !mk.isControl(e) && parseFloat(getComputedStyle(e).borderTopWidth) > 0 && getComputedStyle(e).borderTopStyle !== 'none');          // a footer row: the shared one, or any last part of the card that has a line on its top
+      const hasLine = e => { const cs = getComputedStyle(e); return (parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== 'none') || /inset\s+0px\s+1px\s+0px\s+0px|0px\s+1px\s+0px\s+0px\s+inset/.test(cs.boxShadow); };          // a line on a part's top: its border, or the 1px inset line the footer rows draw (it takes no room)
+      const isFoot = e => e.matches('.foot-row') || (e.parentElement === c && e !== row && !mk.isControl(e) && hasLine(e));          // a footer row: the shared one, or any last part of the card that has a line on its top
       const body = mk.inkOf(c, e => e === row || ctrls.some(k => k === e || k.contains(e)) || isFoot(e)), foot = [...c.children].filter(e => isFoot(e) && mk.shown(e)).concat([...c.querySelectorAll('.foot-row')].filter(e => mk.shown(e) && e.parentElement !== c)).map(R).sort((a, b) => a.top - b.top)[0];
       if (body) { const above = body.top - (headBottom != null ? headBottom : ci.bt), line = foot ? foot.top : ci.bb, below = line - body.bottom;
-        chk('body-balance', cn, near(above, below, odd(above + below) ? 1 : 0.5), 'space above the body ' + f(above) + 'px, below ' + f(below) + 'px'); }
+        chk('body-balance', cn, near(above, below) && Math.min(above, below) >= tok('--gap-set') - 0.5, 'space above the body ' + f(above) + 'px, below ' + f(below) + 'px; at least ' + tok('--gap-set') + 'px on each side'); }
     }
   }
   // gaps between neighbors

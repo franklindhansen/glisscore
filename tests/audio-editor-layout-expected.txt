@@ -2,8 +2,6 @@
 # This list may only shrink. The check fails on a failure that is not listed, and on a listed failure that now passes (it names the line to delete).
 # A ticket that makes a rule pass deletes exactly the lines for it. The rules are described at the top of tests/lib/layout-lines.js; the text after # is only for reading and is not compared.
 noise auto 900x760 body-balance aeNrSample  # space above the body 10.5px, below 5px
-noise auto 900x760 clipped aeNrSample>#aeNrHum  # aeNrSample > #aeNrHum () out by L/R/T/B -488.0/-16.0/-136.0/2.0
-noise auto 900x760 clipped aeNrSample>span  # aeNrSample > span (Mains hum) out by L/R/T/B -16.0/-458.7/-137.0/1.0
 noise learned 900x760 clipped aeNrSample>#aeNrClear  # aeNrSample > #aeNrClear () out by L/R/T/B -274.0/18.3/-139.0/-51.0
 noise learned 700x800 clipped aeNrSample>#aeNrClear  # aeNrSample > #aeNrClear () out by L/R/T/B -274.0/1.0/-139.0/-63.0
 eq idle 900x760 body-balance aeEqBand  # space above the body 14px, below 30px
