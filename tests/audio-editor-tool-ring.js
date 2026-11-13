@@ -1,4 +1,4 @@
-// Background work shows in the tool list as a blue ring that fills with the progress, for Noise reduction (its main job, Auto, Learn noise, Mains hum) and the Emulator, and only while another tool is open:
+// Background work shows in the tool list as a blue ring that fills with the progress, for Noise reduction (its main job, Auto, Learn, Mains hum) and the Emulator, and only while another tool is open:
 // with its own window open the bar there says it. No orange text, no amber pulse; the ring fades in with the job and out when it ends.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-tool-ring.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
@@ -23,7 +23,7 @@ const file = path.join(os.tmpdir(), 'kf-tool-ring.wav'); fs.writeFileSync(file, 
     aeTool('noise'); await sleep(300); const auto = aeNrAuto(); await sleep(100); aeTool('level'); await sleep(250); o.auto = ring('noise'); o.autoBusy = !!AE.nrAutoBusy; await auto; await sleep(700); o.autoDone = ring('noise');
     // Mains hum
     aeTool('noise'); await sleep(300); const hum = aeNrHum(); await sleep(100); aeTool('level'); await sleep(250); o.hum = ring('noise'); o.humBusy = !!AE.humBusy; await hum; await sleep(700); o.humDone = ring('noise');
-    // Learn noise (a turning arc: no share is known)
+    // Learn (a turning arc: no share is known)
     aeTool('noise'); await sleep(300); AE.nsel = { a: 1, b: 3 }; aeRefresh(); await sleep(100); document.querySelector('#aeNrLearn').click(); await sleep(100); aeTool('level'); await sleep(250); o.learn = ring('noise'); o.learnBusy = !!AE.nrLearning;
     for (let i = 0; i < 300 && AE.nrLearning; i++) await sleep(20); await sleep(700); o.learnDone = ring('noise');
     // Emulator
@@ -41,7 +41,7 @@ const file = path.join(os.tmpdir(), 'kf-tool-ring.wav'); fs.writeFileSync(file, 
   ok('a new job starts its ring at its own share, not where the last one ended', o_restart(r), JSON.stringify(r.restart));
   ok('Auto: leave the tool while it works and the ring shows; it goes when Auto ends', r.autoBusy && blue(r.auto) && r.autoDone.op < 0.02, JSON.stringify({ auto: r.auto, done: r.autoDone }));
   ok('Mains hum: the same', r.humBusy && blue(r.hum) && r.humDone.op < 0.02, JSON.stringify({ hum: r.hum, done: r.humDone }));
-  ok('Learn noise: a turning arc, gone when it ends', r.learnBusy && blue(r.learn) && r.learn.wait && r.learnDone.op < 0.02, JSON.stringify({ learn: r.learn, done: r.learnDone }));
+  ok('Learn: a turning arc, gone when it ends', r.learnBusy && blue(r.learn) && r.learn.wait && r.learnDone.op < 0.02, JSON.stringify({ learn: r.learn, done: r.learnDone }));
   ok('Emulator: a blue ring filled to its progress while another tool is open, for the reference and for your audio', blue(r.em) && near(r.em, 0.5) && blue(r.em2) && near(r.em2, 0.25), JSON.stringify({ em: r.em, em2: r.em2 }));
   ok('Emulator: no ring with its own window open, back when you leave, gone when the reading ends', r.emOwn.op < 0.02 && blue(r.emBack) && r.emDone.op < 0.02, JSON.stringify({ own: r.emOwn, back: r.emBack, done: r.emDone }));
   ok('no errors', errs.length === 0, errs.join(' | '));

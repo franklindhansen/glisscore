@@ -8,16 +8,6 @@ id-spacing #aeGainBig {margin}
 id-spacing #aeGainField {margin-top}
 id-spacing #aeMatch .mt-chip {padding-bottom,padding-top}
 id-spacing #aeMeter {row-gap}
-id-spacing #aeNrCtl .field {margin-bottom}
-id-spacing #aeNrCtl .field:last-of-type {margin-bottom}
-id-spacing #aeNrCtl .nr-prog {margin}
-id-spacing #aeNrCtl .nr-prog {margin}
-id-spacing #aeNrCtl .sub {gap,margin-left,padding-left}
-id-spacing #aeNrCtl .sub>.field {margin}
-id-spacing #aeNrLearnStep .mt-n {margin-top}
-id-spacing #aeNrSample .mt-pick {row-gap}
-id-spacing #aeNrSample .mt-steps {gap}
-id-spacing #aeNrSub.open>.fa-in {padding}
 id-spacing #aePaneEq .eq-band.ae-card {margin-top}
 id-spacing #aePaneEq .eq-match {margin-top}
 id-spacing #aePaneEq .eq-top {margin-bottom}
@@ -26,12 +16,9 @@ id-spacing #aeSum b {margin-top}
 id-spacing #aeSum {margin-top,padding-top}
 id-spacing #aeSum>div {column-gap,row-gap}
 id-spacing #aeSum>div {gap}
-id-spacing .nr-grid.pre #aeNrLearnStep {margin-top}
 id-spacing @container level (max-width:399px) #aeNormCard:not(:has(.fa-stack>.fa.open)) .lv-head {margin-bottom}
 id-spacing @container level (max-width:519px) #aeNormMode {margin-left}
 id-spacing @container level (max-width:659px) #audioDlg #aeNormMode span {padding}
-id-spacing @media (max-width:600px) .nr-grid.pre #aeNrLearnStep {margin-top}
-id-spacing @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep {margin-top}
 screen-width @media (max-width:340px) #aeBassCard .im-lowf
 screen-width @media (max-width:340px) #aeBassCard
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar .ae-view label
@@ -63,15 +50,6 @@ screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times b
 screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times span
 screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times
 screen-width @media (max-width:560px) .sp-tools
-screen-width @media (max-width:600px) .nr-grid
-screen-width @media (max-width:600px) .nr-grid
-screen-width @media (max-width:600px) .nr-grid.pre #aeNrLearnStep
-screen-width @media (max-width:600px) .nr-grid.pre #aeNrSample
-screen-width @media (max-width:600px) .nr-grid.pre .mt-steps
-screen-width @media (max-width:600px) .nr-grid.pre .nr-stage canvas
-screen-width @media (max-width:600px) .nr-grid.pre>*
-screen-width @media (max-width:600px) .nr-grid>*
-screen-width @media (max-width:600px) .nr-grid>.nr-stage
 screen-width @media (max-width:760px) #aeBassCard .im-lowf
 screen-width @media (max-width:760px) #aeBassCard
 screen-width @media (max-width:760px) #audioDlg.afull .ae-main
@@ -149,13 +127,6 @@ screen-width @media (max-width:760px) .mt-steps.two
 screen-width @media (max-width:760px) .sp-grid
 screen-width @media (max-width:760px) .sp-lcard
 screen-width @media (max-width:760px) .sp-list
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid #aeNrCtl
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid #aeNrSample
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre .mt-steps
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid.pre .nr-stage canvas
-screen-width @media (min-width:601px) and (max-width:760px) #audioDlg:not(.afull) .nr-grid>.nr-stage
 screen-width @media (min-width:761px) #aePaneEmu .em-grid
 screen-width @media (min-width:761px) #aePaneEmu:not([hidden])
 screen-width @media (min-width:761px) #audioDlg.afull .ae-pane

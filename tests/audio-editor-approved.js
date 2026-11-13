@@ -4,6 +4,7 @@
 //   top, bottom a card's edges: the rules' row (the picture's is recorded beside it, so where the column rule differs from the picture, the difference is visible and intentional)
 //   frame       the Fades picture's frame lines: within 1px of the picture's (36px under the heading's letters, 48px above the curve choice)
 //   scale       the numbers under a slider or bar: within 1px of the picture's in a card whose height matches the picture's; in a card whose height differs by more than 1px, at the rules' row, with the picture's printed beside it
+//   steps       the middle of the buttons on a row of steps (Noise sample's Select row): the rules' row (balanced between the heading and the line above Mains hum), the picture's printed beside it
 //   gap         every slider's numbers start 12px under its thumb, every bar's 8px under the bar
 // A picture whose tool is not built yet is listed in tests/audio-editor-approved-expected.txt, which may only shrink; its rows go into TABLE with its ticket.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-approved.js
@@ -20,15 +21,22 @@ const STATES = {
   'fades idle': ['fades', null],
   'level off': ['level', null],
   'emu idle': ['emu', null],
+  'noise selected': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); }],
+  'noise learning': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); const l = document.querySelector('#aeNrLearn'); l.disabled = true; l.classList.add('loading'); l.style.setProperty('--p', '60%'); l.textContent = 'Processing 60%'; await sleep(300); }],
+  'noise short': ['noise', null, async p => { await p.click('#aeNrHand'); const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(), t = t => r.left + aeX(t); return { y: r.top + r.height / 2, a: t(1.8), z: t(2.0) }; }); await p.mouse.move(g.a, g.y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(g.a + (g.z - g.a) * i / 8, g.y); await p.mouse.up(); await p.waitForTimeout(300); }],
   'fades length 1': ['fades', async () => { const fl = document.querySelector('#aeFadeLen'); fl.value = 1; fl.dispatchEvent(new Event('input', { bubbles: true })); fl.dispatchEvent(new Event('change', { bubbles: true })); await sleep(1500); aeFadeDraw(); }],
 };
 // cards side by side whose last lines share one line (Fades: the Length card's numbers end on the Shape card's choice), so Length's scale follows that rule, not the picture
 const LAST_LINES = ['aeFadeLenCard'], LAST_PAIRS = [['aeFadeLenCard', 'ae-card.fd-shape']];
+// what each Noise picture shows on the Select row: Auto pressed, Manual pressed, Learn on or off, and the "Too short" note
+const NOISE_SHOWS = { 'noise idle': 'false,false,off,nonote', 'noise selected': 'true,false,on,nonote', 'noise learning': 'true,false,off,nonote', 'noise short': 'false,true,off,note' };
+const STEPS = 391;          // the middle of the Select row's buttons, centered between the heading and the line above Mains hum in a 164px card (the picture's card is 158px, so its row is 4px higher)
 const TABLE = {
   'noise idle': [
     ['top:aeNrSample', 318, 318],
     ['bottom:aeNrSample', 476, 482],
     ['head:NOISE SAMPLE', 339, 338.98],
+    ['steps:aeNrSample', 387, STEPS],
     ['top:aeNrCtl', 486, 492],
     ['bottom:aeNrCtl', 656, 656],
     ['head:3REMOVAL', 507, 512.98],
@@ -113,14 +121,17 @@ const TABLE = {
     ['frame-bottom:ae-card.fd-shape', 561, 561]
   ]
 };
+for (const k of ['noise selected', 'noise learning', 'noise short', 'noise selected dark', 'noise short dark']) TABLE[k] = TABLE['noise idle'];          // the Noise pictures differ from p-noise only on the Select row, so every other row is the idle row
 (async () => {
   const b = await chromium.launch(), errs = [];
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } }); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push(e.message));
-  await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/stereo.wav');
-  await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500);
-  await p.evaluate(install); await p.evaluate('window.__radio = ' + radio);
+  const open = async () => { await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/stereo.wav');
+    await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500);
+    await p.evaluate(install); await p.evaluate('window.__radio = ' + radio); };
+  await open();
   for (const [state, rows] of Object.entries(TABLE)) {
-    const [tool, go] = STATES[state]; await p.evaluate(t => aeTool(t), tool); await p.waitForTimeout(800); if (go) { await p.evaluate('(' + go + ')()'); await p.waitForTimeout(900); }
+    if (/^noise (selected|learning|short)/.test(state)) await open();          // each Noise picture starts from a fresh editor: a selection or a note from the one before is not part of it
+    const [tool, go, drive] = STATES[state.replace(/ dark$/, '')]; await p.emulateMedia({ colorScheme: / dark$/.test(state) ? 'dark' : 'light' }); await p.evaluate(t => aeTool(t), tool); await p.waitForTimeout(800); if (go) { await p.evaluate('(' + go + ')()'); await p.waitForTimeout(900); } if (drive) await drive(p);
     const feats = await p.evaluate(features), gaps = feats.filter(f => f.kind === 'gap'), app = Object.fromEntries(feats.map(f => [f.key, f.y])), pic = Object.fromEntries(rows.map(([k, v]) => [k, v])), bad = [], read = [];
     for (const [key, pv, rv] of rows) {
       if (app[key] === undefined) { bad.push(key + ' is not on the page'); continue; }
@@ -143,6 +154,8 @@ const TABLE = {
     }
     for (const [x, y] of LAST_PAIRS) if (app['last:' + x] !== undefined && app['last:' + y] !== undefined && Math.abs(app['last:' + x] - app['last:' + y]) > 0.5) bad.push('the last lines of ' + x + ' (' + app['last:' + x] + ') and ' + y + ' (' + app['last:' + y] + ') are not on one line');
     for (const g of gaps) if (Math.abs(g.y - g.want) > 0.5) bad.push(g.key + ' starts ' + g.y + 'px under its thumb or bar, not ' + g.want);
+    const shows = NOISE_SHOWS[state.replace(/ dark$/, '')];
+    if (shows) { const got = await p.evaluate(() => { const n = document.querySelector('#aeStopNote'); return ['#aeNrFind', '#aeNrHand'].map(s => document.querySelector(s).getAttribute('aria-pressed')).join() + ',' + (document.querySelector('#aeNrLearn').disabled ? 'off' : 'on') + ',' + (n && !n.hidden && /Too short/.test(n.textContent) ? 'note' : 'nonote'); }); if (got !== shows) bad.push('the Select row shows ' + got + ', the picture shows ' + shows); }
     ok(state + ': heading letters and heading-row controls sit under their card\'s top as in the picture; card edges and scales are where the layout rules put them', !bad.length, bad.slice(0, 6).join(' | ') || read.join(', '));
   }
   const pending = fs.readFileSync(path.join(__dirname, 'audio-editor-approved-expected.txt'), 'utf8').split('\n').filter(l => l.trim() && l[0] !== '#');

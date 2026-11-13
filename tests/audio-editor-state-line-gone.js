@@ -1,4 +1,4 @@
-// Noise sample and Emulator cards have no state line (the buttons, chip, tool light and Removal card already say it), and Learn noise is a loading-bar button like Auto.
+// Noise sample and Emulator cards have no state line (the buttons, chip, tool light and Removal card already say it), and Learn is a loading-bar button like Auto.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-state-line-gone.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -21,7 +21,7 @@ const file = path.join(os.tmpdir(), 'kf-state-line.wav'); fs.writeFileSync(file,
     o.nrLine = !!document.querySelector('#aeNrSample .ae-state'); aeTool('emu'); await sleep(500); o.emLine = !!document.querySelector('#aeEmCard .ae-state'); o.anyLine = !!document.querySelector('.ae-state');
     return o;
   });
-  ok('Learn noise is a loading-bar button: while it works it shows "Processing N%" with a bar', r.seen.length && r.seen.some(f => f.loading && /^Processing \d+%$/.test(f.txt) && f.p !== '') && r.seen.every(f => f.dis || !f.loading), JSON.stringify(r.seen.slice(0, 3)));
+  ok('Learn is a loading-bar button: while it works it shows "Processing N%" with a bar', r.seen.length && r.seen.some(f => f.loading && /^Processing \d+%$/.test(f.txt) && f.p !== '') && r.seen.every(f => f.dis || !f.loading), JSON.stringify(r.seen.slice(0, 3)));
   ok('it holds the bar for at least 400ms, then goes back to a normal button with the noise learned', r.took >= 400 && r.end.profile && !r.end.loading && r.end.p === '' && /Learn again/.test(r.end.txt), JSON.stringify({ took: Math.round(r.took), end: r.end }));
   ok('no state line shows while it learns', r.seen.every(f => !f.line));
   ok('the Noise sample card has no state line', !r.nrLine);

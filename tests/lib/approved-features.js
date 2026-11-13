@@ -4,6 +4,7 @@
 //   ctl:<TEXT>      the top of a choice or button on that heading's row (its border box); x range is its width
 //   scale:<card>    the cap top of the numbers or end labels under the card's slider or bar; x range is the first label's width
 //   frame-top:<card>, frame-bottom:<card>   the Fades picture's frame lines (the row of each line), read from the canvas's pixels
+//   steps:<card>    the middle of the buttons on a card's row of steps (Noise sample's Select row): the middle of the lowest top and the highest bottom
 //   last:<card>     the bottom of the lowest ink in a card (its last line)
 //   gap:<card>      the distance from a slider's thumb (or a bar's bottom) to the first number or label under it, with the distance it must be in `want`
 //   top:<card>, bottom:<card>   a card's border box top and bottom
@@ -19,6 +20,9 @@ exports.features = function () {
       const l = mk.letters(h), name = h.textContent.trim().toUpperCase(); out.push({ key: 'head:' + name, kind: 'head', card: id, y: y(l.capTop), x0: x(l.left), x1: x(l.right) });
       const mid = (l.capTop + l.base) / 2, ctl = [...c.querySelectorAll('.btn, .seg, select')].find(e => mk.shown(e) && !e.closest('.foot-row, .sp-list') && !e.parentElement.closest('.seg') && Math.abs((R(e).top + R(e).bottom) / 2 - mid) <= 20);
       if (ctl) out.push({ key: 'ctl:' + name, kind: 'ctl', card: id, y: y(R(ctl).top), x0: x(R(ctl).left), x1: x(R(ctl).right) });
+    }
+    const st = c.querySelector(':scope > .mt-steps'); if (st && mk.shown(st)) {          // a row of steps: the middle of its buttons
+      const bs = [...st.querySelectorAll('.btn')].filter(e => mk.shown(e)).map(R); if (bs.length) out.push({ key: 'steps:' + id, kind: 'steps', card: id, y: y((Math.min(...bs.map(r => r.top)) + Math.max(...bs.map(r => r.bottom))) / 2) });
     }
     const ink = mk.inkOf(c, e => e.matches('.t-head')); if (ink) out.push({ key: 'last:' + id, kind: 'last', card: id, y: y(ink.bottom) });          // the card's last line: the bottom of its lowest ink
     const cv = c.querySelector('#aeFadeCv'); if (cv && mk.shown(cv)) {          // the Fades picture's frame: its top and bottom lines, read from the canvas's own pixels at its left edge, where the curves do not reach

@@ -1084,17 +1084,6 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
   html #audioDlg:not(.afull) .ae-pbody{height:auto;overflow:visible}
   html #audioDlg:not(.afull) .ae-pane{position:static}
 }
-/* Noise reduction, narrow: the desktop arrangement scaled down (the graph across the top, Noise sample and Removal side by side under it) from 601px; one column in that order up to 600px */
-@media (min-width:601px) and (max-width:760px){
-  #audioDlg:not(.afull) .nr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto}
-  #audioDlg:not(.afull) .nr-grid>.nr-stage{grid-area:1/1/2/3;height:104px}
-  #audioDlg:not(.afull) .nr-grid #aeNrSample{grid-area:2/1;background:var(--panel);border-color:var(--line)}
-  #audioDlg:not(.afull) .nr-grid #aeNrCtl{grid-area:2/2}
-  #audioDlg:not(.afull) .nr-grid.pre .nr-stage canvas{opacity:1}
-  #audioDlg:not(.afull) .nr-grid.pre .mt-steps{flex-direction:column;gap:10px;padding-top:0}
-  #audioDlg:not(.afull) .nr-grid.pre #aeNrLearnStep{margin-top:0}
-}
-
 /* ----- Tool list: output tools, bypass, bipolar sliders, level meter ----- */
 .ae-badge{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);transition:opacity .2s var(--ease-ui)}
 .ae-badge:empty{opacity:0}
@@ -1188,8 +1177,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-body{flex:1;min-width:0}
 .mt-step .mt-title{display:flex;align-items:center;min-height:22px}          /* a step's first line is as tall as its number, so the number is centered on it */
 .mt-step .nr-learn{min-height:30px}
-#aeNrLearnStep .mt-n{margin-top:4px}          /* a step whose first line is a small button: the number is centered on the button */
-.nr-grid.pre #aeNrLearnStep{margin-top:-4px}          /* side by side with step 1 (whose first line is a 22px title), the button's row is lifted 4px so the two numbers and the text sit level */
 .mt-title{margin:0 0 var(--gap-label);font-weight:600;color:var(--ink)}
 .mt-body .field label{display:flex;justify-content:space-between}
 .mt-body .field .mt-title{margin:0}
@@ -1227,14 +1214,9 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .field>.lv-big{margin:0 0 14px}
 
 /* ----- noise reduction ----- */
-.nr-grid{display:grid}
-#aeNrSample .mt-pick{color:var(--muted)}
 .nr-listen{display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.nr-prog{display:block;height:3px;margin-top:14px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;transition:opacity .3s var(--ease-ui)}
-.nr-prog.on{opacity:1}
 .nr-prog b{display:block;width:0;height:100%;background:var(--accent);transition:width .25s linear}
 .ae-tool{--row-px:8px;--row-py:8px;padding:0 var(--row-px);height:calc(1lh + 2 * var(--row-py) + 2px);white-space:nowrap}          /* the highlight is the button, so it hugs the name: the same space before and after it (the name is trimmed to its letters, so the height is set here) */
-#aeNrCtl .field:last-of-type{margin-bottom:0}
 .nr-hum{display:flex;align-items:center;gap:10px;font-size:14px}
 .nr-hum{position:relative}
 .nr-hum-l{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0;cursor:pointer}
@@ -1308,13 +1290,9 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .ae-jack{width:22px}
 }
 
-.nr-grid{margin-top:0;align-items:stretch}
-.nr-stage{height:104px;flex:none}
-.nr-prog{position:absolute;left:18px;right:18px;bottom:8px;margin:0}
 @media (max-width:760px){#aeZoomFit.gone{display:none}}
 
 /* Noise reduction: the graph spans the whole window; the two cards sit under it */
-.nr-grid>.nr-stage{grid-column:1/-1}
 .nr-learn{flex-wrap:nowrap;min-height:var(--h-s)}
 .nr-learn .btn,.nr-learn .mt-chip{height:var(--h-s);box-sizing:border-box;margin:0}
 .nr-learn .mt-chip{padding:0 4px 0 12px;white-space:nowrap}
@@ -1329,35 +1307,39 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* main-panel Fades: in and out share a row */
 .fade-pair{display:flex;justify-content:space-between;gap:12px}
 
-/* Noise reduction: the steps open in the big window, then slide down into their card */
-.nr-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
-.nr-grid>.nr-stage{grid-area:1/1/2/3}
-.nr-grid #aeNrSample{grid-area:2/1;transition:background-color .5s var(--ease-ui),border-color .5s var(--ease-ui)}
-.nr-grid #aeNrCtl{grid-area:2/2;min-height:0}
-.nr-stage{background:color-mix(in srgb,var(--ink) 6%,var(--panel2));border:1px solid var(--line);border-radius:var(--r-card)}
+/* ----- Noise reduction, on the tool grid (.tool-grid): the pane lays itself out by its own width. Narrow, it is one column in the order the graph, Noise sample, Removal. From 520px the graph spans the top and the two cards sit side by side under it;
+   before any noise is found, Noise sample takes the graph's place (the graph is hidden) and Removal spans the row under it, and when a noise is learned they slide into their places. ----- */
+#aePaneNoise{container:noise/inline-size}
+.nr-grid{grid-template-columns:minmax(0,1fr)}
+.nr-stage{height:116px;background:color-mix(in srgb,var(--ink) 6%,var(--panel2));border:1px solid var(--line);border-radius:var(--r-card)}
 .nr-stage canvas{transition:opacity .5s var(--ease-ui)}
-.nr-grid.pre #aeNrSample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent}
-.nr-grid.pre #aeNrCtl{grid-area:2/1/3/3}
-.nr-grid.pre .nr-stage canvas{opacity:0}
-.nr-grid.pre .mt-steps{flex-direction:row;gap:32px;padding-top:4px}          /* the row holds the 4px that lifts the second step, so its box ends where its letters and buttons do */
-.nr-grid.pre .mt-step{flex:1}
-#aeNrSample .mt-steps{gap:12px}
+.nr-sample{transition:background-color .5s var(--ease-ui),border-color .5s var(--ease-ui)}
+.nr-removal{position:relative;overflow:clip}          /* clip, not hidden: the progress bar stays inside, and the card never shrinks below its content (it is not a scroll container) */
+@container noise (min-width:520px){
+  .nr-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:minmax(auto,1fr) auto}
+  .nr-stage{grid-area:1/1/2/3;height:auto;min-height:64px}
+  .nr-sample{grid-area:2/1}
+  .nr-removal{grid-area:2/2}
+  .nr-grid.pre .nr-sample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent}
+  .nr-grid.pre .nr-removal{grid-area:2/1/3/3}
+  .nr-grid.pre .nr-stage canvas{opacity:0}
+}
+/* the steps: one row, wrapping when the card is too narrow for it: "1 Select" with Auto and Manual, then "2" with Learn (and the chip once a noise is learned) */
+.nr-steps{flex-direction:row;flex-wrap:wrap;align-items:center;gap:var(--gap-set) calc(2 * var(--gap-set))}
+.nr-steps>.mt-step{align-items:baseline;gap:8px;min-width:0}
+.nr-steps .mt-title{margin:0;min-height:0}
+.nr-steps .mt-n{align-self:center}          /* the number is centered on the row; Select and the buttons' words share a baseline */
+.nr-learn{min-width:0}
+.nr-learn .mt-chip{min-width:0}
+/* Removal: its two small sliders sit under Reduction, in a fold that closes when Reduction is Off */
+.nr-removal .field{margin-bottom:0}
+.nr-removal .fa.open>.fa-in{padding:0}
+.nr-sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
+.nr-sub>.field{margin:0}
 @media (max-width:760px){.ae-pbody{min-height:0}}
-@media (max-width:600px){
-  .nr-grid{grid-template-columns:minmax(0,1fr)}
-  .nr-grid>*,.nr-grid.pre>*{grid-area:auto!important}
-  .nr-grid>.nr-stage{height:116px}
-  .nr-grid.pre #aeNrSample{background:var(--panel);border-color:var(--line)}
-  .nr-grid.pre .nr-stage canvas{opacity:1}
-  .nr-grid.pre .mt-steps{flex-direction:column;gap:12px;padding-top:0}
-  .nr-grid.pre #aeNrLearnStep{margin-top:0}
 }
 
 /* Noise reduction: rows size to their content; even spacing around Noise only */
-#aeNrCtl{position:relative;overflow:hidden}
-#aeNrCtl .nr-prog{left:0;right:0;bottom:0;margin:0;height:3px;border-radius:0}
-#aeNrSample .mt-pick{row-gap:6px}
-@media (max-width:600px){.nr-grid{grid-template-rows:auto}}
 .nr-stage canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 
 /* the cables run in front of lights that are off; a lit light is drawn again on top of them */
@@ -1393,8 +1375,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .eq-tipwrap{position:relative;display:flex;align-items:center}
 .eq-tipwrap .tip{left:auto;right:0;width:260px;max-width:70vw}
 /* margins inside the noise card never merge, so closing the sliders slides "Noise only" the whole way with no jump at the end */
-#aeNrCtl{display:flex;flex-direction:column}
-#aeNrCtl .nr-listen{flex:none}
 
 /* ==================== AUDIO EDITOR: full screen (the picture fills the screen, everything else floats as glass) ==================== */
 #audioDlg.afull{padding:0;place-items:stretch}
@@ -1627,22 +1607,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull[data-tool] .ae-main,#audioDlg.afull .ae-main{max-height:none;overflow:visible}
 #audioDlg.afull .ae-pbody,#audioDlg.afull[data-tool] .ae-pbody{min-height:0}
 /* Noise reduction: the second step is the button itself. Removal's two small sliders fold away when Reduction is Off. */
-#aeNrSub.fa{display:grid}
-#aeNrSub>.fa-in{opacity:1}
-#aeNrSub:not(.open)>.fa-in{opacity:0}
-#aeNrSub.open>.fa-in{padding:0}
-.nr-grid{height:100%;grid-template-rows:minmax(64px,1fr) auto;gap:var(--gap-card)}
-.nr-grid>.nr-stage{min-height:64px;height:auto}
-.nr-grid.pre{grid-template-rows:minmax(0,1fr) auto}          /* before any noise is found the picture's place is the grey card the first step sits on: it takes the spare height, never the Removal card */
-#aeNrCtl .field{margin-bottom:0}
-#aeNrCtl .sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
-#aeNrCtl .sub>.field{margin:0}
 /* Spectra: the tools sit in one roomy row, the edits fill the rest */
 /* ----- The footer row (shared): a label and a switch on one row, under a hairline, pinned to the bottom of its card. The space above the switch (hairline to switch) and below it (switch to the card's padding edge) is the same: --gap-set, the card's own padding. ----- */
 .foot-row{margin-top:auto;padding-top:var(--gap-set);box-shadow:inset 0 1px 0 var(--hairline);display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 /* a card held taller than its content: a footer row pins to the bottom; otherwise its groups spread evenly; a card with one row centers it */
 #aeEmCard{--card-gap:0px}          /* this card spaces its own parts */
-#aeNrSample .mt-steps{justify-content:space-between}
 #aeEmCard>.mt-steps{flex:1;justify-content:space-between}
 /* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
 @media (max-width:760px){#aeBassCard{flex-wrap:nowrap}#aeBassCard .im-lowf{flex-basis:auto;max-width:none}}
@@ -2200,8 +2169,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
 /* Noise reduction: the Processing label sits on the right of the Removal heading and a thin bar runs along the card's bottom edge, so the row takes no room and nothing is cut off */
-#aeNrCtl .nr-prog{position:absolute;inset:0;display:block;height:auto;margin:0;background:none;border-radius:0;overflow:visible;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-ui)}
-#aeNrCtl .nr-prog.on{opacity:1}
+.nr-prog{position:absolute;inset:0;display:block;height:auto;margin:0;background:none;border-radius:0;overflow:visible;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-ui)}
+.nr-prog.on{opacity:1}
 .nr-prog-l{position:absolute;bottom:17px;right:74px;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
 .nr-prog.on .nr-prog-l{pointer-events:auto}
 .nr-prog-l .nr-pct{min-width:3.2ch;text-align:right;font-variant-numeric:tabular-nums}
@@ -2224,7 +2193,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (prefers-reduced-motion:reduce){.ae-jack.busy.wait::before{animation:none}.ae-jack::before{transition:opacity .3s var(--ease-ui)}}
 /* the Removal card: the processing row sits right under Noise only, and its space is kept when idle so nothing shifts */
 /* before the first tick, the shared sweep (.sweeping) moves along the track: it says the job has started */
-#aeNrProgBar .nr-prog-t{overflow:hidden}
 
 
 /* Export audio: the button fills as the export goes */
@@ -2361,8 +2329,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
 /* the note that says a page turn is holding a trim handle: sits on the waveform, below the ruler, and fades away */
-.ae-stop{position:absolute;left:50%;top:32px;transform:translate(-50%,-4px);margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;--lh:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
-.ae-stop.show{opacity:1;transform:translate(-50%,0)}
+.ae-stop{position:absolute;left:50%;top:var(--ae-cy,50%);transform:translate(-50%,calc(-50% - 4px));margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;--lh:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.ae-stop.show{opacity:1;transform:translate(-50%,-50%)}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 
 /* a button's name inside a sentence: the name sits in a small button, spelled as on the button; a switch's name carries a tiny switch */

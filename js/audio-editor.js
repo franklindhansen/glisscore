@@ -284,10 +284,13 @@ function aeTrimStop(which, t, d) {
   const lo = Math.min(lim.endMin, S.audio.duration); return t < lo ? { t: lo, turn: S.turns.length } : { t };
 }
 /* says why the trim stopped (once per drag or trim): the turn in the way */
-function aeTrimSaid(which, s) {          // a note on the waveform itself (a toast sits behind the editor), with a dashed line where the page turn holds the handle
-  if (!s.turn) return; const el = $('#aeStopNote'); if (!el) return;
-  el.textContent = tx('ae.turnstop', { n: s.turn, which }); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
-  AE.stopMark = { t: s.t, which }; clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, 4200); aeAnim(); aeDraw();
+/* the picture's one note (a toast sits behind the editor): shown on the waveform's center line (aeNotePlace) for a few seconds, whatever it says */
+function aeNote(text, mark) {
+  const el = $('#aeStopNote'); if (!el) return; el.textContent = text; aeNotePlace(); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
+  AE.stopMark = mark || null; clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, 4200); aeAnim(); aeDraw();
+}
+function aeTrimSaid(which, s) {          // with a dashed line where the page turn holds the handle
+  if (!s.turn) return; aeNote(tx('ae.turnstop', { n: s.turn, which }), { t: s.t, which });
 }
 function aeStopClear() { const el = $('#aeStopNote'); AE.stopMark = null; if (el) { el.classList.remove('show'); setTimeout(() => { if (!AE.stopMark) el.hidden = true; }, 300); } if ($('#audioDlg') && !$('#audioDlg').hidden) aeDraw(); }
 function aeTrimSilence() {
@@ -598,6 +601,9 @@ function aePeakMorph(pk) {
 /* the transport floats over the lower edge of the picture; everything that is drawn for the eye stays above it (full screen has its own rows, so no room is kept there) */
 const aeInsetNow = () => { const dlg = $('#audioDlg'); if (dlg.classList.contains('afull')) return 0; const bar = dlg.querySelector('.ae-bar'); return bar && bar.offsetHeight ? bar.offsetHeight + 8 : 0; };
 const aeHc = () => { const cv = $('#aeCanvas'); return Math.max(60, cv.clientHeight - aeInsetNow()); };
+/* the waveform's own center line, below the ruler and above the glass transport: where the wave is drawn, and where the picture's note sits (aeNotePlace hands it to the style) */
+const aeCy = Hc => AE_RULER + (Hc - AE_RULER) / 2 - 2;
+function aeNotePlace() { const w = $('.ae-wave'); if (w) w.style.setProperty('--ae-cy', aeCy(aeHc()) + 'px'); }
 /* the columns of the picture: the loudest peak under each pixel (worked out once per picture, not once per pass) */
 function aeColumns(src, lo, hi, W, L) {
   const x0 = Math.floor(AE_PAD), x1 = Math.floor(W - AE_PAD), n = Math.max(0, x1 - x0 + 1), out = new Float32Array(n), k = (hi - lo) / (W - 2 * AE_PAD);
@@ -657,9 +663,10 @@ function specVeil(c, W, Hc, hadPicture) {
 function aeDraw() {
   if (!AE.d || $('#audioDlg').hidden) return;
   const cv = $('#aeCanvas'), c = cv.getContext('2d'), W = AE.cw = cv.clientWidth, H = cv.clientHeight, Hc = Math.max(60, H - aeInsetNow()), d = AE.d, hd = aeHeard(d), C = TL.C, L = S.audio.duration, endT = aeEnd(d);
+  if (AE.cyHc !== Hc) { AE.cyHc = Hc; aeNotePlace(); }          // the note's place follows the picture's height (a resize, full screen, the transport's inset)
   const dvs = AE.dvs = AE.drag ? hsSnap('ae-vs', d.vStart) : hsGet('ae-vs', d.vStart), end = AE.dve = AE.drag ? hsSnap('ae-ve', endT) : hsGet('ae-ve', endT);
   { const tg = AE.zoom ? [AE.zoom.lo, AE.zoom.hi] : aeFull(), still = AE.drag || AE.scrub || AE.nsDrag || AE.zdrag; AE.rlo = still ? hsSnap('ae-rlo', tg[0]) : hsGet('ae-rlo', tg[0]); AE.rhi = still ? hsSnap('ae-rhi', tg[1]) : hsGet('ae-rhi', tg[1]); }
-  const pk0 = S.audio.peaks, pk = aePeakMorph(aeShownPeaks(hd)), cap = limOn(hd) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, G = hsGet('ae-lv', AE.G || 1), cy = AE_RULER + (Hc - AE_RULER) / 2 - 2, half = (Hc - AE_RULER) / 2 - 8, x0 = AE_PAD, x1 = W - AE_PAD, changed = Math.abs(G - 1) > 0.01 || pk !== pk0, e = clamp(hsGet('ae-vt', AE.view === 'spec' ? 1 : 0), 0, 1), showSpec = AE.view === 'spec' || e > 0.004, showWave = AE.view !== 'spec' || e < 0.996, specOn = showSpec && !!AE.spec;          // e: how far the picture has turned from the waveform (0) to the spectrum (1)
+  const pk0 = S.audio.peaks, pk = aePeakMorph(aeShownPeaks(hd)), cap = limOn(hd) ? Math.pow(10, (LIM_CEIL - LIM_GUARD) / 20) : 0, G = hsGet('ae-lv', AE.G || 1), cy = aeCy(Hc), half = (Hc - AE_RULER) / 2 - 8, x0 = AE_PAD, x1 = W - AE_PAD, changed = Math.abs(G - 1) > 0.01 || pk !== pk0, e = clamp(hsGet('ae-vt', AE.view === 'spec' ? 1 : 0), 0, 1), showSpec = AE.view === 'spec' || e > 0.004, showWave = AE.view !== 'spec' || e < 0.996, specOn = showSpec && !!AE.spec;          // e: how far the picture has turned from the waveform (0) to the spectrum (1)
   // the base pictures (the waveform and the spectrum, each on its own canvas): redrawn only when something they show has changed
   const baseOf = (slot, sp) => {
     const key = [cv.width, cv.height, Hc, AE.rlo.toFixed(5), AE.rhi.toFixed(5), sp ? (AE.spec ? pkId(AE.spec.cv) + ':' + AE.spec.done : AE.specLoad ? 'w' : 0) : pkId(pk) + '|' + pkId(pk0) + '|' + G.toFixed(4) + '|' + changed + '|' + cap, C.wave, C.ink, C.panel2, C.line, C.muted, C.accent, !sp && AE.pkAnim ? performance.now() : 0].join('|');
@@ -732,7 +739,7 @@ function aeBindCanvas() {
     if (!AE.d) return; const x = pt(e), dr = AE.drag, L = S.audio.duration; AE.mxy = { x, y: e.clientY - cv.getBoundingClientRect().top }; if (AE.view === 'spec') aeAnim();
     if (AE.zdrag) { barDrag(e); return; }
     if (SP.drag) { const dr = SP.drag; dr.x = x; dr.y = AE.mxy.y; if (!dr.moved && Math.hypot(dr.x - dr.x0, dr.y - dr.y0) > 4) dr.moved = true; aeAnim(); return; }
-    if (AE.nsDrag) { const nd = AE.nsDrag; if (!nd.moved && Math.abs(x - nd.x0) < 4) return; nd.moved = true; const t = clamp(aeT(x), 0, L); AE.nsel = { a: Math.min(nd.t0, t), b: Math.max(nd.t0, t) }; aeNrPanel(); aeDraw(); aeAnim(); return; }
+    if (AE.nsDrag) { const nd = AE.nsDrag; if (!nd.moved && Math.abs(x - nd.x0) < 4) return; nd.moved = true; const t = clamp(aeT(x), 0, L); AE.nsel = { a: Math.min(nd.t0, t), b: Math.max(nd.t0, t) }; AE.nsBy = 'hand'; aeNrPanel(); aeDraw(); aeAnim(); return; }
     if (AE.scrub) { aeSeek(aeT(x)); return; }
     if (!dr) { const h = aeHit(x); if (h !== AE.hover) { AE.hover = h; aeAnim(); } if (spInSpec()) { const hv = spHit(x, AE.mxy.y, aeHc()); if (hv !== AE.spHov) { AE.spHov = hv; aeAnim(); } } cv.style.cursor = h ? 'ew-resize' : spArmed() ? 'crosshair' : AE.tool === 'noise' && AE.nsArm ? 'crosshair' : (aeT(x) >= Math.max(0, AE.d.vStart) && aeT(x) <= Math.min(aeEnd(AE.d), S.audio.duration) ? 'pointer' : 'default'); return; }
     let t = aeT(x) + dr.dx; const d = AE.d, st = Math.max(0, d.vStart), en = Math.min(aeEnd(d), L);
@@ -741,7 +748,7 @@ function aeBindCanvas() {
     else { t = clamp(t, st + 1, L); if (Math.abs(aeX(t) - aeX(L)) <= 8) t = L; const nv = t >= L - 1e-6 ? null : t; if (nv !== d.vEndSet) { d.vEndSet = nv; dr.moved = true; } }
     aeRefresh();
   });
-  const end = () => { if (SP.drag) { const dr = SP.drag; SP.drag = null; const H = aeHc(); if (dr.moved) { if (!(SP.arm && spCommit(dr, H))) aeAnim(); } else if (dr.hit >= 0) { SP.sel = dr.hit; spPanel(); aeAnim(); } else { SP.sel = -1; spPanel(); aeSeek(aeT(dr.x0)); } return; } if (AE.zdrag) { AE.zdrag = false; return; } if (AE.nsDrag) { const nd = AE.nsDrag; AE.nsDrag = null; if (!nd.moved) aeSeek(nd.t0); else if (AE.nsel && AE.nsel.b - AE.nsel.a < 0.05) AE.nsel = null; else if (AE.nsel) nrArm(false); aeRefresh(); return; } if (AE.scrub) { const w = AE.scrub.wasPlaying; AE.scrub = null; if (w) aePlay(); return; } const dr = AE.drag; if (!dr) return; AE.drag = null; if (!dr.moved) AE.undo.pop(); aeRefresh(); aeAnim(); };
+  const end = () => { if (SP.drag) { const dr = SP.drag; SP.drag = null; const H = aeHc(); if (dr.moved) { if (!(SP.arm && spCommit(dr, H))) aeAnim(); } else if (dr.hit >= 0) { SP.sel = dr.hit; spPanel(); aeAnim(); } else { SP.sel = -1; spPanel(); aeSeek(aeT(dr.x0)); } return; } if (AE.zdrag) { AE.zdrag = false; return; } if (AE.nsDrag) { const nd = AE.nsDrag; AE.nsDrag = null; if (!nd.moved) aeSeek(nd.t0); else if (AE.nsel && AE.nsel.b - AE.nsel.a < 0.05) AE.nsel = null; else if (AE.nsel) { nrArm(false); if (AE.nsel.b - AE.nsel.a < NR_MIN) aeNote(tx('ae.nr.short', { s: NR_MIN })); } aeRefresh(); return; } if (AE.scrub) { const w = AE.scrub.wasPlaying; AE.scrub = null; if (w) aePlay(); return; } const dr = AE.drag; if (!dr) return; AE.drag = null; if (!dr.moved) AE.undo.pop(); aeRefresh(); aeAnim(); };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   cv.addEventListener('pointerleave', () => { AE.mxy = null; if (!AE.drag && AE.hover) AE.hover = null; aeAnim(); });
   cv.addEventListener('wheel', e => {
@@ -2110,8 +2117,8 @@ function aeBpUi() {
   $('#audioDlg').dataset.by = aeBy();          // a tool that no longer does anything has nothing to bypass
   const act = aeBpSet(AE.tool).some(k => lit[k]), by = aeBpTool(AE.tool), ab = $('#aeAB'); ab.disabled = !act && !by; ab.setAttribute('aria-pressed', by); ab.title = 'Bypass this tool. Changing any control re-engages it.'; return lit;
 }
-/* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn noise, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
-   and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn noise knows no share, so a short arc turns */
+/* the ring in the tool list: a tool that works in the background (Noise reduction: its main job, Auto, Learn, Mains hum; the Emulator: reading the reference or your audio) fills a blue ring with the share done,
+   and only while another tool is open. With its own window open, the bar there says it, so it is said once. Learn knows no share, so a short arc turns */
 function aeRingSync() {
   if (!AE.d) return; const J = AE.ringJ || (AE.ringJ = { noise: $('.ae-jack[data-tool="noise"]'), emu: $('.ae-jack[data-tool="emu"]') }), em = AE.em;
   const job = { noise: AE.nrShown ? { p: AE.nrTarget > 0.001 ? AE.nrCur || 0 : null } : AE.nrAutoBusy ? { p: (AE.nrAutoPc || 0) / 100 } : AE.humBusy ? { p: (AE.humPc || 0) / 100 } : AE.nrLearning ? { p: null } : null, emu: em && (em.busy || em.busyOwn) ? { p: clamp(em.prog || 0, 0, 1) } : null };
@@ -2571,7 +2578,14 @@ function aeEmBind() {
 const NR_MIN = 0.3;          // the shortest sample worth learning from, in seconds
 /* a quiet stretch of the whole file: the lowest average level over a window, skipping stretches of pure silence (they hold no noise to learn) */
 /* picking noise by hand is something you turn on: otherwise the waveform just moves the playhead and the handles, as it does for every other tool */
-function nrArm(on) { AE.nsArm = !!on; const b = $('#aeNrHand'); if (b) b.setAttribute('aria-pressed', AE.nsArm); const cv = $('#aeCanvas'); if (cv && !AE.nsArm) cv.style.cursor = ''; aeAnim(); }
+function nrArm(on) { AE.nsArm = !!on; nrPress(); const cv = $('#aeCanvas'); if (cv && !AE.nsArm) cv.style.cursor = ''; aeAnim(); }
+/* the button that made the current state stays pressed while that state stands (the shared pressed look). AE.nsBy says who made the selection that stands: 'auto' (the stretch Auto picked on a recording too short to read) or 'hand' (a drag).
+   Auto: pressed while the profile is its whole-recording reading, or while its picked stretch stands. Manual: pressed while armed, or while a stretch dragged by hand stands */
+function nrPress() {
+  const a = $('#aeNrFind'), m = $('#aeNrHand'), nz = AE.d && AE.d.fx.noise, sel = AE.nsel;
+  if (m) m.setAttribute('aria-pressed', String(!!AE.nsArm || (!!sel && AE.nsBy === 'hand')));
+  if (a && !AE.nrAutoBusy) a.setAttribute('aria-pressed', String(!!(nz && nz.profile && nz.auto) || (!!sel && AE.nsBy === 'auto')));
+}
 function nrFindQuiet() {
   const pk = S.audio.peaks, L = S.audio.duration, win = Math.min(1.5, Math.max(0.5, L / 4)), n = Math.round(win * 100); if (pk.length < n + 2) return null;
   let sum = 0; for (let i = 0; i < n; i++) sum += pk[i]; let best = Infinity, bi = -1;
@@ -2581,7 +2595,7 @@ function nrFindQuiet() {
 function aeNrLearn() {
   const sel = AE.nsel; if (!sel || sel.b - sel.a < NR_MIN || AE.nrLearning) return;
   AE.nrLearning = true; const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => { btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; };          // as Auto: the button is the bar
-  btn.disabled = true; btnHold(btn, NR_HOLD['#' + btn.id]); btn.classList.add('loading'); show(0); aeNrHumUi(); NRJ.onProg(0);          // the bar shows at once; the analysis runs after one frame has painted
+  btn.disabled = true; aeNrHolds(); btn.classList.add('loading'); show(0); aeNrHumUi(); NRJ.onProg(0);          // the bar shows at once; the analysis runs after one frame has painted
   requestAnimationFrame(() => setTimeout(async () => {
     try {
       const sr = audSr(), d0 = AE.d, hc = humCoefs(d0.fx.noise.hum, sr), a0 = Math.floor(sel.a * sr), lead = hc ? Math.min(a0, sr) : 0; let from = lead, to = lead + Math.floor(sel.b * sr) - a0;          // only the picked stretch is read (with a second ahead of it for the notches to settle, when a hum is being removed): the learning looks at nothing outside it
@@ -2597,13 +2611,14 @@ function aeNrLearn() {
    it stays solid while the profile is the one it measured, and pressing it again puts back what was there before. A recording too short to judge falls back to picking its quietest stretch for Learn */
 async function aeNrAuto() {
   const d = AE.d; if (!d || !S.audio || AE.nrAutoBusy || AE.humBusy || AE.nrLearning) return; const nz = d.fx.noise;
+  if (!(nz.auto && nz.profile) && AE.nsel && AE.nsBy === 'auto') { AE.nsel = null; aeRefresh(); return; }          // pressing Auto while its picked stretch stands puts back what was there: nothing selected
   if (nz.auto && nz.profile) { const pv = AE.nrPrev; AE.nrPrev = null; aeFx(fx => { fx.noise.profile = pv ? pv.profile : null; fx.noise.dur = pv ? pv.dur : 0; fx.noise.auto = false; }); return; }
-  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.setAttribute('aria-pressed', 'false'); btnHold(btn, NR_HOLD['#' + btn.id]); btn.classList.add('loading'); aeNrHumUi(); show(0);
+  AE.nrAutoBusy = true; nrArm(false); const btn = $('#aeNrFind'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; btn.style.setProperty('--p', pc + '%'); btn.textContent = 'Processing ' + pc + '%'; aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; btn.setAttribute('aria-pressed', 'false'); aeNrHolds(); btn.classList.add('loading'); aeNrHumUi(); show(0);
   try {
     const prof = await nrFloor(d, nz.hum, v => show(Math.round(v * 100))); if (prof === undefined) return;
     show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent)); if (AE.d !== d) return;          // a short recording is read in a blink; the bar stays long enough to be seen
-    if (!prof) { const q = nrFindQuiet(); if (!q) { toast(tx('ae.nr.noquiet'), 4600); return; } AE.nsel = q; aeRefresh(); return; }
-    AE.nrPrev = nz.profile ? { profile: nz.profile.slice(), dur: nz.dur } : null; AE.nsel = null;
+    if (!prof) { const q = nrFindQuiet(); if (!q) { toast(tx('ae.nr.noquiet'), 4600); return; } AE.nsel = q; AE.nsBy = 'auto'; aeRefresh(); return; }
+    AE.nrPrev = nz.profile ? { profile: nz.profile.slice(), dur: nz.dur } : null; AE.nsel = null; AE.nsBy = null;
     aeFx(fx => { fx.noise.profile = prof; fx.noise.dur = 0; fx.noise.auto = true; }); edSay('ae', 'learn');
   } catch (e) { console.error(e); } finally { AE.nrAutoBusy = false; AE.nrAutoPc = null; btn.disabled = false; btn.classList.remove('loading'); btn.style.removeProperty('--p'); btn.textContent = 'Auto'; if (AE.d) aeNrPanel(); }
 }
@@ -2649,9 +2664,9 @@ function aeNrHumUi() {
   const txt = busy ? (AE.humPhase || 'Looking for a hum') + '… ' + (AE.humPc || 0) + '%' : aeHumOn(nz) ? aeHumTxt(nz) : AE.d.humNote || ''; if (t.textContent !== txt) t.textContent = txt;
 }
 /* what shows beside the waveform and in the pane follows the draft */
-/* Auto and Learn show their progress inside the button, so each keeps one width from the first layout for every text it can carry (btnHold), and never jumps when it starts to work */
-const NR_HOLD = { '#aeNrFind': ['Auto', 'Processing 100%'], '#aeNrLearn': ['Learn noise', 'Learn again', 'Processing 100%'] };
-function aeNrHolds() { Object.entries(NR_HOLD).forEach(([id, texts]) => btnHold($(id), texts)); }
+/* Auto and Learn show their progress inside the button, and Manual stands beside them: all three keep one width from the first layout for every text any of them can carry (btnHold), so none jumps when one starts to work */
+const NR_TEXTS = ['Auto', 'Manual', 'Learn', 'Learn again', 'Processing 100%'];
+function aeNrHolds() { const bs = ['#aeNrFind', '#aeNrHand', '#aeNrLearn'].map(q => $(q)); btnHold(bs[0], NR_TEXTS, bs); }          // the three buttons of Noise sample hold one width: the widest text any of them can carry
 function aeNrPanel() {
   const d = AE.d, nz = d.fx.noise, has = !!nz.profile, sel = AE.nsel, short = sel && sel.b - sel.a < NR_MIN;
   aeSlide($('#aeNrRed'), nz.reduction); aeSlide($('#aeNrSens'), nz.sensitivity); aeSlide($('#aeNrSmooth'), nz.smoothing);
@@ -2662,9 +2677,8 @@ function aeNrPanel() {
   aeNrLayout(has); foldSet('#aeNrSub', has && nz.reduction > 0);
   $('#aeNrChip').hidden = !has; $('#aeNrChipTxt').textContent = has ? (nz.auto ? 'Whole recording' : 'Learned ' + nz.dur.toFixed(1) + 's') : '';
   aeNrHumUi();
-  { const a = $('#aeNrFind'), on = has && !!nz.auto; if (!AE.nrAutoBusy) a.setAttribute('aria-pressed', on); }          // as every Auto that sets a value: pressed (the shared pressed look) while the profile is the one it measured
-  $('#aeNrSelTxt').textContent = sel ? (short ? 'Too short. Needs ' + NR_MIN + 's.' : (sel.b - sel.a).toFixed(1) + 's selected') : ''; $('#aeNrSelTxt').classList.toggle('bad', !!short);
-  if (!AE.nrLearning) { $('#aeNrLearn').disabled = !sel || short; $('#aeNrLearn').textContent = has && !nz.auto ? 'Learn again' : 'Learn noise'; } $('#aeNrLearnStep').classList.toggle('dim', !sel && !has);
+  nrPress();          // as every Auto that sets a value: pressed (the shared pressed look) while its reading or its picked stretch stands; Manual while armed or while a dragged stretch stands
+  if (!AE.nrLearning) { $('#aeNrLearn').disabled = !sel || short; $('#aeNrLearn').textContent = has && !nz.auto ? 'Learn again' : 'Learn'; } $('#aeNrLearnStep').classList.toggle('dim', !sel && !has);
 }
 /* before anything is learned the two steps fill the big window; once there is a profile they slide down into their own card and the graph takes over */
 function aeNrLayout(post) {

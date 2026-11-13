@@ -32,13 +32,17 @@ function titleFlipMark() {
 /* the file's name without its ending (the chip shows the start of it and the ending as the format) and the format in capitals */
 const audioShort = n => String(n || '').replace(/\.[A-Za-z0-9]{1,5}$/, '');
 const audioFmt = n => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(n || ''); return m ? m[1].toUpperCase() : 'Audio'; };
-/* a button that shows progress keeps one width for every text it can carry, so a changing number never makes it shift or resize */
-function btnHold(b, texts) {
-  if (!b || !b.offsetParent) return; const t0 = b.textContent, was = b.classList.contains('loading'), key = texts.join('|') + '|' + getComputedStyle(b).font; if (b.dataset.hold === key) return;
-  b.style.minWidth = ''; b.classList.add('loading'); let w = 0; texts.forEach(t => { b.textContent = t; w = Math.max(w, b.offsetWidth); }); b.textContent = t0; if (!was) b.classList.remove('loading'); b.style.minWidth = w + 'px'; b.dataset.hold = key;
+/* a button that shows progress keeps one width for every text it can carry, so a changing number never makes it shift or resize. Buttons that stand together (peers) share one width: the widest any of them can reach */
+function btnHold(b, texts, peers) {
+  if (!b || !b.offsetParent) return; const group = (peers || [b]).filter(x => x && x.offsetParent), key = texts.join('|') + '|' + getComputedStyle(b).font + '|' + group.length; if (b.dataset.hold === key) return;
+  let w = 0; group.forEach(x => {
+    const t0 = x.textContent, was = x.classList.contains('loading'); x.style.minWidth = ''; x.classList.add('loading');
+    texts.forEach(t => { x.textContent = t; w = Math.max(w, x.offsetWidth); }); x.textContent = t0; if (!was) x.classList.remove('loading');
+  });
+  group.forEach(x => { x.style.minWidth = w + 'px'; x.dataset.hold = key; });
   // a width measured before the web font arrives is the fallback's, so measure again once the fonts are in (one wait per button)
   const waiting = btnHold.waiting || (btnHold.waiting = new WeakSet());
-  if (document.fonts.status !== 'loaded' && !waiting.has(b)) { waiting.add(b); document.fonts.ready.then(() => { waiting.delete(b); delete b.dataset.hold; btnHold(b, texts); }); }
+  if (document.fonts.status !== 'loaded' && !waiting.has(b)) { waiting.add(b); document.fonts.ready.then(() => { waiting.delete(b); group.forEach(x => delete x.dataset.hold); btnHold(b, texts, peers); }); }
 }
 /* with no score, the Open audio button shows the loading: "Loading" and how far it is, then turns into Open editor */
 function syncAudioCard() {

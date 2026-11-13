@@ -4,8 +4,8 @@ noise idle aeNrCtl 164
 noise idle aeNrSample 164
 noise auto aeNrCtl 164
 noise auto aeNrSample 164
-noise learned aeNrCtl 198
-noise learned aeNrSample 198
+noise learned aeNrCtl 210
+noise learned aeNrSample 210
 spec heal ae-card.sp-card.sp-lcard 218
 spec heal ae-card.sp-card.sp-sel 110
 spec reduce ae-card.sp-card.sp-lcard 193
