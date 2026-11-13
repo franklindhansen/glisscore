@@ -742,7 +742,7 @@
             <div class="ae-proc" data-tool="level"><span class="ae-jack fixed"><i class="led" id="aeLvLed"></i></span><button class="ae-tool" type="button" data-tool="level" aria-pressed="false"><span class="ae-tn">Level</span></button><output class="ae-badge" id="aeLvBadge"></output></div>
           </div>
           <div class="ae-end" id="aeJackOut"><i aria-hidden="true"></i><span>Out</span></div>
-          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager, and Level for you"><div class="ae-proc off" data-tool="emu"><span class="ae-jack fixed" data-tool="emu" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator</span></button><span class="beta-chip">Beta</span><output class="ae-badge" id="aeEmBadge"></output></div></div>
+          <div class="ae-procs ae-apart" title="Not part of the chain: it sets the EQ, the Imager, and Level for you"><div class="ae-proc off" data-tool="emu"><span class="ae-jack fixed" data-tool="emu" aria-hidden="true"></span><button class="ae-tool" type="button" data-tool="emu" aria-pressed="false"><span class="ae-tn">Emulator</span></button><output class="ae-badge" id="aeEmBadge"></output><span class="beta-chip">Beta</span></div></div>
         </div></div>
       </nav>
       <div class="ae-panes ae-win" id="aeWin">
@@ -863,6 +863,7 @@
         </section>
         <section class="ae-pane" id="aePaneLevel" hidden>
           <div class="lv-grid tool-grid">
+            <div class="lv-top tool-group">
             <div class="ae-card on-grid" id="aeNormCard">
               <div class="lv-head im-head t-head"><h4>Normalize</h4><button class="info-i" type="button" aria-label="About normalizing" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.normalize">Peak sets the loudest moment. Loudness sets how loud it sounds overall.</span><div class="seg" id="aeNormMode" role="radiogroup" aria-label="Normalize by"><label><input type="radio" name="aeNormMode" value="off" checked><span>Off</span></label><label><input type="radio" name="aeNormMode" value="loud"><span>Loudness</span></label><label><input type="radio" name="aeNormMode" value="peak"><span>Peak</span></label></div></div>
               <div class="fa-stack"><div class="fa" id="aePeakFold"><div class="fa-in" inert>
@@ -879,6 +880,7 @@
               </div></div></div>
             </div>
             <div class="ae-card on-grid" id="aeGainCard"><div class="t-head"><h4>Gain</h4></div><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
+            </div>
             <div class="ae-card lv-meter own-grid" id="aeMeter"><div class="lv-mh t-head"><h4>Meter</h4><div class="lv-read"><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>Change</span><b id="aeSumChg">—</b></div></div></div>
           </div>
         </section>

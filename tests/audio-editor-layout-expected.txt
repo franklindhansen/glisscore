@@ -13,8 +13,6 @@ level off 1440x720 body-balance aeGainCard  # space above the body 26.6px, below
 level off 1040x760 body-balance aeGainCard  # space above the body 26.6px, below 18px
 level off 900x760 body-balance aeGainCard  # space above the body 26.6px, below 18px
 level off 700x800 body-balance aeGainCard  # space above the body 26.6px, below 18px
-level off 521x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
-level off 390x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
 level off full body-balance aeGainCard  # space above the body 26.6px, below 18px
 level loud 1440x900 body-balance aeGainCard  # space above the body 26.6px, below 18px
 level loud 1440x900 body-balance aeNormCard  # space above the body 8px, below 16px
@@ -26,9 +24,7 @@ level loud 900x760 body-balance aeGainCard  # space above the body 26.6px, below
 level loud 900x760 body-balance aeNormCard  # space above the body 8px, below 16px
 level loud 700x800 body-balance aeGainCard  # space above the body 26.6px, below 18px
 level loud 700x800 body-balance aeNormCard  # space above the body 8px, below 20px
-level loud 521x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
 level loud 521x800 body-balance aeNormCard  # space above the body 58.5px, below 20px
-level loud 390x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
 level loud 390x800 body-balance aeNormCard  # space above the body 58.5px, below 20px
 level loud full body-balance aeGainCard  # space above the body 26.6px, below 18px
 level loud full body-balance aeNormCard  # space above the body 8px, below 16px
@@ -42,9 +38,7 @@ level peak 900x760 body-balance aeGainCard  # space above the body 26.6px, below
 level peak 900x760 body-balance aeNormCard  # space above the body 8px, below 95px
 level peak 700x800 body-balance aeGainCard  # space above the body 26.6px, below 18px
 level peak 700x800 body-balance aeNormCard  # space above the body 8px, below 95px
-level peak 521x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
 level peak 521x800 body-balance aeNormCard  # space above the body 58.5px, below 51px
-level peak 390x800 body-balance aeGainCard  # space above the body 20.6px, below 18px
 level peak 390x800 body-balance aeNormCard  # space above the body 58.5px, below 30px
 level peak full body-balance aeGainCard  # space above the body 26.6px, below 18px
 level peak full body-balance aeNormCard  # space above the body 8px, below 95px

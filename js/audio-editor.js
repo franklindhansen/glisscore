@@ -1891,7 +1891,7 @@ function aeFadeDraw() {
   const cv = $('#aeFadeCv'); if (!AE.d || $('#aePaneFades').hidden || !aeCvSize(cv)) return;
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, d = AE.d, side = AE.fadeSide || 'both';
   const { Li, Lo, f } = aeFadeFn(d);
-  const top = 10, bot = H - 24, span = Math.max(0.5, +$('#aeFadeLen').max || 3), a0 = 8, a1 = W * 0.42, b0 = W * 0.58, b1 = W - 8;
+  const top = 24, bot = H - 36, span = Math.max(0.5, +$('#aeFadeLen').max || 3), a0 = 8, a1 = W * 0.42, b0 = W * 0.58, b1 = W - 8;
   c.clearRect(0, 0, W, H); c.strokeStyle = C.line; c.lineWidth = 1; c.beginPath(); c.moveTo(0, top + 0.5); c.lineTo(W, top + 0.5); c.moveTo(0, bot + 0.5); c.lineTo(W, bot + 0.5); c.stroke();
   const y = v => top + (1 - v) * (bot - top), font = '11px "Hanken Grotesk",system-ui,sans-serif';
   /* time runs left to right in both pictures: the first rises into the music, the second falls away from it, each with a caption */

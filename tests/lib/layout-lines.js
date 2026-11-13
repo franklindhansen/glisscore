@@ -2,14 +2,14 @@
 //   const m = await p.evaluate(lines, { main: true })     ->  { n: how many things were measured, fails: [[rule, element, note], ...], heights: { card: height } }
 // Nothing here names a tool or a card: the cards are the .ae-card inside the tool pane on show, so a new card is measured the moment it exists. Every letter, button, and slider edge comes from the shared helper (__mk).
 // The rules (the spec's Testing Decisions):
-//   heading-top        the heading's letters (cap top) sit 13px under the card's top edge
+//   heading-top        the heading's letters (cap top) sit 21px under the card's top edge
 //   head-ctl-height    a choice or button on the heading row is 30px tall
 //   head-ctl-center    ... centered on the heading's letters (the middle of the cap height)
 //   head-ctl-right     ... and the row's last one ends on the card's right content line
 //   body-balance       the body (letters, control edges, slider thumbs) has equal space above, from the heading row's lowest visible edge, and below, to the footer row's line or the card's bottom edge
 //   heading-gap        a display or list starts at least --gap-set below its heading row's lowest visible edge
 //   card-gap           two cards side by side or one above the other are --gap-card apart
-//   scale-gap          the labels under a slider or bar start --gap-label under its thumb or edge
+//   scale-gap          the labels under a slider start --gap-set under its thumb, and the numbers under a bar --gap-head under it
 //   mid-tick           the middle label of a three-label scale is centered under the thumb at the middle value
 //   label-row          a label beside a switch is centered on it; beside a control with words it shares its baseline
 //   label-size         ... and it is 13px
@@ -35,7 +35,7 @@ exports.lines = function (ctx) {
     const row = c.querySelector(':scope > .t-head, :scope > h4'), text = row && mk.shown(row) ? (row.matches('h4') ? row : row.querySelector('h4') || row) : null, hl = text ? mk.letters(text) : null;
     let ctrls = [], headBottom = null;
     if (hl) {
-      chk('heading-top', cn, near(hl.capTop - cr.top, 13), 'the heading letters start ' + f(hl.capTop - cr.top) + 'px under the card\'s top, not 13');
+      chk('heading-top', cn, near(hl.capTop - cr.top, 21), 'the heading letters start ' + f(hl.capTop - cr.top) + 'px under the card\'s top, not 21');
       ctrls = [...c.querySelectorAll('.btn, .seg, select')].filter(e => mk.shown(e) && !e.closest('.foot-row, .sp-list') && !e.parentElement.closest('.seg') && Math.abs((R(e).top + R(e).bottom) / 2 - mid(hl)) <= 20);
       for (const e of ctrls) {
         const r = R(e), en = name(e);
@@ -70,18 +70,18 @@ exports.lines = function (ctx) {
     if (vO > 1 && b.top >= a.bottom - 0.5 && !between('stack')) chk('card-gap', name(cards[i]) + '|' + name(cards[j]), near(b.top - a.bottom, gap), 'one above the other ' + f(b.top - a.bottom) + 'px apart, not ' + gap);
   }
   // scales under a slider or a bar
-  const label = tok('--gap-label');
+  const setGap = tok('--gap-set'), headGap = tok('--gap-head');
   for (const sc of pane.querySelectorAll('.sl-ends, .lv-scale')) {
     if (!mk.shown(sc)) continue; const host = sc.parentElement;
     if (sc.matches('.sl-ends')) {
       const sl = host.querySelector('input[type=range]'); if (!sl) continue; const t = mk.thumb(sl), labs = [...sc.children].filter(e => mk.shown(e)), ls = labs.map(e => mk.letters(e)).filter(Boolean); if (!ls.length) continue;
-      chk('scale-gap', name(sl), near(Math.min(...ls.map(l => l.capTop)) - t.bottom, label), 'the labels start ' + f(Math.min(...ls.map(l => l.capTop)) - t.bottom) + 'px under the slider\'s thumb, not ' + label);
+      chk('scale-gap', name(sl), near(Math.min(...ls.map(l => l.capTop)) - t.bottom, setGap), 'the labels start ' + f(Math.min(...ls.map(l => l.capTop)) - t.bottom) + 'px under the slider\'s thumb, not ' + setGap);
       const lo = +sl.min, hi = +sl.max, midV = (lo + hi) / 2, m = labs.find(e => e.dataset.v !== undefined && +e.dataset.v === midV);
       if (m && labs.length === 3) { const w = parseFloat(getComputedStyle(sl, '::-webkit-slider-thumb').width) || 16, r = R(sl), cx = r.left + w / 2 + 0.5 * (r.width - w), ml = mk.letters(m);
         chk('mid-tick', name(sl), ml && near((ml.left + ml.right) / 2, cx), 'the middle label is centered ' + (ml ? f((ml.left + ml.right) / 2 - cx) : '?') + 'px off the thumb at the middle value'); }
     } else {
       const bar = host.querySelector('.lv-track'); if (!bar) continue; const ls = mk.inkOf(sc);
-      if (ls) chk('scale-gap', name(bar), near(ls.top - R(bar).bottom, label), 'the numbers start ' + f(ls.top - R(bar).bottom) + 'px under the bar, not ' + label);
+      if (ls) chk('scale-gap', name(bar), near(ls.top - R(bar).bottom, headGap), 'the numbers start ' + f(ls.top - R(bar).bottom) + 'px under the bar, not ' + headGap);
     }
   }
   // rows of a label and a control
@@ -119,7 +119,7 @@ exports.lines = function (ctx) {
     chk('scroll', 'page', de.scrollHeight - innerHeight <= 1 && de.scrollWidth - innerWidth <= 1, 'the page scrolls'); }
   // the tool grid's own rules (a pane laid out on .tool-grid)
   for (const g of pane.querySelectorAll('.tool-grid')) {
-    const gs = getComputedStyle(g), colGap = parseFloat(gs.columnGap), rowGap = parseFloat(gs.rowGap), gc = [...g.children].filter(c => c.matches('.ae-card') && mk.shown(c));
+    const gs = getComputedStyle(g), colGap = parseFloat(gs.columnGap), rowGap = parseFloat(gs.rowGap), gc = [...g.querySelectorAll(':scope > .ae-card, :scope > .tool-group > .ae-card')].filter(c => mk.shown(c));
     const box = c => { const cs = getComputedStyle(c); return { ...inner(c), pad: cs.padding, sub: cs.gridTemplateRows.indexOf('subgrid') === 0 }; };
     const parts = c => [...c.children].filter(e => mk.shown(e) && getComputedStyle(e).position !== 'absolute' && !e.matches('.tip'));
     const hbase = c => { const h = c.querySelector('h4'), l = h && mk.letters(h); return l ? l.base : null; };
@@ -130,7 +130,7 @@ exports.lines = function (ctx) {
       for (const c of rw.slice(1)) {
         chk('row-top', name(c), near(R(c).top, R(a).top), 'starts ' + f(R(c).top - R(a).top) + 'px off ' + name(a)); chk('row-bottom', name(c), near(R(c).bottom, R(a).bottom), 'ends ' + f(R(c).bottom - R(a).bottom) + 'px off ' + name(a));
         const la = hbase(a), lc = hbase(c); if (la != null && lc != null) chk('row-heading', name(c), near(la, lc, 1), 'its heading is ' + f(lc - la) + 'px from the heading of ' + name(a));
-        if (box(a).sub && box(c).sub) { const pa = parts(a)[1], pc = parts(c)[1]; if (pa && pc) chk('row-body', name(c), near(R(pa).top, R(pc).top), 'its body starts ' + f(R(pc).top - R(pa).top) + 'px from the body of ' + name(a)); } }
+        if (box(a).sub && box(c).sub) { const pa = parts(a)[1], pc = parts(c)[1], top = e => { const l = !e.children.length && e.textContent.trim() ? mk.letters(e) : null; return l ? l.capTop : R(e).top; }; if (pa && pc) chk('row-body', name(c), near(top(pa), top(pc)), 'its body starts ' + f(top(pc) - top(pa)) + 'px from the body of ' + name(a)); } }          // a text part starts where its letters do (its box carries the font's leading in a browser that cannot trim text)
       for (let k = 1; k < rw.length; k++) chk('row-gap', name(rw[k - 1]) + '|' + name(rw[k]), near(R(rw[k]).left - R(rw[k - 1]).right, colGap), 'are ' + f(R(rw[k]).left - R(rw[k - 1]).right) + 'px apart, not ' + colGap);
       if (i) { const d = R(a).top - Math.max(...rows[i - 1].map(c => R(c).bottom)); chk('row-gap', name(a) + '.above', near(d, rowGap), 'is ' + f(d) + 'px under the row above, not ' + rowGap); } });
     if (gc.length) { const pad = box(gc[0]).pad;

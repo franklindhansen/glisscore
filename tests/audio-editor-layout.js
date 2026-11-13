@@ -6,7 +6,7 @@
 // scrolls inside the window, and the pictures keep the sizes they have on a tall screen, so there a card may pass the body (it is reached by scrolling) but nothing may pass its own card.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-layout.js
 const { chromium } = require('playwright-core');
-const { fitMeasure } = require('./lib/fit-measure.js');
+const { fitMeasure } = require('./lib/fit-measure.js'), { install } = require('./lib/measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 (async () => {
   const b = await chromium.launch(), errs = [];
@@ -50,7 +50,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
       const r = R(c), cs = getComputedStyle(c), inner = { t: r.top + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop), b: r.bottom - parseFloat(cs.borderBottomWidth) - parseFloat(cs.paddingBottom) };
       let top = Infinity, bot = -Infinity;
       for (const k of c.children) { if (!shown(k) || getComputedStyle(k).position === 'absolute') continue; const kr = R(k); if (kr.height < 1) continue; top = Math.min(top, kr.top); bot = Math.max(bot, kr.bottom); }
-      out.cards.push({ id: nm(c), cls: c.className, h: rnd(r.height), top: rnd(top - inner.t), bottom: rnd(inner.b - bot), foot: !!c.querySelector('.foot-row') });
+      const hd = c.querySelector(':scope > .t-head h4, :scope > h4'), hl = hd && shown(hd) ? window.__mk.letters(hd) : null;
+      out.cards.push({ id: nm(c), cls: c.className, h: rnd(r.height), top: rnd(top - inner.t), bottom: rnd(inner.b - bot), foot: !!c.querySelector('.foot-row'), head: hl ? rnd(hl.capTop - r.top) : null });
     }
     for (let i = 0; i < cards.length; i++) for (let j = i + 1; j < cards.length; j++) {
       const a = R(cards[i]), b = R(cards[j]), hO = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top), vO = Math.min(a.right, b.right) - Math.max(a.left, b.left);
@@ -78,7 +79,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
       await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); return p; };
     const look = async (p, label) => { const f = await p.evaluate(frame), m = await p.evaluate(fitMeasure, { card: '.ae-card, .nr-stage', body: '.ae-pbody', root: '.ae-pane:not([hidden])' });
       out.frames.push({ label, ...f }); m.pass.forEach(x => out.pass.push(label + ': ' + x)); if (!f.scrolls) m.body.forEach(x => out.body.push(label + ': ' + x));
-      out.space.push({ label, ...(await p.evaluate(spaceOf)) });
+      await p.evaluate(install); out.space.push({ label, ...(await p.evaluate(spaceOf)) });
       const g = await p.evaluate(() => uiGuard.scan().map(x => x.join(' '))); g.forEach(x => out.uig.push(label + ': ' + x));
       return { f, m }; };
     const p = await mk('loud.mp3'), tools = ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu'];
@@ -133,8 +134,10 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok(tag + 'every tool: cards are 10px apart, side by side and top to bottom', !gaps.length, gaps.slice(0, 4).join(' | '));
     // reserved: the 12px gap under Spectra's Select row and under the EQ band's row is the space held for a closed fold (Reduce by, Dynamic), so those two keep their rows and stay unticked in the ticket
     const reserved = c => /sp-sel|aeEqBand/.test(c.id + ' ' + c.cls);
-    const edge = sp.flatMap(f => f.cards.filter(c => !c.foot && !reserved(c) && Math.abs(c.top - c.bottom) > 4).map(c => f.label + ': ' + c.id + ' top ' + c.top + ' bottom ' + c.bottom));
-    ok(tag + 'every tool: a card has the same space at its top and bottom (4px at most), or a footer row pins to its bottom', !edge.length, edge.slice(0, 5).join(' | '));
+    const edge = sp.flatMap(f => f.cards.filter(c => !c.foot && !reserved(c) && c.head === null && Math.abs(c.top - c.bottom) > 0.5).map(c => f.label + ': ' + c.id + ' top ' + c.top + ' bottom ' + c.bottom));
+    ok(tag + 'every tool: a card without a heading row has the same space at its top and bottom (0.5px), or a footer row pins to its bottom', !edge.length, edge.slice(0, 5).join(' | '));
+    const headTop = sp.flatMap(f => f.cards.filter(c => c.head !== null && Math.abs(c.head - 21) > 0.5).map(c => f.label + ': ' + c.id + ' letters ' + c.head + 'px under the top'));
+    ok(tag + 'every tool: a card with a heading row has its letters 21px under its top (its body is balanced: audio-editor-grid-lines, body-balance)', !headTop.length, headTop.slice(0, 5).join(' | '));
     const foot = sp.flatMap(f => f.foot.filter(x => Math.abs(x.above - x.below) > 1).map(x => f.label + ': ' + x.id + ' above ' + x.above + ' below ' + x.below));
     ok(tag + 'footer rows: the space above each switch and below it is equal (1px)', !foot.length, foot.slice(0, 5).join(' | '));
   }
@@ -144,7 +147,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3');
     await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(400);
     await p.evaluate(() => aeTool('imager')); await p.waitForTimeout(800);
-    narrowFoot.push({ w, sp: await p.evaluate(spaceOf) }); await p.close(); }
+    await p.evaluate(install); narrowFoot.push({ w, sp: await p.evaluate(spaceOf) }); await p.close(); }
   for (const h of heights) { const o = sweep[h], sp = o.space, tag = '1440x' + h + ': ';
     const ins = sp.flatMap(f => f.inset.filter(x => x.v !== null && Math.abs(x.v - 17) > 0.6).map(x => f.label + ': ' + x.id + ' ' + x.v));
     ok(tag + 'one padding: every tool card starts its content 17px from its left edge (the card padding and border)', !ins.length, ins.slice(0, 5).join(' | '));
