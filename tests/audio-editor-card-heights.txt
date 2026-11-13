@@ -18,9 +18,8 @@ imager overall aeWidthCard 199
 imager frequency ae-card.im-scope 338
 imager frequency aeBalCard 129
 imager frequency aeWidthCard 199
-fades idle ae-card.fd-shape 248
-fades idle aeFadeLenCard 248
-fades idle aeShapeCard 80
+fades idle ae-card.fd-shape 338
+fades idle aeFadeLenCard 338
 level off aeGainCard 151
 level off aeMeter 177
 level off aeNormCard 151

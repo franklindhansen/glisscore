@@ -59,14 +59,14 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     }
     for (const row of pane.querySelectorAll('.foot-row')) { if (!shown(row)) continue; const card = row.closest('.ae-card'), cs = getComputedStyle(card), sw = row.querySelector('.switch') || row, rr = R(row), sr = R(sw), cr = R(card);
       out.foot.push({ id: row.id || row.className, above: rnd(sr.top - rr.top), below: rnd(cr.bottom - parseFloat(cs.borderBottomWidth) - sr.bottom) }); }
-    // what the ticket asks per tool: the content's left inset, the Level meter's bar and scale sizes, Emulate against the note, Fades' end labels against the picture, and the Mains hum sub-line
+    // what the ticket asks per tool: the content's left inset, the Level meter's bar and scale sizes, Emulate against the note, Fades' end labels against the choice under the picture, and the Mains hum sub-line
     const inset = c => { const k = [...c.children].find(k => shown(k) && R(k).width > 0 && getComputedStyle(k).position !== 'absolute'); return k ? rnd(R(k).left - R(c).left) : null; };
     out.inset = cards.map(c => ({ id: nm(c), v: inset(c) }));
     const el = s => document.querySelector(s);
     if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view .em-note')).bottom) };
     if (pane.id === 'aePaneNoise') out.noise = { pre: el('#aeNrGrid').classList.contains('pre'), graphTop: rnd(R(el('#aeNrGrid .nr-stage')).top), graphBottom: rnd(R(el('#aeNrGrid .nr-stage')).bottom), sampleTop: rnd(R(el('#aeNrSample')).top), sampleBottom: rnd(R(el('#aeNrSample')).bottom), ctlTop: rnd(R(el('#aeNrCtl')).top), ctlBottom: rnd(R(el('#aeNrCtl')).bottom), content: rnd(Math.max(...cards.map(c => R(c).bottom))) };
-    if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('.fd-shape canvas')).bottom) };
+    if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('#aeFadeShape')).bottom) };
     return out;
   };
   const sweep = {}, heights = [680, 720, 760, 800, 900];
@@ -154,9 +154,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const em = sp.filter(f => f.emulate);
     ok(tag + 'Emulator: Emulate sits level with the bottom of the graph card\'s note', em.length > 0 && em.every(f => Math.abs(f.emulate.go - f.emulate.note) <= 1), JSON.stringify(em.map(f => f.emulate)).slice(0, 200));
     const fd = sp.filter(f => f.fades);
-    ok(tag + 'Fades, Length: its end labels end on the bottom line of the Shape picture', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
-    const curve = sp.flatMap(f => f.cards.filter(c => c.id === 'aeShapeCard' && Math.abs(c.top - c.bottom) > 1).map(c => f.label + ' ' + c.top + '/' + c.bottom));
-    ok(tag + 'Fades, Curve: the row is centered in its card', !curve.length, curve.slice(0, 3).join(' | '));
+    ok(tag + 'Fades, Length: its end labels end on the bottom line of the Gradual | Straight choice', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
     const hm = o.hum, moved = Object.entries(hm).filter(([k, x]) => Math.abs(x.sw - hm.idle.sw) > 1 || Math.abs(x.card - hm.idle.card) > 1 || Math.abs(x.row - hm.idle.row) > 1).map(([k]) => k);
     ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
     ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));

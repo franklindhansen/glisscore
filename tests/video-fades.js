@@ -1,4 +1,4 @@
-// Video fades: Length with Both, In and Out above one slider, the In and Out switches, the Shape picture and the Curve, and how the picture's opacity follows each curve.
+// Video fades: Length with Both, In, and Out above one slider, the In and Out switches, the Shape picture and the Curve (Gradual and Straight), and how the picture's opacity follows each curve.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-fades.js
 const { chromium } = require('playwright-core');
 const FX = process.env.S || 'tests/fixtures';
@@ -13,18 +13,18 @@ const K = '__keyframes';
   const vs = await p.evaluate(K => window[K].S.vStart, K);
   // a fixed 1.0s fade in, both fades on
   await setSet({ fadesOn: true, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 1, fadeOutLen: 1, fadeSplit: false });
-  const smooth = x => x * x * (3 - 2 * x);
+  const grad = x => Math.sin(x * Math.PI / 2);
   const at = async (shape, x) => { await setSet({ fadeShape: shape }); return fade(vs + x); };
   const near = (a, b) => Math.abs(a - b) < 0.005;
-  ok('the default curve is today\'s smooth ease', near(await fade(vs + 0.25), smooth(0.25)) && near(await fade(vs + 0.7), smooth(0.7)));
-  ok('Standard is a straight line', near(await at('standard', 0.25), 0.25) && near(await at('standard', 0.7), 0.7));
-  ok('Smooth eases in and out', near(await at('smooth', 0.25), smooth(0.25)));
-  ok('Natural rises like a quarter of a sine wave', near(await at('natural', 0.25), Math.sin(0.25 * Math.PI / 2)) && near(await at('natural', 0.7), Math.sin(0.7 * Math.PI / 2)));
-  ok('every curve starts at 0 and is full after the length', (await Promise.all(['standard', 'smooth', 'natural'].map(async s => (await at(s, 0)) === 0 && (await at(s, 1.5)) === 1))).every(Boolean));
+  ok('the default curve is Gradual', await p.evaluate(K => window[K].S.set.fadeShape, K) === 'natural' && near(await fade(vs + 0.25), grad(0.25)) && near(await fade(vs + 0.7), grad(0.7)));
+  ok('Straight is a straight line', near(await at('standard', 0.25), 0.25) && near(await at('standard', 0.7), 0.7));
+  ok('Gradual rises quickly like a quarter of a sine wave', near(await at('natural', 0.25), grad(0.25)) && near(await at('natural', 0.7), grad(0.7)));
+  ok('an old curve is read as one of the two (Smooth and Fast as Gradual, Slow as Straight)', near(await at('smooth', 0.25), grad(0.25)) && near(await at('fast', 0.7), grad(0.7)) && near(await at('slow', 0.25), 0.25));
+  ok('both curves start at 0 and are full after the length', (await Promise.all(['standard', 'natural'].map(async s => (await at(s, 0)) === 0 && (await at(s, 1.5)) === 1))).every(Boolean));
   // the panel
   await p.evaluate(K => { const s = window[K].S.set; delete s.fadeShape; }, K);
   ok('Length has Both, In and Out', await p.evaluate(() => ['both', 'in', 'out'].every(v => document.querySelector('input[name=fadeSide][value=' + v + ']'))));
-  ok('Curve has Standard, Smooth and Natural', await p.evaluate(() => ['standard', 'smooth', 'natural'].every(v => document.querySelector('input[name=fadeShape][value=' + v + ']'))));
+  ok('Curve reads Gradual, Straight (in that order), with no tooltips, and Gradual is chosen', await p.evaluate(() => { const l = [...document.querySelectorAll('#fadeShape label')]; return JSON.stringify(l.map(x => x.textContent.trim())) === '["Gradual","Straight"]' && JSON.stringify(l.map(x => x.querySelector('input').value)) === '["natural","standard"]' && l.every(x => !x.title) && document.querySelector('input[name=fadeShape]:checked').value === 'natural'; }));
   ok('a Shape picture is there', await p.evaluate(() => !!document.querySelector('#fadeCv')));
   ok('Fade to stays', await p.evaluate(() => !!document.querySelector('input[name=fadeStyle][value=black]') && !!document.querySelector('input[name=fadeStyle][value=score]')));
   // Length: Both, In and Out above one slider; the slider runs Off, Auto, then 0.2s to 3.0s, and there are no on or off switches
@@ -51,7 +51,7 @@ const K = '__keyframes';
   await slide(N(0.8)); await pick('both'); await slide(0); await slide(N(1.2));
   ok('Off then back on in Both restores both sides', (await fade(vs)) === 0 && (await tail()) < 0.9);
   // a project saved with the group switch off opens with both sides Off, and keeps its lengths
-  await p.evaluate(K => { const s = window[K].S.set; Object.assign(s, { fadesOn: false, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 2, fadeOutLen: 2, fadeSplit: false }); document.querySelector('input[name=fadeShape][value=smooth]').dispatchEvent(new Event('change', { bubbles: true })); }, K);
+  await p.evaluate(K => { const s = window[K].S.set; Object.assign(s, { fadesOn: false, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 2, fadeOutLen: 2, fadeSplit: false }); document.querySelector('input[name=fadeShape][value=natural]').dispatchEvent(new Event('change', { bubbles: true })); }, K);
   ok('a project saved with Fades off shows no fade', (await fade(vs)) === 1 && (await tail()) === 1);
   await pick('in'); await slide(N(1.2)); ok('turning In on keeps Out off', (await fade(vs)) === 0 && (await tail()) === 1);
   await p.evaluate(K => Object.assign(window[K].S.set, { fadesOn: true, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 1, fadeOutLen: 1, fadeSplit: false }), K); await pick('both');
@@ -68,9 +68,9 @@ const K = '__keyframes';
     const shot = () => p.evaluate(() => document.querySelector('#fadeCv').toDataURL());
     const a0 = await shot(); await slide(N(3.0)); await p.waitForTimeout(60); const a1 = await shot(); await p.waitForTimeout(900); const a2 = await shot(); await p.waitForTimeout(200); const a3 = await shot();
     ok('the Shape picture eases to a new length instead of jumping', a0 !== a1 && a1 !== a2 && a2 === a3);
-    await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=natural]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(60); const b1 = await shot(); await p.waitForTimeout(900); const b2 = await shot();
+    await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=standard]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(60); const b1 = await shot(); await p.waitForTimeout(900); const b2 = await shot();
     ok('the Shape picture eases to a new curve', a2 !== b1 && b1 !== b2);
-    await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=smooth]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(400);
+    await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=natural]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(400);
   }
   // turning one side off must never touch the other side's length, even when the slider is dragged across Auto on its way to Off
   { await p.evaluate(K => window[K].restoreDefaults(), K); await p.waitForTimeout(300);
@@ -84,13 +84,14 @@ const K = '__keyframes';
     await p.evaluate(K => window[K].restoreDefaults(), K); await p.waitForTimeout(300);
   }
   // the curve buttons set the curve
-  await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=natural]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); });
-  ok('choosing Natural in the panel sets the curve', await p.evaluate(K => window[K].S.set.fadeShape, K) === 'natural');
-  // a saved project from before has no curve: it opens as Smooth with the other fade settings untouched
+  await p.evaluate(() => { const r = document.querySelector('input[name=fadeShape][value=standard]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); });
+  ok('choosing Straight in the panel sets the curve', await p.evaluate(K => window[K].S.set.fadeShape, K) === 'standard');
+  // a saved project from before has no curve: it opens as Gradual with the other fade settings untouched, and an old curve name is mapped
   const old = await p.evaluate(() => { const o = { fadeIn: true, fadeOut: false, fadeLen: 2, fadeOutLen: 1, fadeSplit: false, fadeAuto: false, fadeStyle: 'score' }; const c = cleanSettings(o); return c; });
   ok('an old saved fade keeps its values and gets no new curve', old.fadeLen === 2 && old.fadeOut === false && old.fadeStyle === 'score' && !('fadeShape' in old), JSON.stringify(old));
   await p.evaluate(K => { const s = window[K].S.set; delete s.fadeShape; Object.assign(s, { fadesOn: true, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 1, fadeSplit: false }); }, K);
-  ok('and then fades exactly as before', near(await fade(vs + 0.4), smooth(0.4)));
+  ok('and then fades with Gradual', near(await fade(vs + 0.4), grad(0.4)));
+  { const m = await p.evaluate(() => ['smooth', 'fast', 'slow', 'standard', 'natural', 'bogus'].map(v => cleanSettings({ fadeShape: v }).fadeShape)); ok('a saved settings file maps an old curve (Smooth and Fast to Gradual, Slow to Straight)', JSON.stringify(m) === '["natural","natural","standard","standard","natural","natural"]', JSON.stringify(m)); }
   // scrubbing: the preview shows the fade under the playhead while it is dragged, and stays there
   { const q = await open(1300);
     await q.evaluate(K => { const s = window[K].S.set; Object.assign(s, { fadesOn: true, fadeIn: true, fadeOut: true, fadeAuto: false, fadeLen: 2, fadeOutLen: 2, fadeSplit: false, fadeShape: 'standard' }); const r = window[K].previewR, o = r.render.bind(r); window.__shown = []; r.render = st => { window.__shown.push(st.fade); return o(st); }; }, K);
@@ -110,7 +111,7 @@ const K = '__keyframes';
     const ons = () => p.evaluate(K => { const s = window[K].S.set; return [s.fadesOn !== false && !!s.fadeIn, s.fadesOn !== false && !!s.fadeOut]; }, K);
     const settle = () => p.waitForTimeout(700);
     await pick('both'); await slide(N(1.2)); await settle(); let f = await fold();
-    ok('either side on: Shape, Curve and Fade to are open', f && f.open && !f.inert && f.all >= 6 && f.h > 40, JSON.stringify(f));
+    ok('either side on: Shape, Curve and Fade to are open', f && f.open && !f.inert && f.all >= 5 && f.h > 40, JSON.stringify(f));
     await slide(0); await settle(); f = await fold();
     ok('both sides off: they are folded away, and closed to the keyboard', f && !f.open && f.inert && f.h === 0, JSON.stringify([f, await ons()]));
     await slide(N(1.2)); await settle(); f = await fold(); ok('moving the slider off Off opens them again', f.open && !f.inert && f.h > 40, JSON.stringify(f));

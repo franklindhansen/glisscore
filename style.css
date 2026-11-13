@@ -1085,9 +1085,6 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
   html #audioDlg:not(.afull) .ae-pbody{height:auto;overflow:visible}
   html #audioDlg:not(.afull) .ae-pane{position:static}
 }
-@media (min-width:521px) and (max-width:760px){
-  #audioDlg:not(.afull) .fd-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-}
 /* Noise reduction, narrow: the desktop arrangement scaled down (the graph across the top, Noise sample and Removal side by side under it) from 601px; one column in that order up to 600px */
 @media (min-width:601px) and (max-width:760px){
   #audioDlg:not(.afull) .nr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto}
@@ -1136,10 +1133,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-procs+.ae-rail-h{margin-top:14px}
 .ae-panes{display:flex;flex-direction:column}
 .lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
-.fd-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-#aeShapeCard{grid-column:1/-1;display:flex;flex-direction:column;justify-content:center}          /* the card is held as tall as the Length card beside it: its heading and row sit in the middle, the spare height split evenly above and below (Decision 9) */
-#aeFadeLenCard .seg{margin:0 0 var(--gap-set)}
-.fd-shape canvas{display:block;width:100%}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
 .eq-band.ae-card{margin-top:14px}
@@ -1165,7 +1158,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
   .ae-rail-h{display:flex}
   .ae-procs{flex-direction:column;flex-wrap:nowrap}
   .ae-tool{flex:1}
-  .fd-grid,.im-cols{grid-template-columns:1fr}
+  .im-cols{grid-template-columns:1fr}
 }
 .eq-top{flex-wrap:wrap}
 
@@ -1193,8 +1186,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 @media (prefers-reduced-motion:reduce){.sl-end:not(:disabled):active{transform:none}}
 /* Fades */
 
-.fd-shape{display:flex;flex-direction:column}
-.fd-shape canvas{flex:1;min-height:150px;height:auto}
 /* level meter: red clips, green is a healthy peak, blue is quiet */
 .lv-big.clip{color:var(--bad)}
 /* EQ Match */
@@ -1664,9 +1655,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- The footer row (shared): a label and a switch on one row, under a hairline, pinned to the bottom of its card. The space above the switch (hairline to switch) and below it (switch to the card's padding edge) is the same: --gap-set, the card's own padding. ----- */
 .foot-row{margin-top:auto;padding-top:var(--gap-set);box-shadow:inset 0 1px 0 var(--hairline);display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 /* a card held taller than its content: a footer row pins to the bottom; otherwise its groups spread evenly; a card with one row centers it */
-#aeFadeLenCard,#aeEmCard{--card-gap:0px}          /* these cards space their own parts */
+#aeEmCard{--card-gap:0px}          /* this card spaces its own parts */
 #aeNrSample .mt-steps{justify-content:space-between}
-#aeFadeLenField{margin-top:auto}
 #aeEmCard>.mt-steps{flex:1;justify-content:space-between}
 /* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
 @media (max-width:760px){#aeBassCard{flex-wrap:nowrap}#aeBassCard .im-lowf{flex-basis:auto;max-width:none}}
@@ -1821,9 +1811,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #audioDlg[data-tool=level] #aePaneLevel.ae-pane{height:clamp(332px,var(--ae-body),var(--ae-floor))}
 }
 .ae-card .lv-big,.ae-card .field>.lv-big{margin:0 0 8px}
-/* Fades: the controls and the shape end together */
-.fd-grid{height:100%;gap:var(--gap-card);grid-template-rows:minmax(0,1fr) auto}
-.fd-shape{min-height:0}
 
 /* … in loading messages: three dots that bounce one after another */
 .dots i{display:inline-block;font-style:normal;animation:dot-bounce 1.2s var(--ease-ui) infinite}
@@ -2275,12 +2262,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .ae-bar .ae-fullbtn{width:28px;height:28px}
 #audioDlg .ae-bar .ae-fullbtn svg{width:15px;height:15px}
 #audioDlg .ed-head .btn[aria-pressed=true],#pdfDlg .ed-head .btn[aria-pressed=true],#audioDlg .ae-bar .btn[aria-pressed=true]{background:var(--accent-soft)}
-/* the fade curve picker: five choices share the card at any width; the columns size to their words and split what is left, and the type steps down when the card is narrow */
-#aeFadeShape{min-width:0;grid-auto-flow:column;grid-auto-columns:auto;grid-template-columns:none}
-#aeFadeShape label{padding:6px 3px;font-size:11px;white-space:nowrap}
-@media (min-width:700px){#aeFadeShape label{padding:6px 4px;font-size:12px}}
-@media (min-width:1000px){#aeFadeShape label{font-size:13px}}
-@media (max-width:760px){.fd-grid{grid-template-rows:none}.fd-shape canvas{min-height:140px}}
 
 /* the finished audio chip: the start of the file's name, then the format over the length in small grey type, so it stays narrow */
 .chip-main .pp-box.stack{position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;height:18px}
@@ -2513,6 +2494,15 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pg-wait.show .pg-wait-l{opacity:1}
 @media (prefers-reduced-motion:reduce){.pg-wait,.pg-wait-l{transition-duration:.08s}}
 .sys-find #sysFindT{font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-block;text-align:center}          /* "Processing 100%" fits, so the pill never changes width as the number grows */
+
+/* ----- Fades: Length and Shape are two cards side by side at the pane's full height; Shape is the picture with Gradual | Straight pinned under it. Stacked, Length comes first and Shape second. ----- */
+#aePaneFades{container:fades/inline-size}
+.fd-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
+.fd-shape canvas{display:block;width:100%;flex:1 1 0;min-height:150px;height:auto}          /* the picture takes the card's spare height, as the Imager's scope does */
+@container fades (max-width:399px){
+  .fd-grid{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:none}
+  .fd-shape canvas{min-height:140px}
+}
 
 /* ==================== Layout system: the shared building blocks of a tool window ====================
    Every card in a tool window (.ae-card) is built the same way, and a new card is laid out correctly the moment it follows it:

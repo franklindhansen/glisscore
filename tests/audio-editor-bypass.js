@@ -186,12 +186,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       JSON.stringify = J;
       o.noClone = cl === 0; o.perCallTime = +ms.toFixed(4);
       o.readiness = outSrc() === (aeFxPeek(soundSet().fx) || S.audio);          // the video and the editor agree on whether the sound is ready
-      aeTool('fades'); await sleep(500);          // the Curve card: its heading and row sit in the middle, the spare height split evenly (Decision 9)
-      { const cc = $('#aeShapeCard').getBoundingClientRect(), hd = $('#aeShapeCard .t-head').getBoundingClientRect(), sg = $('#aeFadeShape').getBoundingClientRect(); o.curveTop = sg.top - hd.bottom; o.curveBottom = cc.bottom - sg.bottom; }
+      aeTool('fades'); await sleep(500);          // the Shape card: the picture on top and the choice pinned under it, --gap-set above it and the card's padding below
+      { const cc = $('#aeFadeShape').closest('.ae-card').getBoundingClientRect(), cv = $('#aeFadeCv').getBoundingClientRect(), sg = $('#aeFadeShape').getBoundingClientRect(); o.curveTop = sg.top - cv.bottom; o.curveBottom = cc.bottom - sg.bottom - 1; o.curveCard = !!$('#aeShapeCard'); }
       closeAudioEditor(); await sleep(200);
       return o;
     });
-    ok('the Fades Curve card centers its row between the heading row and the card\'s bottom edge: the space above and below is equal (the balanced body)', Math.abs(r.curveTop - r.curveBottom) <= 1.5, JSON.stringify([r.curveTop, r.curveBottom]));
+    ok('the Fades choice is pinned under the picture, in the Shape card (no Curve card): 12px above it and 12px below it', !r.curveCard && Math.abs(r.curveTop - 12) <= 0.5 && Math.abs(r.curveBottom - 12) <= 0.5, JSON.stringify([r.curveTop, r.curveBottom, r.curveCard]));
     ok('the EQ bypass stopped reads within 0.5dB of the playing reading and of the EQ switched off', r.stoppedVsPlaying, JSON.stringify(r));
     ok('the waveform redraws on Bypass for the EQ, the Imager, Noise reduction, and Spectra', r.wave.eq && r.wave.imager && r.wave.noise && r.wave.spec, JSON.stringify([r.wave, r.nrInfo]));
     ok('Level bypassed: the wave loses its lift, True peak and the Clip light follow, and the Gain number keeps its setting with Net gain at 0dB', r.clipBefore && r.clipAfter && r.clipLight && r.liftBefore > 1 && r.liftAfter && r.gainShown && r.netZero, JSON.stringify(r));

@@ -4,7 +4,7 @@
    ==================================================================== */
 /* The file is plain text (compact JSON) holding only what is needed to read it back. */
 const IO_RANGES = { sysSplit: [0, 0.9], normLufs: [-36, -6], normPeakDb: [-12, 0], audioFadeLen: [0.1, 3], audioFadeOutLen: [0, 3], flipDur: [0.3, 3], slideDur: [0.1, 3], bend: [0, 100], margin: [0, 10], gutter: [0, 100], divider: [0, 100], turnShadow: [0, 150], turnSoft: [0, 100], scoreAmt: [0, 100], scoreSoft: [0, 100], fadeLen: [0.2, 3], fadeOutLen: [0.2, 3], gainDb: [-12, 12] };
-const IO_CHOICES = { creditsBase: ['Hanken Grotesk', 'Instrument Sans'], pageLayout: ['spread', 'single', 'system'], creditsAt: ['start', 'end'], normBy: ['peak', 'loud'], audioFadeShape: ['standard', 'smooth', 'natural', 'slow', 'fast'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['standard', 'smooth', 'natural'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
+const IO_CHOICES = { creditsBase: ['Hanken Grotesk', 'Instrument Sans'], pageLayout: ['spread', 'single', 'system'], creditsAt: ['start', 'end'], normBy: ['peak', 'loud'], audioFadeShape: ['natural', 'standard'], ref: ['start', 'middle', 'end'], transition: ['flip', 'slide', 'cut'], slideDir: ['in', 'out'], fadeStyle: ['black', 'score'], fadeShape: ['natural', 'standard'], fadeAutoOut: [null, true, false], aspect: Object.keys(ASPECTS), res: [720, 1080, 1440, 2160], fps: [24, 30, 60], method: ['auto', 'fast', 'realtime'], codec: ['avc', 'hevc'], audioRate: [0, 44100, 48000, 96000], audioFormat: ['wav24', 'wav', 'wav32', 'flac24', 'flac16', 'm4a', 'm4a128', 'm4a192', 'm4a256', 'm4a320'], videoQuality: ['standard', 'high', 'max'], audioKbps: [0, 128, 192, 256, 320], aeView: ['wave', 'spec'] };
 const IO_HINTS = {
   all: 'Your settings, the work title, your credits text, and your page markings: page turns, where the video starts and ends, and any pages you left out.',
   settings: 'Only the settings in the side panel. Page markings are not included.',
@@ -16,7 +16,7 @@ function cleanSettings(src) {
   const out = {};
   Object.keys(DEFAULTS).forEach(k => {
     if (!(k in src)) return;
-    const v = src[k], d = DEFAULTS[k];
+    const v = k === 'audioFadeShape' || k === 'fadeShape' ? KFX.fadeShape(src[k]) : src[k], d = DEFAULTS[k];          // an old curve becomes one of the two (the same mapping as everywhere a saved curve is read)
     if (typeof d === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
     else if (d === null && v === null) out[k] = null;                 // "same as In" for the fade out length
     else if (k === 'bp') { if (v && typeof v === 'object' && !Array.isArray(v)) { const o = {}; Object.keys(AE_BPSET).forEach(t => { if (v[t] === true) o[t] = true; }); out.bp = o; } }          // only the tools Bypass knows, as flags
@@ -70,6 +70,7 @@ async function importSettings(file) {
   if (!data || typeof data !== 'object' || Array.isArray(data) || data.glisscore !== 1) { ioMessage(bad, true); return; }
   const clean = data.settings && typeof data.settings === 'object' ? cleanSettings(creditsFontsMigrate(Object.assign({}, data.settings))) : null;
   if (clean && !('creditsBase' in clean) && clean.creditsOn) clean.creditsBase = 'Instrument Sans';          // a file made before the font changed, with credits on
+  if (clean) { clean.audioFadeShape = KFX.fadeShape(clean.audioFadeShape); clean.fadeShape = KFX.fadeShape(clean.fadeShape); }          // a file from before curve settings takes the default, even after another curve was chosen
   if (clean && !('bp' in clean)) clean.bp = {};          // a file from before the bypass was saved has none, so nothing is bypassed
   const marks = 'firstAlone' in data;
   if (!clean && !marks) { ioMessage(bad, true); return; }

@@ -186,7 +186,7 @@ async function tools(m) {
   await DISK.fx(fxs.all); t = performance.now(); const sc = await DISK.scan({ onProgress: f => busy('Tools, whole recording ' + Math.round(f * 100) + '%', f) }), ss = (performance.now() - t) / 1000;
   let top = 0; for (const v of sc.tp) if (v > top) top = v;
   add('Tools, whole recording', 'Processed copy on disk in ' + fx(ss) + 's (' + fx(m.duration / ss, 0) + 'X real time), highest true peak ' + db(top), sc.peaks.length === m.peaks.length ? 'ok' : 'bad');
-  const d = { vStart: Math.min(3, m.duration * 0.05), vEndSet: m.duration - Math.min(3, m.duration * 0.05), audioFades: true, audioFadeLen: 1.5, audioFadeShape: 'smooth', normLufs: -14 }, lu = v => isFinite(v) ? fx(v, 2).replace('-', '−') + ' LUFS' : 'silent';
+  const d = { vStart: Math.min(3, m.duration * 0.05), vEndSet: m.duration - Math.min(3, m.duration * 0.05), audioFades: true, audioFadeLen: 1.5, audioFadeShape: 'natural', normLufs: -14 }, lu = v => isFinite(v) ? fx(v, 2).replace('-', '−') + ' LUFS' : 'silent';
   t = performance.now(); const l1 = await DISK.loud(d, { onProgress: f => busy('Loudness ' + Math.round(f * 100) + '%', f) }), ls = (performance.now() - t) / 1000; let txt = lu(l1.I) + ', range ' + fx(l1.LRA) + ' LU, in ' + fx(ls) + 's (' + fx(m.duration / ls, 0) + 'X real time)', state = '', buf = null;
   if (m.duration <= 1200) {          // the app's own whole-file code on the same processed sound must give the same numbers
     const all = await DISK.render(0, m.frames, true); buf = new W.AudioBuffer({ length: m.frames, numberOfChannels: CH, sampleRate: sr }); all.chans.forEach((x, c) => buf.copyToChannel(x, c));

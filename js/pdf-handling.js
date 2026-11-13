@@ -237,9 +237,9 @@ const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice
 function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
 function applySnapIn(h) {
   let struct = false;
-  if (h.set) { const ch = Object.keys(h.set).filter(k => h.set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = h.set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
+  if (h.set) { const set = Object.assign({}, h.set, { fadeShape: aeShape(h.set.fadeShape) }), ch = Object.keys(set).filter(k => set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
   const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
-  if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.fx = fxClone(h.aud.fx); S.set.bp = Object.assign({}, h.aud.bp); saveSettings(); stageDirty = true; fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
+  if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.audioFadeShape = aeShape(S.set.audioFadeShape); S.set.fx = fxClone(h.aud.fx); S.set.bp = Object.assign({}, h.aud.bp); saveSettings(); stageDirty = true; fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
   if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
   if (struct && !layChanged && S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; }
   const sysCh = !!h.sys && !!S.pdf && sysRestore(h.sys); if (sysCh && !layChanged && !struct && sysOn()) S.spreads = buildSpreads();          // the hand marks come back too
@@ -366,7 +366,7 @@ function fadeEnv(s, vs, ve, t) {
   let f = 1;
   if (s.fadeIn && Li > 0) f = Math.min(f, (t - vs) / Li);
   if (s.fadeOut && Lo > 0) f = Math.min(f, (ve - t) / Lo);
-  return (AE_SHAPES[s.fadeShape] || AE_SHAPES.smooth)(clamp(f, 0, 1));          // the picture's curve: Smooth is the long-standing ease
+  return AE_SHAPES[aeShape(s.fadeShape)](clamp(f, 0, 1));          // the picture's curve: Gradual or Straight
 }
 const fadeAt = t => fadeEnv(S.set, S.vStart, vEnd(), t);
 /* the sound's fades are the Audio Editor's, in the video and in an exported audio file alike; the Fades panel on the page is for the picture only */

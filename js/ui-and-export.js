@@ -279,7 +279,7 @@ function syncControls() {
   FADE_SIDE = 'both'; FADE_FORCE = false;
   syncFadeLens();
   document.querySelectorAll('input[name=fadeStyle]').forEach(r => r.checked = r.value === s.fadeStyle);
-  document.querySelectorAll('input[name=fadeShape]').forEach(r => r.checked = r.value === (s.fadeShape || 'smooth'));
+  document.querySelectorAll('input[name=fadeShape]').forEach(r => r.checked = r.value === aeShape(s.fadeShape));
   applyFadeUI(); applyGroupSwitches();
   applyTransitionUI();
   paintRanges(); placeSegs();
@@ -329,11 +329,11 @@ function syncFadeLens() {
 }
 /* the Shape picture: the fade in rising and the fade out falling, in the chosen curve and the chosen lengths */
 /* the picture glides to whatever you set: lengths, which side is lit and the curve ease toward their targets, so a drag, a reset or a double-click all move it smoothly */
-const FSH = { li: null, lo: null, ai: 1, ao: 1, w: { standard: 0, smooth: 1, natural: 0 }, raf: 0, t: 0 };
+const FSH = { li: null, lo: null, ai: 1, ao: 1, w: Object.fromEntries(Object.keys(KFX.SHAPES).map(n => [n, n === KFX.FADE_DEFAULT ? 1 : 0])), raf: 0, t: 0 };
 function drawFadeShape() {
   const cv = $('#fadeCv'); if (!cv) return;
-  const s = S.set, { Li, Lo } = fadeLens(s, S.vStart, vEnd()), oi = fadeOn(s, 'in'), oo = fadeOn(s, 'out'), shape = s.fadeShape || 'smooth';
-  const T = { li: oi ? Math.min(Li, 3) : 0, lo: oo ? Math.min(Lo, 3) : 0, ai: oi && FADE_SIDE !== 'out' ? 1 : 0.35, ao: oo && FADE_SIDE !== 'in' ? 1 : 0.35, w: { standard: shape === 'standard' ? 1 : 0, smooth: shape === 'smooth' ? 1 : 0, natural: shape === 'natural' ? 1 : 0 } };
+  const s = S.set, { Li, Lo } = fadeLens(s, S.vStart, vEnd()), oi = fadeOn(s, 'in'), oo = fadeOn(s, 'out'), shape = aeShape(s.fadeShape);
+  const T = { li: oi ? Math.min(Li, 3) : 0, lo: oo ? Math.min(Lo, 3) : 0, ai: oi && FADE_SIDE !== 'out' ? 1 : 0.35, ao: oo && FADE_SIDE !== 'in' ? 1 : 0.35, w: Object.fromEntries(Object.keys(AE_SHAPES).map(n => [n, shape === n ? 1 : 0])) };
   FSH.T = T; if (FSH.li == null || reducedMotion() || !cv.clientWidth) { Object.assign(FSH, { li: T.li, lo: T.lo, ai: T.ai, ao: T.ao, w: Object.assign({}, T.w) }); paintFadeShape(); return; }
   if (!FSH.raf) { FSH.t = performance.now(); FSH.raf = requestAnimationFrame(stepFadeShape); }
 }

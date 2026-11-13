@@ -559,11 +559,14 @@ function chain(src, recipe, prev, fork) {
    The same sums as the app's masterMaker, reading the processed sound a stretch at a time. read(start, n) gives { chans } for frames inside the recording.
    spec = { vs, ve (seconds kept), gain, fade: { len, shape } or null, clamp, limit (ceiling in dB, or null), ch (channels out), total (frames out, optional) }.
    fill(pos, len) gives planar samples (channel after channel) for output frames pos … pos+len; before or after the sound is silence. */
-const SHAPES = { standard: x => x, smooth: x => x * x * (3 - 2 * x), natural: x => Math.sin(x * Math.PI / 2), slow: x => x * x, fast: x => 1 - (1 - x) * (1 - x) };
+/* The fade curves, once, for the page and the disk store's worker: natural is Gradual (a quarter of a sine wave: it rises quickly and settles, the shape of a logarithmic fade-in) and standard is Straight (a straight line).
+   fadeShape(v) is the one place an old or missing curve becomes one of the two: Smooth and Fast were Gradual's neighbors and become natural, Slow becomes standard, and anything else is the default. */
+const SHAPES = { natural: x => Math.sin(x * Math.PI / 2), standard: x => x }, FADE_DEFAULT = 'natural', FADE_OLD = { smooth: 'natural', fast: 'natural', slow: 'standard' };
+const fadeShape = v => typeof v === 'string' && Object.prototype.hasOwnProperty.call(SHAPES, v) ? v : typeof v === 'string' && Object.prototype.hasOwnProperty.call(FADE_OLD, v) ? FADE_OLD[v] : FADE_DEFAULT;
 const TP_H = (() => { const T = 12, out = []; for (const f of [0.25, 0.5, 0.75]) { const row = []; for (let k = -T + 1; k <= T; k++) { const t = k - f, s = Math.abs(t) < 1e-9 ? 1 : Math.sin(Math.PI * t) / (Math.PI * t), w = 0.5 + 0.5 * Math.cos(Math.PI * t / T); row.push(s * w); } out.push(row); } return out; })();
 function master(read, info, spec) {
   const sr = info.sr, frames = info.frames, nch = info.ch, ch = spec.ch || nch, vs = spec.vs, ve = spec.ve, gain = spec.gain == null ? 1 : spec.gain, total = spec.total || Math.max(1, Math.round((ve - vs) * sr)), base = Math.round(vs * sr);
-  const fd = spec.fade, hf = (ve - vs) / 2, L = fd ? Math.min(fd.len, hf) : 0, Lo = fd ? Math.min(fd.lenOut == null ? fd.len : fd.lenOut, hf) : 0, sh = fd ? SHAPES[fd.shape] || SHAPES.smooth : null, f = x => sh(x < 0 ? 0 : x > 1 ? 1 : x), fadeAt = t => L > 0 || Lo > 0 ? Math.min(L > 0 ? f((t - vs) / L) : 1, Lo > 0 ? f((ve - t) / Lo) : 1) : 1;
+  const fd = spec.fade, hf = (ve - vs) / 2, L = fd ? Math.min(fd.len, hf) : 0, Lo = fd ? Math.min(fd.lenOut == null ? fd.len : fd.lenOut, hf) : 0, sh = fd ? SHAPES[fadeShape(fd.shape)] : null, f = x => sh(x < 0 ? 0 : x > 1 ? 1 : x), fadeAt = t => L > 0 || Lo > 0 ? Math.min(L > 0 ? f((t - vs) / L) : 1, Lo > 0 ? f((ve - t) / Lo) : 1) : 1;
   const lim = spec.limit != null ? { L: new Lim(sr, ch, spec.limit, 80, TP_H), next: -1, fed: 0 } : null;
   const raw = async (pos, len) => {
     const out = new Float32Array(len * ch), a = Math.max(0, base + pos), b = Math.min(frames, base + pos + len), r = b > a ? await read(a, b - a) : null, off = a - (base + pos);
@@ -768,5 +771,5 @@ function resampled(read, info, outRate, seconds) {
     }
   };
 }
-G.KFX = { HumFind, humBands, nrHum, NoiseFloor, nrTab, nrFFTn, nrBinsN, nrNatSetup, nrNatGain, nrNatStep, chain, plain, bqCoef, bqMatched, bqMag, eqTrim, eqSections, eqPlace, eqMS, eqCurveBands, EQ_CURVE_F, eqDynOk, eqDynSpec, eqDynRun, EQ_DYN_ST, plan, master, resampled, loudness, limitTo, binTop, limShape, Heights, Lim, TP_H };
+G.KFX = { SHAPES, FADE_DEFAULT, fadeShape, HumFind, humBands, nrHum, NoiseFloor, nrTab, nrFFTn, nrBinsN, nrNatSetup, nrNatGain, nrNatStep, chain, plain, bqCoef, bqMatched, bqMag, eqTrim, eqSections, eqPlace, eqMS, eqCurveBands, EQ_CURVE_F, eqDynOk, eqDynSpec, eqDynRun, EQ_DYN_ST, plan, master, resampled, loudness, limitTo, binTop, limShape, Heights, Lim, TP_H };
 })(typeof self !== 'undefined' ? self : this);

@@ -361,7 +361,7 @@
           <div class="fa open" id="fadeMoreFold"><div class="fa-in">
             <div class="field">
               <span class="lbl" id="fadeShapeLbl">Curve</span>
-              <div class="seg" id="fadeShape" role="radiogroup" aria-labelledby="fadeShapeLbl"><label><input type="radio" name="fadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="fadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: rises quickly and settles"><input type="radio" name="fadeShape" value="natural"><span>Natural</span></label></div>
+              <div class="seg" id="fadeShape" role="radiogroup" aria-labelledby="fadeShapeLbl"><label><input type="radio" name="fadeShape" value="natural" checked><span>Gradual</span></label><label><input type="radio" name="fadeShape" value="standard"><span>Straight</span></label></div>
               <div class="fade-shape"><canvas id="fadeCv" aria-label="Fade shape"></canvas></div>
             </div>
             <div class="field">
@@ -625,7 +625,7 @@
           <h4>EQ</h4><p>Bands can be Bell, Low shelf, High shelf, High-pass, Low-pass, or Notch. <span class="hb">EQ Match</span> fits bands to the difference between your recording and a reference.</p>
           <h4>Imager</h4><p>Width makes the stereo image wider or narrower.</p>
           <h4>Level</h4><p>Gain changes the volume. Normalize sets a target loudness. The <span class="hb sw">Limiter</span> keeps peaks under the ceiling, so nothing clips.</p>
-          <h4>Fades</h4><p>Eases the sound in at the start and out at the end.</p>
+          <h4>Fades</h4><p>Eases the sound in at the start and out at the end. Length sets how long each lasts. The curve is <span class="hb">Gradual</span>, which rises quickly and settles, or <span class="hb">Straight</span>, a steady line.</p>
           <h4>Emulator (beta)</h4><p>Measures another recording’s tone and loudness, then moves your EQ, width, and level toward it.</p>
         </div></details></section>
       <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold Shift and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. Style chooses between <span class="hb">Turn</span>, <span class="hb">Slide</span>, and <span class="hb">Cut</span>.</p></section>
@@ -885,10 +885,9 @@
           </div>
         </section>
         <section class="ae-pane" id="aePaneFades" hidden>
-          <div class="fd-grid">
+          <div class="fd-grid tool-grid">
             <div class="ae-card" id="aeFadeLenCard"><div class="t-head"><h4>Length</h4></div><div class="seg" id="aeFadeSide" role="radiogroup" aria-label="Fade length for"><label><input type="radio" name="aeFadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="aeFadeSide" value="in"><span>In</span></label><label><input type="radio" name="aeFadeSide" value="out"><span>Out</span></label></div><div class="field" id="aeFadeLenField"><output class="lv-big" id="aeFadeLenVal">Off</output><input type="range" id="aeFadeLen" min="0" max="3" step="0.1" value="0" data-default="0" aria-label="Fade length"><div class="sl-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end" type="button" data-v="max">Longer</button></div></div></div>
-            <div class="ae-card fd-shape"><div class="t-head"><h4>Shape</h4></div><canvas id="aeFadeCv" aria-label="Fade shape"></canvas></div>
-            <div class="ae-card" id="aeShapeCard"><div class="t-head"><h4>Curve</h4></div><div class="seg" id="aeFadeShape" role="radiogroup" aria-label="Fade curve"><label><input type="radio" name="aeFadeShape" value="standard"><span>Standard</span></label><label><input type="radio" name="aeFadeShape" value="smooth" checked><span>Smooth</span></label><label title="Equal power: the usual choice for a crossfade or a music fade"><input type="radio" name="aeFadeShape" value="natural"><span>Natural</span></label><label title="Starts slowly and ends quickly, like a sound dying away."><input type="radio" name="aeFadeShape" value="slow"><span>Slow</span></label><label title="Comes in fastest and holds on longest before the end"><input type="radio" name="aeFadeShape" value="fast"><span>Fast</span></label></div></div>
+            <div class="ae-card fd-shape"><div class="t-head"><h4>Shape</h4></div><canvas id="aeFadeCv" aria-label="Fade shape"></canvas><div class="seg" id="aeFadeShape" role="radiogroup" aria-label="Fade curve"><label><input type="radio" name="aeFadeShape" value="natural" checked><span>Gradual</span></label><label><input type="radio" name="aeFadeShape" value="standard"><span>Straight</span></label></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneEmu" hidden>
