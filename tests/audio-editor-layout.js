@@ -65,7 +65,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     out.inset = cards.map(c => ({ id: nm(c), v: inset(c) }));
     const el = s => document.querySelector(s);
     if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
-    if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view .em-note')).bottom) };
+    if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view')).bottom - parseFloat(getComputedStyle(el('.em-view')).borderBottomWidth) - parseFloat(getComputedStyle(el('.em-view')).paddingBottom)) };
     if (pane.id === 'aePaneNoise') out.noise = { pre: el('#aeNrGrid').classList.contains('pre'), graphTop: rnd(R(el('#aeNrGrid .nr-stage')).top), graphBottom: rnd(R(el('#aeNrGrid .nr-stage')).bottom), sampleTop: rnd(R(el('#aeNrSample')).top), sampleBottom: rnd(R(el('#aeNrSample')).bottom), ctlTop: rnd(R(el('#aeNrCtl')).top), ctlBottom: rnd(R(el('#aeNrCtl')).bottom), content: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('#aeFadeShape')).bottom) };
     return out;
@@ -103,7 +103,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const states = [['Normalize Off, gain 0', async () => { await setMode('off'); await setGain(0); }], ['Normalize Off, gain −6', () => setGain(-6)], ['Normalize Off, gain +6', () => setGain(6)],
       ['Loudness, limiter on', async () => { await setGain(0); await setMode('loud'); await setLim(true); }], ['Loudness, limiter off', () => setLim(false)], ['Peak', () => setMode('peak')]];
     for (const [label, go] of states) { await go(); await q.waitForTimeout(1500);
-      const { m } = await look(q, 'Level: ' + label), more = await q.evaluate(() => ({ clip: document.querySelector('#aeClip').classList.contains('on'), peakLeft: document.querySelector('#aeMeter .lv-read span').getBoundingClientRect().left, noteRows: [...document.querySelectorAll('#aeSum b')].length }));
+      const { m } = await look(q, 'Level: ' + label), more = await q.evaluate(() => ({ clip: document.querySelector('#aeClip').classList.contains('on'), peakLeft: document.querySelector('#aePeakNow').previousElementSibling.getBoundingClientRect().left, noteRows: [...document.querySelectorAll('#aeSum b')].length }));
       out.level.push({ label, clip: more.clip, peakLeft: more.peakLeft, cards: Object.fromEntries(m.cards.map(c => [c.id, c.h])) }); }
     out.strip = await q.evaluate(() => { const e = document.querySelector('#aeSum'), cols = getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat); return { cols, title: e.title, foot: !!document.querySelector('.lv-foot'), clipNote: !!document.querySelector('#aeClipNote, #aeLoudPk') }; });
     out.guard = await q.evaluate(() => { const c = document.querySelector('#aeMeter'); c.style.height = '80px'; c.style.flex = 'none';          // the Meter: a card on the tool's own rows (Normalize, Gain) takes its rows' height whatever height it is given, so it cannot be squeezed
@@ -132,9 +132,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   for (const h of heights) { const sp = sweep[h].space, tag = '1440x' + h + ': ';
     const gaps = sp.flatMap(f => f.gaps.filter(g => Math.abs(+g.split(' ').pop() - 10) > 0.6).map(g => f.label + ': ' + g));
     ok(tag + 'every tool: cards are 10px apart, side by side and top to bottom', !gaps.length, gaps.slice(0, 4).join(' | '));
-    // reserved: the 12px gap under Spectra's Select row and under the EQ band's row is the space held for a closed fold (Reduce by, Dynamic), so those two keep their rows and stay unticked in the ticket
-    const reserved = c => /sp-sel|aeEqBand/.test(c.id + ' ' + c.cls);
-    const edge = sp.flatMap(f => f.cards.filter(c => !c.foot && !reserved(c) && c.head === null && Math.abs(c.top - c.bottom) > 0.5).map(c => f.label + ': ' + c.id + ' top ' + c.top + ' bottom ' + c.bottom));
+    const edge = sp.flatMap(f => f.cards.filter(c => !c.foot && c.head === null && Math.abs(c.top - c.bottom) > 0.5).map(c => f.label + ': ' + c.id + ' top ' + c.top + ' bottom ' + c.bottom));
     ok(tag + 'every tool: a card without a heading row has the same space at its top and bottom (0.5px), or a footer row pins to its bottom', !edge.length, edge.slice(0, 5).join(' | '));
     const headTop = sp.flatMap(f => f.cards.filter(c => c.head !== null && Math.abs(c.head - 21) > 0.5).map(c => f.label + ': ' + c.id + ' letters ' + c.head + 'px under the top'));
     ok(tag + 'every tool: a card with a heading row has its letters 21px under its top (its body is balanced: audio-editor-grid-lines, body-balance)', !headTop.length, headTop.slice(0, 5).join(' | '));
@@ -155,7 +153,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const lv = sp.filter(f => f.meter), lvBad = lv.filter(f => Math.abs(f.meter.track - 14) > 0.5 || Math.abs(f.meter.scale - 16) > 0.5 || Math.abs(f.meter.bottom - f.meter.cardsBottom) > 1);
     ok(tag + 'Level: the bar keeps 14px and its scale 16px, and the Meter ends on the cards\' bottom line', lv.length > 0 && !lvBad.length, JSON.stringify(lv.map(f => f.meter)).slice(0, 300));
     const em = sp.filter(f => f.emulate);
-    ok(tag + 'Emulator: Emulate sits level with the bottom of the graph card\'s note', em.length > 0 && em.every(f => Math.abs(f.emulate.go - f.emulate.note) <= 1), JSON.stringify(em.map(f => f.emulate)).slice(0, 200));
+    ok(tag + 'Emulator: Emulate sits level with the bottom content line of the graph card (its note is gone)', em.length > 0 && em.every(f => Math.abs(f.emulate.go - f.emulate.note) <= 1), JSON.stringify(em.map(f => f.emulate)).slice(0, 200));
     const fd = sp.filter(f => f.fades);
     ok(tag + 'Fades, Length: its end labels end on the bottom line of the Gradual | Straight choice', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
     const hm = o.hum, moved = Object.entries(hm).filter(([k, x]) => Math.abs(x.sw - hm.idle.sw) > 1 || Math.abs(x.card - hm.idle.card) > 1 || Math.abs(x.row - hm.idle.row) > 1).map(([k]) => k);

@@ -1,40 +1,15 @@
 # Today's id-based spacing rules inside a tool pane, and screen-width queries on the Audio Editor, in style.css: one per line. Checked by tests/audio-editor-stylesheet.js.
 # This list may only shrink. A new rule that is not here fails the check; a line whose rule is gone fails it too (delete the line). A tool's ticket deletes that tool's rules from style.css and their lines here.
 # id-spacing: a rule naming an element inside a tool pane by its id that sets margin, padding, or gap ({the spacing properties it sets}). screen-width: a width @media that styles the Audio Editor.
-id-spacing #aeBalCard .field {margin-bottom}
-id-spacing #aeBalCard .field {margin}
-id-spacing #aeEmGo.on::before {margin}
-id-spacing #aeGainBig {margin}
-id-spacing #aeGainField {margin-top}
-id-spacing #aeMatch .mt-chip {padding-bottom,padding-top}
-id-spacing #aeMeter {row-gap}
-id-spacing #aePaneEq .eq-band.ae-card {margin-top}
-id-spacing #aePaneEq .eq-match {margin-top}
-id-spacing #aePaneEq .eq-top {margin-bottom}
-id-spacing #aePaneEq .mt-steps.two {gap}
-id-spacing #aeSum b {margin-top}
-id-spacing #aeSum {margin-top,padding-top}
-id-spacing #aeSum>div {column-gap,row-gap}
-id-spacing #aeSum>div {gap}
-id-spacing @container level (max-width:399px) #aeNormCard:not(:has(.fa-stack>.fa.open)) .lv-head {margin-bottom}
-id-spacing @container level (max-width:519px) #aeNormMode {margin-left}
-id-spacing @container level (max-width:659px) #audioDlg #aeNormMode span {padding}
-screen-width @media (max-width:340px) #aeBassCard .im-lowf
-screen-width @media (max-width:340px) #aeBassCard
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar .ae-view label
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-bar
 screen-width @media (max-width:360px) #audioDlg:not(.afull) .ae-times
-screen-width @media (max-width:420px) #aeWidthCard .im-head .seg
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-ic
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .ae-lb
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-abs .btn
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-rail-cur span
 screen-width @media (max-width:420px) #audioDlg.head-in-bar .ae-rail-cur
-screen-width @media (max-width:420px) #audioDlg:not(.afull) .eq-band.ae-card
-screen-width @media (max-width:420px) #audioDlg:not(.afull) .eq-bn
-screen-width @media (max-width:420px) #spShape svg
 screen-width @media (max-width:420px) .ae-pt .ae-sub
-screen-width @media (max-width:420px) .sp-seg label span
 screen-width @media (max-width:520px) .ae-export
 screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-main
 screen-width @media (max-width:520px) html #audioDlg:not(.afull) .ae-pane
@@ -49,9 +24,6 @@ screen-width @media (max-width:560px) #audioDlg:not(.afull) #aeSilence
 screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times b
 screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times span
 screen-width @media (max-width:560px) #audioDlg:not(.afull) .ae-times
-screen-width @media (max-width:560px) .sp-tools
-screen-width @media (max-width:760px) #aeBassCard .im-lowf
-screen-width @media (max-width:760px) #aeBassCard
 screen-width @media (max-width:760px) #audioDlg.afull .ae-main
 screen-width @media (max-width:760px) #audioDlg.afull .ae-main
 screen-width @media (max-width:760px) #audioDlg.afull .ae-pbody
@@ -68,7 +40,6 @@ screen-width @media (max-width:760px) #audioDlg.head-in-bar .ae-top
 screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-main
 screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-rail
 screen-width @media (max-width:760px) #audioDlg.head-in-bar:not(.afull) .ae-win
-screen-width @media (max-width:760px) #audioDlg:not(.afull) #aePaneEq .eq-stage
 screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .btn
 screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .icon-btn:not(.play)
 screen-width @media (max-width:760px) #audioDlg:not(.afull) .ae-bar .seg
@@ -110,25 +81,8 @@ screen-width @media (max-width:760px) .ae-top
 screen-width @media (max-width:760px) .ae-win .ae-phead
 screen-width @media (max-width:760px) .ae-win
 screen-width @media (max-width:760px) .ae-win
-screen-width @media (max-width:760px) .em-grid
-screen-width @media (max-width:760px) .em-stage
-screen-width @media (max-width:760px) .eq-band .field
-screen-width @media (max-width:760px) .eq-band select
-screen-width @media (max-width:760px) .eq-band
-screen-width @media (max-width:760px) .eq-band.ae-card
-screen-width @media (max-width:760px) .eq-bn
-screen-width @media (max-width:760px) .im-cols
-screen-width @media (max-width:760px) .im-cols
-screen-width @media (max-width:760px) .im-cols
-screen-width @media (max-width:760px) .im-low
-screen-width @media (max-width:760px) .im-lowf
 screen-width @media (max-width:760px) .mt-head .btn
 screen-width @media (max-width:760px) .mt-steps.two
-screen-width @media (max-width:760px) .sp-grid
-screen-width @media (max-width:760px) .sp-lcard
-screen-width @media (max-width:760px) .sp-list
-screen-width @media (min-width:761px) #aePaneEmu .em-grid
-screen-width @media (min-width:761px) #aePaneEmu:not([hidden])
 screen-width @media (min-width:761px) #audioDlg.afull .ae-pane
 screen-width @media (min-width:761px) #audioDlg.afull .ae-pbody
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar .btn
@@ -139,10 +93,6 @@ screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar::before
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-main
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-rail
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-wave
-screen-width @media (min-width:761px) #audioDlg[data-tool=level] #aePaneLevel.ae-pane
 screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pane
 screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pbody
-screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-band .eq-cell
-screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-band.ae-card
-screen-width @media (min-width:761px) and (max-width:980px) #audioDlg:not(.afull) .eq-bn
 screen-width @media (min-width:761px) and (max-width:980px) .ae-pbody

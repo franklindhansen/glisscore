@@ -10,8 +10,10 @@ spec heal ae-card.sp-card.sp-lcard 218
 spec heal ae-card.sp-card.sp-sel 110
 spec reduce ae-card.sp-card.sp-lcard 193
 spec reduce ae-card.sp-card.sp-sel 135
-eq idle aeEqBand 72
+eq idle aeEqBand 69
+eq idle ae-card.eq-main.own-grid 259
 eq match aeMatch 121
+eq match ae-card.eq-main.own-grid 207
 imager overall ae-card.im-scope 338
 imager overall aeBalCard 159
 imager overall aeWidthCard 169

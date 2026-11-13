@@ -789,12 +789,13 @@
               <div class="fa" id="spAmtF"><div class="fa-in" inert><div class="field"><label for="spAmt"><span>Reduce by</span><output id="spAmtVal">24dB</output></label><input type="range" id="spAmt" min="3" max="60" step="1" value="24" data-default="24"></div></div></div>
             </div>
             <div class="ae-card sp-card sp-lcard">
-              <div class="mt-head t-head"><h4>Edits</h4><button class="btn small push-right" id="spClear" type="button" disabled>Clear all</button></div>
+              <div class="mt-head t-head"><h4>Edits</h4><button class="btn small push-right" id="spClear" type="button" disabled>Clear</button></div>
               <div class="sp-list" id="spList"></div>
             </div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneEq" hidden>
+          <div class="ae-card eq-main own-grid">
           <div class="eq-top">
             <select id="aeEqPreset" aria-label="Presets"></select>
             <div class="band-pill" role="group" aria-label="Bands">
@@ -804,11 +805,11 @@
               <button class="bp-b" id="aeBandDel" type="button" aria-label="Remove band" title="Remove the selected band"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
             </div>
             <div class="seg" id="aeBandPlace" role="radiogroup" aria-label="Selected band works on" title="Where the selected band works: the whole stereo sound, or only its mid or its side"><label><input type="radio" name="aeBandPlace" value="st" checked><span>Stereo</span></label><label><input type="radio" name="aeBandPlace" value="mid"><span>Mid</span></label><label><input type="radio" name="aeBandPlace" value="side"><span>Side</span></label></div>
-            <button class="btn small push-right" id="aeAutoBtn" type="button" aria-pressed="false">Auto gain</button>
-            <span class="eq-tipwrap"><button class="info-i" type="button" aria-label="About Auto gain" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.eqopts">Keeps the loudness the same, so before and after are fair to compare.</span></span>
+            <button class="btn small" id="aeAutoBtn" type="button" aria-pressed="false" title="Keeps the loudness the same, so before and after are fair to compare.">Auto gain</button>
             <button class="btn small" id="aeMatchBtn" type="button" aria-pressed="false">EQ Match</button>
           </div>
           <div class="eq-stage"><canvas id="aeEqCv" title="Double-click to add a band. Drag a point to move it." aria-label="EQ curve"></canvas></div>
+          </div>
           <div class="eq-fold" id="aeBandFold"><div class="eq-fold-in">
           <div class="eq-band ae-card own-grid" id="aeEqBand">
             <div class="eq-cell eq-bn"><span class="eq-lbl t-lbl">Band <b id="aeBandNo">1</b></span><div class="eq-ctl"><input type="checkbox" class="switch" id="aeBandOn" aria-label="Band on"><button class="btn small" id="aeBandHear" type="button" aria-pressed="false" title="Hear only the part of the sound this band works on">Listen</button><button class="btn small" id="aeBandDyn" type="button" aria-pressed="false" title="The band moves with how loud the sound is in its own region">Dynamic</button></div></div>
@@ -843,7 +844,7 @@
               <div class="ae-card" id="aeWidthCard">
                 <div class="im-head t-head"><h4>Width</h4><div class="seg" id="aeWidthMode" role="radiogroup" aria-label="Width for"><label><input type="radio" name="aeWidthMode" value="all" checked><span>Overall</span></label><label><input type="radio" name="aeWidthMode" value="bands"><span>Frequency</span></label></div></div>
                 <div class="im-views">
-                  <div class="im-view" id="aeWvAll"><div class="field"><div class="im-slrow"><div class="sl-track"><input type="range" class="bi" id="aeWidth" min="-100" max="100" step="1" value="0" data-default="0" aria-label="Stereo width"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-100">Mono</button><button class="sl-end" type="button" data-v="0">Normal</button><button class="sl-end" type="button" data-v="100">Wider</button></div></div><output id="aeWidthVal">100%</output></div></div></div>
+                  <div class="im-view" id="aeWvAll"><div class="field"><div class="im-slrow"><div class="sl-track"><input type="range" class="bi" id="aeWidth" min="-100" max="100" step="1" value="0" data-default="0" aria-label="Stereo width"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-100">Mono</button><button class="sl-end tick" type="button" data-v="0" aria-label="Normal" title="Normal">|</button><button class="sl-end" type="button" data-v="100">Wide</button></div></div><output id="aeWidthVal">100%</output></div></div></div>
                   <div class="im-view off" id="aeWvBands">
                     <div class="field row3"><label for="aeBwLo"><span>Low<i class="hz">&lt; 250Hz</i></span><output id="aeBwLoVal">0</output></label><input type="range" class="bi" id="aeBwLo" min="-100" max="100" step="1" value="0" data-default="0"></div>
                     <div class="field row3"><label for="aeBwMid"><span>Middle</span><output id="aeBwMidVal">0</output></label><input type="range" class="bi" id="aeBwMid" min="-100" max="100" step="1" value="0" data-default="0"></div>
@@ -853,20 +854,20 @@
                 <div class="im-low foot-row" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
               </div>
               <div class="ae-card" id="aeBalCard">
-                <div class="im-head t-head"><h4>Balance</h4><div class="bal-foot"><span class="t-note inline bal-say" id="aeBalSay" aria-live="polite"></span><output id="aeBalVal">No shift</output></div><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Makes left and right equally loud. Press again to undo.">Auto</button></div>
-                <div class="bal-meter" id="aeLR" title="The average level of each side, after the shift."><span class="bm-name">Left</span><i class="bm-track"><b id="aeBalLb"></b></i><span class="bm-val" id="aeBalL"></span><span class="bm-name">Right</span><i class="bm-track"><b id="aeBalRb"></b></i><span class="bm-val" id="aeBalR"></span></div>
-                <div class="field"><input type="range" class="bi" id="aeBal" min="-12" max="12" step="0.1" value="0" data-default="0" aria-label="Balance, left or right"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-12">Left</button><button class="sl-end" type="button" data-v="0">Center</button><button class="sl-end" type="button" data-v="12">Right</button></div></div>
-                <em id="aeLRtxt" hidden></em></div>
+                <div class="im-head t-head"><h4>Balance</h4><output class="head-note" id="aeBalVal" aria-live="polite"></output><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Makes left and right equally loud. Press again to undo.">Auto</button></div>
+                <div class="bal-meter" id="aeLR" title="The average level of each side, after the shift."><span class="bm-name">L</span><i class="bm-track"><b id="aeBalLb"></b></i><span class="bm-val" id="aeBalL"></span><span class="bm-name">R</span><i class="bm-track"><b id="aeBalRb"></b></i><span class="bm-val" id="aeBalR"></span></div>
+                <div class="field"><input type="range" class="bi" id="aeBal" min="-12" max="12" step="0.1" value="0" data-default="0" aria-label="Balance, left or right"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-12" aria-label="Left" title="Left">L</button><button class="sl-end tick" type="button" data-v="0" aria-label="Center" title="Center">|</button><button class="sl-end" type="button" data-v="12" aria-label="Right" title="Right">R</button></div></div>
+                </div>
               </div>
-            <div class="ae-card im-scope"><canvas id="aeScope" aria-label="Stereo image"></canvas><div class="im-corr" title="How alike left and right are. In the red, the sound thins out in mono."><span>Wide</span><i id="aeCorr"></i><span>Mono</span></div><div class="im-listen"><span>Listen</span><div class="seg" id="aeListen" role="radiogroup" aria-label="Listen to"><label><input type="radio" name="aeListen" value="" checked><span>Both</span></label><label><input type="radio" name="aeListen" value="mid"><span>Middle</span></label><label><input type="radio" name="aeListen" value="side"><span>Sides</span></label></div></div></div>
+            <div class="ae-card im-scope"><canvas id="aeScope" aria-label="Stereo image"></canvas><div class="im-corr" title="How alike left and right are. In the red, the sound thins out in mono."><i id="aeCorr"></i></div><div class="im-listen"><span>Listen</span><div class="seg" id="aeListen" role="radiogroup" aria-label="Listen to"><label><input type="radio" name="aeListen" value="" checked><span>Both</span></label><label><input type="radio" name="aeListen" value="mid"><span>Middle</span></label><label><input type="radio" name="aeListen" value="side"><span>Sides</span></label></div></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneLevel" hidden>
           <div class="lv-grid tool-grid">
             <div class="lv-top tool-group">
-            <div class="ae-card on-grid" id="aeNormCard">
+            <div class="ae-card" id="aeNormCard">
               <div class="lv-head im-head t-head"><h4>Normalize</h4><button class="info-i" type="button" aria-label="About normalizing" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.normalize">Peak sets the loudest moment. Loudness sets how loud it sounds overall.</span><div class="seg" id="aeNormMode" role="radiogroup" aria-label="Normalize by"><label><input type="radio" name="aeNormMode" value="off" checked><span>Off</span></label><label><input type="radio" name="aeNormMode" value="loud"><span>Loudness</span></label><label><input type="radio" name="aeNormMode" value="peak"><span>Peak</span></label></div></div>
-              <div class="fa-stack"><div class="fa" id="aePeakFold"><div class="fa-in" inert>
+              <div class="fa-stack"><div class="fa" id="aePeakFold"><div class="fa-in lv-peak" inert>
                 <label class="lv-target" id="aeNormTarget">Loudest peak <span class="num"><input type="number" id="aeNormDb" min="-12" max="0" step="0.1" inputmode="decimal"><em>dB</em></span></label>
                 <p class="t-note lv-note" id="aePeakNote" aria-live="polite"></p>
               </div></div>
@@ -879,9 +880,9 @@
                 </div>
               </div></div></div>
             </div>
-            <div class="ae-card on-grid" id="aeGainCard"><div class="t-head"><h4>Gain</h4></div><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
+            <div class="ae-card lv-side" id="aeGainCard"><div class="t-head"><h4>Gain</h4></div><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
             </div>
-            <div class="ae-card lv-meter own-grid" id="aeMeter"><div class="lv-mh t-head"><h4>Meter</h4><div class="lv-read"><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>Change</span><b id="aeSumChg">—</b></div></div></div>
+            <div class="ae-card lv-meter own-grid" id="aeMeter"><div class="lv-mh t-head"><h4>Meter</h4><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneFades" hidden>
@@ -891,7 +892,7 @@
           </div>
         </section>
         <section class="ae-pane" id="aePaneEmu" hidden>
-          <div class="em-grid">
+          <div class="em-grid tool-grid">
             <div class="ae-card" id="aeEmCard">
               <div class="mt-steps">
                 <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Reference</div>
@@ -912,7 +913,6 @@
               <div class="mt-head t-head"><h4>Tone</h4><span class="em-key" aria-hidden="true"><i class="a"></i>Yours<i class="b"></i>Reference<i class="c"></i>After</span></div>
               <div class="em-stage"><canvas id="aeEmCv" aria-label="The tone of your recording and of the reference"></canvas><p class="em-empty" id="aeEmEmptyMsg">Choose a reference to see how yours differs.</p></div>
               <div class="lv-sum"><div><span>Tone</span><b id="aeEmT">–</b><small id="aeEmT2"></small></div><div><span>Width</span><b id="aeEmW">–</b><small id="aeEmW2"></small></div><div><span>Loudness</span><b id="aeEmL">–</b><small id="aeEmR"></small></div></div>
-              <p class="t-note em-note">The line marked After is yours with the EQ curve added. Dynamics and the room stay as they are.</p>
             </div>
           </div>
         </section>

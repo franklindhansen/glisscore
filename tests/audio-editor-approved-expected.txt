@@ -1,2 +1,1 @@
 # Approved pictures that tests/audio-editor-approved.js does not compare yet, one per line: "picture  ticket that builds its tool". The list may only shrink: the ticket that builds the tool adds its rows to the table in the check and deletes its line.
-p-eq  EQ

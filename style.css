@@ -1056,6 +1056,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-top .seg{flex:0 0 auto;transition:opacity .3s var(--ease-ui)}
 .eq-top .seg[hidden]{display:none}
 .eq-dyn{grid-column:1/-1}
+.eq-band.ae-card:has(>.eq-dyn:not(.open)){padding-bottom:calc(var(--gap-set) - var(--band-row-gap,0px))}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
 .eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding-top:8px}
 .eq-dyn .eq-cell{gap:2px}
 .eq-dyn .eq-ctl{height:22px}
@@ -1069,10 +1070,9 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-band.none{opacity:.4;pointer-events:none}
 /* Imager */
 .im-cols{display:grid}
-.im-corr{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+.im-corr{display:grid;grid-template-columns:1fr;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
 .im-corr i{position:relative;height:6px;border-radius:99px}
 .im-corr i::after{content:'';position:absolute;top:-5px;left:calc(var(--c,.5) * 100%);width:3px;height:16px;margin-left:-1.5px;border-radius:2px;background:var(--ink);pointer-events:none}
-@media (max-width:760px){.im-cols{grid-template-columns:1fr}}
 #audioDlg:not(.afull) #aeBalCard{flex:none}
 /* narrow but not a phone (521–760px): Fades and Noise use two columns, so the tool fits its window with less scrolling */
 /* phones (520px and below): there is no room for a fixed window, so the whole dialog scrolls like a page and each tool shows at its full height */
@@ -1119,7 +1119,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
-.eq-band.ae-card{margin-top:14px}
 .eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out)}
 .eq-fold.shut{grid-template-rows:0fr}
 .eq-fold-in{min-height:0;overflow:hidden}
@@ -1140,7 +1139,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
   .ae-rail-in{overflow:hidden;min-height:0;padding:0 8px;flex-direction:column}
   .ae-rail.open .ae-rail-in{padding:0 8px 10px}
   .ae-procs{flex-direction:column;flex-wrap:nowrap}
-  .im-cols{grid-template-columns:1fr}
 }
 .eq-top{flex-wrap:wrap}
 
@@ -1195,9 +1193,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-card.nudge{animation:nudge .9s var(--ease-out)}
 @media (prefers-reduced-motion:reduce){.ae-card.nudge{animation:none}.mt-spin{animation-duration:2s}}
 @media (max-width:760px){
-  .eq-band{grid-template-columns:1fr 1fr;gap:12px 14px}
-  .eq-band select{width:100%}
-  .eq-band .field{min-width:0}
   .mt-head .btn{font-size:12.5px}
 }
 
@@ -1229,7 +1224,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 input.switch:disabled{cursor:progress;opacity:.55}
 /* a pressed primary button stays readable: solid with its own ink */
 .btn.primary[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-#aeEmGo.on::before{content:'';display:inline-block;width:12px;height:12px;margin:0 6px -1px 0;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat}
+.em-go .btn.on::before{content:'';display:inline-block;width:12px;height:12px;margin:0 6px -1px 0;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat}
 
 /* ----- One window per tool, wires between lit lights, zoom, live meter ----- */
 .ae-main{grid-template-columns:226px minmax(0,1fr);align-items:stretch}
@@ -1262,6 +1257,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .eq-lbl output{color:var(--ink);font-variant-numeric:tabular-nums}
 .eq-lbl b{color:var(--ink)}
 .eq-ctl{display:flex;align-items:center;height:var(--h-s)}          /* the control line is as tall as its controls (30px), so the cell's box ends where they do */
+.eq-band>.eq-cell>.eq-ctl:has(>input[type=range]){margin-bottom:calc((18px - var(--h-s)) / 2)}          /* a slider's line is as tall as the controls beside it so they share one center line, but its cell ends where the thumb does, so a row of sliders ends where its thumbs do */
 .eq-ctl select{height:34px}
 .eq-ctl input[type=number]{width:96px;height:34px;box-sizing:border-box}
 .eq-ctl input[type=range]{width:100%}
@@ -1272,7 +1268,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .eq-ctl .seg{width:100%;font-size:12.5px}
 .eq-top select{flex:0 0 auto;width:104px;min-width:0}
 /* EQ Match fits beside the curve without growing the window */
-.eq-match{margin-top:12px}
 .mt-steps.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px 22px}
 /* Noise reduction steps */
 .nr-learn{display:flex;align-items:center;gap:8px 10px}
@@ -1284,8 +1279,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (max-width:760px){
   .ae-main{grid-template-columns:minmax(0,1fr)}
   .ae-win{min-height:0;padding:14px}
-  .eq-band.ae-card{grid-template-columns:1fr 1fr;gap:var(--gap-card)}
-  .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .mt-steps.two{grid-template-columns:1fr}
   .ae-jack{width:22px}
 }
@@ -1297,7 +1290,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .nr-learn .btn,.nr-learn .mt-chip{height:var(--h-s);box-sizing:border-box;margin:0}
 .nr-learn .mt-chip{padding:0 4px 0 12px;white-space:nowrap}
 .mt-pick{min-height:var(--h-s)}
-#aeMatch .mt-chip{height:var(--h-s);box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
+.eq-match .mt-chip{height:var(--h-s);box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
 .mt-pick span.bad{color:var(--bad)}
 
 /* tool windows slide */
@@ -1356,8 +1349,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity .3s var(--ease-ui)}
 .im-lowf.dim{opacity:.45}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .im-listen{display:flex;align-items:center;gap:10px}.im-listen>span{font-size:12.5px;color:var(--muted)}.im-listen .seg{flex:1;font-size:12px}.im-listen .seg span{padding:4px 6px}
-#aeBalCard .field{margin-bottom:0}
-@media (max-width:760px){.im-low{flex-wrap:wrap}.im-lowf{max-width:none;flex-basis:100%}}
 .im-view{align-self:center}
 .im-view .field{margin-bottom:6px}
 .field.row3{display:grid;grid-template-columns:92px minmax(0,1fr) 38px;align-items:center;gap:0 10px}
@@ -1372,8 +1363,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-wave{height:128px}
 .ae-view{width:auto;flex:none;font-size:12px}.ae-view span{padding:4px 11px}
 #audioDlg:focus{outline:none}
-.eq-tipwrap{position:relative;display:flex;align-items:center}
-.eq-tipwrap .tip{left:auto;right:0;width:260px;max-width:70vw}
 /* margins inside the noise card never merge, so closing the sliders slides "Noise only" the whole way with no jump at the end */
 
 /* ==================== AUDIO EDITOR: full screen (the picture fills the screen, everything else floats as glass) ==================== */
@@ -1420,7 +1409,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sp-empty{display:grid;place-items:center;flex:1;color:var(--muted);opacity:.45}
 .sp-empty svg{width:44px;height:44px;animation:sp-breathe 3s ease-in-out infinite}
 @keyframes sp-breathe{50%{transform:scale(1.08);opacity:.6}}
-@media (max-width:760px){.sp-grid{grid-template-columns:1fr}.sp-list{max-height:160px}}
+#audioDlg.head-in-bar .sp-list{max-height:160px}
 
 /* ---- full screen, refined: the same glass as the score player's timeline, with a soft specular sheen ---- */
 #audioDlg.afull>.dlg.editor.ae{background:var(--panel)}
@@ -1476,11 +1465,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #audioDlg:not(.afull) .ae-pbody{flex:1 1 auto;height:auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 }
 /* EQ, narrow: the graph keeps a usable height. Below 980px the band is two columns (its Band row across the top, then Type and Frequency, then Gain and Width), the same two-column narrow rule Fades and Noise use, so no slider is squeezed to nothing */
-@media (max-width:760px){#audioDlg:not(.afull) #aePaneEq .eq-stage{flex:none;height:clamp(160px,36dvh,240px)}}
-@media (min-width:761px) and (max-width:980px){
-  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card);align-items:start}
-  #audioDlg:not(.afull) .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
-  #audioDlg:not(.afull) .eq-band .eq-cell{min-width:0}
+#aePaneEq{container:eq/inline-size}
+#audioDlg.head-in-bar:not(.afull) .eq-main>.eq-stage{flex:none;height:clamp(160px,36dvh,240px)}          /* where the tool body scrolls the graph keeps a usable height */
+@container eq (max-width:670px){          /* the band is two columns: its Band row across the top, then Type and Frequency, then Gain and Width, the same two-column narrow rule Fades and Noise use */
+  .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card);--band-row-gap:var(--gap-card);align-items:start}
+  .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
+  .eq-band .eq-cell{min-width:0}
+  .eq-band select{width:100%}
 }
 
 /* ---- full screen, both editors: no title bar. Small glass chips float at the top; the controls and the tools sit in glass rows at the bottom. ---- */
@@ -1614,7 +1605,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #aeEmCard{--card-gap:0px}          /* this card spaces its own parts */
 #aeEmCard>.mt-steps{flex:1;justify-content:space-between}
 /* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
-@media (max-width:760px){#aeBassCard{flex-wrap:nowrap}#aeBassCard .im-lowf{flex-basis:auto;max-width:none}}
+#audioDlg.head-in-bar .im-lowf{flex-basis:auto;max-width:none}
 .sp-grid{display:flex;flex-direction:column;gap:var(--gap-card);height:100%}
 .sp-sel{flex:none}
 .sp-tools{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
@@ -1623,22 +1614,24 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sp-draw svg{width:15px;height:15px;flex:none}
 .sp-seg label{display:flex}
 .sp-seg label span{flex:1;height:100%}
-@media (max-width:560px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
+#aePaneSpec{container:spec/inline-size}
+@container spec (max-width:469.5px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
 .sp-lcard{flex:1 1 0;min-height:0}
-@media (max-width:760px){.sp-lcard{flex:none;min-height:120px}}          /* the narrow layout's tool body scrolls, so the Edits card keeps a height instead of collapsing under its own heading */
+#audioDlg.head-in-bar .sp-lcard{flex:none;min-height:120px}          /* the narrow layout's tool body scrolls, so the Edits card keeps a height instead of collapsing under its own heading */
 .sp-list{padding:2px;align-content:start}
 .sp-sel .fa.open>.fa-in{padding:4px 2px 2px;margin:0 -4px -2px}          /* the 2px of room for the thumb's shadow under the slider is not part of the body, so the box ends where the thumb does (the 2px moves above the label, so the fold keeps its height) */
 /* EQ: the picture takes whatever room is left, so opening EQ Match never makes the window taller */
 #aePaneEq:not([hidden]){display:flex;flex-direction:column}
-#aePaneEq .eq-top{flex:none;margin-bottom:8px}
-#aePaneEq .eq-stage{flex:1 1 0;min-height:64px;height:auto}
 #aePaneEq .eq-fold{flex:none}
-#aePaneEq .eq-band.ae-card{flex:none;margin-top:10px}
-#aePaneEq .eq-match{flex:none;margin-top:10px}
-#aePaneEq .mt-steps.two{gap:6px 20px}
+.eq-fold-in>.ae-card{flex:none;margin-top:var(--gap-card)}          /* a card that opens under the graph sits a card gap below it, and takes no gap while its fold is shut */
+.mt-steps.two{gap:6px 20px}
+/* the graph card: the tools on top (12px above them, from the card's padding, and 12px below), then the graph edge to edge under one line, running to the card's bottom edge; it takes whatever room is left */
+.eq-main{display:flex;flex-direction:column;gap:var(--gap-set);flex:1 1 auto;min-height:0;padding-bottom:0;overflow:hidden}
+.eq-main>.eq-top{flex:none;margin:0}
+.eq-main>.eq-stage{flex:1 1 0;min-height:64px;height:auto;margin:0 -16px;border-top:1px solid var(--hairline)}
 /* Imager: both columns end together */
 .im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:var(--gap-card);align-items:stretch}
-@media (max-width:760px){.im-cols{grid-template-columns:minmax(0,1fr)}}          /* the phone's one column, which the two-column rule above would otherwise win back */
+#audioDlg.head-in-bar .im-cols{grid-template-columns:minmax(0,1fr)}          /* the phone's one column, which the two-column rule above would otherwise win back */
 .im-ctl{display:flex;flex-direction:column;gap:var(--gap-card);min-height:0}          /* Balance keeps its height and sits on the scope's bottom line; Width takes the spare height, and its footer row pins to the bottom of its card */
 #aeWidthCard{flex:1 1 auto;display:flex;flex-direction:column}
 #aeBalCard{flex:none;align-content:space-between}
@@ -1658,22 +1651,16 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .sl-ends.tri .sl-end:last-child{justify-self:end}
 .im-slrow input{margin:0}
 .im-view .field{margin:0}
+.im-ctl .field{margin:0}
 .field.row3{margin-bottom:2px}
-.bal-say{margin-left:auto;display:inline-flex;align-items:center;white-space:nowrap}
-.bal-say.auto{color:var(--accent);font-weight:600}
-.bal-say.auto::before{content:'';flex:none;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 30%,transparent);animation:bal-pulse 1.8s var(--ease-ui) infinite}
-@keyframes bal-pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--ok) 0%,transparent)}}
-#aeBalCard .field{margin:0}
+.head-note{color:var(--ink);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}          /* a readout beside a heading's text (Balance's shift), shown only when it has something to say */
+.head-note:empty{display:none}
 .bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--gap-head) var(--gap-set);align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
 .bal-meter.none{opacity:.35}
 .bm-name{min-width:34px}
 .bm-val{min-width:64px;text-align:right;color:var(--ink);font-weight:500}
 .bm-track{position:relative;display:block;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bm-track b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 38%,transparent);transition:width .4s var(--ease-out)}
-.bal-foot{display:flex;align-items:baseline;justify-content:flex-start;gap:12px;margin-top:6px;font-size:12.5px;color:var(--muted)}
-.bal-foot output{color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
-.bal-foot .bal-say{margin-left:0}
-.bal-say.even{color:var(--ink)}
 .im-scope{min-height:0;gap:var(--gap-card)}
 .im-scope canvas{flex:1 1 0;min-height:0;aspect-ratio:auto;height:auto}
 /* ==================== Tool grid: a tool's cards sit on one shared set of lines ====================
@@ -1687,40 +1674,44 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- Level: Normalize and Gain share the top rows; the Meter is the flexible card and takes the spare height ----- */
 #aePaneLevel{container:level/inline-size}
 .lv-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:1fr 1fr}          /* Normalize and Gain over the Meter share the column evenly (the column rule); each takes more only when its content needs it */
-.lv-top{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);grid-template-rows:auto auto auto}
+.lv-top{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
 .lv-meter{grid-column:1/-1}
 @container level (max-width:659px){          /* too narrow for the Normalize choice at its full size: Normalize takes the wider share and the choice tightens, so it stays on the heading's row */
   .lv-top{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)}
-  #audioDlg #aeNormMode span{padding:0 2px}
+  #audioDlg .ae-card>.t-head.lv-head>.seg span{padding:0 2px}
 }
 @container level (max-width:519px){          /* too narrow even so: the choice takes its own full row under the heading, and each card keeps its own rows, so Gain's number stays under its heading */
   .lv-top{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
-  #aeNormMode{flex:1 1 100%;margin-left:0}
-  .lv-top>.on-grid{grid-template-rows:auto 1fr auto}
+  .lv-head>.seg{flex:1 1 100%}
 }
 @container level (max-width:399px){          /* the phone's one column: no card stands beside another, so each keeps its own rows */
   .lv-grid{height:auto;grid-template-rows:none}
   .lv-top{grid-template-columns:minmax(0,1fr);grid-template-rows:none}
-  .lv-top>.on-grid{grid-row:auto}
-  .lv-head{transition:margin-bottom .45s var(--ease-out)}
-  #aeNormCard:not(:has(.fa-stack>.fa.open)) .lv-head{margin-bottom:0}          /* Off shows nothing under the choice, so the heading keeps no space for it (it closes with the fold) */
 }
 
 /* Normalize: the heading holds the choice; the folds take the body and the foot, so the Limiter's footer row ends on Gain's last line */
 #aeNormCard{overflow:hidden}
-#aeNormCard>.fa-stack{grid-row:span 2}
+.ae-card>.fa-stack{flex:1 1 auto;min-height:0}          /* a stack of folds is the card's whole body: the open fold fills it and lays out its own parts */
 #aeNormCard .fa-stack>.fa{align-self:stretch}
+.lv-peak{display:flex;flex-direction:column;justify-content:space-between}
+.lv-peak>.lv-note:empty{display:none}
+.lv-peak:has(>.lv-note:empty)>.lv-target{margin-block:auto}          /* Peak's target under the heading and its note on the last line */
 .fa-stack>.fa>.fa-in{height:calc(100% + 2px);padding:0 4px 2px;margin:0 -4px -2px}          /* the 2px of room for a ring under the controls is not part of the body, so the box ends where its last row does */
 .lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity .3s var(--ease-ui)}
 .lv-target.dim{opacity:.45}
 .lv-target .num{display:inline-flex;align-items:center;gap:6px}
 .lv-target input{width:74px;text-align:right;font-variant-numeric:tabular-nums}
 .lv-target em{font-style:normal;color:var(--muted)}
-.lv-loud{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:start;height:100%}
+.lv-loud{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr auto auto;gap:0 10px;align-items:start;height:100%}
 #audioDlg .lv-loud select{width:100%;min-width:0;height:var(--h-l)}          /* as tall as the number box beside it */
 .lv-trow{height:var(--h-l)}
 .lv-trow input{height:var(--h-l);box-sizing:border-box}
 .lv-noterow,.lv-limrow{grid-column:1/-1}
+.lv-noterow{grid-row:3;margin-bottom:-4px}          /* the note's 16px line holds 12px letters with 4px under the baseline, so the row ends where its letters do */
+.lv-noterow:has(.lv-note:empty){display:none}
+.lv-loud:has(.lv-note:empty){grid-template-rows:1fr auto 1fr auto}
+.lv-loud:has(.lv-note:empty)>:not(.lv-noterow,.lv-limrow){grid-row:2}          /* with no note, the target is the only part: centered */
+.lv-limrow{grid-row:4;margin-top:var(--gap-set)}
 .lv-noterow{display:flex;gap:4px 12px;min-width:0;height:16px}
 .lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;transition:color .3s var(--ease-color)}
 .lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:16px;line-height:16px}
@@ -1731,18 +1722,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-limrow.nudge .switch:not(:checked){animation:lim-nudge 2.2s var(--ease-ui) infinite}
 @media (prefers-reduced-motion:reduce){.lv-note.busy{animation:none}.lv-limrow.nudge .switch:not(:checked){animation:none;box-shadow:inset 0 0 0 1px rgba(128,128,128,.22),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}}
 
-/* Gain: the number sits under the heading and the slider on the foot, two settings' space below the number at least */
-#aeGainBig{align-self:start;margin:0}
-#aeGainField{align-self:end;margin-top:calc(2 * var(--gap-set))}
 
-/* Meter: heading, bar, scale, then the Loudness and Change row on the card's last line, with the spare height above it */
-#aeMeter{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto minmax(0,1fr) auto;row-gap:0}          /* the bar and its scale are one body between two equal spare rows, so the pair is centered between the heading row and the strip's line (--gap-set at the least on each side) */
-#aeMeter>.lv-track{grid-row:3}
+/* Meter: heading, bar, scale, then the Loudness and True peak row on the card's last line, with the spare height above it */
+.lv-meter{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto minmax(0,1fr) auto;row-gap:0}          /* the bar and its scale are one body between two equal spare rows, so the pair is centered between the heading row and the strip's line (--gap-set at the least on each side) */
+.lv-meter>.lv-track{grid-row:3}
 .lv-meter>.lv-scale{grid-row:4;margin-bottom:calc(var(--gap-set) - var(--inset))}
-#aeMeter>.lv-sum{grid-row:6}
-.lv-read{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-end;gap:2px 14px;margin-left:auto;font-size:12.5px;color:var(--muted)}
-.lv-read b{color:var(--ink);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
-.lv-hit{display:inline-block;min-width:64px;text-align:right;cursor:pointer}          /* a fixed width, so the label beside the number keeps its place whatever the number says */
+.lv-meter>.lv-sum{grid-row:6}
+.lv-hit{cursor:pointer}
 .lv-clip{box-sizing:border-box;height:24px;padding:2px 10px;border:0;border-radius:99px;background:var(--bad);color:#fff;font:600 11.5px/18px inherit;font-family:inherit;cursor:pointer;box-shadow:0 0 10px rgba(229,72,77,.55);animation:clippulse 1.2s ease-in-out infinite}
 .lv-clip:not(.on){visibility:hidden;animation:none;pointer-events:none}          /* its place is reserved, so True peak never moves when Clip shows */
 .lv-track{position:relative;height:14px;border-radius:99px;overflow:hidden;background:var(--line)}
@@ -1754,20 +1740,17 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-hold{position:absolute;z-index:3;top:1px;bottom:1px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--ink);opacity:0;box-shadow:0 0 6px rgba(255,255,255,.7);transition:opacity .25s var(--ease-ui)}
 .lv-meter.good .lv-fill{background:var(--ok)}
 .lv-meter.hot .lv-fill{background:var(--bad)}
-.lv-meter.good .lv-read b{color:var(--ok-ink)}
-.lv-meter.hot .lv-read b{color:var(--bad)}
+.lv-meter.good #aePeakNow{color:var(--ok-ink)}
+.lv-meter.hot #aePeakNow{color:var(--bad)}
 .lv-meter.live .lv-fill{transition:background-color .15s var(--ease-color)}
 .lv-meter.live .lv-orig{opacity:.25}
 .lv-scale{position:relative;height:16px;--inset:calc((16px - round(calc(var(--cap) * 11px), 1px)) / 2);margin:calc(var(--gap-head) - var(--inset)) 0 calc(-1 * var(--inset));font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}          /* the 16px line has the same room above its numbers' letters and below them (--inset), which the margins take back: the scale's box ends where its letters do, --gap-label under the bar */
 .lv-scale span{position:absolute;transform:translateX(-50%)}
 .lv-scale span:first-child{transform:none}
 .lv-scale span:last-child{transform:translateX(-100%)}
-#aeSum{grid-template-columns:repeat(2,minmax(0,1fr));align-self:end;margin-top:0;padding-top:9px}          /* Level's strip holds two values, so two even columns; its label sits midway between the divider and the card's bottom edge */
-#aeSum>div{display:flex;align-items:baseline;gap:8px}          /* a label sits beside its value, so the strip is one line tall */
-#aeSum b{margin-top:0}
-@media (min-width:761px){          /* Level needs less than the shared tool height, so its pane takes the window's height and never reaches under the footer */
-  #audioDlg[data-tool=level] #aePaneLevel.ae-pane{height:clamp(330px,var(--ae-body),var(--ae-floor))}
-}
+.lv-meter>.lv-sum{grid-template-columns:repeat(2,minmax(0,1fr));align-self:end;margin-top:0;padding-top:9px}          /* Level's strip holds two values, so two even columns; its label sits midway between the divider and the card's bottom edge */
+.lv-meter>.lv-sum>div{display:flex;align-items:baseline;gap:8px}          /* a label sits beside its value, so the strip is one line tall */
+.lv-meter>.lv-sum b{margin-top:0}
 .ae-card .lv-big,.ae-card .field>.lv-big{margin:0 0 8px}
 
 /* … in loading messages: three dots that bounce one after another */
@@ -2245,7 +2228,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:var(--gap-card);align-items:stretch}
 .em-take{display:flex;flex-wrap:wrap;gap:6px}
 #aeEmChip{width:fit-content}
-@media (min-width:761px){#aePaneEmu:not([hidden]){display:flex;flex-direction:column;height:100%}#aePaneEmu .em-grid{flex:1 1 auto;min-height:0}}
 .em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:var(--h-s)}
 .em-say{min-width:0}
 .em-view{display:flex;flex-direction:column;min-width:0}
@@ -2258,7 +2240,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .em-empty[hidden]{display:none}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
 .ae-procs.ae-apart{margin-top:auto;padding-top:var(--rail-pad);border-top:1px solid var(--hairline)}          /* pinned to the list's bottom at any height; the space from the hairline to the name equals the space from the name to the list's border (the rail's own padding), so the name is centered */
-@media (max-width:760px){.em-grid{grid-template-columns:minmax(0,1fr)}.em-stage{min-height:120px}}
+#audioDlg.head-in-bar .em-grid{grid-template-columns:minmax(0,1fr)}
+#audioDlg.head-in-bar .em-stage{min-height:120px}
 .ae-chain b.bp{background:transparent;color:var(--muted);text-decoration:line-through;box-shadow:inset 0 0 0 1px var(--hairline)}          /* a hairline edge in place of the fill, so the pill still reads on the status bar; same box as the others */
 
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
@@ -2276,6 +2259,11 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-sum small{display:block;margin-top:2px;min-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;--lh:1.3;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){.em-bar i{transition:none}}
 .em-view .lv-sum b,.em-view .lv-sum small{white-space:normal;overflow:visible;text-overflow:clip}
+.lv-sum small:empty{display:none}          /* a line with nothing to say takes no room */
+/* the Emulator's strip keeps one height whether or not its lines have a second row, and its letters sit midway between its line and the card's bottom edge (--gap-set under the line, the rest centered, and the card's own padding below) */
+.em-view>.lv-sum{align-content:center;margin:0;padding:var(--gap-set) 0 0;min-height:65px}
+.em-view>.lv-sum>div{display:grid;row-gap:var(--gap-head)}
+#audioDlg .em-view>.lv-sum :is(span,b,small){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 
 /* Audio Editor control sizes: two heights only. Small (--h-s, 30px) for buttons, the band pill, and the EQ's toolbar and band row; medium (34px) for segmented controls and menus that stand alone. Controls side by side always match */
 #audioDlg .btn.small{min-height:var(--h-s)}
@@ -2289,12 +2277,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .nr-learn{min-height:var(--h-s)}
 #audioDlg .nr-learn .btn,#audioDlg .nr-learn .mt-chip{height:var(--h-s)}
 #audioDlg .seg label{padding-top:0;padding-bottom:0}
-@media (max-width:340px){#aeBassCard{flex-wrap:wrap}#aeBassCard .im-lowf{flex-basis:100%}}          /* Center low notes: at 300px its slider and value go under the switch (wider, the row holds them) */
+@container imager (max-width:256.5px){.im-low{flex-wrap:wrap}.im-low .im-lowf{flex-basis:100%}}          /* Center low notes: at 300px its slider and value go under the switch (wider, the row holds them) */
 @media (max-width:420px){
   .ae-pt .ae-sub{display:none}          /* a tool's one-line description gives way when the window is this narrow, so its heading and buttons have the room */
-  #audioDlg:not(.afull) .eq-band.ae-card{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
-  #audioDlg:not(.afull) .eq-bn{flex-wrap:wrap;row-gap:8px}          /* Band 1, its switch, Listen, and Dynamic go on a second row when one will not hold them */
-  #aeWidthCard .im-head .seg{flex:1 1 100%;width:100%}          /* the Width choice takes its own full-width row under the heading, as Normalize does */
+}
+@container eq (max-width:335.5px){
+  .eq-band.ae-card{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
+  .eq-bn{flex-wrap:wrap;row-gap:8px}          /* Band 1, its switch, Listen, and Dynamic go on a second row when one will not hold them */
+}
+#aePaneImager{container:imager/inline-size}
+@container imager (max-width:335.5px){
+  .im-head .seg{flex:1 1 100%;width:100%}          /* the Width choice takes its own full-width row under the heading, as Normalize does */
+}
+@container spec (max-width:335.5px){
   .sp-seg label span{gap:3px;padding-left:2px;padding-right:2px}
   #spShape svg{display:none}          /* the Box, Band, and Moment words carry the choice; their icons give way at this width */
 }
@@ -2485,7 +2480,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
 #audioDlg .ae-card :is(h4,.field>label>:is(span,output):not(.mt-title),.bal-meter>span,.lv-big){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
-#audioDlg .ae-card .eq-lbl{margin-block:var(--cut-t) var(--cut-b)}
+#audioDlg .ae-card .eq-lbl{height:16px;line-height:16px;margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */
+#audioDlg .ae-card .eq-lbl>*{line-height:16px}
 #audioDlg .ae-tool .ae-tn{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a tool's name in the list is its letters, so the row can be centered by what you see */
 /* a tag after a name: its own element, a pill with the same space on each side of its word */
 .beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:11.5px;font-weight:600;--lh:1;white-space:nowrap}
@@ -2508,18 +2504,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .ae-card>.t-head>h4{min-height:0;font-size:var(--head-fs);margin-inline:0}
 #audioDlg .ae-card>.t-head>:is(.btn,.seg,select,.mt-acts){height:var(--h-s);min-height:0;box-sizing:border-box;margin-block:calc((var(--cap-px) - var(--h-s)) / 2) 0}          /* centered on the middle of the letters: a half of its height above them and below, so the row ends at its lowest edge */
 #audioDlg .ae-card>.t-head>.info-i{margin-block:calc((var(--cap-px) - 18px) / 2)}
-#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.btn,.seg,select,.mt-acts){display:flex;align-items:center;align-content:center;height:var(--cap-px);margin-block:0}          /* anything else on the row (a readout, a key) is as tall as the letters and centered on them */
+#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note,.btn,.seg,select,.mt-acts){display:flex;align-items:center;align-content:center;height:var(--cap-px);margin-block:0}          /* anything else on the row (a readout, a key) is as tall as the letters and centered on them */
 #audioDlg .ae-card>.t-head .mt-n.inl{vertical-align:middle;margin-block:-11px}          /* a step number in a heading never makes the row taller */
 #audioDlg .ae-card>.t-head>.seg label{padding:0}
 #audioDlg .ae-card>.t-head>.seg span{padding:0 10px}
-#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip):not(:not(h4,.info-i,.tip) ~ *){margin-left:auto}          /* the first of them goes to the row's right end; the rest follow it */
+#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note):not(:not(h4,.info-i,.tip,.head-note) ~ *){margin-left:auto}          /* the first of them goes to the row's right end; the rest follow it */
 
 /* the balanced body: the parts between the heading row and the next line (the footer row's line, or the card's bottom edge) keep --card-gap at the least on each side. One part is centered, so its space above and below are equal; several parts spread, the first under the heading and the
    last above the line, and the spare height goes between them. Flex auto margins, so a new card needs no numbers. A collapsed fold and anything out of the flow is not a part, and a collapsed fold takes no gap. */
-#audioDlg .ae-card:not(.on-grid,.own-grid)>:not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)) ~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)),
-#audioDlg .ae-card:not(.on-grid,.own-grid)>:not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)):not(:has(~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)))){margin-top:auto}          /* every part after the first, and a part that is the only one */
-#audioDlg .ae-card:not(.on-grid,.own-grid)>:is(:first-child,.t-head+*):not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)):not(:has(~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open)))){margin-bottom:auto}          /* the only part also has space below it: it is centered */
+#audioDlg .ae-card:not(.on-grid,.own-grid)>:not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack) ~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack),
+#audioDlg .ae-card:not(.on-grid,.own-grid)>:not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack):not(:has(~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack))){margin-top:auto}          /* every part after the first, and a part that is the only one */
+#audioDlg .ae-card:not(.on-grid,.own-grid)>:is(:first-child,.t-head+*):not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack):not(:has(~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack))){margin-bottom:auto}          /* the only part also has space below it: it is centered */
 #audioDlg .ae-card:not(.on-grid,.own-grid)>.fa:not(.open){margin-top:calc(-1 * var(--card-gap))}
+#audioDlg .ae-card:not(.on-grid,.own-grid)>.fa-stack:not(:has(>.fa.open)){margin-top:calc(-1 * var(--card-gap))}          /* a stack with no fold open holds nothing, so it takes no gap either */
 #audioDlg .ae-card:not(.on-grid,.own-grid)>.foot-row{margin-top:0}          /* the line above the footer is where the body's spare height ends */
 
 /* the column rule: stacked cards share their column, declared once by each tool grid (never a height on a card). Two control cards share it evenly; a control card over a list or a picture takes a third; a card is never shorter than its content (the minimum of a track is its content) */
@@ -2535,6 +2532,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 
 /* scales: the numbers under a slider start --gap-set under its thumb (the input is 20px tall around an 18px thumb) */
 #audioDlg .sl-ends{margin-top:var(--gap-set)}
+.sl-end.tick{font-weight:600}
 #audioDlg .field:has(>.sl-ends){row-gap:0}
 
 /* ==================== 20. SPACING AND SMALL TEXT: the tokens in :root, the title block, and the three small-text roles ====================
@@ -2553,7 +2551,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .t-head{margin:0 0 var(--gap-head)}
 .dlg>.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a control in a window sits --gap-label under it, not a whole window gap */
 .pg>.field{margin-bottom:0}
-.em-view>.t-note{margin-top:calc(var(--gap-label) - var(--gap-set))}
 .eq-bn .eq-lbl{justify-content:flex-start;gap:var(--gap-label)}          /* "Band 1" reads as one label, left-aligned like the others */
 
 /* Narrow layout (760px and under): the tool bar is the tool's heading, with Match gain and Bypass on its line; the pane's own title row goes */
@@ -2596,8 +2593,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
   #audioDlg:not(.afull) #aeSilence .ae-ic{display:block;width:16px;height:16px}
   #audioDlg:not(.afull) #aeSilence{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
 }
-#aeSum>div{flex-wrap:wrap;column-gap:8px;row-gap:0}          /* where a column is too narrow for its label and value side by side, the value goes under its label instead of being cut off */
-#aeSum b{flex:none;overflow:visible;text-overflow:clip}
+.lv-meter>.lv-sum>div{flex-wrap:wrap;column-gap:8px;row-gap:0}          /* where a column is too narrow for its label and value side by side, the value goes under its label instead of being cut off */
+.lv-meter>.lv-sum b{flex:none;overflow:visible;text-overflow:clip}
 @media (max-width:360px){#audioDlg:not(.afull) .ae-times{display:none}}          /* on the narrowest phones the transport keeps Play, Wave | Spec, Trim silence, and Full screen; the start and end times give way */
 @media (max-width:560px){#audioDlg:not(.afull) .ae-times span{display:block;white-space:nowrap}#audioDlg:not(.afull) .ae-times b{display:inline}}
 @media (max-width:760px){#audioDlg:not(.afull) .ae-bar{gap:6px}#audioDlg:not(.afull) .ae-times{flex:none}}

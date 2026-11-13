@@ -57,6 +57,8 @@ const url = '/index.html?disk=0', base = () => 'http://localhost:' + (process.en
     // every tool subtitle
     const subs = await p.evaluate(async () => { const out = {}; for (const t of ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu']) { aeTool(t); await sleep(650); out[t] = document.querySelector('#aePaneSub').textContent; } return out; });
     chk(tag, 'every Audio Editor subtitle is the short command from the spec', Object.keys(SUBS).every(k => subs[k] === SUBS[k]), JSON.stringify(subs));
+    const clr = await p.evaluate(async () => { aeTool('spec'); await sleep(650); const b = document.querySelector('#spClear'); return { text: b.textContent.trim(), any: /Clear all/.test(document.querySelector('#audioDlg').innerText) }; });
+    chk(tag, 'Spectra\'s button reads Clear, and "Clear all" appears nowhere', clr.text === 'Clear' && !clr.any, JSON.stringify(clr));
     if (tag.startsWith('1440x900') || narrow) {
       // the cable runs from In to Out only; Noise reduction and Spectra are lit and have no cable
       const cab = await p.evaluate(async () => {

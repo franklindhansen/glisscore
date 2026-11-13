@@ -2,6 +2,7 @@
 // without touching the settings or what is exported. In memory and on the disk store.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-eq-bands.js [folder for screenshots]
 const { chromium } = require('playwright-core');
+const { install } = require('./lib/measure.js');
 const FX = process.env.S || 'tests/fixtures', shots = process.argv[2];
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 (async () => {
@@ -39,6 +40,14 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok(tag + 'Listen changes only what plays: off in another tool, off again on a second press, playback carries on', r.otherTool && r.off && r.playing1 && r.playing2, JSON.stringify([r.otherTool, r.off, r.playing1, r.playing2]));
     ok(tag + 'no page errors', !errs.length, errs.join('; '));
     if (shots && disk) for (const [w, name] of [[1300, 'wide'], [760, 'narrow']]) { await p.setViewportSize({ width: w, height: 900 }); await p.waitForTimeout(500); for (const [i, kind] of [[0, 'bell'], [1, 'cut']]) { await p.evaluate(k => { AE.band = k; AE.eqListen = k === 1; aeEqPanel(); }, i); await p.waitForTimeout(300); await (await p.$('#aeEqBand')).screenshot({ path: shots + '/eqband-' + name + '-' + kind + '.png' }); } }
+    // the graph and its tools are one card; the band row's labels share one line and its controls one center line
+    await p.setViewportSize({ width: 1440, height: 900 }); await p.waitForTimeout(500); await p.evaluate(() => { aeTool('eq'); AE.band = 0; aeEqPanel(); }); await p.waitForTimeout(500); await p.evaluate(install);
+    const lay = await p.evaluate(() => { const mk = window.__mk, R = mk.R, near = (a, b) => Math.abs(a - b) <= 0.5, card = document.querySelector('.eq-main'), cs = getComputedStyle(card), top = card.querySelector('.eq-top'), stage = card.querySelector('.eq-stage'), cv = stage.querySelector('canvas'), inner = { t: R(card).top + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop), l: R(card).left + parseFloat(cs.borderLeftWidth), r: R(card).right - parseFloat(cs.borderRightWidth), b: R(card).bottom - parseFloat(cs.borderBottomWidth) };
+      const one = { holds: card.contains(document.querySelector('#aeEqPreset')) && card.contains(document.querySelector('#aeAutoBtn')) && card.contains(document.querySelector('#aeMatchBtn')) && card.contains(cv), above: R(top).top - inner.t, pad: parseFloat(cs.paddingTop), below: R(stage).top - R(top).bottom, edgeToEdge: near(R(stage).left, inner.l) && near(R(stage).right, inner.r), toBottom: near(R(stage).bottom, inner.b), frame: ['Top', 'Right', 'Bottom', 'Left'].some(x => parseFloat(getComputedStyle(cv)['border' + x + 'Width']) > 0), info: card.querySelectorAll('.info-i, .eq-tipwrap').length, band: card.querySelector('#aeEqBand') };
+      const cells = [...document.querySelectorAll('#aeEqBand > .eq-cell')].filter(e => mk.shown(e)), labs = cells.map(c => mk.letters(c.querySelector('.eq-lbl')).base), ctls = cells.flatMap(c => [...c.querySelectorAll('.eq-ctl > *')].filter(e => mk.shown(e)).map(e => { if (e.matches('input[type=range]')) { const t = mk.thumb(e); return (t.top + t.bottom) / 2; } const r = R(e); return (r.top + r.bottom) / 2; }));
+      return { one, n: cells.length, labs, ctls }; });
+    ok(tag + 'EQ: one card holds the tools and the graph, 12px above the tools and 12px below, the graph edge to edge with no frame of its own, and no (i) after Auto gain', lay.one.holds && !lay.one.band && Math.abs(lay.one.above) <= 0.5 && lay.one.pad === 12 && Math.abs(lay.one.below - 12) <= 0.5 && lay.one.edgeToEdge && lay.one.toBottom && !lay.one.frame && lay.one.info === 0, JSON.stringify(lay.one));
+    ok(tag + 'EQ band row: every label shares one line (0.5px) and every control one center line (0.5px)', lay.n >= 5 && Math.max(...lay.labs) - Math.min(...lay.labs) <= 0.5 && Math.max(...lay.ctls) - Math.min(...lay.ctls) <= 0.5, JSON.stringify({ n: lay.n, labs: lay.labs.map(v => +v.toFixed(2)), ctls: lay.ctls.map(v => +v.toFixed(2)) }));
     await p.close();
   }
   await b.close();

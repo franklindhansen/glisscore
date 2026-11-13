@@ -1040,16 +1040,13 @@ function fxWaitRun() {
 /* the largest true peak the Peak target would have to lift, over the part you keep */
 function aePeakMax(d) { const pk = aeLevelPeaks(d), from = Math.max(0, d.vStart), to = Math.min(aeEnd(d), S.audio.duration), i0 = Math.max(0, Math.floor(from * 100)), i1 = Math.min(pk.length - 1, Math.ceil(to * 100)); let mx = 0; for (let i = i0; i <= i1; i++) if (pk[i] > mx) mx = pk[i]; return mx; }
 const DB_TXT = v => isFinite(v) ? (v >= 0.05 ? '+' : '') + v.toFixed(1).replace('-', '−') + 'dB' : '—';
-const CHG_TXT = v => Math.abs(v) < 0.05 ? '0.0dB' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + 'dB';
 /* the Level summary: the loudness, the peak and the net change, as the sound is now (the change is the gain applied) */
 function aeSummary(d) {
   const s = AE.sumIn; if (!s) return; const mr = AE.meas || {}, hd = aeHeard(d);
   const m = loudPeek(hd), li = limOn(hd) ? limPeek(hd) : null, loud = li && isFinite(li.I) ? li.I : m && isFinite(m.I) ? m.I + s.gdBnow : null;
   const loudH = s.busy ? '…' : loud != null ? LUFS_TXT(loud) : mr.after != null ? 'Processing ' + Math.round(mr.after * 100) + '%' : '…';
-  const chg = s.busy ? '…' : CHG_TXT(s.gdBnow);
-  const L = $('#aeSumLoud'), C = $('#aeSumChg');
+  const L = $('#aeSumLoud');
   if (L._h !== loudH) { L._h = loudH; L.textContent = loudH; }
-  if (C._h !== chg) { C._h = chg; C.textContent = chg; }
 }
 /* ---------------- Limiter ----------------
    Keeps the sound under a ceiling without clipping it. It looks 5ms ahead, works out how much each moment must come down to stay under the ceiling (counting the peaks that fall between two samples),
@@ -1601,7 +1598,7 @@ function eqDisp(real) {
 function aeEqDraw() {
   const cv = $('#aeEqCv'); if (!AE.d || $('#aePaneEq').hidden || !aeCvSize(cv)) return;
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, real = AE.d.fx.eq.bands, bands = eqDisp(real), on = AE.d.fx.eq.on;
-  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
+  c.clearRect(0, 0, W, H); c.fillStyle = C.panel2; c.fillRect(0, 0, W, H); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fillRect(0, 0, W, H); c.restore();          // no frame of its own: the card's line is the only one
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
   c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted;
   [-9, -6, -3, 3, 6, 9].forEach(g => { c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(EQ_PAD, Math.round(eqY(g, H)), W - 2 * EQ_PAD, 1); });
@@ -1797,16 +1794,15 @@ function aeImPanel() {
   $('#aeWvAll').classList.toggle('off', bandsOn); $('#aeWvBands').classList.toggle('off', !bandsOn);
   $('#aeMonoBass').checked = im.monoBass > 0; if (im.monoBass > 0) aeSlide(f, im.monoBass); $('#aeMonoBassVal').textContent = (im.monoBass > 0 ? im.monoBass : f.value) + 'Hz';
   $('#aeMonoBassField').classList.toggle('dim', !(im.monoBass > 0)); f.disabled = !(im.monoBass > 0);
-  const bl = im.bal || 0; aeSlide($('#aeBal'), bl); $('#aeBalVal').textContent = Math.abs(bl) < 0.05 ? 'No shift' : Math.abs(bl).toFixed(1) + 'dB ' + (bl > 0 ? 'right' : 'left');
-  const m = mono ? null : imMeasure(), lr = $('#aeLR'), ab = $('#aeBalAuto'), say = $('#aeBalSay'); lr.classList.toggle('none', !m);
+  const bl = im.bal || 0; aeSlide($('#aeBal'), bl); $('#aeBalVal').textContent = Math.abs(bl) < 0.05 ? '' : Math.abs(bl).toFixed(1) + 'dB ' + (bl > 0 ? 'right' : 'left');
+  const m = mono ? null : imMeasure(), lr = $('#aeLR'), ab = $('#aeBalAuto'); lr.classList.toggle('none', !m);
   if (m) {          // d0 is left minus right in dB (positive = left louder). A shift to the right takes that many dB off the difference, so Auto sets the shift to d0.
     const d0 = m.db, target = Math.round(clamp(d0, -12, 12) * 10) / 10, auto = Math.abs(d0) >= 0.05 && Math.abs(bl - target) < 0.06, nl = m.ldb - bl / 2, nr = m.rdb + bl / 2, diff = nl - nr, even = Math.abs(diff) < 0.25;
     const ref = Math.max(nl, nr), pct = v => clamp((v - (ref - 6)) / 6, 0, 1) * 100, dbf = v => v.toFixed(1).replace('-', '−') + 'dB';          // the louder side fills its bar; a side 6dB down shows empty
     $('#aeBalLb').style.width = pct(nl) + '%'; $('#aeBalRb').style.width = pct(nr) + '%';
     $('#aeBalL').textContent = dbf(nl); $('#aeBalR').textContent = dbf(nr); lr.classList.toggle('even', even);
-    say.textContent = even ? 'Even' : (diff > 0 ? 'Left' : 'Right') + ' louder by ' + Math.abs(diff).toFixed(1) + 'dB'; say.classList.toggle('even', even);
     ab.setAttribute('aria-pressed', auto);
-  } else { say.textContent = ''; say.classList.remove('even'); ab.setAttribute('aria-pressed', 'false'); ['#aeBalL', '#aeBalR'].forEach(i => { $(i).textContent = ''; }); }
+  } else { ab.setAttribute('aria-pressed', 'false'); ['#aeBalL', '#aeBalR'].forEach(i => { $(i).textContent = ''; }); }
   [w, $('#aeMonoBass'), f, $('#aeBal'), $('#aeBalAuto'), $('#aeBwLo'), $('#aeBwMid'), $('#aeBwHi')].forEach(el => { el.disabled = mono || (el === f && !(im.monoBass > 0)); });
   $('#aeWidthCard').classList.toggle('dim', mono); $('#aeBalCard').classList.toggle('dim', mono);
   document.querySelectorAll('input[name=aeListen]').forEach(x => { x.disabled = mono; x.checked = x.value === (AE.imListen || ''); }); const lsg = $('#aeListen'); if (lsg._place) lsg._place(false);
@@ -1831,7 +1827,7 @@ function aeScopeDraw() {
   c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); c.strokeStyle = C.hairline; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
   c.fillStyle = C.muted; c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('Mono', cx, cy - R - 8); c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
+  c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
   if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
   aePill(c, W, hsGet('ae-by', aeBy()));
   if (!AE.an || !AE.playing) return;

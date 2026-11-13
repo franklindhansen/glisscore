@@ -21,6 +21,7 @@ const STATES = {
   'fades idle': ['fades', null],
   'level off': ['level', null],
   'emu idle': ['emu', null],
+  'eq idle': ['eq', null],
   'noise selected': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); }],
   'noise learning': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); const l = document.querySelector('#aeNrLearn'); l.disabled = true; l.classList.add('loading'); l.style.setProperty('--p', '60%'); l.textContent = 'Processing 60%'; await sleep(300); }],
   'noise short': ['noise', null, async p => { await p.click('#aeNrHand'); const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(), t = t => r.left + aeX(t); return { y: r.top + r.height / 2, a: t(1.8), z: t(2.0) }; }); await p.mouse.move(g.a, g.y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(g.a + (g.z - g.a) * i / 8, g.y); await p.mouse.up(); await p.waitForTimeout(300); }],
@@ -49,6 +50,12 @@ const TABLE = {
     ['top:ae-card.sp-card.sp-lcard', 442, 438],
     ['bottom:ae-card.sp-card.sp-lcard', 656, 656],
     ['head:EDITS', 462, 458.98]
+  ],
+  'eq idle': [
+    ['top:ae-card.eq-main.own-grid', 318, 318],
+    ['bottom:ae-card.eq-main.own-grid', 553, 577],
+    ['top:aeEqBand', 564, 587],
+    ['bottom:aeEqBand', 656, 656]
   ],
   'imager overall': [
     ['top:aeWidthCard', 318, 318],
