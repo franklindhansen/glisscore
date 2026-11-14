@@ -3,22 +3,26 @@
 //   node tests/probe.js --open audio --tool imager --run "document.querySelector('.im-scope').getBoundingClientRect().height"
 //   node tests/probe.js --open pdf --tool crop --dark --shot /tmp/crop.png --sel '#pdfDlg .dlg'
 // Options: --size WxH (1280x800)  --audio FILE (loud.mp3)  --pdf FILE (score.pdf)  --open audio|pdf  --tool NAME  --dark
-//          --wait MS (800)  --run EXPR  --run-file FILE  --shot FILE  --sel SELECTOR (the open dialog, else the page)
+//          --browser chromium|firefox|webkit (chromium)  --disk 1 (use the disk store for long files; off by default here)  --init FILE (a script to run before the page)  --sizes WxH,WxH (resize the window in steps before --run)  --wait MS (800)  --run EXPR  --run-file FILE  --shot FILE  --sel SELECTOR (the open dialog, else the page)
 // FILE for --audio and --pdf is a name in tests/fixtures or a path. --run prints the expression's value as JSON; it may be async.
 const fs = require('fs'), path = require('path');
 module.paths.push(path.join(process.env.HOME || '', 'keyframes-tests/node_modules'));
-const { chromium } = require('playwright-core');
+const { chromium, firefox, webkit } = require(process.env.PW_CORE || 'playwright-core');
 const ROOT = path.join(__dirname, '..'), FIX = path.join(ROOT, process.env.S || 'tests/fixtures');
 const TYPES = { html: 'text/html', js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', png: 'image/png', ico: 'image/x-icon', woff2: 'font/woff2', json: 'application/json', mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', pdf: 'application/pdf', wasm: 'application/wasm' };
 const a = { size: '1280x800', audio: 'loud.mp3', pdf: 'score.pdf', wait: '800' }, argv = process.argv.slice(2);
 for (let i = 0; i < argv.length; i++) { const k = argv[i].replace(/^--/, ''); if (k === 'help') { console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(0, 8).join('\n')); process.exit(0); } if (k === 'dark') a.dark = true; else a[k.replace(/-(\w)/g, (m, c) => c.toUpperCase())] = argv[++i]; }
+// Firefox: use the newest Firefox build that Playwright installed (the one named in the library's own list may be missing or too old for this Mac)
+const launch = async kind => { if (kind !== 'firefox') return ({ chromium, webkit }[kind]).launch(); const dir = path.join(process.env.HOME || '', 'Library/Caches/ms-playwright'), v = fs.readdirSync(dir).filter(n => /^firefox-\d+$/.test(n)).sort((x, y) => x.slice(8) - y.slice(8)).pop();
+  return firefox.launch({ executablePath: path.join(dir, v, 'firefox/Nightly.app/Contents/MacOS/firefox') }); };
 const file = n => fs.existsSync(n) ? path.resolve(n) : path.join(FIX, n);
 (async () => {
-  const [w, h] = a.size.split('x').map(Number), b = await chromium.launch();
+  const [w, h] = a.size.split('x').map(Number), b = await launch(a.browser || 'chromium');
   const p = await b.newPage({ viewport: { width: w, height: h }, colorScheme: a.dark ? 'dark' : 'light' }); p.setDefaultTimeout(60000);
   p.on('pageerror', e => console.error('page error: ' + e.message));
   await p.route('http://localhost:8123/**', r => { const f = path.join(ROOT, decodeURIComponent(new URL(r.request().url()).pathname)); try { r.fulfill({ body: fs.readFileSync(f), contentType: TYPES[f.split('.').pop()] || 'application/octet-stream' }); } catch (e) { r.fulfill({ status: 404, body: '' }); } });
-  await p.goto('http://localhost:8123/index.html?disk=0');
+  if (a.init) await p.addInitScript({ content: fs.readFileSync(a.init, 'utf8') });
+  await p.goto('http://localhost:8123/index.html?disk=' + (a.disk || '0'));
   if (a.dark) await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
   const wait = +a.wait;
   if (a.open === 'pdf' || argv.includes('--pdf')) { await p.setInputFiles('#pdfIn', file(a.pdf)); await p.waitForTimeout(2000); }
@@ -26,6 +30,7 @@ const file = n => fs.existsSync(n) ? path.resolve(n) : path.join(FIX, n);
   if (a.open === 'audio') { await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500); if (a.tool) await p.evaluate(t => aeTool(t), a.tool); }
   if (a.open === 'pdf') { await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(1500); if (a.tool) await p.evaluate(t => peTool(t), a.tool); }
   await p.waitForTimeout(wait);
+  for (const z of (a.sizes || '').split(',').filter(Boolean)) { const [zw, zh] = z.split('x').map(Number); await p.setViewportSize({ width: zw, height: zh }); await p.waitForTimeout(500); }
   const code = a.runFile ? fs.readFileSync(a.runFile, 'utf8') : a.run;
   if (code) console.log(JSON.stringify(await p.evaluate(c => (0, eval)('(async () => (' + c + '\n))()'), code), null, 1));
   if (a.shot) { const sel = a.sel || (a.open === 'audio' ? '#audioDlg .dlg' : a.open === 'pdf' ? '#pdfDlg .dlg' : null); if (sel) await p.locator(sel).first().screenshot({ path: a.shot }); else await p.screenshot({ path: a.shot }); console.log('saved ' + a.shot); }

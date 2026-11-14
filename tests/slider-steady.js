@@ -28,6 +28,16 @@ const sweep = async (p, scope) => p.evaluate(async scope => {
       await p.click('input[name=aeWidthMode][value=bands]', { force: true }); await p.waitForTimeout(700); const r2 = await sweep(p, '#audioDlg'); total += r2.length; for (const s of r2) ok('Audio Editor imager (Frequency): ' + s.id + ' holds still', !s.moved, s.seen); await p.click('input[name=aeWidthMode][value=all]', { force: true }); await p.waitForTimeout(500); continue; }
     const r = await sweep(p, '#audioDlg'); total += r.length; for (const s of r) ok('Audio Editor ' + t + ': ' + s.id + ' holds still', !s.moved, s.seen);
   }
+  // sliders that only show in a state the default view does not open: Noise reduction's folded Sensitivity and Smoothing, Spectra's Reduce by, EQ's Dynamic Threshold and Range, and EQ Match's Amount
+  const opened = [];
+  const inState = async (label, tool, setup, ids) => { await p.evaluate(t => aeTool(t), tool); await p.waitForTimeout(700); await setup(); await p.waitForTimeout(900);
+    const r = (await sweep(p, '#audioDlg')).filter(s => ids.includes(s.id)); total += r.length; opened.push(...r.map(s => s.id));
+    ok('Audio Editor ' + label + ': the sliders were reached (' + ids.join(', ') + ')', r.length === ids.length, r.map(s => s.id).join(', '));
+    for (const s of r) ok('Audio Editor ' + label + ': ' + s.id + ' holds still', !s.moved, s.seen); };
+  await inState('Noise reduction (fold open)', 'noise', () => p.evaluate(() => foldSet('#aeNrSub', true)), ['aeNrSens', 'aeNrSmooth']);
+  await inState('Spectra (Reduce by showing)', 'spec', () => p.evaluate(() => foldSet('#spAmtF', true)), ['spAmt']);
+  await inState('EQ (Dynamic band)', 'eq', () => p.evaluate(() => { foldSet('#aeBandDynFold', true); }), ['aeBandThr', 'aeBandRange']);
+  await inState('EQ Match (reference loaded)', 'eq', async () => { await p.click('#aeMatchBtn'); await p.waitForTimeout(600); await p.setInputFiles('#aeRefIn', FIX + '/loud.mp3'); await p.waitForFunction(() => AE.match && AE.match.ref); }, ['aeMatchAmt']);
   await p.evaluate(() => closeAudioEditor()); await p.waitForTimeout(500); await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(1500);
   for (const t of ['pages', 'clean', 'skew', 'crop', 'dim', 'split', 'resize', 'wm']) { await p.evaluate(t => peTool(t), t); await p.waitForTimeout(700); const r = await sweep(p, '#pdfDlg'); total += r.length; for (const s of r) ok('PDF Editor ' + t + ': ' + s.id + ' holds still', !s.moved, s.seen); }
   ok('the sweep reached the sliders (an empty sweep proves nothing)', total >= 14, total + ' sliders measured');
