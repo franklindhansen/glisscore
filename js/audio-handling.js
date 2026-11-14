@@ -456,7 +456,9 @@ const DISK = {
       const cat = pl.map((x, c) => { const h = held[c], o = new Float32Array(h.length + n - from); o.set(h); o.set(x.subarray(from, n), h.length); return o; }), len = cat[0].length, rel = Math.max(0, len - trim);
       if (rel) add(cat, 0, rel); for (let c = 0; c < ch; c++) held[c] = cat[c].slice(rel);
     };
-    const dec = new AudioDecoder({ output: a => { try { push(audioDataChannels(a), a.numberOfFrames); } catch (e) { err = err || e; } a.close(); }, error: e => { err = e; } });
+    let firstOut = true;
+    // some decoders (Safari's) hand back the first piece without their own 529-sample start delay (it comes out shorter than a full frame); the cut above assumes the delay is still in, so the start gives back what the decoder already took and the end cuts the same amount more (the decoder's last piece still carries its tail)
+    const dec = new AudioDecoder({ output: a => { try { if (firstOut) { firstOut = false; if (lame && a.numberOfFrames < spf) { const give = Math.min(529, spf - a.numberOfFrames, skip); skip -= give; trim += give; } } push(audioDataChannels(a), a.numberOfFrames); } catch (e) { err = err || e; } a.close(); }, error: e => { err = e; } });
     token = (await this.call('create', { key, name: file.name, sr, ch, piece: opt.piece })).token;
     try {
       dec.configure({ codec: 'mp3', sampleRate: sr, numberOfChannels: ch });

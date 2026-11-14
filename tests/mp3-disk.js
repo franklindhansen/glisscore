@@ -25,6 +25,18 @@ const cases = [
     ok(name + ': same rate, channels and length as the one-shot decoder', dsk.disk && dsk.sr === mem.sr && dsk.ch === mem.ch && Math.abs(dsk.len - mem.len) <= 1, JSON.stringify({ mem: [mem.sr, mem.ch, mem.len], disk: [dsk.sr, dsk.ch, dsk.len] }));
     ok(name + ': the samples line up with it', dsk.disk && worst < 2e-4, 'worst ' + worst.toExponential(2));
   }
+  // a decoder that already takes off its own 529-sample start delay and returns its first piece short (Safari's does): the sound on the store must be the same as with a decoder that does not
+  { const nm = 'safari-like.mp3'; sh(`ffmpeg -v error -y ${cases[0][1]} ${path.join(tmp, nm)}`);
+    const grab = async page => { await page.setInputFiles('#audioIn', path.join(tmp, nm)); await page.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 90000 }); await page.waitForTimeout(300);
+      return page.evaluate(async () => S.audio.disk ? { len: DISK.meta.frames, a: Array.from((await DISK.read(0, 3000)).chans[0]), b: Array.from((await DISK.read(DISK.meta.frames - 3000, 3000)).chans[0]) } : null); };
+    const normal = await grab(await open(1)), q = await br.newPage(); q.setDefaultTimeout(90000); q.on('pageerror', e => errs.push(e.message));
+    // like Safari's: the first piece comes back 529 frames short, and the decoder's last piece (after flush) carries 529 more frames than a decoder that keeps its delay
+    await q.addInitScript(() => { const AD = window.AudioDecoder; window.AudioDecoder = class extends AD { constructor(o) { let first = true, info = null; super({ ...o, output: a => { info = { ch: a.numberOfChannels, sr: a.sampleRate, ts: a.timestamp }; if (!first) return o.output(a); first = false; const n = a.numberOfFrames - 529, ch = a.numberOfChannels, buf = new Float32Array(n * ch);
+      for (let c = 0; c < ch; c++) a.copyTo(buf.subarray(c * n, (c + 1) * n), { planeIndex: c, frameOffset: 529, format: 'f32-planar' }); const out = new AudioData({ format: 'f32-planar', sampleRate: a.sampleRate, numberOfFrames: n, numberOfChannels: ch, timestamp: a.timestamp, data: buf }); a.close(); o.output(out); } }); this.__tail = () => { if (info) o.output(new AudioData({ format: 'f32-planar', sampleRate: info.sr, numberOfFrames: 529, numberOfChannels: info.ch, timestamp: info.ts, data: new Float32Array(529 * info.ch) })); }; }
+      async flush() { await super.flush(); this.__tail(); } }; });
+    await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=1'); const like = await grab(q);
+    let wa = 0, wb = 0; if (normal && like) for (let i = 0; i < 3000; i++) { wa = Math.max(wa, Math.abs(normal.a[i] - like.a[i])); wb = Math.max(wb, Math.abs(normal.b[i] - like.b[i])); }
+    ok('a decoder that already took off its own start delay: the same length and the same sound at the start and the end', !!normal && !!like && normal.len === like.len && wa < 2e-4 && wb < 2e-4, JSON.stringify({ len: [normal && normal.len, like && like.len], startWorst: wa, endWorst: wb })); }
   // odd files: a tag after the last frame, and a file cut short
   { const whole = fs.readFileSync(path.join(tmp, 'm0.mp3')); const v = { 'with an ID3v1 tag after the last frame': Buffer.concat([whole, Buffer.from('TAG' + 'x'.repeat(125))]), 'cut short in the middle of a frame': whole.subarray(0, whole.length - 5003) };
     for (const [name, buf] of Object.entries(v)) { const nm = 'odd' + (n++) + '.mp3'; fs.writeFileSync(path.join(tmp, nm), buf);
