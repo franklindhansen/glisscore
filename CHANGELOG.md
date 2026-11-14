@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.10
+
+Noise reduction now picks its method with an Auto or Manual choice, with Learn doing the work for either. Remove hum and Output noise are simple switches, and Sensitivity and Smoothing are tidier.
+
 ## 1.2.9
 
 In now sits above Noise reduction, so the whole chain reads from In to Out, and the cable plugs into Noise reduction and Spectra like every other tool. The idle message now reads "No processing."
