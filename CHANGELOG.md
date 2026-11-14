@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.9
+
+In now sits above Noise reduction, so the whole chain reads from In to Out, and the cable plugs into Noise reduction and Spectra like every other tool. The idle message now reads "No processing."
+
 ## 1.2.8
 
 The Audio Editor moves more consistently: fades, slides, and the Imager's Overall and Frequency switch now share the same timing and feel.
