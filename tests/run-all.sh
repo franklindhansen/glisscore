@@ -25,7 +25,7 @@ if [ -n "$1" ]; then want=(); for a in "$@"; do if [ -f tests/$a.js ]; then want
 cat > $RES/one.sh <<'EOS'
 zmodload zsh/datetime
 t0=$EPOCHREALTIME
-out=$(node tests/$1.js 2>&1); code=$?
+out=$(nice -n 10 node tests/$1.js 2>&1); code=$?          # the checks (and their browsers) run at a lower priority than the server, so it always has time to accept the browsers' first connections when many start at once
 p=$(print -r -- "$out" | grep -c '^PASS'); f=$(print -r -- "$out" | grep -c '^FAIL')
 [ $code -ne 0 ] && f=$((f + 1))
 sec=$(printf '%.1f' $((EPOCHREALTIME - t0)))
