@@ -2206,13 +2206,14 @@ function aeMove(tool, dir) {
   const o = AE.d.fx.order, i = o.indexOf(tool), j = i + dir; if (i < 0 || j < 0 || j >= o.length) return false;
   aeFx(fx => { const t = fx.order[i]; fx.order[i] = fx.order[j]; fx.order[j] = t; }); edSay('ae', 'order'); return true;
 }
-function aeHeadPlace() {          // 760px and under, Match gain and Bypass sit on the tool heading's own line (the tool bar); wider, they stay in the pane's head
-  const narrow = matchMedia('(max-width: 760px)').matches, abs = $('#aeHead .ae-abs, .ae-rail-bar .ae-abs'), bar = $('.ae-rail-bar');
+const aeNarrow = () => getComputedStyle($('#aeWin')).getPropertyValue('--ae-narrow').trim() === '1';          // the dialog is in the narrow layout: the style sheet's container rule says so (one place for the width), so the script never repeats the number
+function aeHeadPlace() {          // in the narrow layout, Match gain and Bypass sit on the tool heading's own line (the tool bar); wider, they stay in the pane's head
+  const narrow = aeNarrow(), abs = $('#aeHead .ae-abs, .ae-rail-bar .ae-abs'), bar = $('.ae-rail-bar');
   if (!abs) return; if (narrow && abs.parentNode !== bar) bar.appendChild(abs); else if (!narrow && abs.parentNode === bar) $('#aeHead').appendChild(abs);
   $('#audioDlg').classList.toggle('head-in-bar', narrow);
 }
 function aeToolsBind() {
-  aeHeadPlace(); matchMedia('(max-width: 760px)').addEventListener('change', aeHeadPlace);
+  aeHeadPlace(); new ResizeObserver(aeHeadPlace).observe($('#audioDlg'));
   document.querySelectorAll('#aeRail .ae-tool').forEach(b => b.addEventListener('click', () => aeTool(b.dataset.tool)));
   $('#aeRailCur').addEventListener('click', () => aeRailOpen(!$('#aeRail').classList.contains('open')));
   $('#aeAB').addEventListener('click', aeToggleBypass);
@@ -2813,7 +2814,7 @@ function aeBind() {
 }
 /* full screen for the Audio Editor: the picture fills the screen and everything else floats over it as frosted glass */
 function aeFsApply(on) {
-  const dlg = $('#audioDlg'); AE.full = on; dlg.classList.toggle('afull', on); { const small = on && window.innerWidth <= 760; dlg.classList.toggle('dock-off', small); $('#aeDock').setAttribute('aria-pressed', !small); } $('#aeDock').classList.toggle('gone', !on);
+  const dlg = $('#audioDlg'); AE.full = on; dlg.classList.toggle('afull', on); { const small = on && aeNarrow(); dlg.classList.toggle('dock-off', small); $('#aeDock').setAttribute('aria-pressed', !small); } $('#aeDock').classList.toggle('gone', !on);
   $('#aeFull').setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); $('#aeFull').title = (on ? 'Exit full screen' : 'Full screen') + ' (F)';
   $('#aeFull').innerHTML = on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
@@ -2834,7 +2835,7 @@ function aeFsEase(p) {          // AE_FS_EASE as a function of time
 }
 function aeFsTarget(dlg, box, wave, on) {          // where the window and picture belong in the other layout, measured without drawing it
   const was = dlg.className, wt = wave.style.top, wb = wave.style.bottom, dock = $('#aeDock'), gone = dock.classList.contains('gone'); dock.classList.toggle('gone', !on);          // the Tools button is part of the full screen bar
-  if (on) { dlg.classList.add('afull'); dlg.classList.toggle('dock-off', window.innerWidth <= 760); aeFsLayout(true); aeFsLayout(true); } else { dlg.classList.remove('afull', 'dock-off'); wave.style.top = wave.style.bottom = ''; }
+  if (on) { dlg.classList.add('afull'); dlg.classList.toggle('dock-off', aeNarrow()); aeFsLayout(true); aeFsLayout(true); } else { dlg.classList.remove('afull', 'dock-off'); wave.style.top = wave.style.bottom = ''; }
   const g = aeFsGeo(box, wave); dlg.className = was; wave.style.top = wt; wave.style.bottom = wb; dock.classList.toggle('gone', gone); return g;
 }
 function aeFs(on, instant) {
@@ -2873,7 +2874,7 @@ function aeFs(on, instant) {
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (typeof aeAlignView === 'function') aeAlignView(); });
 function aeAlignView() {
   const sg = $('#aeView'), w = $('#aeWin'); if (!sg || !w || $('#audioDlg').hidden) return; sg.style.marginLeft = '0px';
-  if (window.innerWidth <= 760 || !w.offsetWidth || $('#audioDlg').classList.contains('dock-off')) return;          // Wave | Spec starts exactly where the tool window below it starts
+  if (aeNarrow() || !w.offsetWidth || $('#audioDlg').classList.contains('dock-off')) return;          // Wave | Spec starts exactly where the tool window below it starts
   const dl = $('#audioDlg .dlg'), k = dl && dl.offsetWidth ? dl.getBoundingClientRect().width / dl.offsetWidth : 1, dx = (w.getBoundingClientRect().left - sg.getBoundingClientRect().left) / (k || 1); if (dx > 0 && dx < 400) sg.style.marginLeft = Math.round(dx) + 'px';          // measured without the opening zoom
 }
 function aeFsLayout(force) {          // force: measure for full screen before it is on

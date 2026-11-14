@@ -9,7 +9,7 @@ const { chromium } = require('playwright-core');
 const { install } = require('./lib/measure.js'), { lines } = require('./lib/layout-lines.js'), { fitMeasure } = require('./lib/fit-measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 const EXPECTED = path.join(__dirname, 'audio-editor-layout-expected.txt'), HEIGHTS = path.join(__dirname, 'audio-editor-card-heights.txt');
-const SIZES = [[1440, 900], [1440, 720], [1040, 760], [900, 760], [700, 800], [521, 800], [390, 800], 'full'];          // 'full' is full screen at 1440x900
+const SIZES = [[1440, 900], [1440, 720], [1040, 760], [900, 760], [761, 800], [700, 800], [600, 800], [521, 800], [390, 800], [360, 800], 'full'];          // 'full' is full screen at 1440x900
 // a tool, and the states that change what its cards hold; each state is set from the one before it
 const radio = (name, v) => { const r = document.querySelector('input[name=' + name + '][value=' + v + ']'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); };
 const TOOLS = {

@@ -841,7 +841,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 
 .ae-export{display:flex;align-items:center;gap:8px;min-width:0}
 .ae-export select{width:auto;max-width:210px;padding:7px 28px 7px 10px;font-size:13px}
-@media (max-width:520px){.ae-export{flex-wrap:wrap}}
+@container aedlg (max-width:488px){.ae-export{flex-wrap:wrap}}
 .pe .row .btn svg,.editor .row .btn svg{width:16px;height:16px;flex:none}
 
 /* ----- How it works, and a steady scrollbar ----- */
@@ -1056,7 +1056,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .ae-proc{display:flex;align-items:center;gap:4px;border-radius:var(--r-ctl)}
 .ae-proc .switch{margin-right:4px}
 .ae-proc.dragging{z-index:2;box-shadow:0 8px 22px rgba(10,14,30,.25);background:var(--panel)}
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   .ae-main{gap:14px}
   .ae-rail{flex-direction:row;flex-wrap:wrap;align-items:center}
   .ae-procs{gap:2px 6px}
@@ -1089,7 +1089,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 #audioDlg:not(.afull) #aeBalCard{flex:none}
 /* narrow but not a phone (521–760px): Fades and Noise use two columns, so the tool fits its window with less scrolling */
 /* phones (520px and below): there is no room for a fixed window, so the whole dialog scrolls like a page and each tool shows at its full height */
-@media (max-width:520px){
+@container aedlg (max-width:488px){
   html #audioDlg:not(.afull) .dlg.editor.ae{height:auto;max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;grid-template-rows:none}
   html #audioDlg:not(.afull) .ae-main{height:auto;min-height:auto;grid-template-rows:none}
   html #audioDlg:not(.afull) .ae-wave{height:128px;min-height:0}
@@ -1138,7 +1138,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .eq-fold.shut .eq-fold-in{visibility:hidden;transition:visibility 0s .4s}
 @media (prefers-reduced-motion:reduce){.eq-fold,.eq-fold.shut .eq-fold-in{transition:none}}
 .eq-match .field.dim{opacity:var(--inactive)}
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   .ae-rail{display:block;padding:0}
   .ae-rail-cur{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
   .ae-rail-cur span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
@@ -1205,7 +1205,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 @keyframes nudge{0%{border-color:var(--line);box-shadow:none}30%{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}100%{border-color:var(--line);box-shadow:none}}
 .ae-card.nudge{animation:nudge .9s var(--ease-out)}
 @media (prefers-reduced-motion:reduce){.ae-card.nudge{animation:none}.mt-spin{animation-duration:2s}}
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   .mt-head .btn{font-size:12.5px}
 }
 
@@ -1290,14 +1290,14 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* live meter */
 @keyframes clippulse{50%{box-shadow:0 0 3px rgba(229,72,77,.3)}}
 @media (prefers-reduced-motion:reduce){.lv-clip,.led.shake{animation:none}}
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   .ae-main{grid-template-columns:minmax(0,1fr)}
   .ae-win{min-height:0;padding:14px}
   .mt-steps.two{grid-template-columns:1fr}
   .ae-jack{width:22px}
 }
 
-@media (max-width:760px){#aeZoomFit.gone{display:none}}
+@container aedlg (max-width:728px){.ae-bar .push-right.gone{display:none}}
 
 /* Noise reduction: the graph spans the whole window; the two cards sit under it */
 .nr-learn{flex-wrap:nowrap;min-height:var(--h-s)}
@@ -1346,7 +1346,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-removal .fa.open>.fa-in{padding:0}
 .nr-sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
 .nr-sub>.field{margin:0}
-@media (max-width:760px){.ae-pbody{min-height:0}}
+@container aedlg (max-width:728px){.ae-pbody{min-height:0}}
 }
 
 /* Noise reduction: rows size to their content; even spacing around Noise only */
@@ -1376,9 +1376,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-abs{display:flex;align-items:center;gap:6px}
 #aeABm{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 /* the noise window stays within the same height as every other tool */
-@media (min-width:761px) and (max-width:980px){.ae-pbody{min-height:430px}}
+@container aedlg (min-width:729px) and (max-width:948px){.ae-pbody{min-height:430px}}
 .ae-wave{height:128px}
 .ae-view{width:auto;flex:none;font-size:12px}.ae-view span{padding:4px 11px}
+#audioDlg{container:aedlg/inline-size}          /* every narrow rule of the Audio Editor asks about the dialog's own width (its content box, 32px under the screen's), never the screen's, so full screen and any window follow the same give-way order */
 #audioDlg:focus{outline:none}
 /* margins inside the noise card never merge, so closing the sliders slides "Noise only" the whole way with no jump at the end */
 
@@ -1397,7 +1398,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ed-head,#audioDlg.afull .ae-bar,#audioDlg.afull .ae-main{padding:10px 16px}
 #audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),visibility 0s .35s}
 #audioDlg.afull.dock-off .ae-bar{grid-row:4}
-@media (max-width:760px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:8px}}
+@container aedlg (max-width:728px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:8px}}
 .ae-fullbtn{width:32px;height:32px}.ae-fullbtn svg{width:16px;height:16px}
 @media (prefers-reduced-motion:reduce){#audioDlg.afull .ae-main{transition:none}}
 /* the Spectra tool */
@@ -1426,7 +1427,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sp-empty{display:grid;place-items:center;flex:1;color:var(--muted);opacity:.45}
 .sp-empty svg{width:44px;height:44px;animation:sp-breathe 3s ease-in-out infinite}
 @keyframes sp-breathe{50%{transform:scale(1.08);opacity:.6}}
-#audioDlg.head-in-bar .sp-list{max-height:160px}
 
 /* ---- full screen, refined: the same glass as the score player's timeline, with a soft specular sheen ---- */
 #audioDlg.afull>.dlg.editor.ae{background:var(--panel)}
@@ -1448,7 +1448,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .im-low .check .switch{flex:none;margin:0}
 /* the bar: a hidden button takes no room, and on a phone the buttons stay in one row */
 #aeDock.gone{display:none}
-@media (max-width:760px){.ae-bar{gap:10px}#aeSilence{margin-left:auto}}
 /* the tools dock is as tall as its tool needs (the Spectra stays small, so the picture stays big), and eases between heights */
 #audioDlg.afull .ae-main{transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),max-height .35s var(--ease-out)}
 #audioDlg.afull[data-tool=eq] .ae-main,#audioDlg.afull[data-tool=imager] .ae-main,#audioDlg.afull[data-tool=noise] .ae-main{max-height:min(440px,50dvh)}
@@ -1472,10 +1471,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull[data-tool=spec] .ae-pbody{min-height:0}
 #audioDlg.afull[data-tool=spec] .ae-main{max-height:min(300px,34dvh)}
 #audioDlg.afull .ae-tool{--row-px:10px;--row-py:5px}
-@media (max-width:760px){#audioDlg.afull .ae-main,#audioDlg.afull[data-tool=spec] .ae-main{max-height:50dvh}#audioDlg.afull .ae-pbody{min-height:0}}
-/* narrow, not full screen: the dialog keeps one fixed height and never scrolls, so Done and Cancel always show. The picture gives way first (down to 64px), then the tool body scrolls inside the window. */
-@media (max-width:760px){
-  #audioDlg:not(.afull) .dlg.editor.ae{height:94dvh;max-height:94dvh;overflow:hidden;grid-template-rows:auto minmax(64px,min(128px,calc(100dvh - 457px))) auto minmax(0,1fr) auto}
+@container aedlg (max-width:728px){#audioDlg.afull .ae-main,#audioDlg.afull[data-tool=spec] .ae-main{max-height:50dvh}#audioDlg.afull .ae-pbody{min-height:0}}
+/* narrow, not full screen: the dialog keeps one fixed height and never scrolls, so Done and Cancel always show. The picture gives way first (150px down to 120px, where the rows are set with the transport below), then the tool body scrolls inside the window. */
+@container aedlg (max-width:728px){
+  #audioDlg:not(.afull) .dlg.editor.ae{height:94dvh;max-height:94dvh;overflow:hidden}
   #audioDlg:not(.afull) .ae-wave{height:auto;min-height:0;align-self:stretch}
   #audioDlg:not(.afull) .ae-main{grid-template-rows:auto minmax(0,1fr);height:100%;min-height:0}
   #audioDlg:not(.afull) .ae-win{height:100%;min-height:0}
@@ -1483,7 +1482,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 /* EQ, narrow: the graph keeps a usable height. Below 980px the band is two columns (its Band row across the top, then Type and Frequency, then Gain and Width), the same two-column narrow rule Fades and Noise use, so no slider is squeezed to nothing */
 #aePaneEq{container:eq/inline-size}
-#audioDlg.head-in-bar:not(.afull) .eq-main>.eq-stage{flex:none;height:clamp(160px,36dvh,240px)}          /* where the tool body scrolls the graph keeps a usable height */
 /* the band is two columns: its Band row across the top, then Type and Frequency, then Gain and Width, the same two-column narrow rule Fades and Noise use. A pane under 622px (a 761px to 980px screen, as before) takes it, and so does the 760px mode, whose tool list is gone and whose pane is wider */
 @container eq (max-width:621.5px){
   .eq-band.ae-card{--band-row-gap:var(--gap-card)}
@@ -1492,11 +1490,14 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .eq-band .eq-cell{min-width:0}
   .eq-band select{width:100%}
 }
-:where(#audioDlg.head-in-bar) .eq-band.ae-card{--band-row-gap:var(--gap-card)}
-:where(#audioDlg.head-in-bar) .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
-:where(#audioDlg.head-in-bar) .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
-:where(#audioDlg.head-in-bar) .eq-band .eq-cell{min-width:0}
-:where(#audioDlg.head-in-bar) .eq-band select{width:100%}
+@container aedlg (max-width:728px){          /* the narrow layout's pane is wider than 622px, and the band is two columns here too */
+  #audioDlg:not(.afull) .eq-main>.eq-stage{flex:none;height:clamp(160px,36dvh,240px)}          /* where the tool body scrolls the graph keeps a usable height */
+  .eq-band.ae-card{--band-row-gap:var(--gap-card)}          /* the band is two columns here: its Band row across the top, then Type and Frequency, then Gain and Width */
+  .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
+  .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
+  .eq-band .eq-cell{min-width:0}
+  .eq-band select{width:100%}
+}
 
 /* ---- full screen, both editors: no title bar. Small glass chips float at the top; the controls and the tools sit in glass rows at the bottom. ---- */
 #audioDlg.afull .ed-head{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;justify-content:flex-end;pointer-events:none;align-items:flex-start}
@@ -1599,27 +1600,30 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-net b{color:var(--ink);font-weight:500}
 .ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2))}
 /* the picture, with the transport floating over its lower edge as glass (the picture keeps its drawing above it) */
-@media (min-width:761px){
+@container aedlg (min-width:729px){
   #audioDlg:not(.afull) .ae-wave{height:var(--ae-wave)}          /* the picture never changes size */
   #audioDlg:not(.afull) .ae-main{margin-top:-13px}          /* the tool window sits a little closer to the picture, so a tool has the room it was drawn for on a laptop screen; the saving is an even number of pixels, so the dialog stays centered on whole pixels */
-  #audioDlg:not(.afull) .ae-bar{position:relative;z-index:3;flex-wrap:nowrap;height:48px;margin:-66px 8px 8px;padding:0 8px 0 10px;gap:12px;border:1px solid var(--glass-edge);border-radius:var(--r-lg);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow);isolation:isolate}
-  #audioDlg:not(.afull) .ae-bar::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.5),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);opacity:.7}
-  #audioDlg:not(.afull) .ae-bar .btn,#audioDlg:not(.afull) .ae-bar .seg,#audioDlg:not(.afull) .ae-bar .icon-btn:not(.play){background:color-mix(in srgb,var(--panel2) 58%,transparent)}
 }
+/* the transport: one glass bar over the picture's lower edge at every width; narrower windows only tighten its gaps */
+#audioDlg:not(.afull) .ae-bar{position:relative;z-index:3;flex-wrap:nowrap;height:48px;margin:-66px 8px 8px;padding:0 8px 0 10px;gap:12px;border:1px solid var(--glass-edge);border-radius:var(--r-lg);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow);isolation:isolate}
+#audioDlg:not(.afull) .ae-bar::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.5),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,0) 45%);opacity:.7}
+#audioDlg:not(.afull) .ae-bar .btn,#audioDlg:not(.afull) .ae-bar .seg,#audioDlg:not(.afull) .ae-bar .icon-btn:not(.play){background:color-mix(in srgb,var(--panel2) 58%,transparent)}
 :root[data-theme="dark"] #audioDlg:not(.afull) .ae-bar::before{opacity:.22}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #audioDlg:not(.afull) .ae-bar::before{opacity:.22}}
 /* a screen shorter than the picture + the floor + --ae-chrome + --ae-margin (796px): the blank space around the dialog goes first (--ae-margin is 0, so the dialog is as tall as the screen lets it be, up to its full size). Only on a screen too short for even that does the tool window get shorter than its tool, and the tool keeps its full size and scrolls inside the window, as it does in the narrow layout */
-@media (min-width:761px) and (max-height:795px){
+@media (max-height:795px){
   :root{--ae-margin:0px}
-  #audioDlg:not(.afull){padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}          /* the page's own 16px above and below goes too */
-  #audioDlg:not(.afull) .ae-pbody{overflow-y:auto;overscroll-behavior:contain}
-  #audioDlg:not(.afull) .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}
+  #audioDlg:not(.afull):not(.head-in-bar){padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}          /* the page's own 16px above and below goes too (the wide layout only: the dialog's own state, set where its width is measured, since a rule cannot ask about the width of the box it styles) */
+  @container aedlg (min-width:729px){
+    #audioDlg:not(.afull) .ae-pbody{overflow-y:auto;overscroll-behavior:contain}
+    #audioDlg:not(.afull) .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}
+  }
 }
-@media (min-width:761px){#audioDlg:not(.afull) .ae-rail{contain:size;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}}          /* the scrollbar's room is always kept, so the buttons and the selection outline keep one width whether or not the list scrolls */          /* the tool list never makes the window taller: on a screen too short for it, it scrolls */
-@media (max-width:760px){.ae-win{overflow:visible;--ae-side:14px}.ae-top{height:auto;padding:12px 0;overflow:visible}.ae-win .ae-phead,.ae-phead{position:static;inset:auto;height:auto;padding:0 var(--ae-side)}.ae-pbody{height:auto;overflow:visible}.ae-pane{height:auto;padding:var(--ae-side)}}
+@container aedlg (min-width:729px){#audioDlg:not(.afull) .ae-rail{contain:size;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}}          /* the scrollbar's room is always kept, so the buttons and the selection outline keep one width whether or not the list scrolls */          /* the tool list never makes the window taller: on a screen too short for it, it scrolls */
+@container aedlg (max-width:728px){.ae-win{overflow:visible;--ae-side:14px;--ae-narrow:1}.ae-top{height:auto;padding:12px 0;overflow:visible}.ae-win .ae-phead,.ae-phead{position:static;inset:auto;height:auto;padding:0 var(--ae-side)}.ae-pbody{height:auto;overflow:visible}.ae-pane{height:auto;padding:var(--ae-side)}}
 /* full screen keeps its own rows: the picture gives way so the whole tool window always shows */
 #audioDlg.afull{--ae-body:calc(round(down,max(182px,min(var(--ae-floor),calc(100dvh - 392px))) - 2px,4px) + 2px);--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the same rule as the window: the tool is one size, and on a screen too short for it the tool window gets shorter and the tool scrolls inside it */
-@media (min-width:761px){#audioDlg.afull .ae-pbody{overflow-y:auto;overscroll-behavior:contain}#audioDlg.afull .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}}
+@container aedlg (min-width:729px){#audioDlg.afull .ae-pbody{overflow-y:auto;overscroll-behavior:contain}#audioDlg.afull .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}}
 #audioDlg.afull .ae-stat{display:none}
 #audioDlg.afull[data-tool] .ae-main,#audioDlg.afull .ae-main{max-height:none;overflow:visible}
 #audioDlg.afull .ae-pbody,#audioDlg.afull[data-tool] .ae-pbody{min-height:0}
@@ -1631,7 +1635,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aeEmCard{--card-gap:0px}          /* this card spaces its own parts */
 #aeEmCard>.mt-steps{flex:1;justify-content:space-between}
 /* at phone width the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
-#audioDlg.head-in-bar .im-lowf{flex-basis:auto;max-width:none}
 .sp-grid{display:flex;flex-direction:column;gap:var(--gap-card);height:100%}
 .sp-sel{flex:none}
 .sp-tools{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
@@ -1641,9 +1644,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sp-seg label{display:flex}
 .sp-seg label span{flex:1;height:100%}
 #aePaneSpec{container:spec/inline-size}
+#aePaneEmu{container:emu/inline-size}
 @container spec (max-width:469.5px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
 .sp-lcard{flex:1 1 0;min-height:0}
-#audioDlg.head-in-bar .sp-lcard{flex:none;min-height:120px}          /* the narrow layout's tool body scrolls, so the Edits card keeps a height instead of collapsing under its own heading */
 .sp-list{padding:2px;align-content:start}
 .sp-sel .fa.open>.fa-in{padding:4px 2px 2px;margin:0 -4px -2px}          /* the 2px of room for the thumb's shadow under the slider is not part of the body, so the box ends where the thumb does (the 2px moves above the label, so the fold keeps its height) */
 /* EQ: the picture takes whatever room is left, so opening EQ Match never makes the window taller */
@@ -1659,8 +1662,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .eq-main>.eq-stage{flex:1 1 0;min-height:64px;height:auto;margin:0 calc(-1 * var(--gap-field)) calc(-1 * var(--gap-set));border-top:1px solid var(--hairline)}
 /* Imager: both columns end together */
 .im-cols{--scope-col:244px;height:100%;grid-template-columns:minmax(0,1fr) var(--scope-col);gap:var(--gap-card);align-items:stretch}
-#audioDlg.head-in-bar .im-cols{grid-template-columns:minmax(0,1fr)}          /* the phone's one column, which the two-column rule above would otherwise win back */
-#audioDlg.head-in-bar .im-scope canvas{flex:none;height:calc(var(--scope-col) - 2 * var(--gap-field))}          /* where the cards stack and take their content height, the scope keeps the height it has beside the cards (its square is drawn centered) */
 .im-ctl{display:flex;flex-direction:column;gap:var(--gap-card);min-height:0}          /* Balance keeps its height and sits on the scope's bottom line; Width takes the spare height, and its footer row pins to the bottom of its card */
 #aeWidthCard{flex:1 1 auto;display:flex;flex-direction:column}
 #aeBalCard{flex:none;align-content:space-between}
@@ -2271,13 +2272,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .em-empty[hidden]{display:none}
 /* the Emulator's row sits apart from the chain, under Out: it has no light and no cable */
 .ae-procs.ae-apart{margin-top:auto;padding-top:var(--rail-pad);border-top:1px solid var(--hairline)}          /* pinned to the list's bottom at any height; the space from the hairline to the name equals the space from the name to the list's border (the rail's own padding), so the name is centered */
-#audioDlg.head-in-bar .em-grid{grid-template-columns:minmax(0,1fr)}
-#audioDlg.head-in-bar .em-stage{min-height:120px}
 .ae-chain b.bp{background:transparent;color:var(--muted);text-decoration:line-through;box-shadow:inset 0 0 0 1px var(--hairline)}          /* a hairline edge in place of the fill, so the pill still reads on the status bar; same box as the others */
 
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
 .ae-ptl{display:flex;align-items:center;gap:10px;min-width:0;height:20px}
-@media (max-width:760px){.ae-ptl{height:auto;min-height:20px}}          /* the narrow layout lets a long tool name wrap onto a second line */
+@container aedlg (max-width:728px){.ae-ptl{height:auto;min-height:20px}}          /* the narrow layout lets a long tool name wrap onto a second line */
 .ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
 #audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
@@ -2309,9 +2308,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .nr-learn .btn,#audioDlg .nr-learn .mt-chip{height:var(--h-s)}
 #audioDlg .seg label{padding-top:0;padding-bottom:0}
 @container imager (max-width:256.5px){.im-low{flex-wrap:wrap}.im-low .im-lowf{flex-basis:100%}}          /* Center low notes: at 300px its slider and value go under the switch (wider, the row holds them) */
-@media (max-width:420px){
-  .ae-pt .ae-sub{display:none}          /* a tool's one-line description gives way when the window is this narrow, so its heading and buttons have the room */
-}
 @container eq (max-width:335.5px){
   .eq-cells{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
   .eq-bn{flex-wrap:wrap;row-gap:8px}          /* Band 1, its switch, Listen, and Dynamic go on a second row when one will not hold them */
@@ -2593,7 +2589,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .eq-bn .eq-lbl{justify-content:flex-start;gap:var(--gap-label)}          /* "Band 1" reads as one label, left-aligned like the others */
 
 /* Narrow layout (760px and under): the tool bar is the tool's heading, with Match gain and Bypass on its line; the pane's own title row goes */
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   #audioDlg.head-in-bar .ae-top,#audioDlg.head-in-bar .ae-rule{display:none}
   #audioDlg.head-in-bar .ae-rail-bar{display:flex;align-items:center;position:relative;padding-right:42px}
   #audioDlg.head-in-bar .ae-rail-cur{flex:1 1 0;min-width:0;width:auto;position:static}
@@ -2601,44 +2597,68 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   #audioDlg.head-in-bar .ae-rail-cur output{display:none}
   #audioDlg.head-in-bar .ae-rail-cur svg{position:absolute;right:14px;top:50%;margin:-9px 0 0}
 }
-@media (max-width:420px){#audioDlg.head-in-bar .ae-rail-cur span{display:none}}
-
-.ae-abs .ae-ic{display:none}
-@media (max-width:760px){#audioDlg.head-in-bar .ae-rail-cur{align-items:baseline}}
-@media (max-width:420px){
-  #audioDlg.head-in-bar .ae-abs .ae-lb{display:none}          /* the two buttons shrink to Lucide icons so a long tool name keeps one line */
-  #audioDlg.head-in-bar .ae-abs .ae-ic{display:block;width:16px;height:16px}
-  #audioDlg.head-in-bar .ae-abs .btn{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
+@container aedlg (max-width:728px){#audioDlg.head-in-bar .ae-rail-cur{align-items:baseline}}
+/* where the cards stack (the dialog's width is 488px and under): labels become icons, the tool bar's "Tool" word goes, and the subtitles go. One collapsing button class, .ae-ib (an icon .ae-ic and a label .ae-lb), serves Match gain, Bypass, and Trim silence in the head and the transport */
+.ae-ib .ae-ic{display:none}
+@container aedlg (max-width:488px){
+  #audioDlg :is(.ae-bar,.ae-abs) .ae-ib.btn{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
+  #audioDlg .ae-ib .ae-lb{display:none}          /* the buttons shrink to Lucide icons so a long tool name keeps one line */
+  #audioDlg .ae-ib .ae-ic{display:block;width:16px;height:16px}
+  #audioDlg.head-in-bar .ae-rail-cur span{display:none}
   #audioDlg.head-in-bar .ae-rail-cur{padding-right:6px}
+  #audioDlg .ae-pt .ae-sub,#audioDlg .ed-lead{display:none}          /* a tool's one-line description and the window's subtitle give way */
 }
 
 /* Narrow layouts (760px and under): one card. The tool bar is the top of the tool window, divided from it by a hairline, as in the wide layout */
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   #audioDlg.head-in-bar:not(.afull) .ae-main{gap:0}
   #audioDlg.head-in-bar:not(.afull) .ae-rail{border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom-color:var(--hairline)}
   #audioDlg.head-in-bar:not(.afull) .ae-win{border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg)}
 }
 /* Narrow layouts: the transport floats over the picture's lower edge as glass, as in the wide layout */
-@media (max-width:760px){
+@container aedlg (max-width:728px){
   #audioDlg:not(.afull) .dlg.editor.ae{grid-template-rows:auto minmax(120px,min(150px,calc(100dvh - 400px))) auto minmax(0,1fr) auto}
-  #audioDlg:not(.afull) .ae-bar{position:relative;z-index:3;flex-wrap:nowrap;height:48px;margin:-66px 8px 8px;padding:0 8px 0 10px;gap:8px;border:1px solid var(--glass-edge);border-radius:var(--r-lg);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow);isolation:isolate}
-  #audioDlg:not(.afull) .ae-bar .btn,#audioDlg:not(.afull) .ae-bar .seg,#audioDlg:not(.afull) .ae-bar .icon-btn:not(.play){background:color-mix(in srgb,var(--panel2) 58%,transparent)}
+  #audioDlg:not(.afull) .ae-bar{gap:6px}
+  #audioDlg:not(.afull) .ae-times{flex:none}
+  #audioDlg:not(.afull) .ae-tail{margin-left:auto}          /* Trim silence and Full screen sit at the bar's right end */
 }
-@media (max-width:520px){html #audioDlg:not(.afull) .ae-wave{height:150px}}
-.ae-bar #aeSilence .ae-ic{display:none}
-@media (max-width:560px){
+@container aedlg (max-width:488px){html #audioDlg:not(.afull) .ae-wave{height:150px}}
+@container aedlg (max-width:519px){          /* the times stack when they no longer fit on one line beside the rest of the bar (the bar is under 476px wide) */
   #audioDlg:not(.afull) .ae-times{display:flex;flex-direction:column;gap:0;font-size:12px;line-height:1.2}
-  #audioDlg:not(.afull) #aeSilence .ae-lb{display:none}
-  #audioDlg:not(.afull) #aeSilence .ae-ic{display:block;width:16px;height:16px}
-  #audioDlg:not(.afull) #aeSilence{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
+  #audioDlg:not(.afull) .ae-times span{display:block;white-space:nowrap}
+  #audioDlg:not(.afull) .ae-times b{display:inline}
 }
-.lv-meter>.lv-sum>div{flex-wrap:wrap;column-gap:8px;row-gap:0}          /* where a column is too narrow for its label and value side by side, the value goes under its label instead of being cut off */
+.lv-meter>.lv-sum>div{flex-wrap:wrap;column-gap:8px;row-gap:var(--gap-head)}          /* where a column is too narrow for its label and value side by side, the value goes under its label instead of being cut off */
 .lv-meter>.lv-sum b{flex:none;overflow:visible;text-overflow:clip}
-@media (max-width:360px){#audioDlg:not(.afull) .ae-times{display:none}}          /* on the narrowest phones the transport keeps Play, Wave | Spec, Trim silence, and Full screen; the start and end times give way */
-@media (max-width:560px){#audioDlg:not(.afull) .ae-times span{display:block;white-space:nowrap}#audioDlg:not(.afull) .ae-times b{display:inline}}
-@media (max-width:760px){#audioDlg:not(.afull) .ae-bar{gap:6px}#audioDlg:not(.afull) .ae-times{flex:none}}
-@media (max-width:360px){#audioDlg:not(.afull) .ae-bar .ae-view label{padding-left:7px;padding-right:7px}#audioDlg:not(.afull) .ae-bar{padding:0 6px;gap:4px}}
+/* the transport gives way only where its parts no longer fit, and the times go last: the spacing tightens first (the bar is 318px wide or less), then, with Play, Wave | Spec, Trim silence, and Full screen still showing, the start and end times (the bar is under 288px) */
+@container aedlg (max-width:356px){#audioDlg:not(.afull) .ae-bar .ae-view label{padding-left:7px;padding-right:7px}#audioDlg:not(.afull) .ae-bar{padding:0 6px;gap:4px}}
+@container aedlg (max-width:324px){#audioDlg:not(.afull) .ae-times{display:none}}
 .ae-chain>span{min-width:0;overflow:hidden;text-overflow:ellipsis}          /* a status line too long for a narrow window ends in an ellipsis, as its own box, instead of being cut off */
 
 /* Level's strip: the label and its value are boxes trimmed to their letters and centered on each other, so their letters share one middle whatever their sizes */
 #audioDlg .lv-meter>.lv-sum :is(span,b){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+
+/* ==================== Narrow sizes: cards that stack take their content height ====================
+   The column rule (two control cards share a column, a control card over a list takes a third) applies only where the tool body has a fixed height to share. Where the dialog is 728px wide or less the body scrolls and the pane is
+   as tall as its tool; and where a tool's own pane is too narrow for its cards to stand side by side (a container query on the pane, whatever the screen) the cards stack and the body scrolls as well. In both, each grid's rows
+   are its cards' own heights and nothing is left empty under a card. */
+@container aedlg (max-width:728px){
+  #audioDlg :is(.tool-grid,.nr-grid,.nr-grid.pre,.sp-grid,.lv-grid,.fd-grid,.im-cols,.im-ctl,.em-grid){height:auto;grid-template-rows:none}
+  #audioDlg .sp-lcard{flex:none;min-height:120px}          /* the tool body scrolls, so the Edits card keeps a height instead of collapsing under its own heading */
+  #audioDlg .sp-list{max-height:160px}
+}
+@container spec (max-width:469.5px){
+  #audioDlg .sp-grid{height:auto;grid-template-rows:none}
+  #audioDlg .sp-lcard{flex:none;min-height:120px}
+  #audioDlg .sp-list{max-height:160px}
+}
+@container imager (max-width:553.5px){          /* the scope (244px) and the controls no longer fit side by side: one column, the scope at the height it has beside the cards (its square is drawn centered) */
+  #audioDlg :is(.im-cols,.im-ctl){height:auto;grid-template-rows:none}
+  #audioDlg .im-cols{grid-template-columns:minmax(0,1fr)}
+  #audioDlg .im-scope canvas{flex:none;height:calc(var(--scope-col) - 2 * var(--gap-field))}
+  #audioDlg .im-lowf{flex-basis:auto;max-width:none}          /* the Center low notes row stays on one line, so its switch keeps equal space above and below (the slider narrows instead) */
+}
+@container emu (max-width:561.5px){          /* the Reference step and the Tone picture no longer fit side by side */
+  #audioDlg .em-grid{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:none}
+  #audioDlg .em-stage{min-height:120px}
+}

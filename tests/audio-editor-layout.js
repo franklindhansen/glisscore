@@ -184,6 +184,41 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   ok('footer rows: Mains hum, Noise only, Limiter, and Center low notes all use the footer row', ['aeNrHumRow', 'nr-listen', 'aeLimRow', 'aeBassCard'].every(id => [...feet].some(x => x.includes(id))), [...feet].join(', '));
   const ih = heights.map(h => sweep[h].imager.widthH.toFixed(1) + '/' + sweep[h].imager.balH.toFixed(1));
   ok('Imager: Width and Balance keep their natural height at every screen height', new Set(ih).size === 1, ih.join(' '));
+  // the give-way order, by the dialog's own width (its content box, which is 32px under the screen's; in full screen the whole screen): the tool list becomes a drop-down at 728px, the cards stack and labels become icons and the subtitles go at 488px,
+  // and the start and end times stay while they fit (they give way under 325px, 356px on a screen, where the bar cannot hold them); no width ever scrolls the dialog or page sideways, and where the cards stack each takes its content height
+  const GW = [320, 357, 358, 360, 375, 388, 389, 390, 412, 430, 500, 520, 521, 551, 552, 600, 728, 760, 761, 900, 1280], gw = [];
+  const gwRead = async p => p.evaluate(() => {
+    const q = s => document.querySelector(s), vis = e => !!e && getComputedStyle(e).display !== 'none', o = q('#audioDlg'), oc = getComputedStyle(o), C = o.clientWidth - parseFloat(oc.paddingLeft) - parseFloat(oc.paddingRight), dlg = q('#audioDlg .dlg');
+    const bar = q('.ae-bar'), br = bar.getBoundingClientRect(), bcs = getComputedStyle(bar), inner = br.right - parseFloat(bcs.borderRightWidth) - parseFloat(bcs.paddingRight), kids = [...bar.children].filter(vis);
+    const full = o.classList.contains('afull'), t = q('.ae-times');
+    return { C, full, sideways: Math.max(dlg.scrollWidth - dlg.clientWidth, document.documentElement.scrollWidth - innerWidth), drop: vis(q('.ae-rail-cur')),
+      icons: ['#aeABm', '#aeAB', '#aeSilence'].map(id => vis(q(id + ' .ae-ic')) && !vis(q(id + ' .ae-lb'))), labels: ['#aeABm', '#aeAB', '#aeSilence'].map(id => !vis(q(id + ' .ae-ic')) && vis(q(id + ' .ae-lb'))),
+      lead: vis(q('#aeLead')), times: vis(t), stacked: vis(t) && getComputedStyle(t).flexDirection === 'column', over: Math.round((kids[kids.length - 1].getBoundingClientRect().right - inner) * 10) / 10 };
+  });
+  const gwForced = async p => p.evaluate(() => { const t = document.querySelector('.ae-times'); t.style.display = 'flex'; const bar = document.querySelector('.ae-bar'), br = bar.getBoundingClientRect(), cs = getComputedStyle(bar), inner = br.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight),
+      kids = [...bar.children].filter(e => getComputedStyle(e).display !== 'none'), dlg = document.querySelector('#audioDlg .dlg'); const r = { over: kids[kids.length - 1].getBoundingClientRect().right - inner, dlg: dlg.scrollWidth - dlg.clientWidth }; t.style.display = ''; return r; });
+  const gwOpen = async (w, dark, fs) => { const p = await b.newPage({ viewport: { width: w, height: 800 }, colorScheme: dark ? 'dark' : 'light' }); p.setDefaultTimeout(90000); p.on('pageerror', e => { if (!/UI guard/.test(e.message)) errs.push('give-way ' + w + ': ' + e.message); });
+    await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); if (dark) await p.evaluate(() => { document.documentElement.dataset.theme = 'dark'; });
+    await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3'); await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer); await p.evaluate(() => openAudioEditor()); await p.waitForTimeout(500);
+    if (fs) { await p.evaluate(() => document.querySelector('#aeFull').click()); await p.waitForTimeout(1200); } return p; };
+  for (const [dark, fs] of [[false, false], [true, false], [false, true]]) await Promise.all(GW.filter(w => !fs || [390, 520, 600, 740, 900].includes(w)).map(async w => { const p = await gwOpen(w, dark, fs), r = await gwRead(p), f = fs ? null : await gwForced(p);
+    // the cards of every tool where the dialog is narrow: each takes its content height, so nothing is left empty under the last card
+    const blank = []; if (r.C <= 728) for (const t of ['noise', 'spec', 'eq', 'imager', 'fades', 'level', 'emu']) { await p.evaluate(t => aeTool(t), t); await p.waitForTimeout(600);
+      blank.push(...await p.evaluate(t => { const pane = document.querySelector('.ae-pane:not([hidden])'), cs = getComputedStyle(pane), cards = [...pane.querySelectorAll('.ae-card, .sp-card, .lv-meter')].filter(c => !c.parentElement.closest('.ae-card, .sp-card') && c.getBoundingClientRect().height > 1 && getComputedStyle(c).visibility !== 'hidden');
+        if (!cards.length) return []; const low = Math.max(...cards.map(c => c.getBoundingClientRect().bottom)), under = pane.getBoundingClientRect().bottom - parseFloat(cs.paddingBottom) - low; return Math.abs(under) > 1.5 ? [t + ' ' + under.toFixed(1)] : []; }, t)); }
+    gw.push({ w, dark, fs, r, f, blank }); await p.close(); }));
+  for (const [dark, fs] of [[false, false], [true, false], [false, true]]) { const tag = 'give-way' + (dark ? ' (dark)' : '') + (fs ? ' (full screen)' : '') + ': ', rows = gw.filter(x => x.dark === dark && x.fs === fs).sort((a, b) => a.w - b.w);
+    const bad = (name, fn) => { const x = rows.filter(r => !fn(r.r, r)); return [name, !x.length, x.slice(0, 4).map(r => r.w + ' ' + JSON.stringify(r.r)).join(' | ')]; };
+    for (const [n, c, x] of [
+      bad('no width scrolls the dialog or page sideways', r => r.sideways <= 1),
+      bad('the tool list is a drop-down exactly where the dialog is 728px wide or less', r => r.drop === (r.C <= 728)),
+      bad('Match gain, Bypass, and Trim silence are icons exactly where the dialog is 488px wide or less, and words wider', r => r.icons.every(v => v === (r.C <= 488)) && r.labels.every(v => v === (r.C > 488))),
+      bad('the window\'s subtitle goes exactly where the dialog is 488px wide or less', r => r.lead === (r.C > 488))]) ok(tag + n, c, x);
+    if (!fs) for (const [n, c, x] of [
+      bad('the start and end times stay wherever they fit: shown from 357px, and nothing in the bar passes its edge', r => r.times === (r.C >= 325) && r.over <= 0.5),
+      bad('the times stack only where one line no longer fits (the dialog is 519px wide or less)', r => !r.times || r.stacked === (r.C <= 519))]) ok(tag + n, c, x);
+    if (!fs) { const hid = rows.filter(x => !x.r.times), over = hid.filter(x => !(x.f.over > 0.5 || x.f.dlg > 1)); ok(tag + 'where the times are hidden they would not fit: forced back, they pass the bar\'s edge or scroll the dialog', hid.length > 0 && !over.length, over.map(x => x.w + ' ' + JSON.stringify(x.f)).join(' | ')); }
+    const bl = rows.filter(x => x.blank.length); ok(tag + 'where the dialog is narrow every tool\'s last card ends at the pane\'s bottom padding (cards take their content height, no empty space under them)', rows.some(x => x.r.C <= 728) && !bl.length, bl.slice(0, 3).map(x => x.w + ' ' + x.blank.join(', ')).join(' | ')); }
   ok('no page errors', !errs.length, errs.slice(0, 2).join(' | '));
   await b.close();
 })();
