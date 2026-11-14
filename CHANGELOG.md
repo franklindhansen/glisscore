@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.6
+
+The Audio Editor has a fresh layout in every tool: a clearer tool list, Noise reduction in one row of steps, and Fades with two curves, Gradual and Straight (your old curves play as the nearest one). Sliders hold still as their numbers change, and the editor opens without stray motion.
+
 ## 1.2.5
 
 The Audio Editor's tool windows are tidier, with even space around cards, headings, and sliders, and the Imager and EQ grids now show in dark mode. Bypass is saved with your settings and applies to exported audio.
