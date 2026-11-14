@@ -1098,6 +1098,8 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
   html #audioDlg:not(.afull) .ae-pbody{height:auto;overflow:visible}
   html #audioDlg:not(.afull) .ae-pane{position:static}
 }
+/* the editor's first state is set without motion: while it opens, the tools take their state at once (the script removes the class two frames later) */
+#audioDlg.ae-still :is(#aeWin,#aeRail) *{transition:none!important}
 /* ----- Tool list: output tools, bypass, bipolar sliders, level meter ----- */
 .ae-badge{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);transition:opacity .2s var(--ease-ui)}
 .ae-badge:empty{opacity:0}

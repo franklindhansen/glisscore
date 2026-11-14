@@ -185,7 +185,8 @@ function openAudioEditor() {
   Transport.pause();
   AE.base = aeFromApp(); AE.d = aeCopy(AE.base); AE.undo = []; AE.redo = []; AE.pos = Math.max(0, AE.d.vStart); AE.band = 0; AE.meas = null; aeInitTools();
   aeFormatUI();
-  sheetShow($('#audioDlg')); aeRefresh(); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
+  const dlg = $('#audioDlg'); dlg.classList.add('ae-still');          // the tools settle into their first state without gliding there: the markup starts as the defaults, and what the recording needs differs (a fold shut, a step dimmed), which would otherwise play as motion on the first open only
+  sheetShow(dlg); aeRefresh(); void dlg.offsetWidth; requestAnimationFrame(() => requestAnimationFrame(() => dlg.classList.remove('ae-still'))); { const d = $('#audioDlg'); d.tabIndex = -1; d.focus({ preventScroll: true }); } edIntro('ae'); requestAnimationFrame(aeAlignView); setTimeout(aeAlignView, 600); setTimeout(aeAlignView, 1400);
 }
 /* the opening screen always fits its box: at full size when there is room, scaled down evenly when there is not, never with a scroll bar */
 function introFit() {
