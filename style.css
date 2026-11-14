@@ -25,6 +25,7 @@
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
+  --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
   --value-fs:13px;   /* every value readout: beside a slider, in a label row, in the Balance meter, and after a heading */
   --scale-fs:11px;   /* every end word and number under or beside a slider or bar (Meter, Gain, Width, Balance, Fades Length) */
   --big-fs:32px;   /* every big number over a slider (Gain, Fades Length) */
@@ -1680,7 +1681,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sl-in{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto;grid-auto-flow:column;grid-auto-columns:auto;column-gap:var(--gap-head);min-width:0}
 .sl-in>*{grid-row:1}
 .sl-in>input{grid-column:2;margin:0;min-width:0}
-.sl-in>output{text-align:right;margin-left:var(--gap-label)}
+.sl-in>output{text-align:right;margin-left:var(--gap-label);min-inline-size:var(--val-w)}
 #audioDlg .sl-in>.sl-end.tick{grid-column:2;grid-row:2;justify-self:center;align-self:start;display:flex;align-items:flex-start;width:1px;height:var(--tick-h);margin:var(--gap-sub) 0 0;padding:0;border:0;border-radius:0;background:none}          /* the tick sits in its own row under the track at the middle, so it takes real room: the slider's body (thumb to tick) is what the card centers */
 #audioDlg .im-view .sl-in>.sl-end.tick{height:calc(round(up, calc(var(--gap-sub) + var(--tick-h)), 2px) - var(--gap-sub))}          /* views that share one slot are each centered in it: a view's height is a whole number of pairs of pixels, so its centered top is a whole pixel (the tick is drawn the same; only the room under it grows by a pixel) */
 .sl-in>.sl-end.tick>i{display:block;width:1px;height:var(--tick-h);background:var(--muted);opacity:.6}
@@ -1920,7 +1921,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-range{display:flex;align-items:center;gap:12px;font-size:13px}
 .pe-range label{color:var(--ink)}
 .pe-range input{width:170px;transition:opacity .25s var(--ease-ui)}
-.pe-range output{min-width:3ch;color:var(--muted);font-variant-numeric:tabular-nums}
+.pe-range output{min-width:var(--val-w);text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 
 /* Add pages: three numbered steps in a row, the same numbers as the Audio Editor's noise steps */
 .pe-steps{display:flex;align-items:center;flex-wrap:wrap;gap:12px 26px;margin-top:14px}
