@@ -22,7 +22,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   ok('nothing bypassed: the settings are heard as they are', r.none);
   ok('EQ bypassed: only the EQ goes', r.eq); ok('Noise reduction bypassed: the noise and the hum go, the rest stays', r.noise); ok('Spectra bypassed: its edits go, the noise reduction stays', r.spec);
   ok('the Emulator\'s bypass covers the EQ, the Imager and Level; other tools are not bypassed by it', r.emu && r.other && r.eqBy); ok('Level bypassed: the limiter is off', r.lim);
-  {          // the pill shows beside the title of Level, Fades, Spectra and the Emulator, and editing a bypassed tool switches it back on
+  {          // the pill shows beside the title of Fades, Spectra, and the Emulator, and never Level's, and editing a bypassed tool switches it back on
     const sr = 22050, n = sr * 3, wav = Buffer.alloc(44 + n * 2); wav.write('RIFF', 0); wav.writeUInt32LE(36 + n * 2, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(1, 22); wav.writeUInt32LE(sr, 24); wav.writeUInt32LE(sr * 2, 28); wav.writeUInt16LE(2, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(n * 2, 40);
     for (let i = 0; i < n; i++) wav.writeInt16LE(Math.round(8000 * Math.sin(i / sr * 2 * Math.PI * 220)), 44 + i * 2);
     const f = path.join(os.tmpdir(), 'kf-bp.wav'); fs.writeFileSync(f, wav);
@@ -32,13 +32,13 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       const pill = () => +getComputedStyle(document.querySelector('.ae-bypill')).opacity, o = {};
       for (const t of ['level', 'fades']) {
         aeTool(t); await sleep(700); if (t === 'level') AE.d.gainDb = 3; else AE.d.audioFades = true; aeToolsRefresh(); await sleep(100);
-        o[t + 'Before'] = pill(); aeToggleBypass(); await sleep(600); o[t + 'On'] = pill() > 0.95 && aeBpTool(t);
+        o[t + 'Before'] = pill(); aeToggleBypass(); await sleep(600); o[t + 'On'] = (t === 'level' ? pill() < 0.05 : pill() > 0.95) && aeBpTool(t);          // Level shows no badge: its struck-through name and the lit Bypass button say it
         if (t === 'level') { AE.d.gainDb = 4; aeToolsRefresh(); await sleep(600); o.levelEdit = !aeBpTool('level') && pill() < 0.05; }
         else { aeToggleBypass(); await sleep(600); o.fadesOff = !aeBpTool('fades') && pill() < 0.05; }
       }
       aeTool('eq'); await sleep(700); o.eqNone = pill() < 0.05; return o;
     });
-    ok('the pill is hidden until Level or Fades is bypassed, then shows beside the title', q.levelBefore < 0.05 && q.levelOn && q.fadesBefore < 0.05 && q.fadesOn, JSON.stringify(q));
+    ok('the pill is hidden until Fades is bypassed, then shows beside the title; Level never shows it', q.levelBefore < 0.05 && q.levelOn && q.fadesBefore < 0.05 && q.fadesOn, JSON.stringify(q));
     ok('editing a bypassed tool switches it back on and the pill goes', q.levelEdit && q.fadesOff && q.eqNone, JSON.stringify(q));
   }
   {          // the readings at rest read what is heard, through aeHeard: the same draft the player plays

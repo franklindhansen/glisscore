@@ -49,7 +49,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     for (const c of cards) {
       const r = R(c), cs = getComputedStyle(c), inner = { t: r.top + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop), b: r.bottom - parseFloat(cs.borderBottomWidth) - parseFloat(cs.paddingBottom) };
       let top = Infinity, bot = -Infinity;
-      for (const k of c.children) { if (!shown(k) || getComputedStyle(k).position === 'absolute') continue; const kr = R(k); if (kr.height < 1) continue; top = Math.min(top, kr.top); bot = Math.max(bot, kr.bottom); }
+      const bl = r.left + parseFloat(cs.borderLeftWidth), br = r.right - parseFloat(cs.borderRightWidth), bb = r.bottom - parseFloat(cs.borderBottomWidth), bleeds = (k, kr) => !!(k.matches('canvas') || k.querySelector(':scope > canvas')) && !k.querySelector('.btn, .seg, select, input') && Math.abs(kr.left - bl) <= 0.5 && Math.abs(kr.right - br) <= 0.5 && Math.abs(kr.bottom - bb) <= 0.5;          // a picture that runs edge to edge to the card's bottom border (the EQ graph) ends the card: its bottom counts as the content edge
+      for (const k of c.children) { if (!shown(k) || getComputedStyle(k).position === 'absolute') continue; const kr = R(k); if (kr.height < 1) continue; top = Math.min(top, kr.top); bot = Math.max(bot, bleeds(k, kr) ? r.bottom - parseFloat(cs.borderBottomWidth) - parseFloat(cs.paddingBottom) : kr.bottom); }
       const hd = c.querySelector(':scope > .t-head h4, :scope > h4'), hl = hd && shown(hd) ? window.__mk.letters(hd) : null;
       out.cards.push({ id: nm(c), cls: c.className, h: rnd(r.height), top: rnd(top - inner.t), bottom: rnd(inner.b - bot), foot: !!c.querySelector('.foot-row'), head: hl ? rnd(hl.capTop - r.top) : null });
     }
@@ -67,7 +68,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     if (shown(el('#aeMeter'))) out.meter = { track: rnd(R(el('#aeMeter .lv-track')).height), scale: rnd(R(el('#aeMeter .lv-scale')).height), bottom: rnd(R(el('#aeMeter')).bottom), paneBottom: rnd(R(pane).bottom), cardsBottom: rnd(Math.max(...cards.map(c => R(c).bottom))) };
     if (shown(el('#aeEmGo'))) out.emulate = { go: rnd(R(el('#aeEmGo')).bottom), note: rnd(R(el('.em-view')).bottom - parseFloat(getComputedStyle(el('.em-view')).borderBottomWidth) - parseFloat(getComputedStyle(el('.em-view')).paddingBottom)) };
     if (pane.id === 'aePaneNoise') out.noise = { pre: el('#aeNrGrid').classList.contains('pre'), graphTop: rnd(R(el('#aeNrGrid .nr-stage')).top), graphBottom: rnd(R(el('#aeNrGrid .nr-stage')).bottom), sampleTop: rnd(R(el('#aeNrSample')).top), sampleBottom: rnd(R(el('#aeNrSample')).bottom), ctlTop: rnd(R(el('#aeNrCtl')).top), ctlBottom: rnd(R(el('#aeNrCtl')).bottom), content: rnd(Math.max(...cards.map(c => R(c).bottom))) };
-    if (shown(el('#aeFadeLenField .sl-ends'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-ends')).bottom), picture: rnd(R(el('#aeFadeShape')).bottom) };
+    if (el('#aeFadeLenField .sl-row') && shown(el('#aeFadeLenField .sl-row'))) out.fades = { labels: rnd(R(el('#aeFadeLenField .sl-row')).bottom), picture: rnd(R(el('#aeFadeShape')).bottom) };
     return out;
   };
   const sweep = {}, heights = [680, 720, 760, 800, 900];
@@ -155,7 +156,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const em = sp.filter(f => f.emulate);
     ok(tag + 'Emulator: Emulate sits level with the bottom content line of the graph card (its note is gone)', em.length > 0 && em.every(f => Math.abs(f.emulate.go - f.emulate.note) <= 1), JSON.stringify(em.map(f => f.emulate)).slice(0, 200));
     const fd = sp.filter(f => f.fades);
-    ok(tag + 'Fades, Length: its end labels end on the bottom line of the Gradual | Straight choice', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
+    ok(tag + 'Fades, Length: its slider row (the slider with Off and Longer beside it) ends on the bottom line of the Gradual | Straight choice', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
     const hm = o.hum, moved = Object.entries(hm).filter(([k, x]) => Math.abs(x.sw - hm.idle.sw) > 1 || Math.abs(x.card - hm.idle.card) > 1 || Math.abs(x.row - hm.idle.row) > 1).map(([k]) => k);
     ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
     ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));

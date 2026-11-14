@@ -58,6 +58,7 @@ exports.install = function () {
         if (direct) take(ink(c));
         if (direct && !isControl(c) && c.children.length === 0 && filled(c)) take(box(c));          // a text on a fill or a border of its own (a step's number in its circle, a chip) is seen as that shape
         if (c.children.length) walk(c);
+        if (c.children.length && filled(c)) take(box(c));          // a group on a fill or a border of its own (an inset panel of readouts) is seen as that panel: its edge is what the eye lines up
         if (n === before) { const cs = getComputedStyle(c); if (R(c).width >= 1 && R(c).height >= 1 && (!/rgba\(\s*0,\s*0,\s*0,\s*0\)|transparent/.test(cs.backgroundColor) || cs.backgroundImage !== 'none' || parseFloat(cs.borderTopWidth) > 0)) take(box(c)); }          // a bar or a picture with a fill or a border (a track whose parts are left out above is still the bar)
       }
     };

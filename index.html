@@ -771,7 +771,7 @@
           </div>
         </section>
         <section class="ae-pane" id="aePaneSpec" hidden>
-          <div class="sp-grid">
+          <div class="sp-grid tool-grid">
             <div class="ae-card sp-card sp-sel">
               <div class="mt-head t-head"><h4>Select</h4><button class="info-i" type="button" aria-label="About Spectra" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.spec">Draw over a blip, a hum, or a squeak. Heal fills it in, and Reduce turns it down.</span></div>
               <div class="sp-tools">
@@ -795,6 +795,7 @@
           </div>
         </section>
         <section class="ae-pane" id="aePaneEq" hidden>
+          <div class="eq-grid tool-grid">
           <div class="ae-card eq-main own-grid">
           <div class="eq-top">
             <select id="aeEqPreset" aria-label="Presets"></select>
@@ -810,21 +811,23 @@
           </div>
           <div class="eq-stage"><canvas id="aeEqCv" title="Double-click to add a band. Drag a point to move it." aria-label="EQ curve"></canvas></div>
           </div>
-          <div class="eq-fold" id="aeBandFold"><div class="eq-fold-in">
+          <div class="eq-fold card-fold" id="aeBandFold"><div class="eq-fold-in">
           <div class="eq-band ae-card own-grid" id="aeEqBand">
+            <div class="eq-cells">
             <div class="eq-cell eq-bn"><span class="eq-lbl t-lbl">Band <b id="aeBandNo">1</b></span><div class="eq-ctl"><input type="checkbox" class="switch" id="aeBandOn" aria-label="Band on"><button class="btn small" id="aeBandHear" type="button" aria-pressed="false" title="Hear only the part of the sound this band works on">Listen</button><button class="btn small" id="aeBandDyn" type="button" aria-pressed="false" title="The band moves with how loud the sound is in its own region">Dynamic</button></div></div>
             <div class="eq-cell"><label class="eq-lbl t-lbl" for="aeBandType">Type</label><div class="eq-ctl"><select id="aeBandType"></select></div></div>
             <div class="eq-cell"><label class="eq-lbl t-lbl" for="aeBandF">Frequency</label><div class="eq-ctl"><input type="number" id="aeBandF" min="20" max="20000" step="1" inputmode="numeric"></div></div>
             <div class="eq-cell" id="aeBandGField"><label class="eq-lbl t-lbl" for="aeBandG"><span>Gain</span><output id="aeBandGVal">0dB</output></label><div class="eq-ctl"><input type="range" class="bi" id="aeBandG" min="-12" max="12" step="0.5" value="0" data-default="0"></div></div>
             <div class="eq-cell" id="aeBandQField"><label class="eq-lbl t-lbl" for="aeBandQ"><span>Width</span><output id="aeBandQVal">1.4oct</output></label><div class="eq-ctl"><input type="range" id="aeBandQ" min="0" max="100" step="1" value="59" data-default="59"></div></div>
             <div class="eq-cell" id="aeBandSField" hidden><span class="eq-lbl t-lbl"><span>Slope</span><output>dB/oct</output></span><div class="eq-ctl"><div class="seg" id="aeBandSlope" role="radiogroup" aria-label="Slope"><label><input type="radio" name="aeBandSlope" value="12" checked><span>12</span></label><label><input type="radio" name="aeBandSlope" value="24"><span>24</span></label><label><input type="radio" name="aeBandSlope" value="48"><span>48</span></label></div></div></div>
+            </div>
             <div class="fa eq-dyn" id="aeBandDynFold"><div class="fa-in" inert><div class="eq-dyn-g">
               <div class="eq-cell"><div class="eq-lbl t-lbl"><label for="aeBandThr">Threshold</label><span class="eq-lbl-r"><button class="btn small" id="aeBandThrAuto" type="button" title="Sets the threshold where this band gets loud, so only its louder moments move it">Auto</button><output id="aeBandThrVal">−30dB</output></span></div><div class="eq-ctl"><input type="range" id="aeBandThr" min="-80" max="0" step="1" value="-30" data-default="-30"></div></div>
               <div class="eq-cell"><div class="eq-lbl t-lbl"><label for="aeBandRange">Range</label><output id="aeBandRangeVal">−6dB</output></div><div class="eq-ctl"><input type="range" class="bi" id="aeBandRange" min="-24" max="24" step="1" value="-6" data-default="-6"></div></div>
             </div></div></div>
           </div>
           </div></div>
-          <div class="eq-fold shut" id="aeMatchFold" inert aria-hidden="true"><div class="eq-fold-in">
+          <div class="eq-fold card-fold shut" id="aeMatchFold" inert aria-hidden="true"><div class="eq-fold-in">
           <div class="eq-match ae-card" id="aeMatch">
             <div class="mt-head t-head"><h4>EQ Match</h4><button class="info-i" type="button" aria-label="About EQ Match" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.match">Matches the tone of another recording. Nothing leaves your device.</span><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button" title="Save the tone of the sound you are editing, to use as a reference in another project">Export EQ profile</button></span></div>
             <div class="mt-steps two">
@@ -837,26 +840,27 @@
             <input type="file" id="aeRefIn" accept="audio/*" hidden><input type="file" id="aeProfIn" accept=".txt,.csv,.tsv,text/plain" hidden>
           </div>
           </div></div>
+          </div>
         </section>
         <section class="ae-pane" id="aePaneImager" hidden>
-          <div class="im-cols">
-            <div class="im-ctl">
+          <div class="im-cols tool-grid">
+            <div class="im-ctl tool-group">
               <div class="ae-card" id="aeWidthCard">
                 <div class="im-head t-head"><h4>Width</h4><div class="seg" id="aeWidthMode" role="radiogroup" aria-label="Width for"><label><input type="radio" name="aeWidthMode" value="all" checked><span>Overall</span></label><label><input type="radio" name="aeWidthMode" value="bands"><span>Frequency</span></label></div></div>
                 <div class="im-views">
-                  <div class="im-view" id="aeWvAll"><div class="field"><div class="im-slrow"><div class="sl-track"><input type="range" class="bi" id="aeWidth" min="-100" max="100" step="1" value="0" data-default="0" aria-label="Stereo width"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-100">Mono</button><button class="sl-end tick" type="button" data-v="0" aria-label="Normal" title="Normal">|</button><button class="sl-end" type="button" data-v="100">Wide</button></div></div><output id="aeWidthVal">100%</output></div></div></div>
+                  <div class="im-view" id="aeWvAll"><div class="field"><div class="sl-row sl-in"><button class="sl-end" type="button" data-v="-100">Mono</button><input type="range" class="bi" id="aeWidth" min="-100" max="100" step="1" value="0" data-default="0" aria-label="Stereo width"><button class="sl-end tick" type="button" data-v="0" aria-label="Normal" title="Normal"><i aria-hidden="true"></i></button><button class="sl-end" type="button" data-v="100">Wide</button><output id="aeWidthVal">100%</output></div></div></div>
                   <div class="im-view off" id="aeWvBands">
-                    <div class="field row3"><label for="aeBwLo"><span>Low<i class="hz">&lt; 250Hz</i></span><output id="aeBwLoVal">0</output></label><input type="range" class="bi" id="aeBwLo" min="-100" max="100" step="1" value="0" data-default="0"></div>
-                    <div class="field row3"><label for="aeBwMid"><span>Middle</span><output id="aeBwMidVal">0</output></label><input type="range" class="bi" id="aeBwMid" min="-100" max="100" step="1" value="0" data-default="0"></div>
-                    <div class="field row3"><label for="aeBwHi"><span>High<i class="hz">&gt; 4kHz</i></span><output id="aeBwHiVal">0</output></label><input type="range" class="bi" id="aeBwHi" min="-100" max="100" step="1" value="0" data-default="0"></div>
+                    <div class="field row3 sl-row"><label for="aeBwLo"><span>Low<i class="hz">&lt; 250Hz</i></span><output id="aeBwLoVal">0</output></label><input type="range" class="bi" id="aeBwLo" min="-100" max="100" step="1" value="0" data-default="0"></div>
+                    <div class="field row3 sl-row"><label for="aeBwMid"><span>Middle</span><output id="aeBwMidVal">0</output></label><input type="range" class="bi" id="aeBwMid" min="-100" max="100" step="1" value="0" data-default="0"></div>
+                    <div class="field row3 sl-row"><label for="aeBwHi"><span>High<i class="hz">&gt; 4kHz</i></span><output id="aeBwHiVal">0</output></label><input type="range" class="bi" id="aeBwHi" min="-100" max="100" step="1" value="0" data-default="0"></div>
                   </div>
                 </div>
-                <div class="im-low foot-row" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
+                <div class="im-low foot-row" id="aeBassCard"><label class="check"><span>Center low notes</span><input type="checkbox" class="switch" id="aeMonoBass"></label><div class="im-lowf sl-row" id="aeMonoBassField"><input type="range" id="aeMonoBassF" min="40" max="500" step="10" value="120" data-default="120" aria-label="Keep centered below"><output id="aeMonoBassVal">120Hz</output></div></div>
               </div>
               <div class="ae-card" id="aeBalCard">
                 <div class="im-head t-head"><h4>Balance</h4><output class="head-note" id="aeBalVal" aria-live="polite"></output><button class="btn small" id="aeBalAuto" type="button" aria-pressed="false" title="Makes left and right equally loud. Press again to undo.">Auto</button></div>
                 <div class="bal-meter" id="aeLR" title="The average level of each side, after the shift."><span class="bm-name">L</span><i class="bm-track"><b id="aeBalLb"></b></i><span class="bm-val" id="aeBalL"></span><span class="bm-name">R</span><i class="bm-track"><b id="aeBalRb"></b></i><span class="bm-val" id="aeBalR"></span></div>
-                <div class="field"><input type="range" class="bi" id="aeBal" min="-12" max="12" step="0.1" value="0" data-default="0" aria-label="Balance, left or right"><div class="sl-ends tri"><button class="sl-end" type="button" data-v="-12" aria-label="Left" title="Left">L</button><button class="sl-end tick" type="button" data-v="0" aria-label="Center" title="Center">|</button><button class="sl-end" type="button" data-v="12" aria-label="Right" title="Right">R</button></div></div>
+                <div class="field"><div class="sl-row sl-in"><button class="sl-end" type="button" data-v="-12" aria-label="Left" title="Left">L</button><input type="range" class="bi" id="aeBal" min="-12" max="12" step="0.1" value="0" data-default="0" aria-label="Balance, left or right"><button class="sl-end tick" type="button" data-v="0" aria-label="Center" title="Center"><i aria-hidden="true"></i></button><button class="sl-end" type="button" data-v="12" aria-label="Right" title="Right">R</button></div></div>
                 </div>
               </div>
             <div class="ae-card im-scope"><canvas id="aeScope" aria-label="Stereo image"></canvas><div class="im-corr" title="How alike left and right are. In the red, the sound thins out in mono."><i id="aeCorr"></i></div><div class="im-listen"><span>Listen</span><div class="seg" id="aeListen" role="radiogroup" aria-label="Listen to"><label><input type="radio" name="aeListen" value="" checked><span>Both</span></label><label><input type="radio" name="aeListen" value="mid"><span>Middle</span></label><label><input type="radio" name="aeListen" value="side"><span>Sides</span></label></div></div></div>
@@ -880,14 +884,14 @@
                 </div>
               </div></div></div>
             </div>
-            <div class="ae-card lv-side" id="aeGainCard"><div class="t-head"><h4>Gain</h4></div><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="0">0</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
+            <div class="ae-card lv-side" id="aeGainCard"><div class="t-head"><h4>Gain</h4></div><output class="lv-big" id="aeGainBig">0dB</output><div class="field" id="aeGainField"><div class="sl-row sl-in"><input type="range" class="bi" id="aeGain" min="-12" max="12" step="0.5" value="0" data-default="0" aria-label="Gain"><button class="sl-end tick" type="button" data-v="0" aria-label="No change" title="No change"><i aria-hidden="true"></i></button></div><div class="sl-ends"><button class="sl-end" type="button" data-v="-12">−12</button><button class="sl-end" type="button" data-v="12">+12</button></div></div></div>
             </div>
             <div class="ae-card lv-meter own-grid" id="aeMeter"><div class="lv-mh t-head"><h4>Meter</h4><button class="lv-clip" id="aeClip" type="button" title="Clipped. Click to clear." aria-hidden="true" tabindex="-1">Clip</button></div><div class="lv-track" title="The dark tick is the loudest peak of the original file."><i class="lv-zone"></i><i class="lv-ceil" title="Ceiling: −1 dBTP. The limiter keeps true peaks under this line." style="left:72.9%"></i><i class="lv-orig" id="aeMeterOrig"></i><b class="lv-fill" id="aeMeterFill"></b><i class="lv-hold" id="aeMeterHold"></i></div><div class="lv-scale"><span style="left:0%">−36</span><span style="left:25%">−24</span><span style="left:50%">−12</span><span style="left:75%">0</span><span style="left:100%">+12</span></div><div class="lv-sum" id="aeSum" title="Measured after every module."><div><span>Loudness</span><b id="aeSumLoud">—</b></div><div><span>True peak</span><b id="aePeakNow" class="lv-hit" title="The highest true peak since play started. Click to reset it.">—</b></div></div></div>
           </div>
         </section>
         <section class="ae-pane" id="aePaneFades" hidden>
           <div class="fd-grid tool-grid">
-            <div class="ae-card" id="aeFadeLenCard"><div class="t-head"><h4>Length</h4></div><div class="seg" id="aeFadeSide" role="radiogroup" aria-label="Fade length for"><label><input type="radio" name="aeFadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="aeFadeSide" value="in"><span>In</span></label><label><input type="radio" name="aeFadeSide" value="out"><span>Out</span></label></div><div class="field" id="aeFadeLenField"><output class="lv-big" id="aeFadeLenVal">Off</output><input type="range" id="aeFadeLen" min="0" max="3" step="0.1" value="0" data-default="0" aria-label="Fade length"><div class="sl-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end" type="button" data-v="max">Longer</button></div></div></div>
+            <div class="ae-card" id="aeFadeLenCard"><div class="t-head"><h4>Length</h4></div><div class="seg" id="aeFadeSide" role="radiogroup" aria-label="Fade length for"><label><input type="radio" name="aeFadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="aeFadeSide" value="in"><span>In</span></label><label><input type="radio" name="aeFadeSide" value="out"><span>Out</span></label></div><div class="field" id="aeFadeLenField"><output class="lv-big" id="aeFadeLenVal">Off</output><div class="sl-row sl-in"><button class="sl-end" type="button" data-v="0">Off</button><input type="range" id="aeFadeLen" min="0" max="3" step="0.1" value="0" data-default="0" aria-label="Fade length"><button class="sl-end" type="button" data-v="max">Longer</button></div></div></div>
             <div class="ae-card fd-shape"><div class="t-head"><h4>Shape</h4></div><canvas id="aeFadeCv" aria-label="Fade shape"></canvas><div class="seg" id="aeFadeShape" role="radiogroup" aria-label="Fade curve"><label><input type="radio" name="aeFadeShape" value="natural" checked><span>Gradual</span></label><label><input type="radio" name="aeFadeShape" value="standard"><span>Straight</span></label></div></div>
           </div>
         </section>

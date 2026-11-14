@@ -27,7 +27,7 @@ const STATES = {
   'noise short': ['noise', null, async p => { await p.click('#aeNrHand'); const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(), t = t => r.left + aeX(t); return { y: r.top + r.height / 2, a: t(1.8), z: t(2.0) }; }); await p.mouse.move(g.a, g.y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(g.a + (g.z - g.a) * i / 8, g.y); await p.mouse.up(); await p.waitForTimeout(300); }],
   'fades length 1': ['fades', async () => { const fl = document.querySelector('#aeFadeLen'); fl.value = 1; fl.dispatchEvent(new Event('input', { bubbles: true })); fl.dispatchEvent(new Event('change', { bubbles: true })); await sleep(1500); aeFadeDraw(); }],
 };
-// cards side by side whose last lines share one line (Fades: the Length card's numbers end on the Shape card's choice), so Length's scale follows that rule, not the picture
+// cards side by side whose last lines share one line (Fades: the Length card's slider row ends on the Shape card's choice). Width, Balance, and Fades Length have no scale row: their end words sit beside the track (owner's decision, November 13, 2026), checked by slider-word in audio-editor-grid-lines
 const LAST_LINES = ['aeFadeLenCard'], LAST_PAIRS = [['aeFadeLenCard', 'ae-card.fd-shape']];
 // what each Noise picture shows on the Select row: Auto pressed, Manual pressed, Learn on or off, and the "Too short" note
 const NOISE_SHOWS = { 'noise idle': 'false,false,off,nonote', 'noise selected': 'true,false,on,nonote', 'noise learning': 'true,false,off,nonote', 'noise short': 'false,true,off,note' };
@@ -62,12 +62,10 @@ const TABLE = {
     ['bottom:aeWidthCard', 493, 487],
     ['head:WIDTH', 339, 338.98],
     ['ctl:WIDTH', 327, 328],
-    ['scale:aeWidthCard', 412, 409.98],
     ['top:aeBalCard', 503, 497],
     ['bottom:aeBalCard', 656, 656],
     ['head:BALANCE', 524, 517.98],
     ['ctl:BALANCE', 512, 507],
-    ['scale:aeBalCard', 629.07, 634.98],
     ['top:ae-card.im-scope', 318, 318],
     ['bottom:ae-card.im-scope', 656, 656]
   ],
@@ -80,7 +78,6 @@ const TABLE = {
     ['bottom:aeBalCard', 656, 656],
     ['head:BALANCE', 524, 517.98],
     ['ctl:BALANCE', 512, 507],
-    ['scale:aeBalCard', 629.07, 634.98],
     ['top:ae-card.im-scope', 318, 318],
     ['bottom:ae-card.im-scope', 656, 656]
   ],
@@ -88,7 +85,6 @@ const TABLE = {
     ['top:aeFadeLenCard', 318, 318],
     ['bottom:aeFadeLenCard', 656, 656],
     ['head:LENGTH', 339, 338.98],
-    ['scale:aeFadeLenCard', 629.01, 634.98],
     ['top:ae-card.fd-shape', 318, 318],
     ['bottom:ae-card.fd-shape', 656, 656],
     ['head:SHAPE', 339.01, 338.98],
@@ -107,7 +103,7 @@ const TABLE = {
     ['top:aeMeter', 497, 492],
     ['bottom:aeMeter', 656, 656],
     ['head:METER', 518, 512.98],
-    ['scale:aeMeter', 576.08, 574.83]
+    ['scale:aeMeter', 576.08, 579.83]
   ],
   'emu idle': [
     ['top:aeEmCard', 318, 318],
@@ -120,7 +116,6 @@ const TABLE = {
     ['top:aeFadeLenCard', 318, 318],
     ['bottom:aeFadeLenCard', 656, 656],
     ['head:LENGTH', 339, 338.98],
-    ['scale:aeFadeLenCard', 629.01, 634.98],
     ['top:ae-card.fd-shape', 318, 318],
     ['bottom:ae-card.fd-shape', 656, 656],
     ['head:SHAPE', 339.01, 338.98],

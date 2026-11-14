@@ -22,12 +22,23 @@
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px;   /* the spacing scale (2, 4, 8, 12, 16): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --ae-side:16px;   /* the tool window's one left line and one right line: the tool's name, its subtitle and buttons, the cards, and the status bar all sit this far in from the window's edges */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
+  --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
+  --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
+  --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
+  --value-fs:13px;   /* every value readout: beside a slider, in a label row, in the Balance meter, and after a heading */
+  --scale-fs:11px;   /* every end word and number under or beside a slider or bar (Meter, Gain, Width, Balance, Fades Length) */
+  --big-fs:32px;   /* every big number over a slider (Gain, Fades Length) */
+  --scale-gap:8px;   /* the white space from the visible bottom of any bar or slider track to the top of the numbers under it (Meter, Gain, Width, Balance, Fades Length); a slider's thumb hangs below its track, so a slider's numbers sit --scale-gap-thumb under the thumb */
+  --scale-gap-thumb:calc(var(--scale-gap) - (var(--thumb) - var(--track)) / 2);
+  --tick-h:6px;   /* a scale's middle tick under a slider (the approved pictures) */
+  --line-s:16px;   /* the line a small label or note sits on (12px text), trimmed to its letters where rows must share one line */
   --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:30px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
   --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
   --hairline:color-mix(in srgb,var(--ink) 13.5%,transparent);   /* a divider or an unlit light on a tinted surface (where --line disappears in dark mode); made from ink, so it follows each theme with no override */
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
+  --thumb-bg:#ffffff; --thumb-edge:rgba(16,20,40,.16);   /* a slider's handle: a pale pill with a hairline edge, so blue means only the value set */
   --fade:#b0389c; --turn:#d97706; --turn-soft:rgba(251,185,40,.34); --play:#d6333f; --cred:#12907c; --cred-soft:rgba(18,144,124,.20);
   --stage:#dfe3ea; --block:#ffffff; --wave:#7c8bf0; --danger:#c4283a;
   --turn-ink:#bf6500; --turn-sys:#8690a6; --turn-sys-soft:rgba(112,124,150,.16); --ok-ink:#1f9a5b;
@@ -41,6 +52,7 @@
   :root:not([data-theme="light"]){
     --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
     --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
+    --thumb-bg:#eceef3; --thumb-edge:rgba(0,0,0,.4);
     --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
     --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
@@ -53,6 +65,7 @@
 :root[data-theme="dark"]{
   --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
   --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
+  --thumb-bg:#eceef3; --thumb-edge:rgba(0,0,0,.4);
   --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
   --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
@@ -116,7 +129,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 /* ----- Button variants: primary, disabled, small ----- */
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:600}
 .btn.primary:hover{filter:brightness(1.06)}
-.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn[disabled]{opacity:var(--inactive);cursor:not-allowed}
 .btn.small{padding:4px 9px;min-height:var(--h-s);font-size:13px}
 
 /* ==================== 5. WORK AREA (STAGE & TRANSPORT) ==================== */
@@ -163,7 +176,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .icon-btn svg{width:18px;height:18px;fill:currentColor}
 .icon-btn.stroke svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .icon-btn.play{width:44px;height:var(--h-l);background:var(--accent);border-color:transparent;color:var(--accent-ink)}
-.icon-btn[disabled]{opacity:.45;cursor:not-allowed}
+.icon-btn[disabled]{opacity:var(--inactive);cursor:not-allowed}
 .time{font-variant-numeric:tabular-nums;margin:0 8px 0 10px;min-width:140px}
 .time b{font-weight:600}
 .time span{color:var(--muted)}
@@ -208,12 +221,12 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;pad
 .field output{color:var(--ink);font-variant-numeric:tabular-nums}
 /* Sliders are drawn by the site instead of the browser, so they look the same whether or not the window is active
    (browsers gray out their own sliders after full screen, or when the window loses focus). --pct is the filled part. */
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;margin:0;padding:0;background:transparent;cursor:pointer;--pct:50%}
-input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:99px;background:linear-gradient(to right,var(--accent) 0,var(--accent) var(--pct),var(--line) var(--pct),var(--line) 100%)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;border:2px solid var(--panel);background:var(--accent);box-shadow:0 0 0 1px var(--accent),0 1px 3px rgba(0,0,0,.3)}
-input[type=range]::-moz-range-track{height:4px;border-radius:99px;background:var(--line)}
-input[type=range]::-moz-range-progress{height:4px;border-radius:99px;background:var(--accent)}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:2px solid var(--panel);background:var(--accent);box-shadow:0 0 0 1px var(--accent),0 1px 3px rgba(0,0,0,.3)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:var(--slider-h);margin:0;padding:0;background:transparent;cursor:pointer;--pct:50%}
+input[type=range]::-webkit-slider-runnable-track{height:var(--track);border-radius:99px;background:linear-gradient(to right,var(--accent) 0,var(--accent) var(--pct),var(--line) var(--pct),var(--line) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:var(--thumb-w);height:var(--thumb);margin-top:calc((var(--track) - var(--thumb)) / 2);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
+input[type=range]::-moz-range-track{height:var(--track);border-radius:99px;background:var(--line)}
+input[type=range]::-moz-range-progress{height:var(--track);border-radius:99px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 select,input[type=text],textarea.autogrow{width:100%;padding:7px 9px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}
 textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
@@ -257,7 +270,7 @@ input.bad{border-color:var(--danger)}
 .seg label:focus-within{outline-offset:0}          /* the focus ring sits in the 2px inset, so the control's edge does not clip it */
 .seg input:checked+span{color:var(--ink)}
 .seg label:has(input:checked){color:var(--ink)}
-.seg label.dim{opacity:.45}
+.seg label.dim{opacity:var(--inactive)}
 .field label.check{min-height:20px;justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
 .colorrow{display:flex;gap:8px;align-items:center}
 .sub{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
@@ -432,7 +445,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 @media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active{transform:none}}
 .stage-strip button.txt,.sys-zoom button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 10px;font-size:12.5px;font-weight:600}
 .stage-strip button:not(:disabled):hover,.sys-zoom button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-zoom button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
-.stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:.5;cursor:default}
+.stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:var(--inactive);cursor:default}
 .stage-strip svg,.sys-zoom svg,.sys-bar svg,.sys-nav svg{width:14px;height:14px}
 .sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
@@ -588,9 +601,9 @@ select,input[type=text],textarea.autogrow,select:hover,input[type=text]:hover,te
 .menu-item{transition:background-color .2s var(--ease-color)}
 input[type=range]::-webkit-slider-thumb{transition:transform .3s var(--spring-hover)}
 input[type=range]::-moz-range-thumb{transition:transform .3s var(--spring-hover)}
-input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.15)}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.06)}
 input[type=range]:active::-webkit-slider-thumb{transform:scale(1.05)}
-input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
+input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 .panel .group{transition:opacity .4s var(--ease-ui)}
 
 /* the PDF chip opens the page chooser: the page count is underlined, and "Choose pages" slides out on hover */
@@ -667,9 +680,9 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.15)}
 @keyframes fsCorners{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1.08)}}
 
 /* a disabled slider (the timeline zoom before there is a score) looks switched off, not just still */
-input[type=range]:disabled{opacity:.4;cursor:not-allowed}
+input[type=range]:disabled{opacity:var(--inactive);cursor:not-allowed}
 input[type=range]:disabled::-webkit-slider-thumb{transform:none}
-.zoom:has(input:disabled){opacity:.6}
+.zoom:has(input:disabled){opacity:var(--inactive)}
 
 .panel .btn.wide{width:100%;margin-top:10px}
 
@@ -714,11 +727,11 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 
 .ae-bar .push-right{margin-left:auto}
 #aeGainField{transition:opacity .3s var(--ease-ui)}
-#aeGainField.dim{opacity:.45}
+#aeGainField.dim{opacity:var(--inactive)}
 /* Normalize grays the Gain slider (a one-off: no shared disabled style dims a slider track and leaves its thumb readable): its card dims (.55) and the slider dims (.4), which stacks to about 22% and hides the track. Here the slider is not dimmed as a whole: the track and fill carry their own greyed colors (ink and accent, derived, so both themes hold), and the thumb takes the .4 */
 #aeGain:disabled{opacity:1}
-#aeGain:disabled::-webkit-slider-thumb{opacity:.4}
-#aeGain:disabled::-webkit-slider-runnable-track{background:linear-gradient(to right,color-mix(in srgb,var(--ink) 26%,transparent) 0,color-mix(in srgb,var(--ink) 26%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 40%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 26%,transparent) 100%)}
+#aeGain:disabled::-webkit-slider-thumb{opacity:1}
+#aeGain:disabled::-webkit-slider-runnable-track{background:linear-gradient(to right,color-mix(in srgb,var(--ink) 33%,transparent) 0,color-mix(in srgb,var(--ink) 33%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 55%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 55%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 33%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 33%,transparent) 100%)}
 .ed-head{flex-wrap:wrap}
 .ed-head h2{white-space:nowrap}
 .line-style.sub{display:flex}
@@ -972,7 +985,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .keys-groups h3{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 @media (max-width:820px){.keys-groups{grid-template-columns:1fr}.keys-col+.keys-col{margin-top:var(--gap-field)}}
 /* a control that is switched off dims smoothly */
-.field.dim{opacity:.45}
+.field.dim{opacity:var(--inactive)}
 .field{transition:opacity .35s var(--ease-ui)}
 /* Resize: the glass card sits a comfortable distance below the size line */
 
@@ -1032,7 +1045,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 /* ==================== 17. AUDIO EDITOR: tool list, tools and tool window ==================== */
 .dlg.editor.ae{width:min(1000px,96vw)}
 .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.btn:disabled[aria-pressed]{opacity:.5}
+.btn:disabled[aria-pressed]{opacity:var(--inactive)}
 .ae-main{display:grid;gap:22px}
 .ae-pane[hidden]{display:none}
 .ae-rail{display:flex;flex-direction:column}
@@ -1056,23 +1069,23 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-top .seg{flex:0 0 auto;transition:opacity .3s var(--ease-ui)}
 .eq-top .seg[hidden]{display:none}
 .eq-dyn{grid-column:1/-1}
-.eq-band.ae-card:has(>.eq-dyn:not(.open)){padding-bottom:calc(var(--gap-set) - var(--band-row-gap,0px))}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
-.eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding-top:8px}
+.eq-band.ae-card{--band-row-gap:0px}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
+.eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding-top:calc(var(--gap-head) + var(--band-row-gap))}          /* the fold holds its own space above it (the cells' row gap and --gap-head), so a shut fold takes none */
 .eq-dyn .eq-cell{gap:2px}
 .eq-dyn .eq-ctl{height:22px}
 .eq-lbl-r{display:inline-flex;align-items:baseline;gap:8px}
 .eq-lbl-r .btn{padding:0 8px;font-size:11.5px;line-height:18px;height:20px;align-self:center}
-.eq-top .seg.dim{opacity:.45;pointer-events:none}
+.eq-top .seg.dim{opacity:var(--inactive);pointer-events:none}
 .eq-top .seg label{padding:4px 10px;font-size:12.5px}
 .eq-stage{position:relative;height:196px}
 .eq-stage canvas,.im-scope canvas{display:block;width:100%;height:100%;touch-action:none}
 .eq-band .field{margin:0}
-.eq-band.none{opacity:.4;pointer-events:none}
+.eq-band.none{opacity:var(--inactive);pointer-events:none}
 /* Imager */
 .im-cols{display:grid}
 .im-corr{display:grid;grid-template-columns:1fr;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
 .im-corr i{position:relative;height:6px;border-radius:99px}
-.im-corr i::after{content:'';position:absolute;top:-5px;left:calc(var(--c,.5) * 100%);width:3px;height:16px;margin-left:-1.5px;border-radius:2px;background:var(--ink);pointer-events:none}
+.im-corr i::after{content:'';position:absolute;top:-4px;left:calc(var(--c,.5) * 100%);width:1px;height:14px;margin-left:-.5px;background:var(--muted);pointer-events:none}          /* a reading, not a control: a thin tick in the scale ticks' gray, never a handle */
 #audioDlg:not(.afull) #aeBalCard{flex:none}
 /* narrow but not a phone (521–760px): Fades and Noise use two columns, so the tool fits its window with less scrolling */
 /* phones (520px and below): there is no room for a fixed window, so the whole dialog scrolls like a page and each tool shows at its full height */
@@ -1092,10 +1105,10 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 /* a slider with a zero in the middle fills outward from it */
 input[type=range].bi::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--line) 0,var(--line) var(--lo,50%),var(--accent) var(--lo,50%),var(--accent) var(--hi,50%),var(--line) var(--hi,50%),var(--line) 100%)}
 input[type=range].bi::-moz-range-progress{background:transparent}
-.sl-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.sl-ends{display:flex;justify-content:space-between;font-size:var(--scale-fs);color:var(--muted)}
 /* EQ */
 .eq-top{gap:8px}
-.eq-band{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:6px 18px;align-items:end;margin-top:14px;transition:opacity .3s var(--ease-ui)}
+.eq-band{transition:opacity .3s var(--ease-ui)}
 .eq-bn{display:flex;align-items:stretch;gap:10px;align-self:center;font-weight:600}
 .eq-bn b{font-variant-numeric:tabular-nums}
 .eq-bn .switch{order:2}
@@ -1110,21 +1123,21 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-card{padding:var(--gap-set) var(--gap-field);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
 .ae-card h4{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-card .field{margin-bottom:0}
-.ae-card.dim{opacity:.55}
+.ae-card.dim{opacity:var(--inactive)}
 .ae-rail{--rail-pad:8px;padding:var(--rail-pad);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);gap:0}
 .ae-rail-cur{display:none}
 .ae-rail-body{display:flex;flex-direction:column;flex:1 0 auto}
 .ae-rail-in{display:flex;flex-direction:column;gap:4px;flex:1 0 auto}
 .ae-panes{display:flex;flex-direction:column}
-.lv-big{display:block;margin:0 0 14px;font-size:40px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
+.lv-big{display:block;margin:0 0 14px;font-size:var(--big-fs);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
-.eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out)}
+.eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out),margin-top .4s var(--ease-out)}
 .eq-fold.shut{grid-template-rows:0fr}
 .eq-fold-in{min-height:0;overflow:hidden}
 .eq-fold.shut .eq-fold-in{visibility:hidden;transition:visibility 0s .4s}
 @media (prefers-reduced-motion:reduce){.eq-fold,.eq-fold.shut .eq-fold-in{transition:none}}
-.eq-match .field.dim{opacity:.45}
+.eq-match .field.dim{opacity:var(--inactive)}
 @media (max-width:760px){
   .ae-rail{display:block;padding:0}
   .ae-rail-cur{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
@@ -1159,7 +1172,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .led.on::after{opacity:1;transform:none}
 /* slider labels that are also buttons */
 .sl-ends{margin-top:0}          /* the end labels sit directly under their slider (the field's own gap is the space between them) */
-.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.sl-end{padding:2px 4px;margin:0 -4px;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--scale-fs);font-variant-numeric:tabular-nums;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .sl-end:hover,.sl-end:focus-visible{color:var(--accent);background:var(--accent-soft)}
 .sl-end:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.sl-end:not(:disabled):active{transform:none}}
@@ -1170,7 +1183,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 /* EQ Match */
 .mt-steps{display:flex;flex-direction:column;gap:14px}
 .mt-step{display:flex;align-items:flex-start;gap:12px;transition:opacity .35s var(--ease-ui)}
-.mt-step.dim{opacity:.45}
+.mt-step.dim{opacity:var(--inactive)}
 .mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
 .mt-body{flex:1;min-width:0}
 .mt-step .mt-title{display:flex;align-items:center;min-height:22px}          /* a step's first line is as tall as its number, so the number is centered on it */
@@ -1221,7 +1234,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .nr-hum-bar{position:absolute;left:0;right:0;bottom:-7px;height:3px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
 .nr-hum.busy .nr-hum-bar{opacity:1}
 .nr-hum-bar b{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .25s linear}
-input.switch:disabled{cursor:progress;opacity:.55}
+input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* a pressed primary button stays readable: solid with its own ink */
 .btn.primary[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .em-go .btn.on::before{content:'';display:inline-block;width:12px;height:12px;margin:0 6px -1px 0;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 5 5 9-10'/%3E%3C/svg%3E") center/contain no-repeat}
@@ -1241,8 +1254,8 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .led.tgt{box-shadow:0 0 0 3px var(--accent-soft),0 0 0 4.5px var(--accent),inset 0 1px 1px rgba(255,255,255,.55)}
 .led.shake{animation:ledshake .4s var(--ease-out)}
 @keyframes ledshake{20%{transform:translateX(-3px)}45%{transform:translateX(3px)}70%{transform:translateX(-2px)}100%{transform:none}}
-.ae-proc.off .ae-tn{opacity:.6}
-.ae-proc.bp .ae-tn{opacity:.45}
+.ae-proc.off .ae-tn{opacity:var(--inactive)}
+.ae-proc.bp .ae-tn{opacity:var(--inactive);text-decoration:line-through}
 .ae-wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
 .w-back{fill:none;stroke:rgba(20,30,60,.14);stroke-width:5.5;stroke-linecap:round}
 .w-front{fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linecap:round}
@@ -1251,18 +1264,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .w-plug.drag{fill:var(--accent);opacity:1}
 .w-front.drag{stroke-dasharray:none;opacity:.9}
 /* EQ: every control sits on the same two lines, a small label above and the control below */
-.eq-band.ae-card{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 20px;align-items:start}
+.eq-band.ae-card{display:flex;flex-direction:column}          /* the band card's parts: its row of cells, then the Dynamic fold */
+.eq-cells{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) minmax(0,1fr);gap:0 var(--gap-set);align-items:start}
 .eq-cell{display:flex;flex-direction:column;gap:var(--gap-label);min-width:0}
 .eq-lbl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0;font-weight:500;color:var(--muted)}
 .eq-lbl output{color:var(--ink);font-variant-numeric:tabular-nums}
 .eq-lbl b{color:var(--ink)}
 .eq-ctl{display:flex;align-items:center;height:var(--h-s)}          /* the control line is as tall as its controls (30px), so the cell's box ends where they do */
-.eq-band>.eq-cell>.eq-ctl:has(>input[type=range]){margin-bottom:calc((18px - var(--h-s)) / 2)}          /* a slider's line is as tall as the controls beside it so they share one center line, but its cell ends where the thumb does, so a row of sliders ends where its thumbs do */
+.eq-cells>.eq-cell>.eq-ctl:has(>input[type=range]){margin-bottom:calc((var(--thumb) - var(--h-s)) / 2)}          /* a slider's line is as tall as the controls beside it so they share one center line, but its cell ends where the thumb does, so a row of sliders ends where its thumbs do */
 .eq-ctl select{height:34px}
 .eq-ctl input[type=number]{width:96px;height:34px;box-sizing:border-box}
 .eq-ctl input[type=range]{width:100%}
 .eq-bn{min-width:70px}
-.eq-cell.dim{opacity:.45}
+.eq-cell.dim{opacity:var(--inactive)}
 .eq-cell[hidden]{display:none}
 .eq-bn .eq-ctl{gap:12px}
 .eq-ctl .seg{width:100%;font-size:12.5px}
@@ -1294,7 +1308,10 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .mt-pick span.bad{color:var(--bad)}
 
 /* tool windows slide */
-.ae-pbody.sliding{overflow:hidden}
+/* While a window slides, the box that holds it clips, whatever else sets its overflow: the leaving and arriving tools overlap by a few pixels, and a box that scrolls would flash a scroll bar for the length of the slide. This is the one rule for every such box (the Audio Editor's window, the PDF Editor's top and body), and it is !important so no later, more specific scroll rule can win. */
+.ae-pbody.sliding{overflow:hidden!important}
+.pe-top.sliding,.pe-body.sliding{overflow:clip!important}
+.pe-grid-wrap.pe-fits{overflow:hidden!important}          /* set while the head slides when the pages already fit the window's final size: its height changes under the grid and a bar would flash. A grid that needs a bar keeps it. */
 .ae-pane.sliding{position:absolute;left:0;right:0;top:0}
 
 /* main-panel Fades: in and out share a row */
@@ -1347,13 +1364,13 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .im-low{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 .im-low .check{white-space:nowrap}
 .im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity .3s var(--ease-ui)}
-.im-lowf.dim{opacity:.45}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.im-lowf.dim{opacity:var(--inactive)}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums}
 .im-listen{display:flex;align-items:center;gap:10px}.im-listen>span{font-size:12.5px;color:var(--muted)}.im-listen .seg{flex:1;font-size:12px}.im-listen .seg span{padding:4px 6px}
 .im-view{align-self:center}
 .im-view .field{margin-bottom:6px}
 .field.row3{display:grid;grid-template-columns:92px minmax(0,1fr) 38px;align-items:center;gap:0 10px}
 .field.row3 label{display:contents}
-.field.row3 label span{order:1;margin:0;white-space:nowrap}
+.field.row3 label span{order:1;white-space:nowrap}
 .field.row3 input{order:2;margin:0}
 .field.row3 output{order:3;text-align:right}
 .ae-abs{display:flex;align-items:center;gap:6px}
@@ -1446,7 +1463,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .band-pill .bp-b+.bp-b{border-left:1px solid var(--line)}
 .band-pill .bp-b:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
 .band-pill .bp-b:active:not(:disabled){transform:scale(.88)}
-.band-pill .bp-b:disabled{opacity:.35;cursor:default}
+.band-pill .bp-b:disabled{opacity:var(--inactive);cursor:default}
 .band-pill .bp-b:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 /* full screen: only Spectra gets the big picture. Every other tool shows its whole window (no scrolling) under a smaller picture. */
 #audioDlg.afull .ae-pbody{min-height:395px}
@@ -1467,12 +1484,19 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* EQ, narrow: the graph keeps a usable height. Below 980px the band is two columns (its Band row across the top, then Type and Frequency, then Gain and Width), the same two-column narrow rule Fades and Noise use, so no slider is squeezed to nothing */
 #aePaneEq{container:eq/inline-size}
 #audioDlg.head-in-bar:not(.afull) .eq-main>.eq-stage{flex:none;height:clamp(160px,36dvh,240px)}          /* where the tool body scrolls the graph keeps a usable height */
-@container eq (max-width:670px){          /* the band is two columns: its Band row across the top, then Type and Frequency, then Gain and Width, the same two-column narrow rule Fades and Noise use */
-  .eq-band.ae-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card);--band-row-gap:var(--gap-card);align-items:start}
+/* the band is two columns: its Band row across the top, then Type and Frequency, then Gain and Width, the same two-column narrow rule Fades and Noise use. A pane under 622px (a 761px to 980px screen, as before) takes it, and so does the 760px mode, whose tool list is gone and whose pane is wider */
+@container eq (max-width:621.5px){
+  .eq-band.ae-card{--band-row-gap:var(--gap-card)}
+  .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
   .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .eq-band .eq-cell{min-width:0}
   .eq-band select{width:100%}
 }
+:where(#audioDlg.head-in-bar) .eq-band.ae-card{--band-row-gap:var(--gap-card)}
+:where(#audioDlg.head-in-bar) .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
+:where(#audioDlg.head-in-bar) .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
+:where(#audioDlg.head-in-bar) .eq-band .eq-cell{min-width:0}
+:where(#audioDlg.head-in-bar) .eq-band select{width:100%}
 
 /* ---- full screen, both editors: no title bar. Small glass chips float at the top; the controls and the tools sit in glass rows at the bottom. ---- */
 #audioDlg.afull .ed-head{background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;justify-content:flex-end;pointer-events:none;align-items:flex-start}
@@ -1480,7 +1504,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg.afull .ed-head .t-block{display:none}
 #audioDlg.afull .ed-head .ed-tools{pointer-events:auto;margin:0}
 #audioDlg.afull .ed-head .btn,.app.fs .transport .btn:not(.primary),.app.fs .transport .icon-btn:not(.play){background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border:1px solid var(--glass-edge);color:var(--ink);box-shadow:var(--glass-shadow)}
-#audioDlg.afull .ed-head .btn:disabled{opacity:.55}
+#audioDlg.afull .ed-head .btn:disabled{opacity:var(--inactive)}
 /* the score player's controls: one glass row above the timeline, the same recipe as the Audio Editor's */
 .app.fs .transport{left:var(--fs-gap);right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + 10px);padding:8px 14px;gap:8px;border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow),0 24px 48px -28px rgba(10,14,30,.6);color:var(--ink);text-shadow:none;isolation:isolate}
 .app.fs .transport::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.55),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%);opacity:.7}
@@ -1500,7 +1524,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .panel .group{padding-bottom:18px}
 .group-body>.field.fade-pair{margin-top:10px}
 /* Bypass dims every lit module (Level and Fades too); a module that is already off stays as quiet as it was */
-.ae-proc.bp.off .ae-tn{opacity:.55}
+.ae-proc.bp.off .ae-tn{opacity:var(--inactive)}
 
 /* ----- Export audio: the Advanced fold (sample rate, metadata) ----- */
 .adv{display:grid;grid-template-columns:minmax(0,1fr)}
@@ -1523,7 +1547,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* ----- Imager balance: say what the sound is like now, and mark on the slider where it becomes even ----- */
 
 /* ----- a button that is greyed out but still tells you why (hover, focus or click) ----- */
-.btn.soft{position:relative;cursor:default;color:color-mix(in srgb,currentColor 45%,transparent);background:color-mix(in srgb,var(--panel2) 45%,transparent);border-color:color-mix(in srgb,var(--line) 45%,transparent)}
+.btn.soft{position:relative;cursor:default;color:color-mix(in srgb,currentColor calc(var(--inactive) * 100%),transparent);background:color-mix(in srgb,var(--panel2) calc(var(--inactive) * 100%),transparent);border-color:color-mix(in srgb,var(--line) calc(var(--inactive) * 100%),transparent)}
 .btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:400;--lh:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .btn.soft:hover::after,.btn.soft:focus-visible::after,.btn.soft.say::after{opacity:1;transform:none}
 .btn.soft:not([data-why])::after,.btn.soft[data-why=""]::after{display:none}
@@ -1623,44 +1647,50 @@ input.switch:disabled{cursor:progress;opacity:.55}
 /* EQ: the picture takes whatever room is left, so opening EQ Match never makes the window taller */
 #aePaneEq:not([hidden]){display:flex;flex-direction:column}
 #aePaneEq .eq-fold{flex:none}
-.eq-fold-in>.ae-card{flex:none;margin-top:var(--gap-card)}          /* a card that opens under the graph sits a card gap below it, and takes no gap while its fold is shut */
+.eq-fold-in>.ae-card{flex:none}
+.tool-grid>.card-fold.shut{margin-top:calc(-1 * var(--gap-card))}          /* a card that folds open sits a card gap below the card above it (the grid's gap); while its fold is shut it takes no gap */
+.tool-grid.eq-grid{display:flex;flex-direction:column;flex:1 1 auto}          /* EQ: the graph card takes the spare height, the band and Match fold open under it */
 .mt-steps.two{gap:6px 20px}
 /* the graph card: the tools on top (12px above them, from the card's padding, and 12px below), then the graph edge to edge under one line, running to the card's bottom edge; it takes whatever room is left */
-.eq-main{display:flex;flex-direction:column;gap:var(--gap-set);flex:1 1 auto;min-height:0;padding-bottom:0;overflow:hidden}
+.eq-main{display:flex;flex-direction:column;gap:var(--gap-set);flex:1 1 auto;min-height:0;overflow:hidden}
 .eq-main>.eq-top{flex:none;margin:0}
-.eq-main>.eq-stage{flex:1 1 0;min-height:64px;height:auto;margin:0 -16px;border-top:1px solid var(--hairline)}
+.eq-main>.eq-stage{flex:1 1 0;min-height:64px;height:auto;margin:0 calc(-1 * var(--gap-field)) calc(-1 * var(--gap-set));border-top:1px solid var(--hairline)}
 /* Imager: both columns end together */
-.im-cols{height:100%;grid-template-columns:minmax(0,1fr) 244px;gap:var(--gap-card);align-items:stretch}
+.im-cols{--scope-col:244px;height:100%;grid-template-columns:minmax(0,1fr) var(--scope-col);gap:var(--gap-card);align-items:stretch}
 #audioDlg.head-in-bar .im-cols{grid-template-columns:minmax(0,1fr)}          /* the phone's one column, which the two-column rule above would otherwise win back */
+#audioDlg.head-in-bar .im-scope canvas{flex:none;height:calc(var(--scope-col) - 2 * var(--gap-field))}          /* where the cards stack and take their content height, the scope keeps the height it has beside the cards (its square is drawn centered) */
 .im-ctl{display:flex;flex-direction:column;gap:var(--gap-card);min-height:0}          /* Balance keeps its height and sits on the scope's bottom line; Width takes the spare height, and its footer row pins to the bottom of its card */
 #aeWidthCard{flex:1 1 auto;display:flex;flex-direction:column}
 #aeBalCard{flex:none;align-content:space-between}
 .im-views{display:grid}          /* the two views share one place, as tall as the taller; each is centered in it, so each is balanced in its own state */
-.im-slrow{display:grid;grid-template-columns:minmax(0,1fr) 36px;grid-template-rows:18px auto;gap:0 12px;align-items:center}
-.im-slrow .sl-track{display:contents}
-.im-slrow input[type=range]{grid-column:1;grid-row:1}
-.im-slrow output{grid-column:2;grid-row:1}
-.im-slrow .sl-ends{grid-column:1;grid-row:2}          /* the value sits at the end of the slider, level with it; the end labels sit under the slider only */
-.im-slrow output{text-align:right;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-/* the slider and its end labels share one track, so Normal sits under the middle of the slider */
-.im-slrow{grid-template-columns:minmax(0,1fr) 46px}
-.im-slrow.bal{grid-template-columns:minmax(0,1fr) 92px}
-.sl-track{min-width:0}
-.sl-ends.tri{display:grid;grid-template-columns:1fr auto 1fr}
-.sl-ends.tri .sl-end:first-child{justify-self:start}
-.sl-ends.tri .sl-end:last-child{justify-self:end}
-.im-slrow input{margin:0}
 .im-view .field{margin:0}
 .im-ctl .field{margin:0}
+/* ==================== The slider row: words beside a slider line up with it by themselves ====================
+   .sl-row is any row that holds a slider and words beside it (end labels, a label, a value). Every word in it is trimmed to its letters (the shared trim) and the row centers it on the slider,
+   whose box is its thumb around its track, so the letters' middle is the track's middle at any size, font, or wording, with no number of its own. Values beside a slider are regular weight.
+   .sl-in lays a slider out with its end words beside the track (Apple's end markers): the left word on the row's left line, the track, the right word, then a value; a middle that means
+   something (Width's Normal, Balance's Center) is a short tick under the track at the middle, clear of the handle. A scale of values (numbers, a labeled value like Auto) stays under the slider. */
+.sl-row{align-items:center}
+.field:has(>.lv-big){row-gap:var(--gap-set)}          /* a big value over its slider (Fades Length) sits --gap-set above the thumb: its letters end there, so it never crowds the slider */
+.sl-row>:not(input,label,.sl-end,.tick),.sl-row>label>:not(input){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h);align-self:center}
+.sl-row output{font-weight:400;color:var(--ink);font-size:var(--value-fs);font-variant-numeric:tabular-nums}
+.sl-in{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto;grid-auto-flow:column;grid-auto-columns:auto;column-gap:var(--gap-head);min-width:0}
+.sl-in>*{grid-row:1}
+.sl-in>input{grid-column:2;margin:0;min-width:0}
+.sl-in>output{text-align:right;margin-left:var(--gap-label)}
+#audioDlg .sl-in>.sl-end.tick{grid-column:2;grid-row:2;justify-self:center;align-self:start;display:flex;align-items:flex-start;width:1px;height:var(--tick-h);margin:var(--gap-sub) 0 0;padding:0;border:0;border-radius:0;background:none}          /* the tick sits in its own row under the track at the middle, so it takes real room: the slider's body (thumb to tick) is what the card centers */
+#audioDlg .im-view .sl-in>.sl-end.tick{height:calc(round(up, calc(var(--gap-sub) + var(--tick-h)), 2px) - var(--gap-sub))}          /* views that share one slot are each centered in it: a view's height is a whole number of pairs of pixels, so its centered top is a whole pixel (the tick is drawn the same; only the room under it grows by a pixel) */
+.sl-in>.sl-end.tick>i{display:block;width:1px;height:var(--tick-h);background:var(--muted);opacity:.6}
 .field.row3{margin-bottom:2px}
-.head-note{color:var(--ink);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}          /* a readout beside a heading's text (Balance's shift), shown only when it has something to say */
+.head-note{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}          /* a readout beside a heading's text (Balance's shift), shown only when it has something to say */
 .head-note:empty{display:none}
-.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--gap-head) var(--gap-set);align-items:center;margin:0 0 6px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}
-.bal-meter.none{opacity:.35}
-.bm-name{min-width:34px}
-.bm-val{min-width:64px;text-align:right;color:var(--ink);font-weight:500}
-.bm-track{position:relative;display:block;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
-.bm-track b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 38%,transparent);transition:width .4s var(--ease-out)}
+.bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--gap-set);align-items:center;margin:0;padding:var(--gap-set);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--ink) 4%,transparent);box-shadow:inset 0 1px 2px rgba(0,0,0,.09),inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}          /* a readout, not a control: the meters sit in an inset panel with --gap-set inside on all four sides (its rows are trimmed to their letters and bars, so the room is the same on every side) */
+.bal-meter.none{opacity:var(--inactive)}
+.bm-name{justify-self:end}          /* L and R hug their bars, so the space from a letter to its bar is the space from the bar to its value */
+.bm-val{justify-self:start;text-align:left;color:var(--muted);font-weight:400}
+.bm-val::before{content:'\2212 00.0dB';display:block;height:0;overflow:hidden;visibility:hidden}          /* the value column is always as wide as the widest reading (digits are all one width), and a value starts the same --gap-set after its bar as the bar starts after L, so a longer number never moves the bar */
+.bm-track{position:relative;display:block;height:8px;border-radius:99px;background:color-mix(in srgb,var(--ink) 10%,transparent);overflow:hidden}
+.bm-track b{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:color-mix(in srgb,var(--ink) 24%,transparent);transition:width .4s var(--ease-out)}
 .im-scope{min-height:0;gap:var(--gap-card)}
 .im-scope canvas{flex:1 1 0;min-height:0;aspect-ratio:auto;height:auto}
 /* ==================== Tool grid: a tool's cards sit on one shared set of lines ====================
@@ -1670,6 +1700,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .tool-grid{display:grid;gap:var(--gap-card);height:100%;min-height:0}
 .tool-group{display:grid;gap:var(--gap-card)}          /* cards that stand in a row of a tool grid together, sharing rows of their own (Level's Normalize and Gain) */
 .ae-card.on-grid{display:grid;grid-row:span 3;grid-template-columns:minmax(0,1fr);grid-template-rows:subgrid;row-gap:0}
+#audioDlg .tool-grid .ae-card:not(.on-grid,.own-grid)>:is(:first-child,.t-head+*):not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack):not(:has(~ :not(.t-head,.foot-row,[hidden],.nr-prog,.tip,.t-note,.fa:not(.open),.fa-stack))){flex:1 0 auto;margin-block:0;align-content:center}          /* on the grid a card's parts reach its content edges: a card's only part fills the body and centers what it holds, so its letters and controls stay centered (the balanced body) */
 
 /* ----- Level: Normalize and Gain share the top rows; the Meter is the flexible card and takes the spare height ----- */
 #aePaneLevel{container:level/inline-size}
@@ -1698,7 +1729,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-peak:has(>.lv-note:empty)>.lv-target{margin-block:auto}          /* Peak's target under the heading and its note on the last line */
 .fa-stack>.fa>.fa-in{height:calc(100% + 2px);padding:0 4px 2px;margin:0 -4px -2px}          /* the 2px of room for a ring under the controls is not part of the body, so the box ends where its last row does */
 .lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity .3s var(--ease-ui)}
-.lv-target.dim{opacity:.45}
+.lv-target.dim{opacity:var(--inactive)}
 .lv-target .num{display:inline-flex;align-items:center;gap:6px}
 .lv-target input{width:74px;text-align:right;font-variant-numeric:tabular-nums}
 .lv-target em{font-style:normal;color:var(--muted)}
@@ -1707,14 +1738,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-trow{height:var(--h-l)}
 .lv-trow input{height:var(--h-l);box-sizing:border-box}
 .lv-noterow,.lv-limrow{grid-column:1/-1}
-.lv-noterow{grid-row:3;margin-bottom:-4px}          /* the note's 16px line holds 12px letters with 4px under the baseline, so the row ends where its letters do */
+.lv-noterow{grid-row:3;margin-bottom:var(--cut-b)}          /* the note's line holds its letters with room under the baseline: the row gives that room back (the metrics' trim), so it ends where its letters do */
 .lv-noterow:has(.lv-note:empty){display:none}
 .lv-loud:has(.lv-note:empty){grid-template-rows:1fr auto 1fr auto}
 .lv-loud:has(.lv-note:empty)>:not(.lv-noterow,.lv-limrow){grid-row:2}          /* with no note, the target is the only part: centered */
 .lv-limrow{grid-row:4;margin-top:var(--gap-set)}
-.lv-noterow{display:flex;gap:4px 12px;min-width:0;height:16px}
+.lv-noterow{display:flex;gap:var(--gap-label) var(--gap-set);min-width:0;height:var(--line-s);line-height:var(--line-s);font-size:12px}
 .lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;transition:color .3s var(--ease-color)}
-.lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:16px;line-height:16px}
+.lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:var(--line-s);line-height:var(--line-s)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
 .lv-note.warn{color:var(--warn,#b7791f)}
 .lv-limrow .check-row{flex:1;min-width:0;cursor:pointer;font-size:14px}
@@ -1744,12 +1775,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .lv-meter.hot #aePeakNow{color:var(--bad)}
 .lv-meter.live .lv-fill{transition:background-color .15s var(--ease-color)}
 .lv-meter.live .lv-orig{opacity:.25}
-.lv-scale{position:relative;height:16px;--inset:calc((16px - round(calc(var(--cap) * 11px), 1px)) / 2);margin:calc(var(--gap-head) - var(--inset)) 0 calc(-1 * var(--inset));font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}          /* the 16px line has the same room above its numbers' letters and below them (--inset), which the margins take back: the scale's box ends where its letters do, --gap-label under the bar */
+.lv-scale{position:relative;height:16px;--inset:calc((16px - round(calc(var(--cap) * var(--scale-fs)), 1px)) / 2);margin:calc(var(--scale-gap) - var(--inset)) 0 calc(-1 * var(--inset));font-size:var(--scale-fs);color:var(--muted);font-variant-numeric:tabular-nums}          /* the 16px line has the same room above its numbers' letters and below them (--inset), which the margins take back: the scale's box ends where its letters do, --gap-label under the bar */
 .lv-scale span{position:absolute;transform:translateX(-50%)}
 .lv-scale span:first-child{transform:none}
 .lv-scale span:last-child{transform:translateX(-100%)}
 .lv-meter>.lv-sum{grid-template-columns:repeat(2,minmax(0,1fr));align-self:end;margin-top:0;padding-top:9px}          /* Level's strip holds two values, so two even columns; its label sits midway between the divider and the card's bottom edge */
-.lv-meter>.lv-sum>div{display:flex;align-items:baseline;gap:8px}          /* a label sits beside its value, so the strip is one line tall */
+.lv-meter>.lv-sum>div{display:flex;align-items:center;gap:8px}          /* a label sits beside its value, so the strip is one line tall */
 .lv-meter>.lv-sum b{margin-top:0}
 .ae-card .lv-big,.ae-card .field>.lv-big{margin:0 0 8px}
 
@@ -1861,14 +1892,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-top{position:relative;flex:none}
 .pe-rule{display:block;flex:none;height:1px;background:var(--line)}
 .pe-rule.pe-snap{position:absolute;left:0;right:0;pointer-events:none}
-.pe-top.sliding{overflow:clip}
 .pe-tv{padding:16px 20px 16px}
 .pe-tv[hidden]{display:none}
 .pe-tv.sliding{position:absolute;left:0;right:0;top:0;pointer-events:none}
 .pe-tv.measure{position:absolute;left:0;right:0;top:0;visibility:hidden}
 .pe-snap{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden!important;background:var(--panel2)}
 .pe-grid-wrap.pe-snap{overflow:auto!important;background:none}
-.pe-body.sliding{overflow:clip}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
 .pe-pt h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1908,7 +1937,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe .pe-notice.warn{background:color-mix(in srgb,var(--turn) 14%,transparent)}
 .pe .pe-notice.warn svg{stroke:var(--turn)}
 #peCropPadF{transition:opacity .3s var(--ease-ui)}
-#peCropPadF.dim{opacity:.4;pointer-events:none}
+#peCropPadF.dim{opacity:var(--inactive);pointer-events:none}
 .pe-cmode{min-width:min(190px,100%)}
 .pe-og{display:flex;align-items:center;gap:10px}
 .pe-cmode label{padding:5px 12px;font-size:13px}
@@ -1959,12 +1988,12 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .pe .page-card:not(.na):not(.pe-hole):hover canvas{box-shadow:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16)}
 }
 .pe .page-card:not(.na):not(.pe-hole):active:not(:has(.pe-tools:active)){transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}          /* pressing a card's own bar (Rotate, Repeat) does not shrink the card: the page must not move beneath the turn */
-.pe .page-card.off canvas{opacity:.38;filter:grayscale(1)}
+.pe .page-card.off canvas{opacity:var(--inactive);filter:grayscale(1)}
 .pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,255,255,.88);color:rgba(16,20,40,.7);box-shadow:0 1px 4px rgba(0,0,0,.28);pointer-events:none}
 .pe .page-card .pe-hid svg{width:17px;height:17px}
 .pe .page-card.hid .pe-hid{display:grid}
 .pe .page-card.na{cursor:default}
-.pe .page-card.na canvas{opacity:.3;filter:grayscale(1)}
+.pe .page-card.na canvas{opacity:var(--inactive);filter:grayscale(1)}
 /* the tick: a check in a circle on the page's corner, always showing in Arrange and in every tick tool. A left-out page is dimmed and carries a crossed-eye badge */
 .pe .page-card .tick{top:8px;right:8px;width:22px;height:22px;border:1.5px solid #fff;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
 .pe .page-card .tick svg{width:12px;height:12px}
@@ -2040,7 +2069,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-glass button:not(:disabled):hover{background:var(--accent-soft);color:var(--accent)}
 .pe-glass button:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.pe-glass button:not(:disabled):active{transform:none}}
-.pe-glass button:disabled{color:var(--muted);opacity:.5;cursor:default}
+.pe-glass button:disabled{color:var(--muted);opacity:var(--inactive);cursor:default}
 .pe-crop-pg canvas{display:block;width:100%;height:100%}
 .pe-crop-pg canvas.pe-ghost{position:absolute;left:50%;top:50%;width:auto;height:auto;transform:translate(-50%,-50%);transition:none;pointer-events:none;opacity:1}
 /* Re-kilter: the original lies over the leveled page as far as the line, which you drag */
@@ -2086,7 +2115,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-nav-a{display:flex;justify-content:flex-start}.pe-nav-b{display:flex;justify-content:flex-end}
 .pe-nav .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
 .pe-nav .btn:not(:disabled):hover,.pe-nav .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;box-shadow:none;transform:none}
-.pe-nav .btn:disabled{color:var(--muted);opacity:.55}
+.pe-nav .btn:disabled{color:var(--muted);opacity:var(--inactive)}
 .pe-win:not([data-mode="skew"]):not([data-mode="clean"]) #peOneCmp{visibility:hidden}
 .pe-nav .icon-btn{width:var(--h-s);height:var(--h-s);border-color:transparent;background:none;color:var(--muted)}
 .pe-nav .icon-btn:not(:disabled):hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:none}
@@ -2096,14 +2125,14 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:7px 12px 6px 20px;border-top:1px solid var(--line)}
 .pe-count{margin-right:auto;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:136px;min-width:0;height:var(--h-s);margin:0 6px 0 8px;padding:0 9px;border-radius:var(--r-sm);font-size:13px;font-variant-numeric:tabular-nums}
-.pe-bar .pe-pages:disabled{opacity:.55;cursor:not-allowed}
+.pe-bar .pe-pages:disabled{opacity:var(--inactive);cursor:not-allowed}
 .pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
 .pe-bar .btn:not(:disabled):hover{background:var(--accent-soft);border-color:transparent;box-shadow:none;transform:none}
-.pe-bar .btn:disabled{color:var(--muted);opacity:.55}
+.pe-bar .btn:disabled{color:var(--muted);opacity:var(--inactive)}
 .pe-win.one .pe-bar,.pe-win[data-mode="resize"] .pe-bar{display:none}
 
-.pe-nav .icon-btn:disabled{opacity:.3}
+.pe-nav .icon-btn:disabled{opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.pe-crop-box .h,.pe-sel,.pe-crop-box,.pe-tools,.pe-thumb,.pe .page-card .tick,.pe-check{transition:none}}
 
 /* narrower windows: the tool list moves above the window as a grid of buttons, so every tool stays in sight */
@@ -2248,7 +2277,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .ae-ptl{display:flex;align-items:center;gap:10px;min-width:0;height:20px}
 @media (max-width:760px){.ae-ptl{height:auto;min-height:20px}}          /* the narrow layout lets a long tool name wrap onto a second line */
 .ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
-#audioDlg[data-by="1"][data-tool="level"] .ae-bypill,#audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+#audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
 
 /* Emulator: the measuring bar, the third line in the key, and the small second line under each summary figure */
@@ -2282,7 +2311,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
   .ae-pt .ae-sub{display:none}          /* a tool's one-line description gives way when the window is this narrow, so its heading and buttons have the room */
 }
 @container eq (max-width:335.5px){
-  .eq-band.ae-card{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
+  .eq-cells{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
   .eq-bn{flex-wrap:wrap;row-gap:8px}          /* Band 1, its switch, Listen, and Dynamic go on a second row when one will not hold them */
 }
 #aePaneImager{container:imager/inline-size}
@@ -2350,7 +2379,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 .field output .ov-dim{color:var(--muted)}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
 #fadeLenField .fade-ends{position:relative;display:block;height:20px}
-#fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin:0}
+#fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin-inline:0}
 #fadeLenField .fade-ends .sl-end[data-v="0"]{left:-4px}
 #fadeLenField .fade-ends .sl-end.auto{left:calc(8px + (100% - 16px) * var(--apos,.333));transform:translateX(-50%)}
 #fadeLenField .fade-ends .sl-end:last-child{right:-4px}
@@ -2480,15 +2509,16 @@ input.switch:disabled{cursor:progress;opacity:.55}
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
 #audioDlg .ae-card :is(h4,.field>label>:is(span,output):not(.mt-title),.bal-meter>span,.lv-big){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
-#audioDlg .ae-card .eq-lbl{height:16px;line-height:16px;margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */
-#audioDlg .ae-card .eq-lbl>*{line-height:16px}
+#audioDlg .ae-card .eq-lbl{height:var(--line-s);line-height:var(--line-s);margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */
+#audioDlg .ae-card .eq-lbl>*{line-height:var(--line-s)}
 #audioDlg .ae-tool .ae-tn{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a tool's name in the list is its letters, so the row can be centered by what you see */
 /* a tag after a name: its own element, a pill with the same space on each side of its word */
 .beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:11.5px;font-weight:600;--lh:1;white-space:nowrap}
 .beta-chip[hidden]{display:none}
 .ae-proc .beta-chip{margin:0 2px 0 0}          /* in the list the chip is the row's last part, on the readouts' right line; the Amount sits before it */
 #audioDlg .ae-card input[type=range]{margin-block:-1px}          /* a slider's box is its thumb and ring (the input is 20px tall around an 18px thumb) */
-#audioDlg .ae-card .sl-end{text-box:trim-both cap alphabetic;box-sizing:content-box;height:var(--trim-h);padding:2px 4px;margin:calc(var(--trim-t) - 2px) -4px calc(var(--trim-b) - 2px)}          /* a scale label's box is its letters; the 2px and 4px around them are its click area, taken back by the margin */
+/* every scale label, in any panel: */
+.sl-ends .sl-end,#audioDlg .ae-card .sl-end{text-box:trim-both cap alphabetic;box-sizing:content-box;height:var(--trim-h);padding:2px 4px;margin:calc(var(--trim-t) - 2px) -4px calc(var(--trim-b) - 2px)}          /* a scale label's box is its letters; the 2px and 4px around them are its click area, taken back by the margin */
 
 /* the card: a column of a heading row, a body, and an optional footer row, --card-gap apart at the least (a card on a grid of its own sets 0 and places its parts itself) */
 :where(#audioDlg) .ae-card{--card-gap:var(--gap-set)}
@@ -2506,7 +2536,7 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .ae-card>.t-head>.info-i{margin-block:calc((var(--cap-px) - 18px) / 2)}
 #audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note,.btn,.seg,select,.mt-acts){display:flex;align-items:center;align-content:center;height:var(--cap-px);margin-block:0}          /* anything else on the row (a readout, a key) is as tall as the letters and centered on them */
 #audioDlg .ae-card>.t-head .mt-n.inl{vertical-align:middle;margin-block:-11px}          /* a step number in a heading never makes the row taller */
-#audioDlg .ae-card>.t-head>.seg label{padding:0}
+#audioDlg .ae-card>.t-head>.seg label{padding-block:0}
 #audioDlg .ae-card>.t-head>.seg span{padding:0 10px}
 #audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note):not(:not(h4,.info-i,.tip,.head-note) ~ *){margin-left:auto}          /* the first of them goes to the row's right end; the rest follow it */
 
@@ -2530,10 +2560,17 @@ input.switch:disabled{cursor:progress;opacity:.55}
 #audioDlg .foot-row :is(label,span,.check-row),#audioDlg .im-listen>span{font-size:13px;font-weight:400}
 #audioDlg .eq-lbl .btn{font-weight:400}          /* a button never takes the weight of the label row it sits in */
 
-/* scales: the numbers under a slider start --gap-set under its thumb (the input is 20px tall around an 18px thumb) */
-#audioDlg .sl-ends{margin-top:var(--gap-set)}
-.sl-end.tick{font-weight:600}
-#audioDlg .field:has(>.sl-ends){row-gap:0}
+/* the numbers under every slider (any panel) start --scale-gap under its track */
+.sl-ends{margin-top:calc(var(--scale-gap) - (var(--slider-h) - var(--track)) / 2)}
+.field:has(>.sl-ends){row-gap:0}
+.field:has(>.sl-ends)>.lbl:not(#audioDlg *){margin-bottom:var(--gap-label)}          /* outside the Audio Editor a label still sits --gap-label above its slider: the row gap is zero so the numbers keep --scale-gap */
+#audioDlg .sl-in:has(>.tick)+.sl-ends{margin-top:calc(var(--scale-gap-thumb) - var(--gap-sub) - var(--tick-h))}          /* a tick row sits between the thumb and the numbers: the numbers still start --scale-gap-thumb under the thumb */
+#audioDlg .ae-card :is(output:not(.lv-big),.bm-val,.head-note){font-size:var(--value-fs)}
+#audioDlg .ae-card output:not(.lv-big){font-weight:400}
+#audioDlg :is(.dim,.none) :is(.dim,.none,input[type=range]:disabled,input.switch:disabled,.btn:disabled,.btn[disabled],.icon-btn[disabled]){opacity:1}          /* inside something already dimmed, a dimmed part is not dimmed again (no stacking: one level, --inactive) */          /* every value readout is regular weight, wherever it sits (a label row inherits the label's weight otherwise) */
+#audioDlg .sl-in:not(:has(>.sl-end:not(.tick))){grid-template-columns:minmax(0,1fr);column-gap:0}          /* a slider row with no words beside its track is just the track, no empty column or gap */
+#audioDlg .sl-in:not(:has(>.sl-end:not(.tick)))>input{grid-column:1}
+#audioDlg .sl-in:not(:has(>.sl-end:not(.tick)))>.sl-end.tick{grid-column:1}
 
 /* ==================== 20. SPACING AND SMALL TEXT: the tokens in :root, the title block, and the three small-text roles ====================
    Title block (.t-block): a title and its subtitle in one block, --gap-sub apart, so the subtitle's place never depends on the buttons beside it.
@@ -2600,3 +2637,6 @@ input.switch:disabled{cursor:progress;opacity:.55}
 @media (max-width:760px){#audioDlg:not(.afull) .ae-bar{gap:6px}#audioDlg:not(.afull) .ae-times{flex:none}}
 @media (max-width:360px){#audioDlg:not(.afull) .ae-bar .ae-view label{padding-left:7px;padding-right:7px}#audioDlg:not(.afull) .ae-bar{padding:0 6px;gap:4px}}
 .ae-chain>span{min-width:0;overflow:hidden;text-overflow:ellipsis}          /* a status line too long for a narrow window ends in an ellipsis, as its own box, instead of being cut off */
+
+/* Level's strip: the label and its value are boxes trimmed to their letters and centered on each other, so their letters share one middle whatever their sizes */
+#audioDlg .lv-meter>.lv-sum :is(span,b){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}

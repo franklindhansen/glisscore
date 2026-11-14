@@ -32,8 +32,8 @@ exports.features = function () {
     const sc = c.querySelector('.sl-ends, .lv-scale'); if (sc && mk.shown(sc)) {
       const labs = [...sc.children].filter(e => mk.shown(e)), ls = labs.map(e => mk.letters(e)).filter(Boolean);
       const top = ls.length ? Math.min(...ls.map(l => l.capTop)) : null, host = sc.parentElement, sl = host.querySelector('input[type=range]'), bar = host.querySelector('.lv-track');
-      if (ls.length && sl && sc.matches('.sl-ends')) out.push({ key: 'gap:' + id, kind: 'gap', want: 12, y: Math.round((top - mk.thumb(sl).bottom) * 100) / 100 });          // the numbers start --gap-set under the slider's thumb
-      if (ls.length && bar && sc.matches('.lv-scale')) out.push({ key: 'gap:' + id, kind: 'gap', want: 8, y: Math.round((top - R(bar).bottom) * 100) / 100 });          // and --gap-head under a bar
+      if (ls.length && sl && sc.matches('.sl-ends')) out.push({ key: 'gap:' + id, kind: 'gap', want: 2, y: Math.round((top - mk.thumb(sl).bottom) * 100) / 100 });          // the numbers start --scale-gap under the slider's thumb
+      if (ls.length && bar && sc.matches('.lv-scale')) out.push({ key: 'gap:' + id, kind: 'gap', want: 8, y: Math.round((top - R(bar).bottom) * 100) / 100 });          // and --scale-gap under a bar
       if (ls.length) out.push({ key: 'scale:' + id, kind: 'scale', card: id, y: y(Math.min(...ls.map(l => l.capTop))), x0: x(ls[0].left), x1: x(ls[0].right) });
     }
   }

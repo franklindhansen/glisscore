@@ -1823,13 +1823,13 @@ function aeImBind() {
 }
 function aeScopeDraw() {
   const cv = $('#aeScope'); if (!AE.d || $('#aePaneImager').hidden || !aeCvSize(cv)) return;
-  const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 18;
-  c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
+  const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 18, bw = Math.min(W, H > W ? W : H), bx = (W - bw) / 2;          // a picture wider than tall (the narrow layout) draws its box as a centered square, as it looks beside the cards
+  c.clearRect(0, 0, W, H); roundRect(c, bx + 0.5, 0.5, bw - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); c.strokeStyle = C.hairline; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
   c.fillStyle = C.muted; c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
   if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
-  aePill(c, W, hsGet('ae-by', aeBy()));
+  c.save(); c.translate(bx, 0); aePill(c, bw, hsGet('ae-by', aeBy())); c.restore();
   if (!AE.an || !AE.playing) return;
   const a = AE.an; a.l.getFloatTimeDomainData(a.buf); a.r.getFloatTimeDomainData(a.buf2);
   let sl = 0, sr2 = 0, slr = 0, pk = 0; for (let i = 0; i < a.buf.length; i++) { const L = a.buf[i], Rr = a.buf2[i]; sl += L * L; sr2 += Rr * Rr; slr += L * Rr; pk = Math.max(pk, Math.abs(L), Math.abs(Rr)); }

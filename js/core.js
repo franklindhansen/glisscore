@@ -34,3 +34,19 @@ function fmt(t, dec = 1) {
   return m + ':' + (s < 10 ? '0' : '') + s.toFixed(dec);
 }
 
+/* A slider whose default is the middle of its range (Balance, Width, a gain) catches there while it is dragged, the way Apple's sliders hold at a marked value: within 2% of the range of the
+   middle it rests on the middle, and dragging further moves on. Only a drag catches; the arrow keys step through it. One rule for every slider, read from the slider's own default. */
+const SLIDER_CATCH = 0.02;
+let _slDrag = null;
+document.addEventListener('pointerdown', e => { const r = e.target; _slDrag = r instanceof HTMLInputElement && r.type === 'range' ? r : null; }, true);
+for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, () => { _slDrag = null; }, true);
+function sliderDefault(r) {
+  if (r.dataset.default != null && r.dataset.default !== '') return +r.dataset.default;
+  return typeof DEFAULTS !== 'undefined' && typeof DEFAULTS[r.id] === 'number' ? DEFAULTS[r.id] : null;
+}
+document.addEventListener('input', e => {
+  const r = e.target; if (r !== _slDrag) return;
+  const lo = r.min === '' ? 0 : +r.min, hi = r.max === '' ? 100 : +r.max, d = sliderDefault(r);
+  if (d == null || Math.abs(d - (lo + hi) / 2) > 1e-9) return;
+  if (+r.value !== d && Math.abs(+r.value - d) <= (hi - lo) * SLIDER_CATCH) r.value = d;
+}, true);

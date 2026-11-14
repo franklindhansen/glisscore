@@ -132,11 +132,12 @@ function peSlide(prev, name) {
   const body = $('#peBand'), views = Array.from(body.querySelectorAll('.pe-tv')), cur = views.find(v => v.dataset.tool === name), old = views.find(v => v.dataset.tool === prev);
   const h0 = body.offsetHeight, lo = peLive(old), lc = peLive(cur);
   views.forEach(v => { (v._slide || []).forEach(a => a.cancel()); v._slide = null; v.classList.remove('sliding'); v.hidden = v !== cur; v.inert = v !== cur; });
-  (body._slide || []).forEach(a => a.cancel()); body._slide = null; body.classList.remove('sliding');
+  (body._slide || []).forEach(a => a.cancel()); body._slide = null; body.classList.remove('sliding'); $('#peWrap').classList.remove('pe-fits');
   peTopFit(name);
   if (!old || old === cur || !PE.chromed || reducedMotion()) return;
   const dir = peOrder().indexOf(name) > peOrder().indexOf(prev) ? 1 : -1, h1 = body.offsetHeight, dist = PE_LIFT;
   old.hidden = false; old.classList.add('sliding'); body.classList.add('sliding');
+  { const wrap = $('#peWrap'); wrap.classList.toggle('pe-fits', wrap.scrollHeight <= wrap.clientHeight); }          // the pages already fit the window's final size: no scroll bar shows while the head's height settles (a window that needs one keeps it)
   const a1 = old.animate([{ transform: lo ? lo.t : 'none', opacity: lo ? lo.o : 1, offset: 0 }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0, offset: PE_OUT }, { transform: 'translateY(' + (-dir * dist) + 'px)', opacity: 0, offset: 1 }], { duration: PE_MS, easing: PE_EASE, fill: 'forwards' });
   const a2 = cur.animate([{ transform: lc ? lc.t : 'translateY(' + (dir * dist) + 'px)', opacity: lc ? lc.o : 0 }, { transform: 'none', opacity: 1 }], { duration: PE_MS, delay: PE_DELAY, easing: PE_EASE, fill: 'backwards' });
   const a3 = Math.abs(h1 - h0) > 1 ? body.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: PE_MS, easing: PE_EASE }) : null;
@@ -147,7 +148,7 @@ function peSlide(prev, name) {
     g.onfinish = g.oncancel = () => ghost.remove(); }
   }
   old._slide = [a1]; cur._slide = [a2]; body._slide = a3 ? [a3] : null;
-  a2.onfinish = () => { a1.cancel(); if (a3) a3.cancel(); old._slide = cur._slide = body._slide = null; old.classList.remove('sliding'); old.hidden = true; body.classList.remove('sliding'); };
+  a2.onfinish = () => { a1.cancel(); if (a3) a3.cancel(); old._slide = cur._slide = body._slide = null; old.classList.remove('sliding'); old.hidden = true; body.classList.remove('sliding'); $('#peWrap').classList.remove('pe-fits'); };
 }
 /* the pages slide with the head: a still copy of what was showing leaves, the new view comes in from the same side as the new head */
 function peBodySnap() {

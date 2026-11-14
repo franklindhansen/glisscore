@@ -91,7 +91,7 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
   for (const t of ['light', 'dark']) {
     await p.evaluate(t => flip(t, null), t); await settle();
     const r = await p.evaluate(() => {
-      const g = document.querySelector('#aeGain'), s = K.surf(g.parentElement), d = document.createElement('div'); d.style.color = 'color-mix(in srgb, var(--ink) 26%, transparent)'; document.body.appendChild(d); const c = K.rgba(getComputedStyle(d).color); d.remove();
+      const g = document.querySelector('#aeGain'), s = K.surf(g.parentElement), d = document.createElement('div'); d.style.color = 'color-mix(in srgb, var(--ink) 33%, transparent)'; document.body.appendChild(d); const c = K.rgba(getComputedStyle(d).color); d.remove();
       let op = 1; for (let n = g; n; n = n.parentElement) op *= +getComputedStyle(n).opacity;
       return { disabled: g.disabled, inputOpacity: getComputedStyle(g).opacity, ratio: K.ratio(K.over([c[0], c[1], c[2], c[3] * op], s), s) };
     });
