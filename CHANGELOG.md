@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.8
+
+The Audio Editor moves more consistently: fades, slides, and the Imager's Overall and Frequency switch now share the same timing and feel.
+
 ## 1.2.7
 
 MP3 files now start cleanly in Safari instead of losing their first moment.
