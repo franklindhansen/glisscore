@@ -576,6 +576,10 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   --ease-out:cubic-bezier(.22,1,.36,1);
   --ease-ui:cubic-bezier(.2,.8,.2,1);
   --ease-color:cubic-bezier(.44,0,.56,1);
+  --ae-ms:260ms;      /* the Audio Editor's one fade time: a tool switch, a view switch, a note, a pill; JS reads it too (AE_TOOL_MS) */
+  --ae-move:400ms;    /* the Audio Editor's one slide time: a fold, the selection pill, the dock, the waveform resize */
+  --ae-lift:10px;     /* how far a pane or view travels as it fades; JS reads it too (AE_LIFT) */
+  --ae-lift-sm:4px;   /* the same for a small piece (a pill, a notice) */
   --spring-hover:linear(0, 0.0217, 0.0751, 0.1465, 0.2266, 0.309, 0.3895, 0.4656, 0.5357, 0.5993, 0.656, 0.7062, 0.75, 0.7881, 0.821, 0.8493, 0.8734, 0.8939, 0.9113, 0.9259, 0.9383, 0.9487, 0.9574, 0.9647, 0.9707, 0.9758, 0.98, 0.9835, 1);      /* no bounce, 0.3 s */
   --spring-press:linear(0, 0.0223, 0.0791, 0.1576, 0.2478, 0.3426, 0.4364, 0.5257, 0.608, 0.6821, 0.7471, 0.8032, 0.8507, 0.8901, 0.9223, 0.9481, 0.9682, 0.9836, 0.9951, 1.0033, 1.0089, 1.0124, 1.0144, 1.0151, 1.015, 1.0143, 1.0132, 1.0119, 1);      /* a little bounce, 0.4 s */
 }
@@ -727,7 +731,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 /* ----- Editor tidy-ups: room for focus rings, grid footer, gain ----- */
 
 .ae-bar .push-right{margin-left:auto}
-#aeGainField{transition:opacity .3s var(--ease-ui)}
+#aeGainField{transition:opacity var(--ae-ms) var(--ease-ui)}
 #aeGainField.dim{opacity:var(--inactive)}
 /* Normalize grays the Gain slider (a one-off: no shared disabled style dims a slider track and leaves its thumb readable): its card dims (.55) and the slider dims (.4), which stacks to about 22% and hides the track. Here the slider is not dimmed as a whole: the track and fill carry their own greyed colors (ink and accent, derived, so both themes hold), and the thumb takes the .4 */
 #aeGain:disabled{opacity:1}
@@ -1067,7 +1071,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 /* EQ */
 .eq-top{display:flex;align-items:center;margin-bottom:10px}
 .eq-top select{max-width:230px}
-.eq-top .seg{flex:0 0 auto;transition:opacity .3s var(--ease-ui)}
+.eq-top .seg{flex:0 0 auto;transition:opacity var(--ae-ms) var(--ease-ui)}
 .eq-top .seg[hidden]{display:none}
 .eq-dyn{grid-column:1/-1}
 .eq-band.ae-card{--band-row-gap:0px}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
@@ -1103,7 +1107,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 /* ----- Tool list: output tools, bypass, bipolar sliders, level meter ----- */
 .ae-badge{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);transition:opacity .2s var(--ease-ui)}
 .ae-badge:empty{opacity:0}
-.ae-proc .ae-tn{transition:opacity .3s var(--ease-ui)}
+.ae-proc .ae-tn{transition:opacity var(--ae-ms) var(--ease-ui)}
 .ae-proc.bp .switch:checked{background:var(--muted)}
 /* a slider with a zero in the middle fills outward from it */
 input[type=range].bi::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--line) 0,var(--line) var(--lo,50%),var(--accent) var(--lo,50%),var(--accent) var(--hi,50%),var(--line) var(--hi,50%),var(--line) 100%)}
@@ -1111,7 +1115,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .sl-ends{display:flex;justify-content:space-between;font-size:var(--scale-fs);color:var(--muted)}
 /* EQ */
 .eq-top{gap:8px}
-.eq-band{transition:opacity .3s var(--ease-ui)}
+.eq-band{transition:opacity var(--ae-ms) var(--ease-ui)}
 .eq-bn{display:flex;align-items:stretch;gap:10px;align-self:center;font-weight:600}
 .eq-bn b{font-variant-numeric:tabular-nums}
 .eq-bn .switch{order:2}
@@ -1135,10 +1139,10 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-big{display:block;margin:0 0 14px;font-size:var(--big-fs);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;--lh:1;transform-origin:left center;will-change:transform;transition:color .25s var(--ease-color)}
 .im-scope{display:flex;flex-direction:column}
 .im-scope canvas{width:100%}
-.eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s var(--ease-out),margin-top .4s var(--ease-out)}
+.eq-fold{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--ae-move) var(--ease-out),margin-top var(--ae-move) var(--ease-out)}
 .eq-fold.shut{grid-template-rows:0fr}
 .eq-fold-in{min-height:0;overflow:hidden}
-.eq-fold.shut .eq-fold-in{visibility:hidden;transition:visibility 0s .4s}
+.eq-fold.shut .eq-fold-in{visibility:hidden;transition:visibility 0s var(--ae-move)}
 @media (prefers-reduced-motion:reduce){.eq-fold,.eq-fold.shut .eq-fold-in{transition:none}}
 .eq-match .field.dim{opacity:var(--inactive)}
 @container aedlg (max-width:728px){
@@ -1147,10 +1151,10 @@ input[type=range].bi::-moz-range-progress{background:transparent}
   .ae-rail-cur span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
   .ae-rail-cur b{font-weight:600}
   .ae-rail-cur output{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .ae-rail-cur svg{width:18px;height:18px;flex:none;color:var(--muted);transition:transform .4s var(--spring-hover)}
+  .ae-rail-cur svg{width:18px;height:18px;flex:none;color:var(--muted);transition:transform var(--ae-move) var(--spring-hover)}
   .ae-rail-cur output:empty+svg{margin-left:auto}
   .ae-rail.open .ae-rail-cur svg{transform:rotate(180deg)}
-  .ae-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s var(--ease-out)}
+  .ae-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .ae-rail.open .ae-rail-body{grid-template-rows:1fr}
   .ae-rail-in{overflow:hidden;min-height:0;padding:0 8px;flex-direction:column}
   .ae-rail.open .ae-rail-in{padding:0 8px 10px}
@@ -1165,7 +1169,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-phead>:first-child{flex:1 1 150px;min-width:0}
 .ae-phead .ae-abs{flex:none;margin-left:auto}
 .ae-phead{flex-wrap:wrap;row-gap:8px}          /* the heading and its buttons share a row while they fit; when they do not, the buttons drop under the heading instead of squeezing it */
-.ae-phead .btn{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color)}
+.ae-phead .btn{transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),color .2s var(--ease-color)}
 .ae-phead .btn.gone{opacity:0;transform:scale(.9);pointer-events:none}
 .ae-times{gap:4px 18px}
 .ae-bar{flex-wrap:wrap}
@@ -1185,7 +1189,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .lv-big.clip{color:var(--bad)}
 /* EQ Match */
 .mt-steps{display:flex;flex-direction:column;gap:14px}
-.mt-step{display:flex;align-items:flex-start;gap:12px;transition:opacity .35s var(--ease-ui)}
+.mt-step{display:flex;align-items:flex-start;gap:12px;transition:opacity var(--ae-ms) var(--ease-ui)}
 .mt-step.dim{opacity:var(--inactive)}
 .mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
 .mt-body{flex:1;min-width:0}
@@ -1214,7 +1218,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 
 /* ----- Lights on the left, one selection pill that glides ----- */
 .ae-rail-in{position:relative}
-.ae-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform .4s var(--spring-press),width .4s var(--spring-press),height .4s var(--spring-press),opacity .25s var(--ease-ui)}
+.ae-sel{position:absolute;left:0;top:0;z-index:0;width:0;height:0;border:1px solid var(--accent);border-radius:var(--r-ctl);background:var(--accent-soft);pointer-events:none;opacity:0;will-change:transform;transition:transform var(--ae-move) var(--spring-press),width var(--ae-move) var(--spring-press),height var(--ae-move) var(--spring-press),opacity var(--ae-ms) var(--ease-ui)}
 .ae-proc{position:relative;z-index:1}
 .ae-tool,.ae-tool:hover{background:none}
 .ae-tool:hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}
@@ -1248,7 +1252,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-win .ae-phead{margin-bottom:14px}
 .ae-pbody{display:block}
 .btn.gone{opacity:0;pointer-events:none;transform:scale(.92)}
-#aeZoomFit{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover)}
+#aeZoomFit{transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--spring-hover)}
 /* the rail: every row is a light, a name, and a note */
 .ae-jack{display:grid;place-items:center;flex:none;width:22px;height:32px;padding:0;border:0;background:none;cursor:grab;touch-action:none}
 .ae-jack.fixed,.ae-jack.lockd{cursor:default}
@@ -1325,8 +1329,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aePaneNoise{container:noise/inline-size}
 .nr-grid{grid-template-columns:minmax(0,1fr)}
 .nr-stage{height:116px;background:color-mix(in srgb,var(--ink) 6%,var(--panel2));border:1px solid var(--line);border-radius:var(--r-card)}
-.nr-stage canvas{transition:opacity .5s var(--ease-ui)}
-.nr-sample{transition:background-color .5s var(--ease-ui),border-color .5s var(--ease-ui)}
+.nr-stage canvas{transition:opacity var(--ae-ms) var(--ease-ui)}
+.nr-sample{transition:background-color var(--ae-ms) var(--ease-color),border-color var(--ae-ms) var(--ease-color)}
 .nr-removal{position:relative;overflow:clip}          /* clip, not hidden: the progress bar stays inside, and the card never shrinks below its content (it is not a scroll container) */
 @container noise (min-width:520px){
   .nr-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:minmax(auto,1fr) auto}
@@ -1361,12 +1365,12 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* Imager: width overall or by frequency, balance, listen */
 .im-head .seg{width:auto;font-size:12px}
-.im-view{grid-area:1/1;transition:opacity .35s var(--ease-ui),transform .45s var(--ease-out)}
-.im-view.off{opacity:0;transform:translateY(6px);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--ease-out),visibility 0s .35s}.im-view .field:last-child{margin-bottom:0}
+.im-view{grid-area:1/1;transition:opacity var(--ae-ms) var(--ease-ui) calc(var(--ae-ms) * .15),transform var(--ae-ms) var(--ease-out) calc(var(--ae-ms) * .15)}
+.im-view.off{opacity:0;transform:translateY(calc(var(--ae-lift) * -1));pointer-events:none;visibility:hidden;transition:opacity calc(var(--ae-ms) * .55) var(--ease-ui),transform calc(var(--ae-ms) * .55) var(--ease-out),visibility 0s var(--ae-ms)}.im-view .field:last-child{margin-bottom:0}#aeWvBands.off{transform:translateY(var(--ae-lift))}
 .hz{font-style:normal;color:var(--muted);font-size:11.5px;margin-left:4px}
 .im-low{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 .im-low .check{white-space:nowrap}
-.im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity .3s var(--ease-ui)}
+.im-lowf{display:flex;align-items:center;gap:8px;flex:1;min-width:0;max-width:210px;transition:opacity var(--ae-ms) var(--ease-ui)}
 .im-lowf.dim{opacity:var(--inactive)}.im-lowf input{flex:1;min-width:0}.im-lowf output{width:46px;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums}
 .im-listen{display:flex;align-items:center;gap:10px}.im-listen>span{font-size:12.5px;color:var(--muted)}.im-listen .seg{flex:1;font-size:12px}.im-listen .seg span{padding:4px 6px}
 .im-view{align-self:center}
@@ -1377,7 +1381,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .field.row3 input{order:2;margin:0}
 .field.row3 output{order:3;text-align:right}
 .ae-abs{display:flex;align-items:center;gap:6px}
-#aeABm{transition:opacity .3s var(--ease-ui),transform .4s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
+#aeABm{transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 /* the noise window stays within the same height as every other tool */
 @container aedlg (min-width:729px) and (max-width:948px){.ae-pbody{min-height:430px}}
 .ae-wave{height:128px}
@@ -1389,7 +1393,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* ==================== AUDIO EDITOR: full screen (the picture fills the screen, everything else floats as glass) ==================== */
 #audioDlg.afull{padding:0;place-items:stretch}
 #audioDlg.afull>.dlg.editor.ae{position:fixed;inset:0;width:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:14px;gap:10px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;align-content:stretch}
-#audioDlg.afull .ae-wave{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;z-index:0;transition:top .35s var(--ease-out),bottom .35s var(--ease-out)}
+#audioDlg.afull .ae-wave{position:absolute;left:0;right:0;top:0;bottom:0;height:auto;z-index:0;transition:top var(--ae-move) var(--ease-out),bottom var(--ae-move) var(--ease-out)}
 #audioDlg.afull .ae-wave canvas{border-radius:0}
 /* while the window grows or shrinks, one animation moves it and nothing else glides on its own */
 #audioDlg.fsmove,#audioDlg.fsmove *{transition:none!important}
@@ -1399,7 +1403,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
 #audioDlg.afull .ae-main{grid-row:4;z-index:2;overflow:auto;overscroll-behavior:contain}
 #audioDlg.afull .ed-head,#audioDlg.afull .ae-bar,#audioDlg.afull .ae-main{padding:10px 16px}
-#audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),visibility 0s .35s}
+#audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform var(--ae-move) var(--ease-out),opacity var(--ae-ms) var(--ease-ui),visibility 0s var(--ae-move)}
 #audioDlg.afull.dock-off .ae-bar{grid-row:4}
 @container aedlg (max-width:728px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:8px}}
 .ae-fullbtn{width:32px;height:32px}.ae-fullbtn svg{width:16px;height:16px}
@@ -1452,7 +1456,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the bar: a hidden button takes no room, and on a phone the buttons stay in one row */
 #aeDock.gone{display:none}
 /* the tools dock is as tall as its tool needs (the Spectra stays small, so the picture stays big), and eases between heights */
-#audioDlg.afull .ae-main{transition:transform .35s var(--ease-out),opacity .25s var(--ease-ui),max-height .35s var(--ease-out)}
+#audioDlg.afull .ae-main{transition:transform var(--ae-move) var(--ease-out),opacity var(--ae-ms) var(--ease-ui),max-height var(--ae-move) var(--ease-out)}
 #audioDlg.afull[data-tool=eq] .ae-main,#audioDlg.afull[data-tool=imager] .ae-main,#audioDlg.afull[data-tool=noise] .ae-main{max-height:min(440px,50dvh)}
 #audioDlg.afull .ae-main{max-height:min(440px,50dvh)}
 
@@ -1532,9 +1536,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* ----- Export audio: the Advanced fold (sample rate, metadata) ----- */
 .adv{display:grid;grid-template-columns:minmax(0,1fr)}
-.fa{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease-out)}
+.fa{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
 .fa.open{grid-template-rows:1fr}
-.fa-in{overflow:hidden;min-height:0;opacity:0;transition:opacity .25s var(--ease-color)}
+.fa-in{overflow:hidden;min-height:0;opacity:0;transition:opacity var(--ae-ms) var(--ease-ui)}
 .fa.open>.fa-in{opacity:1}
 .fa.open>.fa-in{padding:4px 4px 5px;margin:0 -4px}
 .tag-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px 10px;padding:6px 4px 4px;margin:0 -4px}
@@ -1734,7 +1738,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .lv-peak>.lv-note:empty{display:none}
 .lv-peak:has(>.lv-note:empty)>.lv-target{margin-block:auto}          /* Peak's target under the heading and its note on the last line */
 .fa-stack>.fa>.fa-in{height:calc(100% + 2px);padding:0 4px 2px;margin:0 -4px -2px}          /* the 2px of room for a ring under the controls is not part of the body, so the box ends where its last row does */
-.lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity .3s var(--ease-ui)}
+.lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity var(--ae-ms) var(--ease-ui)}
 .lv-target.dim{opacity:var(--inactive)}
 .lv-target .num{display:inline-flex;align-items:center;gap:6px}
 .lv-target input{width:74px;text-align:right;font-variant-numeric:tabular-nums}
@@ -2280,7 +2284,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* "Bypassed" beside the title of the tools that have no picture to carry it (the others draw it in the corner of their picture) */
 .ae-ptl{display:flex;align-items:center;gap:10px;min-width:0;height:20px}
 @container aedlg (max-width:728px){.ae-ptl{height:auto;min-height:20px}}          /* the narrow layout lets a long tool name wrap onto a second line */
-.ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(-4px) scale(.94);pointer-events:none;visibility:hidden;transition:opacity .25s var(--ease-ui),transform .35s var(--spring-hover),visibility 0s .35s}
+.ae-bypill{flex:none;height:22px;padding:0 10px;border-radius:11px;background:var(--ink);color:var(--panel2);font:600 11.5px/22px 'Hanken Grotesk',system-ui,sans-serif;opacity:0;transform:translateY(calc(var(--ae-lift-sm) * -1)) scale(.94);pointer-events:none;visibility:hidden;transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--spring-hover),visibility 0s var(--ae-move)}
 #audioDlg[data-by="1"][data-tool="fades"] .ae-bypill,#audioDlg[data-by="1"][data-tool="spec"] .ae-bypill,#audioDlg[data-by="1"][data-tool="emu"] .ae-bypill{opacity:1;transform:none;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
 
@@ -2354,7 +2358,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
 /* the note that says a page turn is holding a trim handle: sits on the waveform, below the ruler, and fades away */
-.ae-stop{position:absolute;left:50%;top:var(--ae-cy,50%);transform:translate(-50%,calc(-50% - 4px));margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;--lh:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.ae-stop{position:absolute;left:50%;top:var(--ae-cy,50%);transform:translate(-50%,calc(-50% - var(--ae-lift-sm)));margin:0;max-width:min(92%,460px);padding:7px 14px;border:1px solid var(--line);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--panel) 94%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);color:var(--ink);box-shadow:var(--shadow);font-size:12.5px;font-weight:500;--lh:1.4;text-align:center;opacity:0;pointer-events:none;z-index:2;transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--ease-out)}
 .ae-stop.show{opacity:1;transform:translate(-50%,-50%)}
 @media (prefers-reduced-motion:reduce){.ae-stop{transition:none}}
 

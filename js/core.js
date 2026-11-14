@@ -1,5 +1,6 @@
 'use strict';
-const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = 260, AE_LIFT = 10;          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length of an Audio Editor tool switch
+const cssNum = (name, fallback) => { const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)); return v > 0 ? v : fallback; };
+const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = cssNum('--ae-ms', 260), AE_LIFT = cssNum('--ae-lift', 10);          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length and lift of an Audio Editor switch (the CSS --ae-ms and --ae-lift, defined once in style.css)
 const $ = (s, r = document) => r.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
