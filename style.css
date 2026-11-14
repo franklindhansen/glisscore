@@ -23,6 +23,7 @@
   --ae-side:16px;   /* the tool window's one left line and one right line: the tool's name, its subtitle and buttons, the cards, and the status bar all sit this far in from the window's edges */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
+  --thumb-s:14px; --thumb-s-w:22px; --track-s:4px;   /* the small slider (.sl-small): a lighter handle and track for a setting under a main one */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
   --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
@@ -228,6 +229,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 input[type=range]::-moz-range-track{height:var(--track);border-radius:99px;background:var(--line)}
 input[type=range]::-moz-range-progress{height:var(--track);border-radius:99px;background:var(--accent)}
 input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
+input[type=range].sl-small{--thumb:var(--thumb-s);--thumb-w:var(--thumb-s-w);--track:var(--track-s)}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 select,input[type=text],textarea.autogrow{width:100%;padding:7px 9px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}
 textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
@@ -1337,22 +1339,16 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .nr-stage{grid-area:1/1/2/3;height:auto;min-height:64px}
   .nr-sample{grid-area:2/1}
   .nr-removal{grid-area:2/2}
-  .nr-grid.pre .nr-sample{grid-area:1/1/2/3;z-index:1;background:transparent;border-color:transparent}
-  .nr-grid.pre .nr-removal{grid-area:2/1/3/3}
-  .nr-grid.pre .nr-stage canvas{opacity:0}
 }
 /* the steps: one row, wrapping when the card is too narrow for it: "1 Select" with Auto and Manual, then "2" with Learn (and the chip once a noise is learned) */
 .nr-steps{flex-direction:row;flex-wrap:wrap;align-items:center;gap:var(--gap-set) calc(2 * var(--gap-set))}
 .nr-steps>.mt-step{align-items:baseline;gap:8px;min-width:0}
 .nr-steps .mt-title{margin:0;min-height:0}
-.nr-steps .mt-n{align-self:center}          /* the number is centered on the row; Select and the buttons' words share a baseline */
 .nr-learn{min-width:0}
 .nr-learn .mt-chip{min-width:0}
 /* Removal: its two small sliders sit under Reduction, in a fold that closes when Reduction is Off */
 .nr-removal .field{margin-bottom:0}
-.nr-removal .fa.open>.fa-in{padding:0}
-.nr-sub{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-left:12px;padding-left:12px}
-.nr-sub>.field{margin:0}
+.nr-removal .fa.open>.fa-in{padding:3px 4px;margin:-3px -4px}          /* room for a slider's thumb inside the fold's clip, taken back by the margin so nothing moves */
 @container aedlg (max-width:728px){.ae-pbody{min-height:0}}
 }
 
@@ -2190,15 +2186,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
 .pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
-/* Noise reduction: the Processing label sits on the right of the Removal heading and a thin bar runs along the card's bottom edge, so the row takes no room and nothing is cut off */
-.nr-prog{position:absolute;inset:0;display:block;height:auto;margin:0;background:none;border-radius:0;overflow:visible;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-ui)}
-.nr-prog.on{opacity:1}
-.nr-prog-l{position:absolute;bottom:17px;right:74px;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap;pointer-events:none}
-.nr-prog.on .nr-prog-l{pointer-events:auto}
-.nr-prog-l .nr-pct{min-width:3.2ch;text-align:right;font-variant-numeric:tabular-nums}
-.nr-prog-l .tip{left:auto;right:0;top:auto;bottom:calc(100% + 6px);width:230px;max-width:none;white-space:normal}
-.nr-prog-t{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--line);overflow:hidden}
-.nr-prog-t b{display:block;width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:0 50%;will-change:transform}
+/* Noise reduction: the wait pill sits in the middle of the graph, as System finding does; its bar is filled by the tween, not by a transition */
+.nr-wait{opacity:0;visibility:hidden;transition:opacity .26s var(--ease-ui),visibility 0s .26s}
+.nr-wait.on{opacity:1;visibility:visible;transition-delay:0s}
+.nr-wait .nr-prog-t b{width:100%;transition:none}
+.nr-wait .nr-pct{min-width:3.2ch;text-align:right;font-variant-numeric:tabular-nums;margin-left:4px}
+.nr-wait .nr-pct:empty{margin-left:0}
+@media (prefers-reduced-motion:reduce){.nr-wait{transition-duration:.08s}}
 /* the play button waits (pulses) until the noise removal has a result; reduced motion keeps it still */
 .icon-btn.play.waiting{animation:play-wait 1.1s ease-in-out infinite}
 @keyframes play-wait{0%,100%{opacity:1}50%{opacity:.45}}
@@ -2555,7 +2549,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .ae-card:not(.on-grid,.own-grid)>.foot-row{margin-top:0}          /* the line above the footer is where the body's spare height ends */
 
 /* the column rule: stacked cards share their column, declared once by each tool grid (never a height on a card). Two control cards share it evenly; a control card over a list or a picture takes a third; a card is never shorter than its content (the minimum of a track is its content) */
-.nr-grid.pre{grid-template-rows:1fr 1fr}          /* Noise reduction before learning: the sample card over Removal */
 .sp-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(round(calc((100% - var(--gap-card)) / 3), 2px),auto) minmax(0,1fr)}          /* Spectra: Select over the list of edits */
 .sp-grid>.sp-sel,.sp-grid>.sp-lcard{flex:none}
 .im-ctl{display:grid;grid-template-rows:1fr 1fr}          /* the Imager: Width over Balance */
@@ -2650,7 +2643,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
    as tall as its tool; and where a tool's own pane is too narrow for its cards to stand side by side (a container query on the pane, whatever the screen) the cards stack and the body scrolls as well. In both, each grid's rows
    are its cards' own heights and nothing is left empty under a card. */
 @container aedlg (max-width:728px){
-  #audioDlg :is(.tool-grid,.nr-grid,.nr-grid.pre,.sp-grid,.lv-grid,.fd-grid,.im-cols,.im-ctl,.em-grid){height:auto;grid-template-rows:none}
+  #audioDlg :is(.tool-grid,.nr-grid,.sp-grid,.lv-grid,.fd-grid,.im-cols,.im-ctl,.em-grid){height:auto;grid-template-rows:none}
   #audioDlg .sp-lcard{flex:none;min-height:120px}          /* the tool body scrolls, so the Edits card keeps a height instead of collapsing under its own heading */
   #audioDlg .sp-list{max-height:160px}
 }
@@ -2669,3 +2662,17 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   #audioDlg .em-grid{height:auto;grid-template-columns:minmax(0,1fr);grid-template-rows:none}
   #audioDlg .em-stage{min-height:120px}
 }
+
+/* the learned noise reads as a quiet status beside Learn: a check and the words, with a small clear button, not a pill */
+.nr-learn .mt-chip{border:0;background:none;padding:0;gap:4px;color:var(--muted)}
+.nr-learn .mt-chip::before{content:"";flex:none;width:14px;height:14px;margin-right:2px;background:var(--accent);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat}
+.nr-learn .mt-chip b{font-weight:400}
+.nr-head+.field{margin-top:2px}
+
+/* Removal's two small sliders share one set of columns: the words, the bar, and a value column wide enough for 100%, so the bars line up and nothing moves as a number grows */
+.nr-subs{display:grid;grid-template-columns:max-content minmax(0,1fr) calc(var(--value-fs) * 2.7);column-gap:10px;row-gap:var(--gap-set)}
+.nr-subs>.field.row3{grid-column:1/-1;grid-template-columns:subgrid;column-gap:10px}
+.nr-learn .btn{min-width:0}
+.nr-steps{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:var(--gap-set) var(--gap-set)}          /* Select and its choices on one row, Learn under them, always, so Learn growing into Learn again moves nothing */
+.nr-steps>.mt-step{display:contents}
+.nr-steps .nr-learn{grid-column:2}

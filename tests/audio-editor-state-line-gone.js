@@ -15,13 +15,13 @@ const file = path.join(os.tmpdir(), 'kf-state-line.wav'); fs.writeFileSync(file,
     AE.nsel = { a: 1, b: 3 }; aeRefresh(); await sleep(100);
     const btn = document.querySelector('#aeNrLearn'); o.start = { txt: btn.textContent, loading: btn.classList.contains('loading') };
     const t0 = performance.now(), seen = []; btn.click();
-    for (let i = 0; i < 600 && (i < 3 || AE.nrLearning); i++) { await sleep(10); seen.push({ loading: btn.classList.contains('loading'), txt: btn.textContent, p: btn.style.getPropertyValue('--p'), dis: btn.disabled, line: !!document.querySelector('.ae-state') }); }
+    for (let i = 0; i < 600 && (i < 3 || AE.nrLearning); i++) { await sleep(10); seen.push({ pill: document.querySelector('#aeNrProgBar').classList.contains('on'), loading: btn.classList.contains('loading'), txt: btn.textContent, p: btn.style.getPropertyValue('--p'), dis: btn.disabled, line: !!document.querySelector('.ae-state') }); }
     o.took = performance.now() - t0; o.seen = seen; await sleep(300);
     o.end = { txt: btn.textContent, loading: btn.classList.contains('loading'), p: btn.style.getPropertyValue('--p'), profile: !!AE.d.fx.noise.profile };
     o.nrLine = !!document.querySelector('#aeNrSample .ae-state'); aeTool('emu'); await sleep(500); o.emLine = !!document.querySelector('#aeEmCard .ae-state'); o.anyLine = !!document.querySelector('.ae-state');
     return o;
   });
-  ok('Learn is a loading-bar button: while it works it shows "Processing N%" with a bar', r.seen.length && r.seen.some(f => f.loading && /^Processing \d+%$/.test(f.txt) && f.p !== '') && r.seen.every(f => f.dis || !f.loading), JSON.stringify(r.seen.slice(0, 3)));
+  ok('Learn keeps its word while it works; the wait pill over the graph says it', r.seen.length && r.seen.some(f => f.pill) && r.seen.every(f => /^Learn/.test(f.txt) && !f.loading), JSON.stringify(r.seen.slice(0, 3)));
   ok('it holds the bar for at least 400ms, then goes back to a normal button with the noise learned', r.took >= 400 && r.end.profile && !r.end.loading && r.end.p === '' && /Learn again/.test(r.end.txt), JSON.stringify({ took: Math.round(r.took), end: r.end }));
   ok('no state line shows while it learns', r.seen.every(f => !f.line));
   ok('the Noise sample card has no state line', !r.nrLine);

@@ -17,7 +17,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     setBusy('', ''); box.remove(); return { out, rebuilt, stopped };
   });
   const v = Object.values(look.out);
-  ok('the three bars run the same animation, length, curve, color, and band width', v.every(x => x.replace(/\|\d+$/, '') === v[0].replace(/\|\d+$/, '') && Math.abs(+x.split('|').pop() - 40) <= 1) && /^bar-sweep\|1.3s\|cubic-bezier\(0.45, 0, 0.25, 1\)\|infinite/.test(v[0]), JSON.stringify(look.out));
+  const noCol = x => x.replace(/\|\d+$/, '').split('|').filter((_, j) => j !== 4).join('|'), col = x => x.split('|')[4];          // the noise bar sits on the dark wait pill, so its band is the pill's lighter blue; the other two share one color
+  ok('the three bars run the same animation, length, curve, color, and band width', v.every(x => noCol(x) === noCol(v[0]) && Math.abs(+x.split('|').pop() - 40) <= 1) && col(look.out.chip) === col(look.out.font) && /^bar-sweep\|1.3s\|cubic-bezier\(0.45, 0, 0.25, 1\)\|infinite/.test(v[0]), JSON.stringify(look.out));
   ok('a chip rebuilt in the middle of a pass keeps its place in it', look.rebuilt.newBar && look.rebuilt.sweeping && look.rebuilt.delay < -300 && look.rebuilt.delay > -1300, JSON.stringify(look.rebuilt));
   ok('a stopped bar finishes its pass and then goes', look.stopped.still && !look.stopped.after, JSON.stringify(look.stopped));
   ok('no page errors', errs.length === 0, errs.slice(0, 2).join(' | '));

@@ -58,19 +58,19 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
   }
   // 3. the Mains hum divider: at least 1.3 against the surface behind it, before and after a noise is learned, in both themes
   const humRatio = () => p.evaluate(() => {
-    const hum = document.querySelector('.nr-hum'), pre = !!document.querySelector('#aeNrGrid.pre');
-    const under = pre ? document.querySelector('#aeNrCv').parentElement : hum.parentElement;          // before a noise is learned the sample card is see-through and sits on the noise graph
+    const hum = document.querySelector('.nr-hum'), pre = false;
+    const under = hum.parentElement;
     const bg = K.surf(under), line = K.over(K.rgba(getComputedStyle(hum).borderTopColor), bg);
     return { pre, r: +K.ratio(line, bg).toFixed(3) };
   });
   const pre = {}, post = {};
   for (const t of ['light', 'dark']) { await p.evaluate(t => flip(t, null), t); await settle(); pre[t] = await humRatio(); }
   await p.evaluate(() => { AE.nsel = { a: 0.2, b: 1.8 }; aeNrLearn(); });          // learn the noise from a stretch of hiss
-  await p.waitForFunction(() => !document.querySelector('#aeNrGrid').classList.contains('pre'), null, { timeout: 60000 }).catch(() => {});
+  await p.waitForFunction(() => AE.d && AE.d.fx.noise.profile, null, { timeout: 60000 }).catch(() => {});
   await settle();
   for (const t of ['light', 'dark']) { await p.evaluate(t => flip(t, null), t); await settle(); post[t] = await humRatio(); }
-  ok('the Mains hum divider has contrast 1.3 or more before a noise is learned, in both themes', pre.light.pre && pre.dark.pre && pre.light.r >= 1.3 && pre.dark.r >= 1.3, JSON.stringify(pre));
-  ok('the Mains hum divider has contrast 1.3 or more after a noise is learned, in both themes', !post.dark.pre && post.light.r >= 1.3 && post.dark.r >= 1.3, JSON.stringify(post));
+  ok('the Mains hum divider has contrast 1.3 or more before a noise is learned, in both themes', pre.light.r >= 1.3 && pre.dark.r >= 1.3, JSON.stringify(pre));
+  ok('the Mains hum divider has contrast 1.3 or more after a noise is learned, in both themes', post.light.r >= 1.3 && post.dark.r >= 1.3, JSON.stringify(post));
   // 4. light mode: the token is no heavier than --line was, on each surface it sits on
   await p.evaluate(t => flip(t, null), 'light'); await settle();
   const light = await p.evaluate(() => {

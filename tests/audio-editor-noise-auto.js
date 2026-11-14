@@ -25,7 +25,7 @@ async function steps(b) {
   // one width, before and while Auto works
   const wa = await widths(), seen = [];
   await p.evaluate(() => document.querySelector('#aeNrFind').click()); for (let i = 0; i < 30; i++) { seen.push(await widths()); await p.waitForTimeout(40); } await p.waitForFunction(() => !AE.nrAutoBusy); await p.waitForTimeout(700);
-  ok('short recording: Auto, Manual, and Learn are one width before and while Auto works', [...wa, ...seen.flat()].every(x => Math.abs(x - wa[0]) < 0.6) && wa[0] >= 100, JSON.stringify({ wa, spread: Math.max(...seen.flat()) - Math.min(...seen.flat()) }));
+  ok('short recording: Auto, Manual, and Learn keep their own width while Auto works', seen.every(r => r.every((x, i) => Math.abs(x - wa[i]) < 0.6)), JSON.stringify({ wa, spread: Math.max(...seen.flat()) - Math.min(...seen.flat()) }));
   // Auto on a short recording only picks a stretch: it is pressed, the stretch is orange, and Manual is not
   const a1 = await p.evaluate(() => { const s = AE.nsel, cv = document.querySelector('#aeCanvas'), k = cv.width / cv.clientWidth, px = (t, y) => { const d = cv.getContext('2d').getImageData(Math.round(aeX(t) * k), Math.round(y * k), 1, 1).data; return [d[0], d[1], d[2]]; }; const mid = s && (s.a + s.b) / 2; return { sel: !!s, by: AE.nsBy, inside: s && px(mid, 90), outside: s && px(Math.max(0, s.a - 0.4), 90), profile: !!AE.d.fx.noise.profile }; });
   const orange = c => c && c[0] - c[2] > 18, st1 = await press();
@@ -63,7 +63,7 @@ async function steps(b) {
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
     const r = await p.evaluate(async () => {
-      const find = document.querySelector('#aeNrFind'), w3 = () => ['#aeNrFind', '#aeNrHand', '#aeNrLearn'].map(q => document.querySelector(q).getBoundingClientRect().width), w = () => w3(); const press = async () => { document.querySelector('#aeNrFind').click(); await sleep(60); const bar = document.querySelector('#aeNrFind').classList.contains('loading'); (window.__wBusy = window.__wBusy || []).push(w3()); for (let i = 0; i < 400 && AE.nrAutoBusy; i++) await sleep(25); await sleep(150); return bar; };
+      const find = document.querySelector('#aeNrFind'), w3 = () => ['#aeNrFind', '#aeNrHand', '#aeNrLearn'].map(q => document.querySelector(q).getBoundingClientRect().width), w = () => w3(); const press = async () => { document.querySelector('#aeNrFind').click(); await sleep(60); const bar = document.querySelector('#aeNrProgBar').classList.contains('on'); (window.__wBusy = window.__wBusy || []).push(w3()); for (let i = 0; i < 400 && AE.nrAutoBusy; i++) await sleep(25); await sleep(150); return bar; };
       aeTool('noise'); await sleep(300); const o = {}; o.w0 = w3(); o.r0 = aeSilenceRange(); o.bar = await press(); const nz = AE.d.fx.noise; o.auto = !!nz.auto && !!nz.profile; o.on = document.querySelector('#aeNrFind').getAttribute('aria-pressed') === 'true'; o.chip = document.querySelector('#aeNrChipTxt').textContent; o.sel = !!AE.nsel;
       await press(); o.back = !AE.d.fx.noise.profile && document.querySelector('#aeNrFind').getAttribute('aria-pressed') !== 'true'; await press(); o.again = !!AE.d.fx.noise.auto;
       aeFx(fx => { fx.noise.reduction = 18; }); const d = AE.d, ch = 2, grab = async () => { const mm = S.audio.disk ? await aeMasterDisk(d, ch, false, null) : await aeMasterFor(d, (await fxGet(d.fx)).buffer, ch, false), w = new Float32Array(mm.total * ch); await mm.fill(0, mm.total, w); return { w, total: mm.total, sr: mm.sr }; };
@@ -71,8 +71,8 @@ async function steps(b) {
       o.wBusy = window.__wBusy; o.hiss = rms(u, 29.3, 29.9) - rms(y, 29.3, 29.9); o.music = rms(y, 5, 25) - rms(u, 5, 25); o.cut = Array.from(y.w.subarray(Math.round(12 * sr), Math.round(12 * sr) + 4000)); return o;
     });
     cut.push(r.cut);
-    ok(tag + 'Auto, Manual, and Learn share one width, held for "Processing 100%" from the first layout, so none changes width when one starts to work', r.w0[0] >= 100 && [...r.w0, ...r.wBusy.flat()].every(x => Math.abs(x - r.w0[0]) < 0.6), JSON.stringify({ before: r.w0, whileBusy: r.wBusy }));
-    ok(tag + 'Auto shows its bar, sets a profile from the whole recording and stays pressed, with nothing left selected', r.bar && r.auto && r.on && r.chip === 'Whole recording' && !r.sel, JSON.stringify({ bar: r.bar, auto: r.auto, on: r.on, chip: r.chip }));
+    ok(tag + 'Auto, Manual, and Learn keep their own width when one starts to work', r.wBusy.every(row => row.every((x, i) => Math.abs(x - r.w0[i]) < 0.6)), JSON.stringify({ before: r.w0, whileBusy: r.wBusy }));
+    ok(tag + 'Auto shows the wait pill, sets a profile from the whole recording and stays pressed, with nothing left selected', r.bar && r.auto && r.on && r.chip === 'Whole recording' && !r.sel, JSON.stringify({ bar: r.bar, auto: r.auto, on: r.on, chip: r.chip }));
     ok(tag + 'pressing Auto again puts back what was there; once more measures again', r.back && r.again);
     ok(tag + 'with Reduction at 18dB the hiss goes down by nearly that, and the music keeps its level', r.hiss > 14 && r.hiss < 19 && Math.abs(r.music) < 0.6, 'hiss down ' + r.hiss.toFixed(1) + 'dB, music ' + r.music.toFixed(2) + 'dB, ' + r.ms + 'ms for 30s');
     ok(tag + 'Trim silence looks at the cleaned sound: the second of hiss at the end, too loud to count as silence before, is trimmed once the noise is down', r.r0 && r.r0[1] > 29.9 && r.r1 && r.r1[1] > 28.9 && r.r1[1] < 29.6, JSON.stringify([r.r0, r.r1]));

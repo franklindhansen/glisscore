@@ -41,7 +41,7 @@ const file = path.join(os.tmpdir(), 'kf-tool-ring.wav'); fs.writeFileSync(file, 
   ok('a new job starts its ring at its own share, not where the last one ended', o_restart(r), JSON.stringify(r.restart));
   ok('Auto: leave the tool while it works and the ring shows; it goes when Auto ends', r.autoBusy && blue(r.auto) && r.autoDone.op < 0.02, JSON.stringify({ auto: r.auto, done: r.autoDone }));
   ok('Mains hum: the same', r.humBusy && blue(r.hum) && r.humDone.op < 0.02, JSON.stringify({ hum: r.hum, done: r.humDone }));
-  ok('Learn: a turning arc, gone when it ends', r.learnBusy && blue(r.learn) && r.learn.wait && r.learnDone.op < 0.02, JSON.stringify({ learn: r.learn, done: r.learnDone }));
+  ok('Learn: a ring while it works, gone when it ends', r.learnBusy && blue(r.learn) && r.learnDone.op < 0.02, JSON.stringify({ learn: r.learn, done: r.learnDone }));
   ok('Emulator: a blue ring filled to its progress while another tool is open, for the reference and for your audio', blue(r.em) && near(r.em, 0.5) && blue(r.em2) && near(r.em2, 0.25), JSON.stringify({ em: r.em, em2: r.em2 }));
   ok('Emulator: no ring with its own window open, back when you leave, gone when the reading ends', r.emOwn.op < 0.02 && blue(r.emBack) && r.emDone.op < 0.02, JSON.stringify({ own: r.emOwn, back: r.emBack, done: r.emDone }));
   ok('no errors', errs.length === 0, errs.join(' | '));

@@ -33,15 +33,15 @@ const LAST_LINES = ['aeFadeLenCard'], LAST_PAIRS = [['aeFadeLenCard', 'ae-card.f
 const NOISE_SHOWS = { 'noise idle': 'false,false,off,nonote', 'noise selected': 'true,false,on,nonote', 'noise learning': 'true,false,off,nonote', 'noise short': 'false,true,off,note' };
 const STEPS = 391;          // the middle of the Select row's buttons, centered between the heading and the line above Mains hum in a 164px card (the picture's card is 158px, so its row is 4px higher)
 const TABLE = {
-  'noise idle': [
-    ['top:aeNrSample', 318, 318],
-    ['bottom:aeNrSample', 476, 482],
-    ['head:NOISE SAMPLE', 339, 338.98],
-    ['steps:aeNrSample', 387, STEPS],
-    ['top:aeNrCtl', 486, 492],
+  'noise idle': [          // the graph is always on top, so both cards sit under it (the old pictures had the sample card over Removal); the rows are the rules' own
+    ['top:aeNrSample', 484, 484],
+    ['bottom:aeNrSample', 656, 656],
+    ['head:NOISE SAMPLE', 505, 505],
+    ['steps:aeNrSample', 561, 561],
+    ['top:aeNrCtl', 484, 484],
     ['bottom:aeNrCtl', 656, 656],
-    ['head:3REMOVAL', 507, 512.98],
-    ['ctl:3REMOVAL', 495, 502]
+    ['head:REMOVAL', 505, 505],
+    ['ctl:REMOVAL', 495, 495]
   ],
   'spec heal': [
     ['top:ae-card.sp-card.sp-sel', 318, 318],

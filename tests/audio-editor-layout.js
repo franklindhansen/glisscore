@@ -161,11 +161,9 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
     ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));
   }
-  // Noise reduction, by Principle 2: before a noise is learned the sample card sits on the graph and both end together, and Removal (the last card) ends on the content's bottom line; after learning, the sample and Removal end on one line, and the graph above them takes the spare height
+  // Noise reduction, by Principle 2: the sample and Removal end on one line, and the graph above them takes the spare height
   for (const h of heights) { const sp = sweep[h].space, tag = '1440x' + h + ': ', nz = sp.filter(f => f.noise).map(f => f.noise), near = (a, b) => Math.abs(a - b) <= 1;
-    const pre = nz.filter(n => n.pre), post = nz.filter(n => !n.pre);
-    const preBad = pre.filter(n => !(near(n.sampleBottom, n.graphBottom) && near(n.ctlBottom, n.content) && near(n.graphBottom + 10, n.ctlTop)));
-    ok(tag + 'Noise reduction before learning: the sample and graph end together, and Removal ends on the content line 10px under the graph', pre.length > 0 && !preBad.length, JSON.stringify(pre[0] || null) + (preBad.length ? ' bad ' + JSON.stringify(preBad[0]) : ''));
+    const post = nz;          // the graph is always on top, so every Noise state is laid out as after learning
     const postBad = post.filter(n => !(near(n.sampleBottom, n.ctlBottom) && near(n.ctlBottom, n.content) && near(n.graphBottom + 10, n.ctlTop)));
     ok(tag + 'Noise reduction after learning: the sample and Removal end on one line, the content\'s bottom, and the graph sits 10px above them', post.length > 0 && !postBad.length, JSON.stringify(post[0] || null) + (postBad.length ? ' bad ' + JSON.stringify(postBad[0]) : ''));
   }

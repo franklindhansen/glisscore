@@ -16,8 +16,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const em = await p.evaluate(() => { window.__emStop(); return window.__em; });
     ok(tag + 'Emulate is greyed during the reading and the button says "Processing"', em.length > 0 && em.every(s => s.go && /Processing/.test(s.state)), JSON.stringify(em.slice(0, 3)) + ' of ' + em.length);
     // the noise tool's Auto
-    const nr = await p.evaluate(async () => { aeTool('noise'); await sleep(300); const q = document.querySelector.bind(document), seen = []; q('#aeNrFind').click(); for (let i = 0; i < 800 && AE.nrAutoBusy; i++) { seen.push({ find: q('#aeNrFind').disabled, listen: q('#aeNrListen').disabled, why: q('.nr-listen').title, state: q('#aeNrFind').textContent.trim() }); await sleep(10); } return seen; });
-    ok(tag + 'Auto is greyed during its work and the button says "Processing"', nr.length > 0 && nr.every(s => s.find && /Processing/.test(s.state)), JSON.stringify(nr.slice(0, 2)) + ' of ' + nr.length);
+    const nr = await p.evaluate(async () => { aeTool('noise'); await sleep(300); const q = document.querySelector.bind(document), seen = []; q('#aeNrFind').click(); for (let i = 0; i < 800 && AE.nrAutoBusy; i++) { seen.push({ find: q('#aeNrFind').disabled, listen: q('#aeNrListen').disabled, why: q('.nr-listen').title, state: q('#aeNrProgBar').classList.contains('on') ? 'Processing' : q('#aeNrFind').textContent.trim() }); await sleep(10); } return seen; });
+    ok(tag + 'Auto is greyed during its work and the wait pill over the graph says "Processing"', nr.length > 0 && nr.every(s => s.find && /Processing/.test(s.state)), JSON.stringify(nr.slice(0, 2)) + ' of ' + nr.length);
     ok(tag + '"Noise only" is greyed during it, with its reason', nr.length > 0 && nr.every(s => s.listen && s.why === 'Available when processing finishes'), JSON.stringify(nr.slice(0, 2)));
     ok(tag + 'no errors', errs.length === 0, errs.join(' | ')); await p.close();
   }
