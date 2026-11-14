@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.7
+
+MP3 files now start cleanly in Safari instead of losing their first moment.
+
 ## 1.2.6
 
 The Audio Editor has a fresh layout in every tool: a clearer tool list, Noise reduction in one row of steps, and Fades with two curves, Gradual and Straight (your old curves play as the nearest one). Sliders hold still as their numbers change, and the editor opens without stray motion.
