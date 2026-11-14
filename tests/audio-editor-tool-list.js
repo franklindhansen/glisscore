@@ -1,5 +1,4 @@
-// The Audio Editor's tool list: the order of the tools (Noise reduction, Spectra, In, EQ, Imager, Fades, Level, Out, spare room, a hairline, Emulator) with no headings; the cable from In to Out only,
-// while Noise reduction and Spectra keep their lights; the highlight hugging each name with the same space before and after it; the Emulator pinned to the list's bottom with its name centered between its hairline
+// The Audio Editor's tool list: the order of the tools (In, Noise reduction, Spectra, EQ, Imager, Fades, Level, Out, spare room, a hairline, Emulator) with no headings; the cable from In to Out through every lit tool; the highlight hugging each name with the same space before and after it; the Emulator pinned to the list's bottom with its name centered between its hairline
 // and the list's border at every list height; the Emulator dimmed like any tool that does nothing (light and dark); the Beta chip as its own element with the same space each side of its word, in the list and in the head;
 // "Emulator (beta)" nowhere; every tool subtitle in both editors the short command from the spec's table. Edges come from the shared helper tests/lib/measure.js (font metrics, never a marker element).
 // Run through tests/run-all.sh.
@@ -8,7 +7,7 @@ const { install } = require('./lib/measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 const SUBS = { noise: 'Banish hiss, hum, or room tone.', spec: 'Heal or turn down a blip, a hum, or a squeak you can see.', eq: 'Shape the tone, band by band.', imager: 'Widen, narrow, or re-center the sound.', fades: 'Ease the start and end.', level: 'Set the finished audio\'s volume.', emu: 'Borrow the sound of another recording.' };
 const PDF_SUBS = { Arrange: 'Drag to reorder. Click a page to leave it out.', Clean: 'Whiten the paper and take the specks out of scans.', 'Re-kilter': 'Level tilted, slanted, and curved scans.', Crop: 'Find the music on the ticked pages and trim the extra margins.', Dim: 'Visually soften music before or after a repeat.', 'Split spreads': 'Split two-page spreads into single pages.', 'Re-size': 'Fit every page to one size.', Watermark: 'Print text across the pages you pick.' };
-const ORDER = ['noise', 'spec', 'in', 'eq', 'imager', 'fades', 'level', 'out', 'emu'];
+const ORDER = ['in', 'noise', 'spec', 'eq', 'imager', 'fades', 'level', 'out', 'emu'];
 const SIZES = [[1440, 900], [1440, 1100], [1440, 760], [1040, 700], [390, 800], 'full'];
 const url = '/index.html?disk=0', base = () => 'http://localhost:' + (process.env.PORT || 8123) + url;
 (async () => {
@@ -27,7 +26,7 @@ const url = '/index.html?disk=0', base = () => 'http://localhost:' + (process.en
       const apart = rail.querySelector('.ae-apart'), cs = getComputedStyle(apart), out = document.querySelector('#aeJackOut').getBoundingClientRect();
       return { order: items.map(i => i.k), headings: rail.querySelectorAll('.ae-rail-h').length, text: /Processing|Output/.test(rail.innerText), hair: parseFloat(cs.borderTopWidth), hairBelowOut: apart.getBoundingClientRect().top >= out.bottom - 0.5, apartHasOnlyEmu: apart.querySelectorAll('.ae-tool').length === 1 && apart.querySelector('.ae-tool').dataset.tool === 'emu' };
     });
-    chk(tag, 'the list reads Noise reduction, Spectra, In, EQ, Imager, Fades, Level, Out, then Emulator', o.order.join() === ORDER.join(), o.order.join());
+    chk(tag, 'the list reads In, Noise reduction, Spectra, EQ, Imager, Fades, Level, Out, then Emulator', o.order.join() === ORDER.join(), o.order.join());
     chk(tag, 'the list has no headings', o.headings === 0 && !o.text, JSON.stringify({ n: o.headings, text: o.text }));
     chk(tag, 'the Emulator is the last row, alone under a hairline that sits under Out', o.hair === 1 && o.hairBelowOut && o.apartHasOnlyEmu, JSON.stringify(o));
     // the highlight hugs each name: the button is the highlight, the same space before and after the letters
@@ -60,17 +59,26 @@ const url = '/index.html?disk=0', base = () => 'http://localhost:' + (process.en
     const clr = await p.evaluate(async () => { aeTool('spec'); await sleep(650); const b = document.querySelector('#spClear'); return { text: b.textContent.trim(), any: /Clear all/.test(document.querySelector('#audioDlg').innerText) }; });
     chk(tag, 'Spectra\'s button reads Clear, and "Clear all" appears nowhere', clr.text === 'Clear' && !clr.any, JSON.stringify(clr));
     if (tag.startsWith('1440x900') || narrow) {
-      // the cable runs from In to Out only; Noise reduction and Spectra are lit and have no cable
+      // the cable runs from In to Out through every lit tool, Noise reduction and Spectra included
       const cab = await p.evaluate(async () => {
         aeTool('eq'); AE.d.fx.noise.on = true; AE.d.fx.spec.on = true; AE.d.fx.imager.on = true; AE.d.fx.eq.on = true; AE.d.fx.eq.curve = Array.from(eqAxis, () => 3); AE.d.audioFades = true; AE.d.gainDb = 3; aeToolsRefresh(); if (innerWidth <= 760) aeRailOpen(true); await sleep(2200);
         const root = document.querySelector('#aeRailIn').getBoundingClientRect(), svg = document.querySelector('#aeWires'), c = e => { const r = document.querySelector(e).getBoundingClientRect(); return [(r.left + r.right) / 2 - root.left, (r.top + r.bottom) / 2 - root.top]; };
         const plugs = [...svg.querySelectorAll('.w-plug:not(.drag)')].map(e => [+e.getAttribute('cx'), +e.getAttribute('cy')]), near = (a, b) => Math.abs(a[0] - b[0]) < 1.5 && Math.abs(a[1] - b[1]) < 1.5;
         let top = Infinity, bottom = -Infinity; for (const e of svg.querySelectorAll('path')) { const bb = e.getBBox(); top = Math.min(top, bb.y); bottom = Math.max(bottom, bb.y + bb.height); }
         const inY = c('#aeJackIn i')[1], outY = c('#aeJackOut i')[1], led = id => document.querySelector(id).classList.contains('on');
-        return { top: +(top - inY).toFixed(1), bottom: +(bottom - outY).toFixed(1), plugged: ['#aeEqLed', '#aeImLed', '#aeFdLed', '#aeLvLed'].map(id => plugs.some(p => near(p, c(id)))), unplugged: ['#aeNrLed', '#aeSpLed'].map(id => !plugs.some(p => near(p, c(id)))), lit: ['#aeNrLed', '#aeSpLed', '#aeEqLed', '#aeImLed', '#aeFdLed', '#aeLvLed'].map(led), n: plugs.length };
+        return { top: +(top - inY).toFixed(1), bottom: +(bottom - outY).toFixed(1), plugged: ['#aeNrLed', '#aeSpLed', '#aeEqLed', '#aeImLed', '#aeFdLed', '#aeLvLed'].map(id => plugs.some(p => near(p, c(id)))), lit: ['#aeNrLed', '#aeSpLed', '#aeEqLed', '#aeImLed', '#aeFdLed', '#aeLvLed'].map(led), n: plugs.length };
       });
-      chk(tag, 'the cable runs from In to Out only: it starts at In and ends at Out, plugging EQ, Imager, Fades, and Level', Math.abs(cab.top) <= 0.5 && Math.abs(cab.bottom) <= 0.5 && cab.plugged.every(Boolean), JSON.stringify(cab));
-      chk(tag, 'Noise reduction and Spectra keep their lights and have no cable', cab.lit.every(Boolean) && cab.unplugged.every(Boolean), JSON.stringify(cab));
+      chk(tag, 'the cable runs from In to Out: it starts at In and ends at Out, plugging Noise reduction, Spectra, EQ, Imager, Fades, and Level', Math.abs(cab.top) <= 0.5 && Math.abs(cab.bottom) <= 0.5 && cab.plugged.every(Boolean), JSON.stringify(cab));
+      chk(tag, 'every tool\'s light is lit when it is on', cab.lit.every(Boolean), JSON.stringify(cab));
+      // switched off, Noise reduction and Spectra unplug like any tool, and with nothing on the status line reads just "No processing."
+      const off = await p.evaluate(async () => {
+        const d = AE.d; d.fx.noise.on = d.fx.spec.on = d.fx.eq.on = d.fx.imager.on = false; d.audioFades = false; d.gainDb = 0; d.normalize = false; d.vStart = 1; aeToolsRefresh(); await sleep(1800);
+        const root = document.querySelector('#aeRailIn').getBoundingClientRect(), c = e => { const r = document.querySelector(e).getBoundingClientRect(); return [(r.left + r.right) / 2 - root.left, (r.top + r.bottom) / 2 - root.top]; };
+        const plugs = [...document.querySelectorAll('#aeWires .w-plug:not(.drag)')].map(e => [+e.getAttribute('cx'), +e.getAttribute('cy')]), near = (a, b) => Math.abs(a[0] - b[0]) < 1.5 && Math.abs(a[1] - b[1]) < 1.5;
+        const res = { text: document.querySelector('#aeChain').textContent.trim(), plugs: ['#aeNrLed', '#aeSpLed', '#aeEqLed', '#aeImLed', '#aeFdLed', '#aeLvLed'].map(id => plugs.some(p => near(p, c(id)))), lit: ['#aeNrLed', '#aeSpLed'].map(id => document.querySelector(id).classList.contains('on')) };
+        d.audioFades = true; d.vStart = 0; aeToolsRefresh(); return res;
+      });
+      chk(tag, 'with everything off no light is plugged or lit, and the status line reads "No processing." even with a trim', off.text === 'No processing.' && off.plugs.every(x => !x) && off.lit.every(x => !x), JSON.stringify(off));
     }
     if (tag.startsWith('1440x900')) {
       const help = await p.evaluate(() => { const d = [...document.querySelectorAll('.how-d')].find(e => e.querySelector('summary').textContent === 'How the Audio Editor works'); return { headings: [...d.querySelectorAll('h4')].map(e => e.textContent), buttons: [...d.querySelectorAll('.hb')].map(e => e.textContent) }; });

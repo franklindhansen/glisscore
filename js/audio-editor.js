@@ -1980,7 +1980,7 @@ function aeLit(d) {
   return { noise: !!fx.noise.on, spec: !!fx.spec.on, eq: !!fx.eq.on && eqHas(fx), imager: !!fx.imager.on && nch === 2, level: !!d.normalize || d.gainDb !== 0, fades: d.audioFades !== false };
 }
 const aeChainOrder = d => ['noise', 'spec'].concat(d.fx.order, ['fades', 'level']);          // every tool that works on the sound, in the order it runs (the status bar's "Runs" line)
-const aeWireOrder = d => d.fx.order.concat(['fades', 'level']);          // the cable's route from In to Out: Noise reduction and Spectra rewrite the recording itself, so they are lit but not on the cable
+const aeWireOrder = aeChainOrder;          // the cable's route from In to Out is the same list, in the same order, as the status bar's "Runs" line
 function aeRailSync() {
   const procs = $('#aeProcs'), want = AE.d.fx.order, cur = Array.from(procs.children).map(e => e.dataset.tool), d = AE.d, fx = d.fx, nch = fxChannels(), lit = aeLit(d);
   if (want.join() !== cur.join()) {
@@ -1995,7 +1995,7 @@ function aeRailSync() {
   const bd = { noise: lit.noise ? fx.noise.reduction + 'dB' : '', spec: lit.spec ? String(fx.spec.edits.length) : '', eq: lit.eq ? (n => fx.eq.curve ? (n ? 'Curve + ' + n + (n === 1 ? ' band' : ' bands') : 'Curve') : n + (n === 1 ? ' band' : ' bands'))(fx.eq.bands.filter(b => b.on).length) : '', imager: lit.imager ? (fx.imager.width !== 100 ? sg(fx.imager.width - 100) : imBands(fx.imager) ? 'Bands' : fx.imager.bal ? 'Bal' : 'Bass') : (nch < 2 ? 'Mono' : ''), level: d.normalize ? (d.normBy === 'loud' ? LUFS_TXT(d.normLufs) : DB_TXT(d.normPeakDb)) : d.gainDb ? sg(d.gainDb) + 'dB' : '', fades: aeFadeBadge(d) };
   $('#aeNrBadge').textContent = bd.noise; aeRingSync(); $('#aeSpBadge').textContent = bd.spec; $('#aeEqBadge').textContent = bd.eq; $('#aeImBadge').textContent = bd.imager; $('#aeLvBadge').textContent = bd.level; $('#aeFdBadge').textContent = bd.fades;
   $('#aeRailBadge').textContent = bd[AE.tool] || '';
-  { const on = aeChainOrder(d).filter(k => lit[k]), trimmed = d.vStart > 0 || d.vEndSet != null, idle = 'No processing. ' + (trimmed ? 'Only the trim changes the sound.' : 'Audio plays unchanged.'), sig = on.map(k => k + (aeBp(k) ? '-' : '')).join() + '|' + idle, ch = $('#aeChain'); if (ch._sig !== sig) { ch._sig = sig; ch.innerHTML = on.length ? '<span>Runs</span>' + on.map(k => '<b' + (aeBp(k) ? ' class="bp" title="Bypassed"' : '') + '>' + AE_NAMES[k] + '</b>').join('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>') : '<span>' + idle + '</span>'; } }
+  { const on = aeChainOrder(d).filter(k => lit[k]), idle = 'No processing.', sig = on.map(k => k + (aeBp(k) ? '-' : '')).join() + '|' + idle, ch = $('#aeChain'); if (ch._sig !== sig) { ch._sig = sig; ch.innerHTML = on.length ? '<span>Runs</span>' + on.map(k => '<b' + (aeBp(k) ? ' class="bp" title="Bypassed"' : '') + '>' + AE_NAMES[k] + '</b>').join('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>') : '<span>' + idle + '</span>'; } }
   aeWiresDraw();
 }
 /* the wires: a cable runs from light to light down the list, in the order the sound travels. A tool that is off has nothing to plug in, so the cable skips it.
