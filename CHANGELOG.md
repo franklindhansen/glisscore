@@ -2,7 +2,7 @@
 
 ## 1.2.5
 
-The Audio Editor's tool windows are a little shorter, with even space above and below their cards and headings, labels, sliders, and step numbers lined up. The Imager and EQ grids show in dark mode, and Mains hum matches Noise only. The How it works intro is shorter.
+The Audio Editor's tool windows are tidier, with even space around cards, headings, and sliders, and the Imager and EQ grids now show in dark mode. Bypass is saved with your settings and applies to exported audio.
 
 ## 1.2.4
 
