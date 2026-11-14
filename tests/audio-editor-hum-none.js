@@ -1,4 +1,4 @@
-// Mains hum row when there is no hum: no "Off" sub-line before a press, a press takes at least 400ms like any other, and "No hum found" stays in the row (said once, no toast) until the next press.
+// Remove hum when there is no hum: the wait pill shows over the graph like any other wait, a press takes at least 400ms, and "No hum found" comes as a toast with the switch left off.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-hum-none.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -11,18 +11,17 @@ const file = path.join(os.tmpdir(), 'kf-hum-none.wav'); fs.writeFileSync(file, w
   await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#audioIn', file); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
   await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
   const r = await p.evaluate(async () => {
-    aeTool('noise'); await sleep(300); const small = document.querySelector('#aeNrHumVal'), o = {};
-    o.before = { txt: small.textContent, shown: getComputedStyle(small).display !== 'none' };
-    const t0 = performance.now(); document.querySelector('#aeNrHum').click(); await sleep(60); for (let i = 0; i < 400 && AE.humBusy; i++) await sleep(10); o.took = performance.now() - t0;
-    await sleep(100); o.after = small.textContent; o.toast = /No steady mains hum/.test(document.body.innerText);
-    await sleep(6000); o.later = small.textContent; o.laterShown = getComputedStyle(small).display !== 'none';
-    document.querySelector('#aeNrHum').click(); await sleep(60); o.again = small.textContent; return o;
+    aeTool('noise'); await sleep(300); const sw = document.querySelector('#aeNrHum'), pill = document.querySelector('#aeNrProgBar'), o = {};
+    o.oldRow = !!document.querySelector('#aeNrHumRow, #aeNrHumVal, #aeNrHumBar');
+    const t0 = performance.now(); sw.click(); await sleep(80); o.pill = pill.classList.contains('on'); o.pillText = pill.textContent.replace(/\s+/g, ' ').trim(); o.held = sw.disabled;
+    for (let i = 0; i < 400 && AE.humBusy; i++) await sleep(10); o.took = performance.now() - t0;
+    await sleep(150); o.pillGone = !pill.classList.contains('on'); o.toast = /No hum found/.test(document.body.innerText); o.on = sw.checked; o.hum = AE.d.fx.noise.hum; o.free = !sw.disabled;
+    return o;
   });
-  ok('before a press the Mains hum sub-line is empty (its line is kept, so the row does not move)', !r.before.txt, JSON.stringify(r.before));
+  ok('the old Mains hum row (its sub-line and bar) is gone', !r.oldRow);
+  ok('a press with no hum shows the same wait pill over the graph as every other wait, and holds the switch still meanwhile', r.pill && /^Processing/.test(r.pillText) && r.held, JSON.stringify({ pill: r.pill, text: r.pillText, held: r.held }));
   ok('a press with no hum takes at least 400ms', r.took >= 400, r.took.toFixed(0) + 'ms');
-  ok('it says "No hum found" in the row and nowhere else', r.after === 'No hum found' && !r.toast, JSON.stringify({ after: r.after, toast: r.toast }));
-  ok('the message is still there 6s later', r.later === 'No hum found' && r.laterShown, r.later);
-  ok('the next press replaces it with the working line', /Looking for a hum/.test(r.again), r.again);
+  ok('it then says "No hum found" in a toast, the pill is gone, and the switch is off and free again', r.pillGone && r.toast && !r.on && !r.hum && r.free, JSON.stringify(r));
   ok('no errors', errs.length === 0, errs.join(' | '));
   await b.close(); fs.unlinkSync(file);
 })();

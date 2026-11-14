@@ -1,11 +1,11 @@
 # The card heights at 1440x900, "tool state card height", as the shared layout rules make them (a card's height follows its content and the tool window; no card carries a height of its own). Checked by tests/audio-editor-grid-lines.js: a card that changes height fails.
 # A ticket that changes a card on purpose (merging two cards into one) edits its lines here.
-noise idle aeNrCtl 172
-noise idle aeNrSample 172
-noise auto aeNrCtl 172
-noise auto aeNrSample 172
-noise learned aeNrCtl 208
-noise learned aeNrSample 208
+noise idle aeNrCtl 141
+noise idle aeNrSample 141
+noise auto aeNrCtl 159
+noise auto aeNrSample 159
+noise learned aeNrCtl 159
+noise learned aeNrSample 159
 spec heal ae-card.sp-card.sp-lcard 218
 spec heal ae-card.sp-card.sp-sel 110
 spec reduce ae-card.sp-card.sp-lcard 193

@@ -88,9 +88,9 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
       if (t === 'imager') out.imager = await p.evaluate(() => { const r = s => document.querySelector(s).getBoundingClientRect(); return { balBottom: r('#aeBalCard').bottom, scopeBottom: r('.im-scope').bottom, widthTop: r('#aeWidthCard').top, scopeTop: r('.im-scope').top, widthH: r('#aeWidthCard').height, balH: r('#aeBalCard').height }; });
       if (t === 'noise') out.noisePad = await p.evaluate(() => [getComputedStyle(document.querySelector('#aeNrCtl')).padding, getComputedStyle(document.querySelector('#aeGainCard')).padding]); }
     await p.evaluate(() => aeTool('noise')); await p.waitForTimeout(500);
-    await p.evaluate(async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(300); }); await look(p, 'noise found by Auto');
-    // the Mains hum row: the switch and the card hold their places from idle, through busy, to done, and back off
-    out.hum = await p.evaluate(async () => { const pos = () => { const s = document.querySelector('#aeNrHum').getBoundingClientRect(), c = document.querySelector('#aeNrSample').getBoundingClientRect(), r = document.querySelector('#aeNrHumRow').getBoundingClientRect(); return { sw: Math.round(s.top * 10) / 10, card: Math.round(c.height * 10) / 10, row: Math.round(r.height * 10) / 10, sub: document.querySelector('#aeNrHumVal').textContent }; };
+    await p.evaluate(async () => { document.querySelector('#aeNrLearn').click(); await sleep(100); for (let i = 0; i < 600 && (AE.nrAutoBusy || AE.nrLearning); i++) await sleep(25); await sleep(700); }); await look(p, 'noise found by Auto');
+    // the Remove hum switch: it and the card hold their places from idle, through busy, to done, and back off
+    out.hum = await p.evaluate(async () => { const pos = () => { const s = document.querySelector('#aeNrHum').getBoundingClientRect(), c = document.querySelector('#aeNrSample').getBoundingClientRect(), r = document.querySelector('#aeNrSample .nr-foot').getBoundingClientRect(); return { sw: Math.round(s.top * 10) / 10, card: Math.round(c.height * 10) / 10, row: Math.round(r.height * 10) / 10 }; };
       aeTool('noise'); await sleep(300); const rec = { idle: pos() }; document.querySelector('#aeNrHum').click(); await sleep(60); rec.busy = pos(); for (let i = 0; i < 400 && AE.humBusy; i++) await sleep(25); await sleep(300); rec.done = pos();
       document.querySelector('#aeNrHum').click(); await sleep(300); rec.off = pos(); return rec; });
     await p.evaluate(() => aeTool('noise')); await p.waitForTimeout(400); await p.evaluate(async () => { document.querySelector('#aeNrLearn').click(); for (let i = 0; i < 200 && document.querySelector('#aeNrGrid').classList.contains('pre'); i++) await sleep(50); const box = () => ['#aeNrCtl', '#aeNrSample', '#aeNrGrid'].map(q => { const r = document.querySelector(q).getBoundingClientRect(); return [r.top, r.height].map(Math.round).join(); }).join(); let was = '', still = 0; for (let i = 0; i < 200 && still < 8; i++) { await sleep(50); const now = box(); still = now === was ? still + 1 : 0; was = now; } });          // wait until the cards stop moving (400ms still), not a set time: a busy machine makes them take longer
@@ -158,7 +158,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const fd = sp.filter(f => f.fades);
     ok(tag + 'Fades, Length: its slider row (the slider with Off and Longer beside it) ends on the bottom line of the Gradual | Straight choice', fd.length > 0 && fd.every(f => Math.abs(f.fades.labels - f.fades.picture) <= 1), JSON.stringify(fd.map(f => f.fades)).slice(0, 200));
     const hm = o.hum, moved = Object.entries(hm).filter(([k, x]) => Math.abs(x.sw - hm.idle.sw) > 1 || Math.abs(x.card - hm.idle.card) > 1 || Math.abs(x.row - hm.idle.row) > 1).map(([k]) => k);
-    ok(tag + 'Mains hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
+    ok(tag + 'Remove hum: the switch, its row, and the card hold their places from idle through busy and done, and back off', !moved.length, JSON.stringify(hm).slice(0, 400) + (moved.length ? ' moved: ' + moved.join(',') : ''));
     ok(tag + 'uiGuard reports nothing in any tool or state', !o.uig.length, o.uig.slice(0, 4).join(' | '));
   }
   // Noise reduction, by Principle 2: the sample and Removal end on one line, and the graph above them takes the spare height
@@ -179,7 +179,7 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
   for (const n of narrowFoot) { const bad = n.sp.foot.filter(x => Math.abs(x.above - x.below) > 1);
     ok('Imager at ' + n.w + 'px: the footer row (Center low notes) keeps equal space above and below its switch', n.sp.foot.length > 0 && !bad.length, JSON.stringify(n.sp.foot)); }
   const feet = new Set(sweep[heights[0]].space.flatMap(f => f.foot.map(x => x.id)));
-  ok('footer rows: Mains hum, Noise only, Limiter, and Center low notes all use the footer row', ['aeNrHumRow', 'nr-listen', 'aeLimRow', 'aeBassCard'].every(id => [...feet].some(x => x.includes(id))), [...feet].join(', '));
+  ok('footer rows: Remove hum with Output noise, Limiter, and Center low notes all use the footer row', ['nr-foot', 'aeLimRow', 'aeBassCard'].every(id => [...feet].some(x => x.includes(id))), [...feet].join(', '));
   const ih = heights.map(h => sweep[h].imager.widthH.toFixed(1) + '/' + sweep[h].imager.balH.toFixed(1));
   ok('Imager: Width and Balance keep their natural height at every screen height', new Set(ih).size === 1, ih.join(' '));
   // the give-way order, by the dialog's own width (its content box, which is 32px under the screen's; in full screen the whole screen): the tool list becomes a drop-down at 728px, the cards stack and labels become icons and the subtitles go at 488px,

@@ -22,26 +22,25 @@ const STATES = {
   'level off': ['level', null],
   'emu idle': ['emu', null],
   'eq idle': ['eq', null],
-  'noise selected': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); }],
-  'noise learning': ['noise', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(500); const l = document.querySelector('#aeNrLearn'); l.disabled = true; l.classList.add('loading'); l.style.setProperty('--p', '60%'); l.textContent = 'Processing 60%'; await sleep(300); }],
-  'noise short': ['noise', null, async p => { await p.click('#aeNrHand'); const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(), t = t => r.left + aeX(t); return { y: r.top + r.height / 2, a: t(1.8), z: t(2.0) }; }); await p.mouse.move(g.a, g.y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(g.a + (g.z - g.a) * i / 8, g.y); await p.mouse.up(); await p.waitForTimeout(300); }],
+  'noise selected': ['noise', async () => { document.querySelector('#aeNrLearn').click(); await sleep(100); for (let i = 0; i < 600 && (AE.nrAutoBusy || AE.nrLearning); i++) await sleep(25); await sleep(700); }],
+  'noise learning': ['noise', async () => { document.querySelector('#aeNrLearn').click(); await sleep(100); for (let i = 0; i < 600 && (AE.nrAutoBusy || AE.nrLearning); i++) await sleep(25); await sleep(700); const l = document.querySelector('#aeNrLearn'); l.disabled = true; l.classList.add('loading'); l.style.setProperty('--p', '60%'); l.textContent = 'Processing 60%'; await sleep(300); }],
+  'noise short': ['noise', null, async p => { await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=manual]').click()); const g = await p.evaluate(() => { const r = document.querySelector('#aeCanvas').getBoundingClientRect(), t = t => r.left + aeX(t); return { y: r.top + r.height / 2, a: t(1.8), z: t(2.0) }; }); await p.mouse.move(g.a, g.y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(g.a + (g.z - g.a) * i / 8, g.y); await p.mouse.up(); await p.waitForTimeout(300); }],
   'fades length 1': ['fades', async () => { const fl = document.querySelector('#aeFadeLen'); fl.value = 1; fl.dispatchEvent(new Event('input', { bubbles: true })); fl.dispatchEvent(new Event('change', { bubbles: true })); await sleep(1500); aeFadeDraw(); }],
 };
 // cards side by side whose last lines share one line (Fades: the Length card's slider row ends on the Shape card's choice). Width, Balance, and Fades Length have no scale row: their end words sit beside the track (owner's decision, November 13, 2026), checked by slider-word in audio-editor-grid-lines
 const LAST_LINES = ['aeFadeLenCard'], LAST_PAIRS = [['aeFadeLenCard', 'ae-card.fd-shape']];
-// what each Noise picture shows on the Select row: Auto pressed, Manual pressed, Learn on or off, and the "Too short" note
-const NOISE_SHOWS = { 'noise idle': 'false,false,off,nonote', 'noise selected': 'true,false,on,nonote', 'noise learning': 'true,false,off,nonote', 'noise short': 'false,true,off,note' };
+// what each Noise picture shows on the Method card: the chosen method, Learn on or off, and the "Too short" note
+const NOISE_SHOWS = { 'noise idle': 'auto,on,nonote', 'noise selected': 'auto,on,nonote', 'noise learning': 'auto,off,nonote', 'noise short': 'manual,off,note' };
 const STEPS = 391;          // the middle of the Select row's buttons, centered between the heading and the line above Mains hum in a 164px card (the picture's card is 158px, so its row is 4px higher)
 const TABLE = {
-  'noise idle': [          // the graph is always on top, so both cards sit under it (the old pictures had the sample card over Removal); the rows are the rules' own
-    ['top:aeNrSample', 484, 484],
+  'noise idle': [          // the graph is always on top, so both cards sit under it (the old pictures had the sample card over Removal); the rows are the rules' own. Idle, the sliders under Reduction are folded shut: the cards are shorter and the graph taller
+    ['top:aeNrSample', 484, 515],
     ['bottom:aeNrSample', 656, 656],
-    ['head:NOISE SAMPLE', 505, 505],
-    ['steps:aeNrSample', 561, 561],
-    ['top:aeNrCtl', 484, 484],
+    ['head:METHOD', 505, 536],
+    ['top:aeNrCtl', 484, 515],
     ['bottom:aeNrCtl', 656, 656],
-    ['head:REMOVAL', 505, 505],
-    ['ctl:REMOVAL', 495, 495]
+    ['head:REMOVAL', 505, 536],
+    ['ctl:REMOVAL', 495, 526]
   ],
   'spec heal': [
     ['top:ae-card.sp-card.sp-sel', 318, 318],
@@ -123,7 +122,16 @@ const TABLE = {
     ['frame-bottom:ae-card.fd-shape', 561, 561]
   ]
 };
-for (const k of ['noise selected', 'noise learning', 'noise short', 'noise selected dark', 'noise short dark']) TABLE[k] = TABLE['noise idle'];          // the Noise pictures differ from p-noise only on the Select row, so every other row is the idle row
+const NOISE_OPEN = [          // with a noise learned the fold is open: the cards are 159px and the graph shorter
+    ['top:aeNrSample', 484, 497],
+    ['bottom:aeNrSample', 656, 656],
+    ['head:METHOD', 505, 518],
+    ['top:aeNrCtl', 484, 497],
+    ['bottom:aeNrCtl', 656, 656],
+    ['head:REMOVAL', 505, 518],
+    ['ctl:REMOVAL', 495, 508]
+];
+for (const k of ['noise short', 'noise short dark']) TABLE[k] = TABLE['noise idle']; for (const k of ['noise selected', 'noise learning', 'noise selected dark']) TABLE[k] = NOISE_OPEN;          // the Noise pictures differ only in whether the fold under Reduction is open
 (async () => {
   const b = await chromium.launch(), errs = [];
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } }); p.setDefaultTimeout(90000); p.on('pageerror', e => errs.push(e.message));
@@ -157,7 +165,7 @@ for (const k of ['noise selected', 'noise learning', 'noise short', 'noise selec
     for (const [x, y] of LAST_PAIRS) if (app['last:' + x] !== undefined && app['last:' + y] !== undefined && Math.abs(app['last:' + x] - app['last:' + y]) > 0.5) bad.push('the last lines of ' + x + ' (' + app['last:' + x] + ') and ' + y + ' (' + app['last:' + y] + ') are not on one line');
     for (const g of gaps) if (Math.abs(g.y - g.want) > 0.5) bad.push(g.key + ' starts ' + g.y + 'px under its thumb or bar, not ' + g.want);
     const shows = NOISE_SHOWS[state.replace(/ dark$/, '')];
-    if (shows) { const got = await p.evaluate(() => { const n = document.querySelector('#aeStopNote'); return ['#aeNrFind', '#aeNrHand'].map(s => document.querySelector(s).getAttribute('aria-pressed')).join() + ',' + (document.querySelector('#aeNrLearn').disabled ? 'off' : 'on') + ',' + (n && !n.hidden && /Too short/.test(n.textContent) ? 'note' : 'nonote'); }); if (got !== shows) bad.push('the Select row shows ' + got + ', the picture shows ' + shows); }
+    if (shows) { const got = await p.evaluate(() => { const n = document.querySelector('#aeStopNote'); return (document.querySelector('input[name=aeNrMethod]:checked') || {}).value + ',' + (document.querySelector('#aeNrLearn').disabled ? 'off' : 'on') + ',' + (n && !n.hidden && /Too short/.test(n.textContent) ? 'note' : 'nonote'); }); if (got !== shows) bad.push('the Method card shows ' + got + ', the picture shows ' + shows); }
     ok(state + ': heading letters and heading-row controls sit under their card\'s top as in the picture; card edges and scales are where the layout rules put them', !bad.length, bad.slice(0, 6).join(' | ') || read.join(', '));
   }
   const pending = fs.readFileSync(path.join(__dirname, 'audio-editor-approved-expected.txt'), 'utf8').split('\n').filter(l => l.trim() && l[0] !== '#');

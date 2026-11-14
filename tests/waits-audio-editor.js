@@ -22,7 +22,7 @@ const STRAY = '/\\b(Preparing|Measuring|Working out|Loading|Finding|Finishing)\\
     await p.setInputFiles('#aeEmIn', FX + '/s24.wav'); await p.waitForFunction(() => AE.em && AE.em.ref && AE.em.own && !AE.em.busyOwn && !AE.em.busy); await p.waitForTimeout(300);
     await p.evaluate(async () => { document.querySelector('#aeEmGo').click(); for (let i = 0; i < 400 && !emLive(); i++) await sleep(25); });
     // the noise tool's Auto
-    await p.evaluate(async () => { aeTool('noise'); await sleep(300); document.querySelector('#aeNrFind').click(); for (let i = 0; i < 400 && AE.nrAutoBusy; i++) await sleep(25); await sleep(150); });
+    await p.evaluate(async () => { aeTool('noise'); await sleep(300); document.querySelector('#aeNrLearn').click(); for (let i = 0; i < 400 && AE.nrAutoBusy; i++) await sleep(25); await sleep(150); });
     // Level's loudness reading
     await p.evaluate(async () => { aeTool('level'); await sleep(300); const d = AE.d; d.normalize = true; d.normBy = 'loud'; aeRefresh && aeRefresh(); await sleep(600); });
     const r = await p.evaluate(() => ({ stray: [...window.__stray], waits: [...window.__waits] }));

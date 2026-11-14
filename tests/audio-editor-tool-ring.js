@@ -1,4 +1,4 @@
-// Background work shows in the tool list as a blue ring that fills with the progress, for Noise reduction (its main job, Auto, Learn, Mains hum) and the Emulator, and only while another tool is open:
+// Background work shows in the tool list as a blue ring that fills with the progress, for Noise reduction (its main job, Auto, Learn, Remove hum) and the Emulator, and only while another tool is open:
 // with its own window open the bar there says it. No orange text, no amber pulse; the ring fades in with the job and out when it ends.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-tool-ring.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
@@ -24,7 +24,7 @@ const file = path.join(os.tmpdir(), 'kf-tool-ring.wav'); fs.writeFileSync(file, 
     // Mains hum
     aeTool('noise'); await sleep(300); const hum = aeNrHum(); await sleep(100); aeTool('level'); await sleep(250); o.hum = ring('noise'); o.humBusy = !!AE.humBusy; await hum; await sleep(700); o.humDone = ring('noise');
     // Learn (a turning arc: no share is known)
-    aeTool('noise'); await sleep(300); AE.nsel = { a: 1, b: 3 }; aeRefresh(); await sleep(100); document.querySelector('#aeNrLearn').click(); await sleep(100); aeTool('level'); await sleep(250); o.learn = ring('noise'); o.learnBusy = !!AE.nrLearning;
+    aeTool('noise'); await sleep(300); document.querySelector('input[name=aeNrMethod][value=manual]').click(); await sleep(100); AE.nsel = { a: 1, b: 3 }; AE.nsBy = 'hand'; aeRefresh(); await sleep(100); document.querySelector('#aeNrLearn').click(); await sleep(100); aeTool('level'); await sleep(250); o.learn = ring('noise'); o.learnBusy = !!AE.nrLearning;
     for (let i = 0; i < 300 && AE.nrLearning; i++) await sleep(20); await sleep(700); o.learnDone = ring('noise');
     // Emulator
     o.emIdle = ring('emu'); AE.em = { busy: true, prog: 0.5, name: 'x' }; aeRingSync(); await sleep(700); o.em = ring('emu'); aeTool('emu'); await sleep(700); o.emOwn = ring('emu'); aeTool('level'); await sleep(700); o.emBack = ring('emu');

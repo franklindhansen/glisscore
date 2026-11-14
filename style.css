@@ -23,7 +23,7 @@
   --ae-side:16px;   /* the tool window's one left line and one right line: the tool's name, its subtitle and buttons, the cards, and the status bar all sit this far in from the window's edges */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
-  --thumb-s:14px; --thumb-s-w:22px; --track-s:4px;   /* the small slider (.sl-small): a lighter handle and track for a setting under a main one */
+  --thumb-s:14px; --thumb-s-w:14px; --track-s:4px;   /* the small slider (.sl-small): the same handle and blue as a main slider, as a round 14px dot on a 4px track, for a setting under a main one */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
   --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
@@ -230,6 +230,11 @@ input[type=range]::-moz-range-track{height:var(--track);border-radius:99px;backg
 input[type=range]::-moz-range-progress{height:var(--track);border-radius:99px;background:var(--accent)}
 input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
 input[type=range].sl-small{--thumb:var(--thumb-s);--thumb-w:var(--thumb-s-w);--track:var(--track-s)}
+/* a sub-slider row (.sl-sub): the name, a small slider, and its value on one line. A group of them (.sl-subs) shares three columns: the names, the bars, and a value column as wide as "100%", so the bars line up and nothing moves as a number grows. For a setting that sits under a main slider */
+.sl-subs{display:grid;grid-template-columns:max-content minmax(0,1fr) 4ch;column-gap:10px;row-gap:var(--gap-set);align-items:center}
+.sl-sub{display:grid;grid-template-columns:subgrid;grid-column:1/-1;align-items:center}
+.sl-sub label{font-size:13px;color:var(--muted)}
+.sl-sub output{text-align:right;font-weight:400;font-size:var(--value-fs);font-variant-numeric:tabular-nums;color:var(--ink)}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 select,input[type=text],textarea.autogrow{width:100%;padding:7px 9px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}
 textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
@@ -1196,7 +1201,6 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-n{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:0;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
 .mt-body{flex:1;min-width:0}
 .mt-step .mt-title{display:flex;align-items:center;min-height:22px}          /* a step's first line is as tall as its number, so the number is centered on it */
-.mt-step .nr-learn{min-height:30px}
 .mt-title{margin:0 0 var(--gap-label);font-weight:600;color:var(--ink)}
 .mt-body .field label{display:flex;justify-content:space-between}
 .mt-body .field .mt-title{margin:0}
@@ -1231,18 +1235,8 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .field>.lv-big{margin:0 0 14px}
 
 /* ----- noise reduction ----- */
-.nr-listen{display:flex;justify-content:space-between;align-items:center;font-size:14px}
 .nr-prog b{display:block;width:0;height:100%;background:var(--accent);transition:width .25s linear}
 .ae-tool{--row-px:8px;--row-py:8px;padding:0 var(--row-px);height:calc(1lh + 2 * var(--row-py) + 2px);white-space:nowrap}          /* the highlight is the button, so it hugs the name: the same space before and after it (the name is trimmed to its letters, so the height is set here) */
-.nr-hum{display:flex;align-items:center;gap:10px;font-size:14px}
-.nr-hum{position:relative}
-.nr-hum-l{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0;cursor:pointer}
-.nr-hum-l small{font-size:12px;--lh:1.3;color:var(--muted);font-variant-numeric:tabular-nums;transition:color .25s var(--ease-color)}          /* the result sits on the label's own line, so Mains hum is the same height as Noise only and the switch never moves */
-.nr-hum.on small,.nr-hum.busy small{color:var(--accent)}
-.nr-hum.none small{color:var(--turn-ink)}
-.nr-hum-bar{position:absolute;left:0;right:0;bottom:-7px;height:3px;border-radius:99px;background:var(--line);overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui)}
-.nr-hum.busy .nr-hum-bar{opacity:1}
-.nr-hum-bar b{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .25s linear}
 input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* a pressed primary button stays readable: solid with its own ink */
 .btn.primary[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
@@ -1340,14 +1334,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .nr-sample{grid-area:2/1}
   .nr-removal{grid-area:2/2}
 }
-/* the steps: one row, wrapping when the card is too narrow for it: "1 Select" with Auto and Manual, then "2" with Learn (and the chip once a noise is learned) */
-.nr-steps{flex-direction:row;flex-wrap:wrap;align-items:center;gap:var(--gap-set) calc(2 * var(--gap-set))}
-.nr-steps>.mt-step{align-items:baseline;gap:8px;min-width:0}
-.nr-steps .mt-title{margin:0;min-height:0}
 .nr-learn{min-width:0}
 .nr-learn .mt-chip{min-width:0}
 /* Removal: its two small sliders sit under Reduction, in a fold that closes when Reduction is Off */
 .nr-removal .field{margin-bottom:0}
+.nr-head+.field{margin-top:1px}          /* the seg above Reduction ends a hair high in its row, so the body sits level between the heading and the card's foot */
 .nr-removal .fa.open>.fa-in{padding:3px 4px;margin:-3px -4px}          /* room for a slider's thumb inside the fold's clip, taken back by the margin so nothing moves */
 @container aedlg (max-width:728px){.ae-pbody{min-height:0}}
 }
@@ -2667,12 +2658,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-learn .mt-chip{border:0;background:none;padding:0;gap:4px;color:var(--muted)}
 .nr-learn .mt-chip::before{content:"";flex:none;width:14px;height:14px;margin-right:2px;background:var(--accent);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/contain no-repeat}
 .nr-learn .mt-chip b{font-weight:400}
-.nr-head+.field{margin-top:2px}
 
-/* Removal's two small sliders share one set of columns: the words, the bar, and a value column wide enough for 100%, so the bars line up and nothing moves as a number grows */
-.nr-subs{display:grid;grid-template-columns:max-content minmax(0,1fr) calc(var(--value-fs) * 2.7);column-gap:10px;row-gap:var(--gap-set)}
-.nr-subs>.field.row3{grid-column:1/-1;grid-template-columns:subgrid;column-gap:10px}
 .nr-learn .btn{min-width:0}
-.nr-steps{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:var(--gap-set) var(--gap-set)}          /* Select and its choices on one row, Learn under them, always, so Learn growing into Learn again moves nothing */
-.nr-steps>.mt-step{display:contents}
-.nr-steps .nr-learn{grid-column:2}
+.nr-foot{flex-wrap:wrap;column-gap:var(--gap-set)}          /* the two switches share the row, and stack when the card is too narrow for both */
+.nr-foot>label{display:flex;align-items:center;gap:10px;font-size:14px;white-space:nowrap}

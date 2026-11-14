@@ -1,5 +1,5 @@
 // Theme and dark mode in the Audio Editor and the timeline: changing the theme redraws every picture the editor shows (the waveform, the noise graph, the EQ, the scope, the fade shape, the Emulator's graph) and the timeline in the same task, in both directions, stopped.
-// The dividers above Mains hum, Noise only, the Level and Emulator summaries, and Emulator in the tool list, and the unlit lights, use the one hairline token (--hairline).
+// The divider above Remove hum and Output noise, the Level and Emulator summaries, and Emulator in the tool list, and the unlit lights, use the one hairline token (--hairline).
 // The Mains hum divider has a contrast of 1.3 or more against the surface behind it, before and after a noise is learned, in both themes; in light mode the token is no heavier than --line was.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-theme.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
@@ -52,13 +52,13 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
   for (const t of ['light', 'dark']) {
     await p.evaluate(t => flip(t, null), t); await settle();
     const tok = await tokenOf();
-    const seen = await p.evaluate(() => ['.nr-hum', '.nr-listen', '.im-low', '.lv-sum', '.ae-procs.ae-apart'].map(s => { const el = document.querySelector(s); if (!el) return 'missing'; const cs = getComputedStyle(el); return parseFloat(cs.borderTopWidth) > 0 ? cs.borderTopColor : (cs.boxShadow.match(/^(color\([^)]*\)|rgba?\([^)]*\))/) || [])[1]; }).concat([getComputedStyle(document.querySelector('#aeRule')).backgroundColor]));
+    const seen = await p.evaluate(() => ['.nr-foot', '.im-low', '.lv-sum', '.ae-procs.ae-apart'].map(s => { const el = document.querySelector(s); if (!el) return 'missing'; const cs = getComputedStyle(el); return parseFloat(cs.borderTopWidth) > 0 ? cs.borderTopColor : (cs.boxShadow.match(/^(color\([^)]*\)|rgba?\([^)]*\))/) || [])[1]; }).concat([getComputedStyle(document.querySelector('#aeRule')).backgroundColor]));
     const led = await p.evaluate(() => getComputedStyle(document.querySelector('#aeLvLed')).backgroundColor);
     ok('the dividers and the unlit light use the hairline token (' + t + ')', seen.every(c => c === tok) && led === tok, JSON.stringify({ tok, seen, led }));
   }
-  // 3. the Mains hum divider: at least 1.3 against the surface behind it, before and after a noise is learned, in both themes
+  // 3. the Remove hum divider: at least 1.3 against the surface behind it, before and after a noise is learned, in both themes
   const humRatio = () => p.evaluate(() => {
-    const hum = document.querySelector('.nr-hum'), pre = false;
+    const hum = document.querySelector('.nr-foot'), pre = false;
     const under = hum.parentElement;
     const bg = K.surf(under), line = K.over(K.rgba(getComputedStyle(hum).borderTopColor), bg);
     return { pre, r: +K.ratio(line, bg).toFixed(3) };
@@ -97,18 +97,18 @@ const file = path.join(os.tmpdir(), 'kf-theme-noise.wav'); fs.writeFileSync(file
     });
     ok('the greyed Gain track is 1.3 or more against its card, and the slider is not dimmed as a whole (' + t + ')', r.disabled && r.inputOpacity === '1' && r.ratio >= 1.3, JSON.stringify(r));
   }
-  // 7. the one pressed look: Balance's Auto, a band's Threshold Auto, Noise reduction's Auto, and Auto gain look the same when pressed (a soft accent fill, an accent edge and text), in both themes; solid blue is only the primary button
+  // 7. the one pressed look: Balance's Auto, a band's Threshold Auto, and Auto gain look the same when pressed (a soft accent fill, an accent edge and text), in both themes; solid blue is only the primary button
   for (const t of ['light', 'dark']) {
     await p.evaluate(t => flip(t, null), t); await settle();
     const r = await p.evaluate(() => {
-      const ids = ['#aeBalAuto', '#aeBandThrAuto', '#aeNrFind', '#aeAutoBtn'], look = e => { const c = getComputedStyle(e); return [c.backgroundColor, c.borderTopColor, c.color, c.fontWeight].join(' | '); };
+      const ids = ['#aeBalAuto', '#aeBandThrAuto', '#aeAutoBtn'], look = e => { const c = getComputedStyle(e); return [c.backgroundColor, c.borderTopColor, c.color, c.fontWeight].join(' | '); };
       const was = ids.map(i => document.querySelector(i).getAttribute('aria-pressed')); ids.forEach(i => document.querySelector(i).setAttribute('aria-pressed', 'true'));
       const looks = ids.map(i => look(document.querySelector(i))), prim = getComputedStyle(document.querySelector('#aeDone')), solid = prim.backgroundColor;
       ids.forEach((i, k) => { if (was[k] == null) document.querySelector(i).removeAttribute('aria-pressed'); else document.querySelector(i).setAttribute('aria-pressed', was[k]); });
       const accent = K.rgba(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#000');
       return { looks, same: looks.every(l => l === looks[0]), solid, pressedBg: looks[0].split(' | ')[0], pressedText: looks[0].split(' | ')[2], accentOk: K.rgba(looks[0].split(' | ')[2]).join() === accent.join() };
     });
-    ok('the four Auto buttons share one pressed look, a soft fill with accent text, not the primary button\'s solid blue (' + t + ')', r.same && r.pressedBg !== r.solid && r.accentOk, JSON.stringify(r));
+    ok('the three Auto buttons share one pressed look, a soft fill with accent text, not the primary button\'s solid blue (' + t + ')', r.same && r.pressedBg !== r.solid && r.accentOk, JSON.stringify(r));
   }
   {          // a theme change redraws every picture in the same task, stopped or playing, in both directions; the timeline and the PDF Editor's pictures too
     await p.evaluate(() => { openAudioEditor(); }); await settle();

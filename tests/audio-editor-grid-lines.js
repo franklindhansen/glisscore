@@ -13,7 +13,7 @@ const SIZES = [[1440, 900], [1440, 720], [1040, 760], [900, 760], [761, 800], [7
 // a tool, and the states that change what its cards hold; each state is set from the one before it
 const radio = (name, v) => { const r = document.querySelector('input[name=' + name + '][value=' + v + ']'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); };
 const TOOLS = {
-  noise: [['idle', null], ['auto', async () => { document.querySelector('#aeNrFind').click(); await sleep(100); for (let i = 0; i < 600 && AE.nrAutoBusy; i++) await sleep(25); await sleep(300); }],
+  noise: [['idle', null], ['auto', async () => { document.querySelector('#aeNrLearn').click(); await sleep(100); for (let i = 0; i < 600 && (AE.nrAutoBusy || AE.nrLearning); i++) await sleep(25); await sleep(700); }],
     ['learned', async () => { document.querySelector('#aeNrLearn').click(); for (let i = 0; i < 200 && document.querySelector('#aeNrGrid').classList.contains('pre'); i++) await sleep(50); await sleep(700); }]],
   spec: [['heal', null], ['reduce', () => __radio('spMode', 'cut')]],
   eq: [['idle', null], ['match', () => document.querySelector('#aeMatchBtn').click()]],

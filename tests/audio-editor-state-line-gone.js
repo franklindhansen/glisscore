@@ -12,7 +12,7 @@ const file = path.join(os.tmpdir(), 'kf-state-line.wav'); fs.writeFileSync(file,
   await p.evaluate(() => document.querySelector('[data-audio]').click()); await p.waitForTimeout(700);
   const r = await p.evaluate(async () => {
     const o = {}; aeTool('noise'); await sleep(400);
-    AE.nsel = { a: 1, b: 3 }; aeRefresh(); await sleep(100);
+    document.querySelector('input[name=aeNrMethod][value=manual]').click(); await sleep(100); AE.nsel = { a: 1, b: 3 }; AE.nsBy = 'hand'; aeRefresh(); await sleep(100);
     const btn = document.querySelector('#aeNrLearn'); o.start = { txt: btn.textContent, loading: btn.classList.contains('loading') };
     const t0 = performance.now(), seen = []; btn.click();
     for (let i = 0; i < 600 && (i < 3 || AE.nrLearning); i++) { await sleep(10); seen.push({ pill: document.querySelector('#aeNrProgBar').classList.contains('on'), loading: btn.classList.contains('loading'), txt: btn.textContent, p: btn.style.getPropertyValue('--p'), dis: btn.disabled, line: !!document.querySelector('.ae-state') }); }

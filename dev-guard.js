@@ -13,7 +13,7 @@ window.uiGuard = (() => {
       if (b.textContent.trim() && !b.matches('.panel .btn.primary, .eq-lbl-r .btn, .fs-only') && !scale.some(v => Math.abs((b.parentElement.matches('.btn-group') ? b.parentElement.offsetHeight : h) - v) < 0.6)) out.push([b, 'height', name(b) + ' is ' + h + 'px tall, which is not one of the control heights (' + scale.join(', ') + 'px)']);
       if (b.textContent.trim() && h > one * 1.5 + 2) out.push([b, 'tall', name(b) + ' is ' + h + 'px tall, but one line of its text is ' + Math.round(one) + 'px']);
       if (b.classList.contains('loading')) { if (b._gw != null && Math.abs(w - b._gw) > 0.5) out.push([b, 'width', name(b) + ' changed width from ' + b._gw + 'px to ' + w + 'px while showing progress']); b._gw = w; } else b._gw = null;
-      if (!b.classList.contains('loading') && !(parseFloat(cs.minWidth) > 0) && !b.style.width && !(b.parentElement && w >= b.parentElement.clientWidth * 0.9)) {          // a button that fills its row is full width on purpose
+      if (!b.classList.contains('loading') && !b.getAnimations().length && !(parseFloat(cs.minWidth) > 0) && !b.style.width && !(b.parentElement && w >= b.parentElement.clientWidth * 0.9)) {          // a button that fills its row is full width on purpose
         const r = document.createRange(); r.selectNodeContents(b); const inner = r.getBoundingClientRect().width / ((b.getBoundingClientRect().width / w) || 1), extra = (w - inner) / 2 - pad('Left');
         if (inner > 0 && extra > 4 && cs.flexGrow === '0' && b.parentElement && getComputedStyle(b.parentElement).display !== 'grid') out.push([b, 'inset', name(b) + ' has ' + Math.round(extra) + 'px more space beside its text than its padding allows']);
       }
