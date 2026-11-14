@@ -93,6 +93,7 @@ screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-bar::before
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-main
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-rail
 screen-width @media (min-width:761px) #audioDlg:not(.afull) .ae-wave
+screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull)
 screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pane
 screen-width @media (min-width:761px) and (max-height:795px) #audioDlg:not(.afull) .ae-pbody
 screen-width @media (min-width:761px) and (max-width:980px) .ae-pbody

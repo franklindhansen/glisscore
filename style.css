@@ -1576,7 +1576,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aeDrFold.open>.fa-in{padding:2px 4px 0}
 
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
-:root{--ae-floor:362px;--ae-chrome:226px;--ae-wave:170px;--ae-body:calc(round(down,max(182px,min(var(--ae-floor),calc(100dvh - 32px - var(--ae-chrome) - var(--ae-wave)))) - 2px,4px) + 2px);--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the tool window's height (always 2px over a multiple of 4px, so that two cards stacked with --gap-card between them each get a whole, even share), set here once, and the picture's: both are fixed sizes, whatever the screen. --ae-floor is the height the tallest tool needs (Level, with its Meter, and Imager are the tallest, 362px). --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). On a screen too short for both, the tool body is what gets shorter: the tool keeps its full size and scrolls inside it. */
+:root{--ae-margin:32px;--ae-floor:362px;--ae-chrome:226px;--ae-wave:170px;--ae-body:calc(round(down,max(182px,min(var(--ae-floor),calc(100dvh - var(--ae-margin) - var(--ae-chrome) - var(--ae-wave)))) - 2px,4px) + 2px);--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the tool window's height (always 2px over a multiple of 4px, so that two cards stacked with --gap-card between them each get a whole, even share), set here once, and the picture's: both are fixed sizes, whatever the screen. --ae-floor is the height the tallest tool needs (Level, with its Meter, and Imager are the tallest, 362px). --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). On a screen too short for both, the tool body is what gets shorter: the tool keeps its full size and scrolls inside it. */
 .dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:9px;height:22px;margin:2px 0;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -1608,8 +1608,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 :root[data-theme="dark"] #audioDlg:not(.afull) .ae-bar::before{opacity:.22}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #audioDlg:not(.afull) .ae-bar::before{opacity:.22}}
-/* a screen shorter than the picture + the floor + --ae-chrome + 32px (796px): the dialog still fits the screen, so the tool window is shorter than its tool, and the tool keeps its full size and scrolls inside the window, as it does in the narrow layout */
+/* a screen shorter than the picture + the floor + --ae-chrome + --ae-margin (796px): the blank space around the dialog goes first (--ae-margin is 0, so the dialog is as tall as the screen lets it be, up to its full size). Only on a screen too short for even that does the tool window get shorter than its tool, and the tool keeps its full size and scrolls inside the window, as it does in the narrow layout */
 @media (min-width:761px) and (max-height:795px){
+  :root{--ae-margin:0px}
+  #audioDlg:not(.afull){padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}          /* the page's own 16px above and below goes too */
   #audioDlg:not(.afull) .ae-pbody{overflow-y:auto;overscroll-behavior:contain}
   #audioDlg:not(.afull) .ae-pane{height:clamp(calc(var(--ae-floor) - 12px),var(--ae-body),var(--ae-floor));overflow:visible}
 }
