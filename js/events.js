@@ -22,7 +22,7 @@ function removeAudio() {
   if (!S.audio) return;
   Transport.pause();
   S.manualDur = Math.max(S.manualDur || 0, S.audio.duration);   // the timeline keeps its length, so no turn moves
-  S.audio = null; vqNote(); S.time = clamp(S.time, S.vStart, vEnd()); if (DISK.meta) DISK.remove().catch(() => {});
+  S.audio = null; fxForget(); vqNote(); S.time = clamp(S.time, S.vStart, vEnd()); if (DISK.meta) DISK.remove().catch(() => {});
   setChips(); layoutTimeline(); TL.staticDirty = true; stageDirty = true; updateButtons(); updateInfo(); updateTimeUI(true);
   toast(tx('aud.removed'));
 }

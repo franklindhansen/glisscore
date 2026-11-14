@@ -618,7 +618,7 @@ function diskTruePeaks(a) {
 /* the recording is in: the editor and the timeline take it up. Gives the note about any page turns that had to move */
 function adoptAudio(file, audio, frames) {
   let movedMsg = ''; const hadTurns = S.turns.slice(), wasEdited = S.turnsEdited, hadAudio = !!S.audio;
-  FXC.clear(); NRC.clear(); SEC.clear(); DW.chans = null; DW.at = -1;
+  fxForget(); DW.chans = null; DW.at = -1;
   if (DISK.meta && !audio.disk) { DISK.remove().catch(() => {}); }
   if (audio.disk) diskTruePeaks(audio);          // a recording held in memory replaces the one on the disk store
   S.audio = audio; vqNote();

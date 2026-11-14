@@ -165,6 +165,9 @@ function fxRecipe(fx, nch) {
 }
 /* the processed sound (the same nodes, rendered faster than real time) is kept for the current settings, with its waveform peaks */
 const FXC = new Map();
+const FXK = [];          // the sounds the Audio Editor keeps beside the one above (the last two it ran), so a switch back needs no new render
+/* a different recording, or none: every sound worked out for the old one goes, so none can be handed back for the new one */
+function fxForget() { FXC.clear(); NRC.clear(); SEC.clear(); FXK.length = 0; }
 function calcPeaks(buffer) {
   const per = Math.max(1, Math.floor(buffer.sampleRate / 100)), len = Math.ceil(buffer.length / per), peaks = new Float32Array(len), chs = [];
   for (let c = 0; c < buffer.numberOfChannels; c++) chs.push(buffer.getChannelData(c));
