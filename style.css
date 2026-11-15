@@ -1098,11 +1098,11 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-top .seg{flex:0 0 auto;transition:opacity var(--ae-ms) var(--ease-ui)}
 .eq-top .seg[hidden]{display:none}
 .eq-dyn{grid-column:1/-1}
-.eq-band.ae-card{--band-row-gap:0px}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
-.eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding-top:calc(var(--gap-head) + var(--band-row-gap))}          /* the fold holds its own space above it (the cells' row gap and --gap-head), so a shut fold takes none */
+.eq-band.ae-card{--eq-col-gap:var(--gap-set)}          /* the space between the band's columns, which is also the space above the Dynamic row's line: one gap in each direction, as the cards have */
+.eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:0 var(--eq-col-gap);align-items:end;padding-top:var(--eq-col-gap)}          /* Threshold, its Auto, then Range: the two sliders are the same length, Auto stands between them on their one control line, and the gaps are the band row's own column gap, so a shut fold takes no space and nothing sits off the grid above */
 .eq-dyn .eq-cell{gap:2px}
-.eq-dyn.fa.open>.fa-in{padding-bottom:0}          /* the fold's own bottom padding is taken out, so the card's bottom edge is as far from the last control as its top edge is from the first label */
-.eq-dyn .eq-ctl{height:var(--h-s);gap:var(--gap-head)}          /* the Threshold's Auto button sits beside its slider on the one control line, as every control does */
+.eq-dyn.fa.open>.fa-in{padding-block:0}          /* the fold's own top and bottom padding are taken out: the row's space above it is the grid's own gap, and the card's bottom edge is as far from the last control as its top edge is from the first label */
+.eq-dyn .eq-ctl{height:var(--h-s)}
 .eq-top .seg.dim{opacity:var(--inactive);pointer-events:none}
 .eq-top .seg label{padding:4px 10px;font-size:12.5px}
 .eq-stage{position:relative;height:196px}
@@ -1496,16 +1496,16 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aePaneEq{container:eq/inline-size}
 /* the band is two columns: its Band row across the top, then Type and Frequency, then Gain and Width, the same two-column narrow rule Fades and Noise use. A pane under 622px (a 761px to 980px screen, as before) takes it, and so does the 760px mode, whose tool list is gone and whose pane is wider */
 @container eq (max-width:621.5px){
-  .eq-band.ae-card{--band-row-gap:var(--gap-card)}
   .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
+  .eq-band.ae-card{--eq-col-gap:var(--gap-card)}
   .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .eq-band .eq-cell{min-width:0}
   .eq-band select{width:100%}
 }
 @container aedlg (max-width:728px){          /* the narrow layout's pane is wider than 622px, and the band is two columns here too */
   #audioDlg:not(.afull) .eq-main>.eq-stage{flex:none;height:clamp(160px,36dvh,240px)}          /* where the tool body scrolls the graph keeps a usable height */
-  .eq-band.ae-card{--band-row-gap:var(--gap-card)}          /* the band is two columns here: its Band row across the top, then Type and Frequency, then Gain and Width */
   .eq-cells{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--gap-card)}
+  .eq-band.ae-card{--eq-col-gap:var(--gap-card)}
   .eq-bn{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
   .eq-band .eq-cell{min-width:0}
   .eq-band select{width:100%}
@@ -2313,6 +2313,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @container imager (max-width:256.5px){.im-low{flex-wrap:wrap}.im-low .im-lowf{flex-basis:100%}}          /* Center low notes: at 300px its slider and value go under the switch (wider, the row holds them) */
 @container eq (max-width:335.5px){
   .eq-cells{grid-template-columns:minmax(0,1fr)}          /* one control per row: nothing sits side by side on a phone */
+  .eq-dyn-g{grid-template-columns:minmax(0,1fr) auto;row-gap:var(--eq-col-gap)}          /* Threshold and its Auto on the first line, Range under them */
+  .eq-dyn-g>:last-child{grid-column:1/-1}
   .eq-bn{flex-wrap:wrap;row-gap:8px}          /* Band 1, its switch, Listen, and Dynamic go on a second row when one will not hold them */
 }
 #aePaneImager{container:imager/inline-size}
