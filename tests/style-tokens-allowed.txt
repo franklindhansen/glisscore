@@ -1,0 +1,218 @@
+# Today's raw spacing, type size, corner, control height, and color values in the PDF Editor's and the video panels' rules, one per line: "area kind context selector {property}". Checked by tests/style-tokens.js.
+# This list may only shrink. A new raw value anywhere fails the check; a line whose rule is fixed fails it too (delete the line). The Audio Editor has no lines: it is held at zero. Ticket 02 empties the pdf lines and ticket 03 the video lines.
+pdf color .page-card.pe-ghost canvas {box-shadow}
+pdf color .pe .page-card .pe-hid {background}
+pdf color .pe .page-card .pe-hid {box-shadow}
+pdf color .pe .page-card .pe-hid {color}
+pdf color .pe .page-card .tick {border}
+pdf color .pe .page-card .tick {box-shadow}
+pdf color .pe .page-card .tick {color}
+pdf color .pe .page-card canvas {background}
+pdf color .pe .page-card canvas {box-shadow}
+pdf color .pe .page-card.off .tick {background}
+pdf color .pe .page-card.off .tick {border-color}
+pdf color .pe-crop-box {box-shadow}
+pdf color .pe-crop-pg {background}
+pdf color .pe-crop-pg {box-shadow}
+pdf color .pe-dimbox {background}
+pdf color .pe-dimx {box-shadow}
+pdf color .pe-dimx {color}
+pdf color .pe-dimx:focus-visible {outline}
+pdf color .pe-glass {box-shadow}
+pdf color .pe-hint {background}
+pdf color .pe-hint {color}
+pdf color .pe-lvl {box-shadow}
+pdf color .pe-lvl {color}
+pdf color .pe-side {background}
+pdf color .pe-side {color}
+pdf color .pe-tools {box-shadow}
+pdf color .pe-wipe::after {box-shadow}
+pdf color .pe-wipe:focus-visible::after {outline}
+pdf color @media (hover:hover) .pe .page-card:not(.na):not(.pe-hole):hover canvas {box-shadow}
+pdf corner .pe .page-card canvas {border-radius}
+pdf corner .pe-crop-box {border-radius}
+pdf corner .pe-crop-pg {border-radius}
+pdf corner .pe-drop {border-radius}
+pdf corner .pe-sheen {border-radius}
+pdf height .pe-glass button {height}
+pdf height .pe-tools button {height}
+pdf spacing #peCropNote {margin-top}
+pdf spacing .dlg.editor.pe {gap}
+pdf spacing .dlg.editor.pe {padding}
+pdf spacing .pe .page-card .pe-hid {margin}
+pdf spacing .pe .page-card {gap}
+pdf spacing .pe .page-card {padding}
+pdf spacing .pe .pe-notice svg {margin-top}
+pdf spacing .pe .pe-notice {gap}
+pdf spacing .pe .pe-notice {margin}
+pdf spacing .pe .pe-notice {padding}
+pdf spacing .pe-acts {gap}
+pdf spacing .pe-bar .pe-pages {margin}
+pdf spacing .pe-bar .pe-pages {padding}
+pdf spacing .pe-bar {gap}
+pdf spacing .pe-bar {padding}
+pdf spacing .pe-check {gap}
+pdf spacing .pe-cmode label {padding}
+pdf spacing .pe-crop-box .e {margin-top}
+pdf spacing .pe-crop-box .n {margin-left}
+pdf spacing .pe-crop-box .s {margin-left}
+pdf spacing .pe-crop-box .w {margin-top}
+pdf spacing .pe-crop-pg .pe-wipe {margin-left}
+pdf spacing .pe-deg {gap}
+pdf spacing .pe-dir {gap}
+pdf spacing .pe-foot .num.same {margin-left}
+pdf spacing .pe-foot {gap}
+pdf spacing .pe-glass button.txt {padding}
+pdf spacing .pe-glass {gap}
+pdf spacing .pe-glass {padding}
+pdf spacing .pe-grid {gap}
+pdf spacing .pe-grid-wrap {padding}
+pdf spacing .pe-hint {padding}
+pdf spacing .pe-lvl {padding}
+pdf spacing .pe-main {gap}
+pdf spacing .pe-nav {gap}
+pdf spacing .pe-nav {padding}
+pdf spacing .pe-og {gap}
+pdf spacing .pe-opts {gap}
+pdf spacing .pe-opts {margin-top}
+pdf spacing .pe-phead {gap}
+pdf spacing .pe-pos {padding}
+pdf spacing .pe-rail {padding}
+pdf spacing .pe-rail-h {margin}
+pdf spacing .pe-rail-in {gap}
+pdf spacing .pe-range {gap}
+pdf spacing .pe-rz .rz-custom {gap}
+pdf spacing .pe-rz .rz-grid {gap}
+pdf spacing .pe-rz .rz-grid {margin-top}
+pdf spacing .pe-rz .rz-opt {gap}
+pdf spacing .pe-rz .rz-opt {padding}
+pdf spacing .pe-rz .rz-shapes {margin-top}
+pdf spacing .pe-rz .rz-tick {margin-top}
+pdf spacing .pe-sel+.pe-rail-h {margin-top}
+pdf spacing .pe-side {padding}
+pdf spacing .pe-stage {padding}
+pdf spacing .pe-step {gap}
+pdf spacing .pe-steps .seg label {padding}
+pdf spacing .pe-steps {gap}
+pdf spacing .pe-steps {margin-top}
+pdf spacing .pe-tab {gap}
+pdf spacing .pe-tab {padding}
+pdf spacing .pe-tools {gap}
+pdf spacing .pe-tools {padding}
+pdf spacing .pe-tv {padding}
+pdf spacing .pe-win.wipe .pe-wipe {margin-left}
+pdf spacing .pe-wipe::after {margin}
+pdf spacing .pe-wm-grid .line-style {gap}
+pdf spacing .pe-wm-grid .seg label {padding}
+pdf spacing .pe-wm-grid {gap}
+pdf spacing .pe-wm-grid {margin-top}
+pdf spacing @media (max-width:400px) .pe-bar .btn.small {padding-left}
+pdf spacing @media (max-width:400px) .pe-bar .btn.small {padding-right}
+pdf spacing @media (max-width:400px) .pe-bar .pe-pages {margin}
+pdf spacing @media (max-width:400px) .pe-bar .pe-pages {padding}
+pdf spacing @media (max-width:400px) .pe-bar {padding-right}
+pdf spacing @media (max-width:760px) .pe-bar .pe-pages {margin}
+pdf spacing @media (max-width:760px) .pe-bar {padding-left}
+pdf spacing @media (max-width:760px) .pe-cmode label {padding}
+pdf spacing @media (max-width:760px) .pe-grid {gap}
+pdf spacing @media (max-width:760px) .pe-grid-wrap {padding}
+pdf spacing @media (max-width:760px) .pe-opts {gap}
+pdf spacing @media (max-width:760px) .pe-phead {gap}
+pdf spacing @media (max-width:760px) .pe-stage {padding}
+pdf spacing @media (max-width:760px) .pe-steps {gap}
+pdf spacing @media (max-width:760px) .pe-tv {padding}
+pdf spacing @media (max-width:900px) .pe-main {gap}
+pdf spacing @media (max-width:900px) .pe-rail {padding}
+pdf spacing @media (max-width:900px) .pe-rail-in {gap}
+pdf spacing @media (max-width:900px) .pe-tab {gap}
+pdf spacing @media (max-width:900px) .pe-tab {padding}
+pdf type .pe-lvl {font-size}
+pdf type .pe-rz .rz-now {font-size}
+pdf type .pe-wm-grid .pe-fmt i {font-size}
+video color .app.fs .stage-wrap {background}
+video color .app.fs .timeline::before {background}
+video color .app.fs .transport .btn {background}
+video color .app.fs .transport .btn {border-color}
+video color .app.fs .transport .btn {color}
+video color .app.fs .transport .icon-btn {background}
+video color .app.fs .transport .icon-btn {border-color}
+video color .app.fs .transport .icon-btn {color}
+video color .app.fs .transport .tapbtn.on {color}
+video color .app.fs .transport {box-shadow}
+video color .app.fs .transport::before {background}
+video color .app.fs {background}
+video color .stage-strip {box-shadow}
+video color .sys-bar {box-shadow}
+video color .sys-nav {box-shadow}
+video color .sys-zoom {box-shadow}
+video height .sys-nav .seg {height}
+video height .sys-tools .sp-col button {height}
+video spacing #centerFold[hidden]+.subhead {margin-top}
+video spacing .app.fs .transport {gap}
+video spacing .app.fs .transport {padding}
+video spacing .fade-pair {gap}
+video spacing .fade-shape {margin-top}
+video spacing .fs-dock {gap}
+video spacing .group h3 {margin}
+video spacing .group {padding}
+video spacing .group-body>.field.fade-pair {margin-top}
+video spacing .group-head {gap}
+video spacing .group-head+#turnShadowBlock>#centerFold>.subhead {margin-top}
+video spacing .group-sum {padding-left}
+video spacing .group.collapsed .group-head {margin-bottom}
+video spacing .group.collapsed>h3 {margin-bottom}
+video spacing .group[data-sum="shadows"] .sub {margin-left}
+video spacing .line-fold {margin-top}
+video spacing .panel .adv {margin-bottom}
+video spacing .panel .adv[open] {margin-bottom}
+video spacing .panel .btn.primary {margin-top}
+video spacing .panel .btn.primary {padding}
+video spacing .panel .btn.wide {margin-top}
+video spacing .panel .field.sub {margin-top}
+video spacing .panel .field:has(>.line-row)>.line-fold.open {margin-top}
+video spacing .panel .field:has(>.line-row)>.line-row {margin-top}
+video spacing .panel .group {padding-bottom}
+video spacing .panel {padding}
+video spacing .stage-col {gap}
+video spacing .stage-col {padding}
+video spacing .stage-div {margin}
+video spacing .stage-strip button.txt {padding}
+video spacing .stage-strip {gap}
+video spacing .stage-strip {padding}
+video spacing .subhead {margin}
+video spacing .sys-bar button.txt {padding}
+video spacing .sys-bar {gap}
+video spacing .sys-bar {padding}
+video spacing .sys-nav .seg label {padding}
+video spacing .sys-nav .sys-pg {padding}
+video spacing .sys-nav button.txt {padding}
+video spacing .sys-nav {gap}
+video spacing .sys-nav {padding}
+video spacing .sys-note>*+* {margin-top}
+video spacing .sys-sel.tight .sys-nav .seg label {padding}
+video spacing .sys-sel.tight .sys-nav .sys-pg {padding}
+video spacing .sys-sel.tight .sys-nav {gap}
+video spacing .sys-sel.tight .sys-zoom button.txt {padding}
+video spacing .sys-sel.tight .sys-zoom {gap}
+video spacing .sys-tools .sp-col .stage-div {margin}
+video spacing .sys-why {gap}
+video spacing .sys-zoom button.txt {padding}
+video spacing .sys-zoom {gap}
+video spacing .sys-zoom {padding}
+video spacing .tl-bar .hint {padding}
+video spacing .tl-bar {gap}
+video spacing .tl-bar {padding}
+video spacing .transport {gap}
+video spacing @media (max-width:360px) .tl-bar .hist-wrap>.btn {padding}
+video spacing @media (max-width:520px) .tl-bar .hist-wrap>.btn {padding}
+video spacing @media (max-width:520px) .tl-bar .tl-turns>.btn {padding}
+video spacing @media (max-width:520px) .tl-bar {gap}
+video spacing @media (max-width:520px) .tl-bar {padding}
+video spacing @media (max-width:520px) .transport .time {margin}
+video spacing @media (max-width:760px) .app.fs .transport {padding}
+video spacing @media (max-width:760px) .tl-bar {gap}
+video spacing @media (max-width:760px) .tl-bar {padding}
+video spacing @media (max-width:960px) .panel {padding}
+video spacing @media (max-width:960px) .stage-col {padding}
+video type .subhead {font-size}
+video type .sys-nav .sys-pg {font-size}

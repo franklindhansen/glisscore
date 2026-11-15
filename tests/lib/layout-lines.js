@@ -26,8 +26,9 @@ exports.lines = function (ctx) {
   const chk = (rule, el, pass, note) => { out.n++; if (!pass) fails.push([rule, el, note]); };
   const name = e => e.id ? e.id : (typeof e.className === 'string' && e.className.trim() ? e.className.trim().split(/\s+/).slice(0, 3).join('.') : e.tagName.toLowerCase());
   const root = getComputedStyle(document.documentElement), tok = k => parseFloat(root.getPropertyValue(k));
-  const pane = document.querySelector('.ae-pane:not([hidden])');
-  const cards = [...pane.querySelectorAll('.ae-card')].filter(c => mk.shown(c) && !c.parentElement.closest('.ae-card'));
+  const SEL = Object.assign({ pane: '.ae-pane:not([hidden])', card: '.ae-card', head: '.ae-phead', body: '.ae-pbody' }, ctx.sel || {});          // where the tool pane, its cards, its heading bar, and its body are: the Audio Editor's by default, another editor's through ctx.sel
+  const pane = document.querySelector(SEL.pane);
+  const cards = [...pane.querySelectorAll(SEL.card)].filter(c => mk.shown(c) && !c.parentElement.closest(SEL.card));
   const noBody = c => c.querySelector('.sp-list, .nr-stage, .im-scope, canvas');          // a picture or a list that takes the rest of the card has no body to center
   const mid = l => (l.capTop + l.base) / 2;
   const inner = c => { const r = R(c), cs = getComputedStyle(c), n = k => parseFloat(cs[k]); return { bt: r.top + n('borderTopWidth'), bb: r.bottom - n('borderBottomWidth'), t: r.top + n('borderTopWidth') + n('paddingTop'), b: r.bottom - n('borderBottomWidth') - n('paddingBottom'), l: r.left + n('borderLeftWidth') + n('paddingLeft'), r: r.right - n('borderRightWidth') - n('paddingRight') }; };
@@ -137,7 +138,7 @@ exports.lines = function (ctx) {
       chk('left-line', name(c), hasLeft || near(R(c).left, L), 'starts ' + f(R(c).left - L) + 'px off the shared left line'); chk('right-line', name(c), hasRight || near(R(c).right, Rt), 'ends ' + f(R(c).right - Rt) + 'px off the shared right line'); }
   }
   // the tool window's one left and one right line: the tool's name and buttons in the head (the status bar's content starts on the left line) sit on the same lines as the cards
-  if (cards.length) { const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), head = document.querySelector('.ae-phead'), stat = document.querySelector('.ae-stat');
+  if (cards.length) { const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), head = document.querySelector(SEL.head), stat = document.querySelector('.ae-stat');
     if (head && mk.shown(head)) { const kids = [...head.children].filter(e => mk.shown(e)), first = kids[0], last = kids[kids.length - 1];
       if (first) chk('left-line', 'head', near(R(first).left, L), 'the tool\'s name starts at ' + f(R(first).left) + ', the cards\' left line is ' + f(L));
       if (last) chk('right-line', 'head', near(R(last).right, Rt), 'the tool\'s buttons end at ' + f(R(last).right) + ', the cards\' right line is ' + f(Rt)); }
@@ -146,7 +147,7 @@ exports.lines = function (ctx) {
       /* the status line holds only what runs, on the left: nothing sits at its right end */ } }
   // scrolling
   chk('clipped', name(pane) + '.sideways', pane.scrollWidth - pane.clientWidth <= 1, 'the tool scrolls sideways by ' + (pane.scrollWidth - pane.clientWidth) + 'px');
-  if (ctx.main) { const pb = document.querySelector('.ae-pbody'), dlg = document.querySelector('#audioDlg .dlg'), de = document.documentElement;
+  if (ctx.main) { const pb = document.querySelector(SEL.body), dlg = document.querySelector('#audioDlg .dlg'), de = document.documentElement;
     chk('scroll', 'tool-body', pb.scrollHeight - pb.clientHeight <= 1, 'the tool body scrolls by ' + (pb.scrollHeight - pb.clientHeight) + 'px');
     chk('scroll', 'dialog', dlg.scrollHeight - dlg.clientHeight <= 1 && dlg.scrollWidth - dlg.clientWidth <= 1, 'the dialog scrolls by ' + (dlg.scrollHeight - dlg.clientHeight) + 'px down and ' + (dlg.scrollWidth - dlg.clientWidth) + 'px across');
     chk('scroll', 'page', de.scrollHeight - innerHeight <= 1 && de.scrollWidth - innerWidth <= 1, 'the page scrolls'); }

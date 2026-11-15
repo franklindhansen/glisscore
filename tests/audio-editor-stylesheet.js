@@ -21,26 +21,8 @@ const paneIds = new Set(); {
     if (!self) stack.push({ tag, pane });
   }
 }
-// the stylesheet as rules: { ctx: ['@media (max-width:700px)'], sel: '...', props: [...] }
-const rules = []; {
-  const src = css.replace(/\/\*[\s\S]*?\*\//g, ' ');
-  const skipStr = (s, i) => { const q = s[i]; for (i++; i < s.length && s[i] !== q; i++) if (s[i] === '\\') i++; return i; };
-  const block = (s, i) => { let d = 0; for (; i < s.length; i++) { const c = s[i]; if (c === '"' || c === "'") i = skipStr(s, i); else if (c === '{') d++; else if (c === '}') { d--; if (!d) return i; } } return s.length; };
-  const walk = (s, ctx) => {
-    let i = 0;
-    while (i < s.length) {
-      let j = i, par = 0; for (; j < s.length; j++) { const c = s[j]; if (c === '"' || c === "'") j = skipStr(s, j); else if (c === '(') par++; else if (c === ')') par--; else if (!par && (c === '{' || c === ';' || c === '}')) break; }
-      const pre = s.slice(i, j).trim();
-      if (s[j] !== '{') { i = j + 1; continue; }
-      const end = block(s, j), body = s.slice(j + 1, end);
-      if (pre[0] === '@') { if (/^@(media|supports|container|layer)\b/.test(pre)) walk(body, ctx.concat(pre.replace(/\s+/g, ' '))); }
-      else { const props = []; let d = 0, cur = '', q = null; for (const c of body) { if (q) { cur += c; if (c === q) q = null; } else if (c === '"' || c === "'") { q = c; cur += c; } else if (c === '(') { d++; cur += c; } else if (c === ')') { d--; cur += c; } else if (c === ';' && !d) { props.push(cur); cur = ''; } else cur += c; } props.push(cur);
-        rules.push({ ctx, sels: pre.split(/,(?![^(]*\))/).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean), props: props.map(p => p.split(':')[0].trim().toLowerCase()).filter(Boolean) }); }
-      i = end + 1;
-    }
-  };
-  walk(src, []);
-}
+// the stylesheet as rules: { ctx: ['@media (max-width:700px)'], sels: [...], props: [...] }
+const rules = require('./lib/css-rules.js').readRules(css).map(r => ({ ctx: r.ctx, sels: r.sels, props: r.decls.map(d => d.prop) }));
 const SPACING = /^(margin|padding)(-[a-z-]+)?$|^(row-|column-)?gap$/;
 const TOOL_CLASS = /\.(ae-[\w-]+|(nr|sp|im|eq|lv|fd|em|mt)-[\w-]+|tool-grid|on-grid)\b/;
 const idsOf = sel => [...sel.matchAll(/#([\w-]+)/g)].map(m => m[1]);
