@@ -263,10 +263,10 @@ function histPanel(c) {
   }
   function sync() {
     const st = c.states(), cur = c.cur(), on = H.sel >= 0 && H.sel !== cur, list = el('list');
-    foldSet('#' + c.foot, on); if (!on) { el('sub').textContent = 'Pick a step to go back to it'; return; }
+    foldSet('#' + c.foot, on); if (!on) { el('sub').textContent = 'Pick a step to go back to it.'; return; }
     const fwd = H.sel > cur, n = Math.abs(H.sel - cur), t = list.querySelector('.hs-row.target .hs-n');
     el('sum').textContent = fwd ? 'Go forward to “' + (t ? t.textContent : '') + '”' : 'Undo ' + n + (n === 1 ? ' change' : ' changes');
-    el('go').textContent = fwd ? 'Go forward' : 'Go back'; el('sub').textContent = fwd ? 'Pick a step to go forward to' : 'Pick a step to go back to';
+    el('go').textContent = fwd ? 'Go forward' : 'Go back'; el('sub').textContent = fwd ? 'Pick a step to go forward to.' : 'Pick a step to go back to.';
   }
   function open(on) {
     const pop = el('pop'), btn = el('btn'); if (on === isOpen()) return;

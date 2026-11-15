@@ -190,7 +190,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     const bar = q('.ae-bar'), br = bar.getBoundingClientRect(), bcs = getComputedStyle(bar), inner = br.right - parseFloat(bcs.borderRightWidth) - parseFloat(bcs.paddingRight), kids = [...bar.children].filter(vis);
     const full = o.classList.contains('afull'), t = q('.ae-times');
     return { C, full, sideways: Math.max(dlg.scrollWidth - dlg.clientWidth, document.documentElement.scrollWidth - innerWidth), drop: vis(q('.ae-rail-cur')),
-      icons: ['#aeABm', '#aeAB', '#aeSilence'].map(id => vis(q(id + ' .ae-ic')) && !vis(q(id + ' .ae-lb'))), labels: ['#aeABm', '#aeAB', '#aeSilence'].map(id => !vis(q(id + ' .ae-ic')) && vis(q(id + ' .ae-lb'))),
+      silenceIcon: vis(q('#aeSilence svg')) && !q('#aeSilence .ae-lb') && Math.abs(q('#aeSilence').getBoundingClientRect().width - q('#aeSilence').getBoundingClientRect().height) < 1.5,
+      icons: ['#aeABm', '#aeAB'].map(id => vis(q(id + ' .ae-ic')) && !vis(q(id + ' .ae-lb'))), labels: ['#aeABm', '#aeAB'].map(id => !vis(q(id + ' .ae-ic')) && vis(q(id + ' .ae-lb'))),
       lead: vis(q('#aeLead')), times: vis(t), stacked: vis(t) && getComputedStyle(t).flexDirection === 'column', over: Math.round((kids[kids.length - 1].getBoundingClientRect().right - inner) * 10) / 10 };
   });
   const gwForced = async p => p.evaluate(() => { const t = document.querySelector('.ae-times'); t.style.display = 'flex'; const bar = document.querySelector('.ae-bar'), br = bar.getBoundingClientRect(), cs = getComputedStyle(bar), inner = br.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight),
@@ -210,7 +211,8 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     for (const [n, c, x] of [
       bad('no width scrolls the dialog or page sideways', r => r.sideways <= 1),
       bad('the tool list is a drop-down exactly where the dialog is 728px wide or less', r => r.drop === (r.C <= 728)),
-      bad('Match gain, Bypass, and Trim silence are icons exactly where the dialog is 488px wide or less, and words wider', r => r.icons.every(v => v === (r.C <= 488)) && r.labels.every(v => v === (r.C > 488))),
+      bad('Trim silence is an icon button, as wide as it is tall, at every width', r => r.silenceIcon),
+      bad('Match gain and Bypass are icons exactly where the dialog is 488px wide or less, and words wider', r => r.icons.every(v => v === (r.C <= 488)) && r.labels.every(v => v === (r.C > 488))),
       bad('the window\'s subtitle goes exactly where the dialog is 488px wide or less', r => r.lead === (r.C > 488))]) ok(tag + n, c, x);
     if (!fs) for (const [n, c, x] of [
       bad('the start and end times stay wherever they fit: shown from 357px, and nothing in the bar passes its edge', r => r.times === (r.C >= 325) && r.over <= 0.5),

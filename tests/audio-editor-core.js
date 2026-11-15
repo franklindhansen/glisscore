@@ -68,7 +68,7 @@ const ok = (name, pass, info = '') => { results.push((pass ? 'PASS ' : 'FAIL ') 
   await p.waitForTimeout(1500);
   const lab = await p.evaluate(() => ({ read: document.querySelector('#aeSum').textContent + (document.querySelector('#aeMeter .t-head #aePeakNow') ? ' [also in the heading]' : '') + (document.querySelector('#aeSumChg') ? ' [Change is back]' : ''), sum: document.querySelector('#aeSumPeak') ? 'duplicate' : 'True peak', loud: document.querySelector('#aeLoudNote').textContent }));
   ok('True peak reads once, in the Meter\'s strip, and Change is gone', /True peak/.test(lab.read) && !/also in the heading|Change/.test(lab.read) && lab.sum === 'True peak', JSON.stringify(lab));
-  ok('loudness reads its target with the limiter on', /Reaches −14\.0LUFS|Measuring/.test(lab.loud), lab.loud);
+  ok('loudness on target says nothing under the box (the box already says it)', /^(Processing…)?$/.test(lab.loud), lab.loud);
   await p.evaluate(() => { document.querySelector('#aeMeter').scrollIntoView(); });
   await p.screenshot({ path: require('os').tmpdir() + '/level1040.png' });
   // playback: the live meter reads without errors

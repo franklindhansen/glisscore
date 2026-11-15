@@ -1,4 +1,4 @@
-// Remove hum when there is no hum: the wait pill shows over the graph like any other wait, a press takes at least 400ms, and "No hum found" comes as a toast with the switch left off.
+// Remove hum when there is no hum: the wait pill shows over the graph like any other wait, a press takes at least 400ms, and "No hum found" shows on the graph with the switch left off.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/audio-editor-hum-none.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -21,7 +21,7 @@ const file = path.join(os.tmpdir(), 'kf-hum-none.wav'); fs.writeFileSync(file, w
   ok('the old Mains hum row (its sub-line and bar) is gone', !r.oldRow);
   ok('a press with no hum shows the same wait pill over the graph as every other wait, and holds the switch still meanwhile', r.pill && /^Processing/.test(r.pillText) && r.held, JSON.stringify({ pill: r.pill, text: r.pillText, held: r.held }));
   ok('a press with no hum takes at least 400ms', r.took >= 400, r.took.toFixed(0) + 'ms');
-  ok('it then says "No hum found" in a toast, the pill is gone, and the switch is off and free again', r.pillGone && r.toast && !r.on && !r.hum && r.free, JSON.stringify(r));
+  ok('it then says "No hum found" on the graph, the pill is gone, and the switch is off and free again', r.pillGone && r.toast && !r.on && !r.hum && r.free, JSON.stringify(r));
   ok('no errors', errs.length === 0, errs.join(' | '));
   await b.close(); fs.unlinkSync(file);
 })();

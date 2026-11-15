@@ -59,7 +59,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       AE.d.bp = bpOf({}); AE.d.fx.eq.on = false; AE.d.fx.eq.bands = [];
       AE.d.gainDb = 12; aeRefresh(); await sleep(400); o.levelOn = AE.G;
       const clipK0 = AE.clipKey; aeTool('level'); await sleep(400); aeToggleBypass(); await sleep(600);
-      o.levelG = AE.G; o.levelPeak = num(AE.ms.text); o.gainTxt = document.querySelector('#aeGainBig').textContent; o.netTxt = document.querySelector('#aeNet').textContent;
+      o.levelG = AE.G; o.levelPeak = num(AE.ms.text); o.gainTxt = document.querySelector('#aeGainBig').textContent;
       o.clipKeyMoved = AE.clipKey !== clipK0; o.limOff = aeLimMsg().lim.on === false;
       AE.d.bp = bpOf({}); AE.d.gainDb = 0; aeRefresh(); await sleep(400);
       aeTool('fades'); AE.d.audioFades = true; AE.d.audioFadeLen = 1; AE.d.audioFadeOutLen = null; aeRefresh(); await sleep(300);
@@ -70,7 +70,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok('the readings at rest follow the EQ bypass: stopped true peak within 0.5dB of the EQ off', Math.abs(r.bypPeak - r.offPeak) <= 0.5 && r.onPeak - r.offPeak > 1, JSON.stringify(r));
     ok('the waveform picture changes on Bypass', r.wave && r.bypOn, JSON.stringify(r));
     ok('Bypass off is instant: no copy is being made, and the meter shows the same reading', r.backInstant, JSON.stringify(r));
-    ok('the Gain number keeps the setting while Level is bypassed, Net gain reads 0dB, and the true peak falls', r.levelG === 1 && r.gainTxt.indexOf('+12') === 0 && /0dB/.test(r.netTxt) && r.levelPeak < 0, JSON.stringify(r));
+    ok('the Gain number keeps the setting while Level is bypassed, the level gain is 1, and the true peak falls', r.levelG === 1 && r.gainTxt.indexOf('+12') === 0 && r.levelPeak < 0, JSON.stringify(r));
     ok('a change of bypass moves the Clip key, and Level bypassed takes out its limiter', r.clipKeyMoved && r.limOff, JSON.stringify(r));
     ok('Fades bypassed: the fade envelope leaves the picture, and the setting is kept', r.fadesKept && r.fadesGone, JSON.stringify(r));
   }
@@ -168,7 +168,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
       o.clipBefore = AE.ms.hot; o.liftBefore = AE.G;
       aeToggleBypass(); await sleep(700);
       o.clipAfter = !AE.ms.hot; o.liftAfter = AE.G === 1; o.clipLight = !$('#aeClip').classList.contains('on');
-      o.gainShown = document.querySelector('#aeGainBig').textContent.indexOf('+12') === 0; o.netZero = /0dB/.test(document.querySelector('#aeNet').textContent);
+      o.gainShown = document.querySelector('#aeGainBig').textContent.indexOf('+12') === 0;
       aeToggleBypass(); await sleep(600); AE.d.gainDb = 0; aeRefresh(); await sleep(300);
       aeTool('eq'); await sleep(300); aePush(); AE.d.fx.eq.on = true; AE.d.fx.eq.bands[0].g = 9; aeRefresh(); await sleep(50);
       aeToggleBypass(); o.busyOk = !AE.sumIn.busy || AE.ms.text === '…'; await sleep(1200);
@@ -194,7 +194,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     ok('the Fades choice is pinned under the picture, in the Shape card (no Curve card): 12px above it and 12px below it', !r.curveCard && Math.abs(r.curveTop - 12) <= 0.5 && Math.abs(r.curveBottom - 12) <= 0.5, JSON.stringify([r.curveTop, r.curveBottom, r.curveCard]));
     ok('the EQ bypass stopped reads within 0.5dB of the playing reading and of the EQ switched off', r.stoppedVsPlaying, JSON.stringify(r));
     ok('the waveform redraws on Bypass for the EQ, the Imager, Noise reduction, and Spectra', r.wave.eq && r.wave.imager && r.wave.noise && r.wave.spec, JSON.stringify([r.wave, r.nrInfo]));
-    ok('Level bypassed: the wave loses its lift, True peak and the Clip light follow, and the Gain number keeps its setting with Net gain at 0dB', r.clipBefore && r.clipAfter && r.clipLight && r.liftBefore > 1 && r.liftAfter && r.gainShown && r.netZero, JSON.stringify(r));
+    ok('Level bypassed: the wave loses its lift, True peak and the Clip light follow, and the Gain number keeps its setting', r.clipBefore && r.clipAfter && r.clipLight && r.liftBefore > 1 && r.liftAfter && r.gainShown, JSON.stringify(r));
     ok('the meter reads "…" or the new number while a copy is made, and switching back is instant', r.busyOk && r.backInstant, JSON.stringify(r));
     ok('the Emulator\'s Bypass stays unpressed and shows no pill when only the EQ is bypassed', r.emuEqAlone, JSON.stringify(r));
     ok('the outside sound costs no deep clone per call, and the video and the editor agree on whether it is ready', r.noClone && r.readiness && r.oneOfOne, JSON.stringify(r));

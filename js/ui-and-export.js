@@ -68,13 +68,13 @@ function setChips() {
   const settled = k => setChips.holding && setChips.holding[k] ? ' settle' : '';          // a chip that replaces its loading twin does not rise in again, it settles
   if (!S.pdf && busyMsg && busyKind === 'pdf') { h += holder('pdf', busyName); seenNow.pdf = busyName; }
   if (S.pdf) {
-    const used = S.pdf.keep.length, edited = !recipeIsSimple(recipeOf()), meta = edited ? used + ' pp · edited' : used < S.pdf.n ? used + ' of ' + S.pdf.n + ' pp' : S.pdf.n + ' pp';
+    const used = S.pdf.keep.length, edited = !recipeIsSimple(recipeOf()), meta = edited ? used + ' pp. (edited)' : used < S.pdf.n ? used + ' of ' + S.pdf.n + ' pp.' : S.pdf.n + ' pp.';
     h += '<div class="chip' + fresh('pdf', S.pdf.name) + settled('pdf') + '" data-k="pdf"><button class="chip-icon" type="button" data-remove="pdf" aria-label="Remove score" title="Remove score"><span class="ic">' + svgIcon.pdf + '</span><span class="x">' + xIcon + '</span></button>'
-      + '<button class="chip-main" type="button" data-pages title="' + esc(S.pdf.name) + ' · Click to open the PDF Editor" aria-label="' + esc(S.pdf.name) + ', ' + meta + '. Open the PDF Editor"><span class="chip-name">' + esc(S.pdf.name) + '</span><span class="pp-box"><small class="pp">' + meta + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
+      + '<button class="chip-main" type="button" data-pages title="' + esc(S.pdf.name) + '. Click to open the PDF Editor." aria-label="' + esc(S.pdf.name) + ', ' + meta + '. Open the PDF Editor"><span class="chip-name">' + esc(S.pdf.name) + '</span><span class="pp-box"><small class="pp">' + meta + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
   }
   if (!S.audio && busyMsg && busyKind === 'audio' && S.pdf) { h += holder('audio', busyName); seenNow.audio = busyName; }          // with no score the progress is on the Open audio button instead, and the chip appears when the sound is ready
   if (S.audio) h += '<div class="chip' + fresh('audio', S.audio.name) + settled('audio') + '" data-k="audio"><button class="chip-icon" type="button" data-remove="audio" aria-label="Remove audio" title="Remove audio"><span class="ic">' + svgIcon.audio + '</span><span class="x">' + xIcon + '</span></button>'
-    + '<button class="chip-main" type="button" data-audio title="' + esc(S.audio.name) + ' · Click to open the Audio Editor" aria-label="' + esc(S.audio.name) + ', ' + fmt(S.audio.duration) + '. Open the Audio Editor"><span class="chip-name">' + esc(audioShort(S.audio.name)) + '</span><span class="pp-box stack"><small class="pp">' + esc(audioFmt(S.audio.name)) + '</small><small class="pp">' + fmt(S.audio.duration) + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
+    + '<button class="chip-main" type="button" data-audio title="' + esc(S.audio.name) + '. Click to open the Audio Editor." aria-label="' + esc(S.audio.name) + ', ' + fmt(S.audio.duration) + '. Open the Audio Editor"><span class="chip-name">' + esc(audioShort(S.audio.name)) + '</span><span class="pp-box stack"><small class="pp">' + esc(audioFmt(S.audio.name)) + '</small><small class="pp">' + fmt(S.audio.duration) + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
   const oldW = {}; el.querySelectorAll('.chip.busy').forEach(c => { oldW[c.dataset.k] = c.getBoundingClientRect().width; });
   el.innerHTML = h; seen.pdf = S.pdf ? S.pdf.name : (seenNow.pdf || null); seen.audio = S.audio ? S.audio.name : (seenNow.audio || null);
   setChips.holding = { pdf: !S.pdf && !!seenNow.pdf, audio: !S.audio && !!seenNow.audio };
@@ -204,7 +204,7 @@ function infoParts(i, n) {
     if (r && !r.systems.length) return [['p', 'Page '], ['c', (pages.indexOf(pg) + 1) + ' / ' + pages.length]];
     return [['p', 'System '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', 'p. ' + pageNo(pg)]];
   }
-  if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits || sp.startCredits ? [['s', ' · '], ['t', 'credits']] : [])];
+  if (one) return [['p', sysOn() ? 'System ' : 'Page '], ['c', (i + 1) + ' / ' + n], ...(sp.credits || sp.startCredits ? [['s', ' ('], ['t', 'credits)']] : [])];
   return [['p', 'Spread '], ['c', (i + 1) + ' / ' + n], ['s', ' · '], ['t', pg]];
 }
 function setInfo(el, parts) {

@@ -85,7 +85,7 @@ const K = '__keyframes';
     ok('credits are a separate card after the last page (Credits start ' + (withLast ? 'With' : 'After') + ')', c.n === 4 && c.last[0] === -1 && c.last[1] === -2 && c.credits && !c.inline && c.turns === 3, JSON.stringify(c));
   }
   await p.evaluate(K => { const kf = window[K]; kf.S.time = kf.vEnd() - 0.3; updateInfo(); }, K);
-  ok('on the credits card the counter reads "Page 4 / 4 · credits"', await info() === 'Page 4 / 4 · credits', await info());
+  ok('on the credits card the counter reads "Page 4 / 4 (credits)"', await info() === 'Page 4 / 4 (credits)', await info());
   await S(s => { s.time = s.vStart; }); await p.evaluate(() => updateInfo());
   const ct = await S(s => s.turns[s.turns.length - 1]);
   const cl = await look(ct + 1.2);

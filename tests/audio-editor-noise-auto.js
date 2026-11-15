@@ -9,7 +9,7 @@ const sr = 44100, secs = 30, n = sr * secs, x = new Float32Array(n); let seed = 
 const wav = Buffer.alloc(44 + n * 4); wav.write('RIFF', 0); wav.writeUInt32LE(36 + n * 4, 4); wav.write('WAVEfmt ', 8); wav.writeUInt32LE(16, 16); wav.writeUInt16LE(1, 20); wav.writeUInt16LE(2, 22); wav.writeUInt32LE(sr, 24); wav.writeUInt32LE(sr * 4, 28); wav.writeUInt16LE(4, 32); wav.writeUInt16LE(16, 34); wav.write('data', 36); wav.writeUInt32LE(n * 4, 40);
 for (let i = 0; i < n; i++) { const l = x[i] + 0.006 * gauss(), r = x[i] * 0.8 + 0.006 * gauss(); wav.writeInt16LE(Math.round(Math.max(-1, Math.min(1, l)) * 32767), 44 + i * 4); wav.writeInt16LE(Math.round(Math.max(-1, Math.min(1, r)) * 32767), 46 + i * 4); }
 const file = path.join(os.tmpdir(), 'kf-noise-auto.wav'); fs.writeFileSync(file, wav);
-// The Method card on a recording too short for a whole-recording reading (the fixture): the wording, the picker (Auto first and chosen, Manual arms the waveform and Auto lets go), Learn doing each method's job, the "Too short" note, and Learn keeping one width
+// The Method card on a recording too short for a whole-recording reading (the fixture): the wording, the picker (Auto first and chosen, Manual arms the waveform and Auto lets go), Learn doing each method's job, the "Select at least" note, and Learn keeping one width
 async function steps(b) {
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#audioIn', (process.env.S || 'tests/fixtures') + '/loud.mp3'); await p.waitForFunction(() => S.audio && S.audio.buffer); await p.waitForTimeout(800);
@@ -20,7 +20,7 @@ async function steps(b) {
   const drag = async (a, z) => { const xa = await timeX(a), xz = await timeX(z), y = g.y + g.h / 2; await p.mouse.move(xa, y); await p.mouse.down(); for (let i = 1; i <= 8; i++) await p.mouse.move(xa + (xz - xa) * i / 8, y); await p.mouse.up(); await p.waitForTimeout(150); };
   // the wording
   const w0 = await p.evaluate(() => ({ title: document.querySelector('#aeNrSample h4').textContent, opts: [...document.querySelectorAll('#aeNrMethod label span')].map(e => e.textContent), learn: document.querySelector('#aeNrLearn').textContent, info: !!document.querySelector('#aeNrSample .info-i'), old: /Select noise|Learn noise|selected|Noise sample/.test(document.querySelector('#aeNrSample').textContent), foot: [...document.querySelectorAll('#aeNrSample .nr-foot span')].map(e => e.textContent) }));
-  ok('the Method card reads Method, Auto and Manual, Learn, Remove hum, and Output noise, with no (i)', w0.title === 'Method' && w0.opts.join() === 'Auto,Manual' && w0.learn === 'Learn' && !w0.info && !w0.old && w0.foot.join() === 'Remove hum,Output noise', JSON.stringify(w0));
+  ok('the Selection card reads Selection, Auto and Manual, Learn, Remove hum, and Output noise, with no (i)', w0.title === 'Selection' && w0.opts.join() === 'Auto,Manual' && w0.learn === 'Learn' && !w0.info && !w0.old && w0.foot.join() === 'Remove hum,Output noise', JSON.stringify(w0));
   const p0 = await pick(); ok('Auto is chosen from the start and the waveform is not armed', p0.m === 'auto' && p0.checked === 'auto' && !p0.armed, JSON.stringify(p0));
   // Learn in Auto on a short recording only picks the quietest stretch, then learns from it
   await p.click('#aeNrLearn'); await p.waitForFunction(() => !AE.nrAutoBusy && !AE.nrLearning && AE.d.fx.noise.profile, null, { timeout: 30000 }); await p.waitForTimeout(900);
@@ -34,14 +34,14 @@ async function steps(b) {
   const l1 = await p.evaluate(() => ({ learn: document.querySelector('#aeNrLearn').textContent, chip: document.querySelector('#aeNrChipTxt').textContent }));
   ok('after learning from a hand selection: the step reads Learn again with the length learned', l1.learn === 'Learn again' && /Learned 0\.8s|Learned 0\.9s/.test(l1.chip), JSON.stringify(l1));
   await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=auto]').click()); const au = await p.evaluate(() => ({ m: AE.nrMethod, armed: AE.nsArm, sel: !!AE.nsel }));
-  ok('going back to Auto lets go of the hand selection and the waveform', au.m === 'auto' && !au.armed && !au.sel, JSON.stringify(au));
+  ok('going back to Auto stops the waveform taking drags and keeps the picked stretch until Learn', au.m === 'auto' && !au.armed && au.sel, JSON.stringify(au));
   await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=manual]').click()); await p.keyboard.press('Escape'); const esc = await pick();
   ok('Escape while armed goes back to Auto', esc.m === 'auto' && esc.checked === 'auto' && !esc.armed, JSON.stringify(esc));
-  // the "Too short" note: a drag under 0.3s, on the waveform's center line in the waveform, the spectrogram, and full screen; trim stops use the same place
+  // the "Select at least" note: a drag under 0.3s, on the waveform's center line in the waveform, the spectrogram, and full screen; trim stops use the same place
   const note = () => p.evaluate(() => { const n = document.querySelector('#aeStopNote'), cv = document.querySelector('#aeCanvas'), bar = document.querySelector('#audioDlg .ae-bar'), full = document.querySelector('#audioDlg').classList.contains('afull'), inset = full ? 0 : (bar && bar.offsetHeight ? bar.offsetHeight + 8 : 0), top = cv.getBoundingClientRect().top, Hc = Math.max(60, cv.clientHeight - inset), want = top + AE_RULER + (Hc - AE_RULER) / 2 - 2, r = n.getBoundingClientRect(); return { hidden: n.hidden, text: n.textContent, op: +getComputedStyle(n).opacity, off: (r.top + r.bottom) / 2 - want }; });
   const short = async tag => {
     await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=manual]').click()); await drag(0.5, 0.6); await p.waitForTimeout(700); const n = await note(), l = await p.evaluate(() => ({ dis: document.querySelector('#aeNrLearn').disabled, m: AE.nrMethod }));
-    ok(tag + ': a drag under 0.3s shows "Too short. Select at least 0.3s." on the waveform\'s center line, and Learn stays off', !n.hidden && n.text === 'Too short. Select at least 0.3s.' && n.op > 0.9 && Math.abs(n.off) <= 0.5 && l.dis && l.m === 'manual', JSON.stringify({ n, l }));
+    ok(tag + ': a drag under 0.3s shows "Select at least 0.3s" on the waveform\'s center line, and Learn stays off', !n.hidden && n.text === 'Select at least 0.3s.' && n.op > 0.9 && Math.abs(n.off) <= 0.5 && l.dis && l.m === 'manual', JSON.stringify({ n, l }));
     await p.evaluate(() => { aeStopClear(); }); await p.waitForTimeout(500);
     await p.evaluate(() => aeTrimSaid('start', { turn: 2, t: 1 })); await p.waitForTimeout(700); const t = await note();
     ok(tag + ': a trim stop shows its note in the same place', !t.hidden && /Page turn 2/.test(t.text) && Math.abs(t.off) <= 0.5, JSON.stringify(t)); await p.evaluate(() => { aeStopClear(); }); await p.waitForTimeout(500);

@@ -21,9 +21,9 @@
 :root{
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px;   /* the spacing scale (2, 4, 8, 12, 16): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --ae-side:16px;   /* the tool window's one left line and one right line: the tool's name, its subtitle and buttons, the cards, and the status bar all sit this far in from the window's edges */
+  --pill-bg:rgba(14,17,40,.92);   /* the dark pill: the wait pill and the hints drawn on the waveform, the same in light and dark */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
-  --thumb-s:14px; --thumb-s-w:14px; --track-s:4px;   /* the small slider (.sl-small): the same handle and blue as a main slider, as a round 14px dot on a 4px track, for a setting under a main one */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
   --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
@@ -35,9 +35,12 @@
   --tick-h:6px;   /* a scale's middle tick under a slider (the approved pictures) */
   --line-s:16px;   /* the line a small label or note sits on (12px text), trimmed to its letters where rows must share one line */
   --h-s:30px; --h-m:34px; --h-l:36px; --h-xs:30px;   /* one control height for every small button, choice, and menu in both editors; --h-m is the taller one, --h-l the tallest (icon buttons, tool tabs, the loudness rows), --h-xs the compact one: a button group's outer height in the timeline bar and the PDF Editor's head, and the Fit button beside it */
+  --field-pad-x:9px;   /* the room inside a field (a menu, a text box, a number box) between its edge and its first letter, and between its edge and a menu's chevron: the same on both sides */
+  --chev-x:calc(var(--field-pad-x) + 1px); --chev-s:14px;   /* a menu's chevron (its picture is cut to its ink): the distance from the menu's right edge (the field's room plus the 1px of space a letter keeps beside its stem, so the chevron's space matches the first letter's), and its width */
+  --num-w:80px;   /* the width of every number box (Loudest peak, the loudness target, an EQ frequency) */
   --r-sm:7px; --r-ctl:8px; --r-card:12px; --r-lg:14px; --r-win:18px;   /* corner scale: small control, control, card, large card, window. A group around controls uses the control corner plus the gap (7 + 4 = 11) */
 
-  --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778;
+  --bg:#e9ecf2; --panel:#f6f7fa; --panel2:#ffffff; --line:#cfd4de; --ink:#1a1d26; --muted:#5f6778; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='5 8 14 8' fill='none' stroke='%235f6778' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --hairline:color-mix(in srgb,var(--ink) 13.5%,transparent);   /* a divider or an unlit light on a tinted surface (where --line disappears in dark mode); made from ink, so it follows each theme with no override */
   --accent:#3f55e6; --accent-ink:#ffffff; --accent-soft:rgba(63,85,230,.12);
   --thumb-bg:#ffffff; --thumb-edge:rgba(16,20,40,.16);   /* a slider's handle: a pale pill with a hairline edge, so blue means only the value set */
@@ -52,7 +55,7 @@
 /* ----- Dark mode: follows the device setting ----- */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
+    --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='5 8 14 8' fill='none' stroke='%2398a0b1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
     --thumb-bg:#eceef3; --thumb-edge:rgba(0,0,0,.4);
     --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
@@ -65,7 +68,7 @@
 
 /* ----- Dark mode: forced via data-theme="dark" ----- */
 :root[data-theme="dark"]{
-  --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1;
+  --bg:#14171d; --panel:#1b1f27; --panel2:#232833; --line:#2f3542; --ink:#e8eaf0; --muted:#98a0b1; --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='5 8 14 8' fill='none' stroke='%2398a0b1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --accent:#8c9cff; --accent-ink:#10131c; --accent-soft:rgba(140,156,255,.16);
   --thumb-bg:#eceef3; --thumb-edge:rgba(0,0,0,.4);
   --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --turn-sys-soft:rgba(160,172,196,.16); --ok-ink:#2fb872;
@@ -229,14 +232,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 input[type=range]::-moz-range-track{height:var(--track);border-radius:99px;background:var(--line)}
 input[type=range]::-moz-range-progress{height:var(--track);border-radius:99px;background:var(--accent)}
 input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
-input[type=range].sl-small{--thumb:var(--thumb-s);--thumb-w:var(--thumb-s-w);--track:var(--track-s)}
-/* a sub-slider row (.sl-sub): the name, a small slider, and its value on one line. A group of them (.sl-subs) shares three columns: the names, the bars, and a value column as wide as "100%", so the bars line up and nothing moves as a number grows. For a setting that sits under a main slider */
-.sl-subs{display:grid;grid-template-columns:max-content minmax(0,1fr) 4ch;column-gap:10px;row-gap:var(--gap-set);align-items:center}
-.sl-sub{display:grid;grid-template-columns:subgrid;grid-column:1/-1;align-items:center}
-.sl-sub label{font-size:13px;color:var(--muted)}
-.sl-sub output{text-align:right;font-weight:400;font-size:var(--value-fs);font-variant-numeric:tabular-nums;color:var(--ink)}
 input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
-select,input[type=text],textarea.autogrow{width:100%;padding:7px 9px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}
+select,input[type=text],input[type=number],textarea.autogrow{border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}          /* every field you type in or pick from (a menu, a text box, a number box): one corner, one border, one fill, one hover, and one focus ring (below) */
+select,input[type=text],textarea.autogrow{width:100%;padding:7px var(--field-pad-x)}
+select{-webkit-appearance:none;appearance:none;padding-right:calc(var(--chev-x) + var(--chev-s) + 8px);background-image:var(--chev);background-repeat:no-repeat;background-position:right var(--chev-x) center;background-size:var(--chev-s) auto}          /* every menu draws its own chevron, the same distance from the right edge (--chev-x) and the same size (--chev-s), in the muted color of the theme */
+input[type=number]{width:var(--num-w);height:var(--h-s);padding:0 var(--field-pad-x);box-sizing:border-box;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}          /* every number box: one width, one corner (the control corner, as a menu or a button has), one border; its height follows the row it sits in (--h-s by default, --h-l beside a --h-l control) */
 textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
 input.bad{border-color:var(--danger)}
 /* style row under a credits line: optional font box, then Bold and Italic */
@@ -583,6 +583,9 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   --ease-out:cubic-bezier(.22,1,.36,1);
   --ease-ui:cubic-bezier(.2,.8,.2,1);
   --ease-color:cubic-bezier(.44,0,.56,1);
+  --toast-ms:4200ms;   /* how long a toast stays; JS reads it too (TOAST_MS) */
+  --toast-long-ms:6000ms;   /* a toast that needs more reading time, such as an error; JS reads it too (TOAST_LONG_MS) */
+  --ae-note-ms:3000ms;   /* how long a note on the picture stays (the stop note, the noise graph's "No hum found"); JS reads it too (AE_NOTE_MS) */
   --ae-ms:260ms;      /* the Audio Editor's one fade time: a tool switch, a view switch, a note, a pill; JS reads it too (AE_TOOL_MS) */
   --ae-move:400ms;    /* the Audio Editor's one slide time: a fold, the selection pill, the dock, the waveform resize */
   --ae-lift:10px;     /* how far a pane or view travels as it fades; JS reads it too (AE_LIFT) */
@@ -606,7 +609,8 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .seg label{transition:background-color .2s var(--ease-color),color .2s var(--ease-color),opacity .2s var(--ease-color),transform .14s var(--ease-out)}
 .seg label:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.seg label:active{transform:none}}
-select,input[type=text],textarea.autogrow,select:hover,input[type=text]:hover,textarea.autogrow:hover{border-color:var(--muted)}
+select:hover,input[type=text]:hover,textarea.autogrow:hover,input[type=number]:hover{border-color:var(--muted)}
+select:focus-visible,input[type=text]:focus-visible,input[type=number]:focus-visible,textarea.autogrow:focus-visible{border-color:var(--accent);outline:1px solid var(--accent);outline-offset:0}          /* one ring, not a border and a ring side by side */
 .chip,.page-card{transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color),transform .3s var(--spring-hover)}
 @media (hover:hover){.page-card:hover{transform:scale(1.02)}}
 .page-card:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
@@ -711,7 +715,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 
 /* ----- PDF Editor ----- */
 
-.t-note.warn{color:var(--turn-ink);font-weight:600}
+.t-note.warn{color:var(--turn-ink)}          /* a note is the same size and weight whatever it says; only its color says the result is not what was asked for (a target that could not be reached) */
 
 /* ==================== 16. FILE CHIPS (a steady size) ==================== */
 /* the name is cut with an ellipsis, and on hover the small text (page count or length) trades places with the action, in the same space,
@@ -1084,9 +1088,8 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .eq-band.ae-card{--band-row-gap:0px}          /* a shut fold is an empty last row, and the gap above it falls under the body: the card's bottom padding gives that much back, so the body is balanced in every layout */
 .eq-dyn-g{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding-top:calc(var(--gap-head) + var(--band-row-gap))}          /* the fold holds its own space above it (the cells' row gap and --gap-head), so a shut fold takes none */
 .eq-dyn .eq-cell{gap:2px}
-.eq-dyn .eq-ctl{height:22px}
-.eq-lbl-r{display:inline-flex;align-items:baseline;gap:8px}
-.eq-lbl-r .btn{padding:0 8px;font-size:11.5px;line-height:18px;height:20px;align-self:center}
+.eq-dyn.fa.open>.fa-in{padding-bottom:0}          /* the fold's own bottom padding is taken out, so the card's bottom edge is as far from the last control as its top edge is from the first label */
+.eq-dyn .eq-ctl{height:var(--h-s);gap:var(--gap-head)}          /* the Threshold's Auto button sits beside its slider on the one control line, as every control does */
 .eq-top .seg.dim{opacity:var(--inactive);pointer-events:none}
 .eq-top .seg label{padding:4px 10px;font-size:12.5px}
 .eq-stage{position:relative;height:196px}
@@ -1276,7 +1279,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .eq-ctl{display:flex;align-items:center;height:var(--h-s)}          /* the control line is as tall as its controls (30px), so the cell's box ends where they do */
 .eq-cells>.eq-cell>.eq-ctl:has(>input[type=range]){margin-bottom:calc((var(--thumb) - var(--h-s)) / 2)}          /* a slider's line is as tall as the controls beside it so they share one center line, but its cell ends where the thumb does, so a row of sliders ends where its thumbs do */
 .eq-ctl select{height:34px}
-.eq-ctl input[type=number]{width:96px;height:34px;box-sizing:border-box}
 .eq-ctl input[type=range]{width:100%}
 .eq-bn{min-width:70px}
 .eq-cell.dim{opacity:var(--inactive)}
@@ -1338,7 +1340,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-learn .mt-chip{min-width:0}
 /* Removal: its two small sliders sit under Reduction, in a fold that closes when Reduction is Off */
 .nr-removal .field{margin-bottom:0}
-.nr-head+.field{margin-top:1px}          /* the seg above Reduction ends a hair high in its row, so the body sits level between the heading and the card's foot */
+.nr-more{gap:calc(var(--gap-set) - var(--gap-sub))}          /* Sensitivity and Smoothing are the shared one-line slider rows (.field.row3, as Imager's Low, Middle, and High), stacked one setting-gap apart (the row's own 2px margin is part of it) */
+.nr-head+.field{margin-top:2px}          /* the seg above Reduction ends a hair high in its row, so the body sits level between the heading and the card's foot */
 .nr-removal .fa.open>.fa-in{padding:3px 4px;margin:-3px -4px}          /* room for a slider's thumb inside the fold's clip, taken back by the margin so nothing moves */
 @container aedlg (max-width:728px){.ae-pbody{min-height:0}}
 }
@@ -1362,11 +1365,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .im-listen{display:flex;align-items:center;gap:10px}.im-listen>span{font-size:12.5px;color:var(--muted)}.im-listen .seg{flex:1;font-size:12px}.im-listen .seg span{padding:4px 6px}
 .im-view{align-self:center}
 .im-view .field{margin-bottom:6px}
-.field.row3{display:grid;grid-template-columns:92px minmax(0,1fr) 38px;align-items:center;gap:0 10px}
+.row3-set,.field.row3{column-gap:var(--gap-field)}
+.row3-set{display:grid;grid-template-columns:max-content minmax(0,1fr) max-content}          /* a group of slider rows: the name column is as wide as the longest name in the group, so every slider starts at the same place with one gap after the longest word, and one gap before the value */
+.field.row3{display:grid;grid-column:1/-1;grid-template-columns:subgrid;align-items:center}
 .field.row3 label{display:contents}
 .field.row3 label span{order:1;white-space:nowrap}
 .field.row3 input{order:2;margin:0}
-.field.row3 output{order:3;text-align:right}
+.field.row3 output{order:3;text-align:right;min-width:4.5ch}          /* names sit flush left and values flush right, with one gap beside the slider at the longest name and the widest value (like -100 or 100%, with a little room for the % sign) so the slider never resizes while it is dragged */
 .ae-abs{display:flex;align-items:center;gap:6px}
 #aeABm{transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 /* the noise window stays within the same height as every other tool */
@@ -1393,13 +1398,12 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform var(--ae-move) var(--ease-out),opacity var(--ae-ms) var(--ease-ui),visibility 0s var(--ae-move)}
 #audioDlg.afull.dock-off .ae-bar{grid-row:4}
 @container aedlg (max-width:728px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:8px}}
-.ae-fullbtn{width:32px;height:32px}.ae-fullbtn svg{width:16px;height:16px}
+
 @media (prefers-reduced-motion:reduce){#audioDlg.afull .ae-main{transition:none}}
 /* the Spectra tool */
 .sp-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
 .sp-card{display:flex;flex-direction:column;gap:var(--gap-set);min-height:0}
-.sp-seg label span{display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.sp-seg svg{width:15px;height:15px;flex:none}
+.sp-seg label>span{display:inline-flex;align-items:center;justify-content:center}
 .sp-list{display:flex;flex-direction:column;gap:6px;overflow-y:auto;overflow-x:hidden;min-height:0;flex:1}
 .sp-item{display:flex;align-items:center;gap:10px;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel2);cursor:pointer;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
 /* a new edit fades in in place: no slide, so nothing pokes past the list and no scroll bar flashes */
@@ -1558,7 +1562,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* Peak and Loudness share one cell, so the one leaving stays where it is and wipes up while the one arriving fades in at the same place, rather than sliding down under a growing panel */
 .fa-stack{display:grid}
-@media (min-width:761px){.fa-stack>.fa{grid-template-rows:1fr}.fa-stack>.fa:not(.open)>.fa-in{visibility:hidden;transition:opacity .25s var(--ease-color),visibility 0s .25s}}          /* every fold keeps its full height, hidden, so the stack is as tall as its tallest fold in every mode and the card never changes height when a fold opens or shuts (the narrow layout scrolls and keeps its own) */
+@media (min-width:761px){.fa-stack>.fa{grid-template-rows:1fr}.fa-stack>.fa:not(.open)>.fa-in{visibility:hidden;transition:opacity calc(var(--ae-ms) * .55) var(--ease-ui),visibility 0s var(--ae-ms)}}
+.fa-stack>.fa.open>.fa-in{transition:opacity var(--ae-ms) var(--ease-ui) calc(var(--ae-ms) * .15)}          /* folds that share a place pass the way the Imager's two views do (the same times and curve): the old one is mostly gone before the new one comes up, so two sets of words are never half-visible on top of each other */          /* every fold keeps its full height, hidden, so the stack is as tall as its tallest fold in every mode and the card never changes height when a fold opens or shuts (the narrow layout scrolls and keeps its own) */
 .fa-stack>.fa{grid-area:1/1;align-self:start}
 @keyframes note-pulse{from{opacity:.45}to{opacity:1}}
 /* the Level summary under the meter: loudness, peak and change, before → after */
@@ -1590,8 +1595,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-chain{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .ae-chain b{padding:1px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;line-height:16px;font-weight:500}
 .ae-chain svg{flex:none;width:12px;height:12px;opacity:.7}
-.ae-net{margin-left:auto;flex:none;font-variant-numeric:tabular-nums}
-.ae-net b{color:var(--ink);font-weight:500}
 .ae-win .ae-card{background:color-mix(in srgb,var(--ink) 3%,var(--panel2))}
 /* the picture, with the transport floating over its lower edge as glass (the picture keeps its drawing above it) */
 @container aedlg (min-width:729px){
@@ -1633,10 +1636,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sp-sel{flex:none}
 .sp-tools{display:grid;grid-template-columns:auto minmax(0,1.2fr) minmax(0,1fr);gap:12px;align-items:center}
 .sp-tools .btn,.sp-tools .seg{height:34px;box-sizing:border-box}
-.sp-draw{display:inline-flex;align-items:center;gap:7px;padding:0 14px;font-size:13px;border-radius:var(--r-ctl)}
-.sp-draw svg{width:15px;height:15px;flex:none}
+.sp-draw{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;font-size:13px;border-radius:var(--r-ctl)}
 .sp-seg label{display:flex}
-.sp-seg label span{flex:1;height:100%}
+.sp-seg label>span{flex:1;height:100%}
 #aePaneSpec{container:spec/inline-size}
 #aePaneEmu{container:emu/inline-size}
 @container spec (max-width:469.5px){.sp-tools{grid-template-columns:minmax(0,1fr)}}          /* each Spectra control gets the whole width, so no label is cut off */
@@ -1668,7 +1670,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
    .sl-in lays a slider out with its end words beside the track (Apple's end markers): the left word on the row's left line, the track, the right word, then a value; a middle that means
    something (Width's Normal, Balance's Center) is a short tick under the track at the middle, clear of the handle. A scale of values (numbers, a labeled value like Auto) stays under the slider. */
 .sl-row{align-items:center}
-.field:has(>.lv-big){row-gap:var(--gap-set)}          /* a big value over its slider (Fades Length) sits --gap-set above the thumb: its letters end there, so it never crowds the slider */
 .sl-row>:not(input,label,.sl-end,.tick),.sl-row>label>:not(input){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h);align-self:center}
 .sl-row output{font-weight:400;color:var(--ink);font-size:var(--value-fs);font-variant-numeric:tabular-nums}
 .sl-in{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto;grid-auto-flow:column;grid-auto-columns:auto;column-gap:var(--gap-head);min-width:0}
@@ -1679,6 +1680,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .im-view .sl-in>.sl-end.tick{height:calc(round(up, calc(var(--gap-sub) + var(--tick-h)), 2px) - var(--gap-sub))}          /* views that share one slot are each centered in it: a view's height is a whole number of pairs of pixels, so its centered top is a whole pixel (the tick is drawn the same; only the room under it grows by a pixel) */
 .sl-in>.sl-end.tick>i{display:block;width:1px;height:var(--tick-h);background:var(--muted);opacity:.6}
 .field.row3{margin-bottom:2px}
+.im-view.row3-set{row-gap:var(--gap-sub);margin-block:calc(var(--gap-sub) * -1)}          /* Imager's three rows sit a little further apart; the extra comes out of the space above and below them, so the card keeps its height */
 .head-note{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}          /* a readout beside a heading's text (Balance's shift), shown only when it has something to say */
 .head-note:empty{display:none}
 .bal-meter{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:var(--gap-set);align-items:center;margin:0;padding:var(--gap-set);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--ink) 4%,transparent);box-shadow:inset 0 1px 2px rgba(0,0,0,.09),inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;transition:opacity .3s var(--ease-ui)}          /* a readout, not a control: the meters sit in an inset panel with --gap-set inside on all four sides (its rows are trimmed to their letters and bars, so the room is the same on every side) */
@@ -1721,30 +1723,25 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aeNormCard{overflow:hidden}
 .ae-card>.fa-stack{flex:1 1 auto;min-height:0}          /* a stack of folds is the card's whole body: the open fold fills it and lays out its own parts */
 #aeNormCard .fa-stack>.fa{align-self:stretch}
-.lv-peak{display:flex;flex-direction:column;justify-content:space-between}
-.lv-peak>.lv-note:empty{display:none}
-.lv-peak:has(>.lv-note:empty)>.lv-target{margin-block:auto}          /* Peak's target under the heading and its note on the last line */
+.lv-peak{display:grid;grid-template-rows:1fr auto 1fr}
+.lv-peak>.lv-target{grid-row:2}
+.lv-peak>.lv-note{grid-row:3;align-self:end;margin:0}          /* Peak's target is always centered; its note sits in the spare room under it, so a note appearing moves nothing */
 .fa-stack>.fa>.fa-in{height:calc(100% + 2px);padding:0 4px 2px;margin:0 -4px -2px}          /* the 2px of room for a ring under the controls is not part of the body, so the box ends where its last row does */
 .lv-target{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;transition:opacity var(--ae-ms) var(--ease-ui)}
 .lv-target.dim{opacity:var(--inactive)}
 .lv-target .num{display:inline-flex;align-items:center;gap:6px}
-.lv-target input{width:74px;text-align:right;font-variant-numeric:tabular-nums}
+.lv-target input{height:var(--h-l);text-align:right}          /* the Level boxes sit beside --h-l rows (the menu, the Loudness target), so they are --h-l too */
 .lv-target em{font-style:normal;color:var(--muted)}
 .lv-loud{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 1fr auto auto;gap:0 10px;align-items:start;height:100%}
 #audioDlg .lv-loud select{width:100%;min-width:0;height:var(--h-l)}          /* as tall as the number box beside it */
 .lv-trow{height:var(--h-l)}
-.lv-trow input{height:var(--h-l);box-sizing:border-box}
 .lv-noterow,.lv-limrow{grid-column:1/-1}
-.lv-noterow{grid-row:3;margin-bottom:var(--cut-b)}          /* the note's line holds its letters with room under the baseline: the row gives that room back (the metrics' trim), so it ends where its letters do */
-.lv-noterow:has(.lv-note:empty){display:none}
-.lv-loud:has(.lv-note:empty){grid-template-rows:1fr auto 1fr auto}
-.lv-loud:has(.lv-note:empty)>:not(.lv-noterow,.lv-limrow){grid-row:2}          /* with no note, the target is the only part: centered */
+.lv-noterow{grid-row:3;margin-bottom:var(--cut-b)}          /* the note's row is always there, so a note appearing moves nothing; it counts as part of the body, which is the menu and its note line */          /* the note's line holds its letters with room under the baseline: the row gives that room back (the metrics' trim), so it ends where its letters do */
 .lv-limrow{grid-row:4;margin-top:var(--gap-set)}
 .lv-noterow{display:flex;gap:var(--gap-label) var(--gap-set);min-width:0;height:var(--line-s);line-height:var(--line-s);font-size:12px}
 .lv-note{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px;transition:color .3s var(--ease-color)}
 .lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:var(--line-s);line-height:var(--line-s)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
-.lv-note.warn{color:var(--warn,#b7791f)}
 .lv-limrow .check-row{flex:1;min-width:0;cursor:pointer;font-size:14px}
 .lv-tip-warn{position:absolute;left:66px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--warn,#b7791f);white-space:nowrap;pointer-events:none}
 .lv-limrow.nudge .switch:not(:checked){animation:lim-nudge 2.2s var(--ease-ui) infinite}
@@ -1776,8 +1773,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .lv-scale span{position:absolute;transform:translateX(-50%)}
 .lv-scale span:first-child{transform:none}
 .lv-scale span:last-child{transform:translateX(-100%)}
-.lv-meter>.lv-sum{grid-template-columns:repeat(2,minmax(0,1fr));align-self:end;margin-top:0;padding-top:9px}          /* Level's strip holds two values, so two even columns; its label sits midway between the divider and the card's bottom edge */
-.lv-meter>.lv-sum>div{display:flex;align-items:center;gap:8px}          /* a label sits beside its value, so the strip is one line tall */
+.lv-meter>.lv-sum{grid-template-columns:repeat(2,minmax(0,1fr));align-self:end;margin-top:0;padding-top:var(--gap-set)}          /* Level's strip holds two values, so two even columns; its label sits midway between the divider and the card's bottom edge */
+.lv-meter>.lv-sum>div{display:flex;align-items:last baseline;gap:8px}          /* a label sits beside its value, so the strip is one line tall, and the two share a baseline (letters of different sizes, so centering them leaves the smaller one a pixel high) */
 .lv-meter>.lv-sum b{margin-top:0}
 .ae-card .lv-big,.ae-card .field>.lv-big{margin:0 0 8px}
 
@@ -2217,14 +2214,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* ---- the Audio Editor's controls bar and its buttons share one recipe (the Undo group is a .btn-group, see the end of this file): a soft glass edge, buttons the same height and corner,
    and a group corner that is the button corner plus the gap around it (7px + 4px = 11px), so the curves nest ---- */
-#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:var(--h-s);box-sizing:border-box;background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#audioDlg .ae-bar .btn,#audioDlg .ae-bar .ae-view{height:var(--h-m);box-sizing:border-box;background:color-mix(in srgb,var(--panel2) 58%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 #audioDlg .ae-bar .btn{border-radius:var(--r-sm)}          /* Wave|Spec keeps the segmented control's own corner */
-#audioDlg .ae-bar .btn.small{padding:0 9px;font-size:13px}
-#audioDlg .ae-bar .ae-view{min-height:28px;font-size:13px}          /* as tall as the buttons beside it */
+#audioDlg .ae-bar .btn.small:not(.ico){padding:0 9px;font-size:13px}
+#audioDlg .ae-bar .ae-view{min-height:var(--h-m);font-size:13px}          /* the same heights as the video editor's transport: a choice or text button --h-m, an icon button and Play --h-l */
+#audioDlg .ae-bar .btn.ico{width:var(--h-l);min-width:var(--h-l);height:var(--h-l)}          /* Trim silence is an icon button like Full screen and Play */
 #audioDlg .ae-bar .ae-view label{display:flex;align-items:center;justify-content:center;padding:0 11px;height:100%;box-sizing:border-box}
 #audioDlg .ae-bar .ae-view span{padding:0}
-#audioDlg .ae-bar .ae-fullbtn{width:28px;height:28px}
-#audioDlg .ae-bar .ae-fullbtn svg{width:15px;height:15px}
 #audioDlg .ed-head .btn[aria-pressed=true],#pdfDlg .ed-head .btn[aria-pressed=true],#audioDlg .ae-bar .btn[aria-pressed=true]{background:var(--accent-soft)}
 
 /* the finished audio chip: the start of the file's name, then the format over the length in small grey type, so it stays narrow */
@@ -2307,10 +2303,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aePaneImager{container:imager/inline-size}
 @container imager (max-width:335.5px){
   .im-head .seg{flex:1 1 100%;width:100%}          /* the Width choice takes its own full-width row under the heading, as Normalize does */
-}
-@container spec (max-width:335.5px){
-  .sp-seg label span{gap:3px;padding-left:2px;padding-right:2px}
-  #spShape svg{display:none}          /* the Box, Band, and Moment words carry the choice; their icons give way at this width */
 }
 
 /* PDF Editor controls: one height (--h-s) for every button, choice and menu in a tool's head, so what sits side by side always matches */
@@ -2456,7 +2448,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pg-wait{position:absolute;display:flex;align-items:center;justify-content:center;transition:opacity .26s var(--ease-ui,ease)}          /* centered by layout, never by a transform, so the text stays crisp; the pill may pass a narrow page's edges */
 .pg-wait.out{opacity:0}
 /* the one wait pill: dark, nearly solid, with white text (the same in light and dark, and over any picture) and a bar along its foot (a fill once a share is known, the shared sweep while it is not) */
-.wait-pill{position:relative;display:inline-flex;align-items:center;flex:none;overflow:hidden;padding:4px 10px;border-radius:99px;background:rgba(14,17,40,.92);color:#fff;font:600 12px "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
+.wait-pill{position:relative;display:inline-flex;align-items:center;flex:none;overflow:hidden;padding:4px 10px;border-radius:99px;background:var(--pill-bg);color:#fff;font:600 12px "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
 .wait-pill .wait-bar{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:rgba(255,255,255,.2)}
 .wait-bar b{display:block;height:100%;background:color-mix(in srgb,var(--accent) 55%,#fff);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s var(--ease-out);will-change:transform}          /* a scaled layer, so the fill glides on the compositor even while the page is busy drawing */
 .wait-bar.sweeping::after{background:color-mix(in srgb,var(--accent) 55%,#fff)}          /* the sweep in the fill's own color */
@@ -2498,7 +2490,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   --trim-t:var(--cut-t);--trim-b:var(--cut-b);          /* --cut is always the metrics' trim, for text the browser cannot trim (a label that is a flex box holds its text in a box of no name) */
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
-#audioDlg .ae-card :is(h4,.field>label>:is(span,output):not(.mt-title),.bal-meter>span,.lv-big){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+#audioDlg .ae-card :is(h4,.field>label>:is(span,output):not(.mt-title),.bal-meter>span){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+#audioDlg .ae-card .lv-big{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a big number is trimmed to its letters like any text */
+#audioDlg .ae-card>.lv-big{margin-block:auto 0;position:relative;top:calc((var(--trim-t) - var(--trim-b)) / 2)}          /* a big value that is a card's own part (Gain) is centered between the heading and the slider: the spare room is split evenly between its top and the slider's top (the card's last part already takes the rest), so there is equal room above and below its letters. Where the browser cannot trim text, the box has the font's spare room, which top gives back */
 #audioDlg .ae-card .eq-lbl{height:var(--line-s);line-height:var(--line-s);margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */
 #audioDlg .ae-card .eq-lbl>*{line-height:var(--line-s)}
 #audioDlg .ae-tool .ae-tn{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a tool's name in the list is its letters, so the row can be centered by what you see */
@@ -2521,13 +2515,16 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the heading row */
 #audioDlg .ae-card>.t-head{position:relative;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;column-gap:var(--gap-head);row-gap:calc((var(--h-s) - var(--cap-px)) / 2 + var(--gap-head));min-height:var(--cap-px);margin:0 0 calc(var(--gap-set) - var(--card-gap));padding:0;--cap-px:round(calc(var(--cap) * var(--head-fs)), 1px)}          /* wrapped, a choice or button takes a line of its own, --gap-head under the letters */
 #audioDlg .ae-card>.t-head:has(>:is(.btn,.seg,select,.mt-acts)){min-height:calc((var(--cap-px) + var(--h-s)) / 2)}          /* a row with a choice or button ends where that does (centered on the letters, so half its height below their middle), so the card's content is what you see */
+#audioDlg .ae-card>.t-head.hang:has(>:is(.btn,.seg,select,.mt-acts)){min-height:var(--cap-px)}
+#audioDlg .ae-card>.t-head.hang>:is(.btn,.seg,select,.mt-acts){margin-bottom:calc((var(--cap-px) - var(--h-s)) / 2)}          /* a heading row whose choice hangs into the body (nothing sits beside it there): the row ends at its letters, so the body is balanced between the letters and the next line */
 #audioDlg .ae-card>.t-head>h4{min-height:0;font-size:var(--head-fs);margin-inline:0}
 #audioDlg .ae-card>.t-head>:is(.btn,.seg,select,.mt-acts){height:var(--h-s);min-height:0;box-sizing:border-box;margin-block:calc((var(--cap-px) - var(--h-s)) / 2) 0}          /* centered on the middle of the letters: a half of its height above them and below, so the row ends at its lowest edge */
 #audioDlg .ae-card>.t-head>.info-i{margin-block:calc((var(--cap-px) - 18px) / 2)}
-#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note,.btn,.seg,select,.mt-acts){display:flex;align-items:center;align-content:center;height:var(--cap-px);margin-block:0}          /* anything else on the row (a readout, a key) is as tall as the letters and centered on them */
+#audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note,.btn,.seg,select,.mt-acts,.lv-clip){display:flex;align-items:center;align-content:center;height:var(--cap-px);margin-block:0}          /* anything else on the row (a readout, a key) is as tall as the letters and centered on them */
 #audioDlg .ae-card>.t-head .mt-n.inl{vertical-align:middle;margin-block:-11px}          /* a step number in a heading never makes the row taller */
 #audioDlg .ae-card>.t-head>.seg label{padding-block:0}
 #audioDlg .ae-card>.t-head>.seg span{padding:0 10px}
+#audioDlg .ae-card>.t-head>.lv-clip{margin-block:calc((var(--cap-px) - 24px) / 2)}          /* the Clip pill is its own 24px height, centered on the letters; it takes no more room than the letters, so the card's body never moves */
 #audioDlg .ae-card>.t-head>:not(h4,.info-i,.tip,.head-note):not(:not(h4,.info-i,.tip,.head-note) ~ *){margin-left:auto}          /* the first of them goes to the row's right end; the rest follow it */
 
 /* the balanced body: the parts between the heading row and the next line (the footer row's line, or the card's bottom edge) keep --card-gap at the least on each side. One part is centered, so its space above and below are equal; several parts spread, the first under the heading and the
@@ -2589,7 +2586,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   #audioDlg.head-in-bar .ae-rail-cur svg{position:absolute;right:14px;top:50%;margin:-9px 0 0}
 }
 @container aedlg (max-width:728px){#audioDlg.head-in-bar .ae-rail-cur{align-items:baseline}}
-/* where the cards stack (the dialog's width is 488px and under): labels become icons, the tool bar's "Tool" word goes, and the subtitles go. One collapsing button class, .ae-ib (an icon .ae-ic and a label .ae-lb), serves Match gain, Bypass, and Trim silence in the head and the transport */
+/* where the cards stack (the dialog's width is 488px and under): labels become icons, the tool bar's "Tool" word goes, and the subtitles go. One collapsing button class, .ae-ib (an icon .ae-ic and a label .ae-lb), serves Match gain and Bypass in the head, and Spectra's Draw, Box, Band, Moment, Heal, and Reduce (words at full size, icons only here) */
+.btn.small.ico{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}          /* a button that is only an icon (Trim silence): as wide as it is tall, at every width; its name is in its tooltip and aria-label */
+.btn.small.ico svg{width:16px;height:16px;flex:none}
 .ae-ib .ae-ic{display:none}
 @container aedlg (max-width:488px){
   #audioDlg :is(.ae-bar,.ae-abs) .ae-ib.btn{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
@@ -2621,8 +2620,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 .lv-meter>.lv-sum>div{flex-wrap:wrap;column-gap:8px;row-gap:var(--gap-head)}          /* where a column is too narrow for its label and value side by side, the value goes under its label instead of being cut off */
 .lv-meter>.lv-sum b{flex:none;overflow:visible;text-overflow:clip}
-/* the transport gives way only where its parts no longer fit, and the times go last: the spacing tightens first (the bar is 318px wide or less), then, with Play, Wave | Spec, Trim silence, and Full screen still showing, the start and end times (the bar is under 288px) */
-@container aedlg (max-width:356px){#audioDlg:not(.afull) .ae-bar .ae-view label{padding-left:7px;padding-right:7px}#audioDlg:not(.afull) .ae-bar{padding:0 6px;gap:4px}}
+/* the transport gives way only where its parts no longer fit, and the times go last: the spacing tightens first (the bar is 362px wide or less), then, with Play, Wave | Spec, Trim silence, and Full screen still showing, the start and end times (the bar is under 288px) */
+@container aedlg (max-width:400px){#audioDlg:not(.afull) .ae-bar .ae-view label{padding-left:4px;padding-right:4px}#audioDlg:not(.afull) .ae-bar{padding:0 4px;gap:4px}}
 @container aedlg (max-width:324px){#audioDlg:not(.afull) .ae-times{display:none}}
 .ae-chain>span{min-width:0;overflow:hidden;text-overflow:ellipsis}          /* a status line too long for a narrow window ends in an ellipsis, as its own box, instead of being cut off */
 

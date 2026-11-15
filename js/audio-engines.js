@@ -581,7 +581,7 @@ document.addEventListener('input', e => { if (e.target.type === 'range') paintRa
 
 /* ---------------- toast ---------------- */
 let toastTimer = 0;
-function toast(msg, ms = 4200) {
+function toast(msg, ms = TOAST_MS) {
   const el = $('#toast'); el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }

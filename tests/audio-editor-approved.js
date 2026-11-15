@@ -29,18 +29,18 @@ const STATES = {
 };
 // cards side by side whose last lines share one line (Fades: the Length card's slider row ends on the Shape card's choice). Width, Balance, and Fades Length have no scale row: their end words sit beside the track (owner's decision, November 13, 2026), checked by slider-word in audio-editor-grid-lines
 const LAST_LINES = ['aeFadeLenCard'], LAST_PAIRS = [['aeFadeLenCard', 'ae-card.fd-shape']];
-// what each Noise picture shows on the Method card: the chosen method, Learn on or off, and the "Too short" note
+// what each Noise picture shows on the Method card: the chosen method, Learn on or off, and the "Select at least" note
 const NOISE_SHOWS = { 'noise idle': 'auto,on,nonote', 'noise selected': 'auto,on,nonote', 'noise learning': 'auto,off,nonote', 'noise short': 'manual,off,note' };
 const STEPS = 391;          // the middle of the Select row's buttons, centered between the heading and the line above Mains hum in a 164px card (the picture's card is 158px, so its row is 4px higher)
 const TABLE = {
-  'noise idle': [          // the graph is always on top, so both cards sit under it (the old pictures had the sample card over Removal); the rows are the rules' own. Idle, the sliders under Reduction are folded shut: the cards are shorter and the graph taller
-    ['top:aeNrSample', 484, 515],
+  'noise idle': [          // the graph is always on top, so both cards sit under it (the old pictures had the sample card over Removal); the rows are the rules' own. The sliders under Reduction stay in place (greyed until a noise is learned), so the cards are the same height before and after Learn
+    ['top:aeNrSample', 484, 496],
     ['bottom:aeNrSample', 656, 656],
-    ['head:METHOD', 505, 536],
-    ['top:aeNrCtl', 484, 515],
+    ['head:SELECTION', 505, 517],
+    ['top:aeNrCtl', 484, 496],
     ['bottom:aeNrCtl', 656, 656],
-    ['head:REMOVAL', 505, 536],
-    ['ctl:REMOVAL', 495, 526]
+    ['head:ADJUSTMENT', 505, 517],
+    ['ctl:ADJUSTMENT', 495, 507]
   ],
   'spec heal': [
     ['top:ae-card.sp-card.sp-sel', 318, 318],
@@ -102,7 +102,7 @@ const TABLE = {
     ['top:aeMeter', 497, 492],
     ['bottom:aeMeter', 656, 656],
     ['head:METER', 518, 512.98],
-    ['scale:aeMeter', 576.08, 579.83]
+    ['scale:aeMeter', 576.08, 578.33]
   ],
   'emu idle': [
     ['top:aeEmCard', 318, 318],
@@ -122,14 +122,14 @@ const TABLE = {
     ['frame-bottom:ae-card.fd-shape', 561, 561]
   ]
 };
-const NOISE_OPEN = [          // with a noise learned the fold is open: the cards are 159px and the graph shorter
-    ['top:aeNrSample', 484, 497],
+const NOISE_OPEN = [          // with a noise learned the fold is open: the cards are 160px and the graph shorter
+    ['top:aeNrSample', 484, 496],
     ['bottom:aeNrSample', 656, 656],
-    ['head:METHOD', 505, 518],
-    ['top:aeNrCtl', 484, 497],
+    ['head:SELECTION', 505, 517],
+    ['top:aeNrCtl', 484, 496],
     ['bottom:aeNrCtl', 656, 656],
-    ['head:REMOVAL', 505, 518],
-    ['ctl:REMOVAL', 495, 508]
+    ['head:ADJUSTMENT', 505, 517],
+    ['ctl:ADJUSTMENT', 495, 507]
 ];
 for (const k of ['noise short', 'noise short dark']) TABLE[k] = TABLE['noise idle']; for (const k of ['noise selected', 'noise learning', 'noise selected dark']) TABLE[k] = NOISE_OPEN;          // the Noise pictures differ only in whether the fold under Reduction is open
 (async () => {
@@ -165,7 +165,7 @@ for (const k of ['noise short', 'noise short dark']) TABLE[k] = TABLE['noise idl
     for (const [x, y] of LAST_PAIRS) if (app['last:' + x] !== undefined && app['last:' + y] !== undefined && Math.abs(app['last:' + x] - app['last:' + y]) > 0.5) bad.push('the last lines of ' + x + ' (' + app['last:' + x] + ') and ' + y + ' (' + app['last:' + y] + ') are not on one line');
     for (const g of gaps) if (Math.abs(g.y - g.want) > 0.5) bad.push(g.key + ' starts ' + g.y + 'px under its thumb or bar, not ' + g.want);
     const shows = NOISE_SHOWS[state.replace(/ dark$/, '')];
-    if (shows) { const got = await p.evaluate(() => { const n = document.querySelector('#aeStopNote'); return (document.querySelector('input[name=aeNrMethod]:checked') || {}).value + ',' + (document.querySelector('#aeNrLearn').disabled ? 'off' : 'on') + ',' + (n && !n.hidden && /Too short/.test(n.textContent) ? 'note' : 'nonote'); }); if (got !== shows) bad.push('the Method card shows ' + got + ', the picture shows ' + shows); }
+    if (shows) { const got = await p.evaluate(() => { const n = document.querySelector('#aeStopNote'); return (document.querySelector('input[name=aeNrMethod]:checked') || {}).value + ',' + (document.querySelector('#aeNrLearn').disabled ? 'off' : 'on') + ',' + (n && !n.hidden && /Select at least/.test(n.textContent) ? 'note' : 'nonote'); }); if (got !== shows) bad.push('the Method card shows ' + got + ', the picture shows ' + shows); }
     ok(state + ': heading letters and heading-row controls sit under their card\'s top as in the picture; card edges and scales are where the layout rules put them', !bad.length, bad.slice(0, 6).join(' | ') || read.join(', '));
   }
   const pending = fs.readFileSync(path.join(__dirname, 'audio-editor-approved-expected.txt'), 'utf8').split('\n').filter(l => l.trim() && l[0] !== '#');

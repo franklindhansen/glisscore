@@ -95,7 +95,7 @@ function aeRecords(a, b) {
     const p = op.path.join('.');
     if (op.t === 'item') {
       const eq = /^fx\.eq\.bands$/.test(p), x = op.after || op.before, nm = eq ? 'EQ band' : 'Box';
-      const lab = eq ? (op.kind === 'change' ? 'EQ band ' + band(op.before) + ' → ' + band(op.after) : (op.kind === 'add' ? 'EQ band added · ' : 'EQ band removed · ') + band(x)) : (op.kind === 'change' ? 'Box ' + box(op.before) + ' → ' + box(op.after) : (op.kind === 'add' ? 'Box added · ' : 'Box removed · ') + box(x));
+      const lab = eq ? (op.kind === 'change' ? 'EQ band ' + band(op.before) + ' → ' + band(op.after) : 'EQ band at ' + hz(x.f) + (op.kind === 'add' ? ' added' : ' removed')) : (op.kind === 'change' ? 'Box ' + box(op.before) + ' → ' + box(op.after) : 'Box ' + box(x) + (op.kind === 'add' ? ' added' : ' removed'));
       recs.push({ label: lab, ops: [op] }); return;
     }
     if (/^bp\./.test(p)) { const k = p.slice(3), nm = AE_NAMES[k] || k; recs.push({ label: b.bp && b.bp[k] ? 'Bypassed ' + nm : nm + ' back in', ops: [op] }); return; }          // Bypass is a step of its own: 'Bypassed EQ', or 'EQ back in' (an edit that switches a tool back on lands here too)
@@ -134,7 +134,7 @@ function aeHistSync() {
   let gone = 0; if (H.sel < cur) for (let i = H.sel + 1; i <= cur; i++) gone += Math.max(1, aeHistRec(H, st, i).length);
   const keptN = H.sel < cur ? [...kept].filter(k => { const i = +k.split(':')[0]; return i > H.sel && i <= cur; }).length : 0;
   $('#aeHistSum').textContent = H.sel > cur ? 'Go forward to “' + list.querySelector('.hs-row.target .hs-n').textContent + '”' : 'Undo ' + (gone - keptN) + ((gone - keptN) === 1 ? ' change' : ' changes') + (keptN ? ', keep ' + keptN : '');
-  $('#aeHistSub').textContent = H.sel < cur ? 'Tick anything you want to hold onto' : 'Pick a step to go back to it';
+  $('#aeHistSub').textContent = H.sel < cur ? 'Tick anything you want to hold onto.' : 'Pick a step to go back to it.';
 }
 function aeHistArrow() {
   const list = $('#aeHistList'), H = AE.hist; let a = list.querySelector('.hs-arrow'); const cur = list.querySelector('.hs-row.cur .hs-main'), tg = list.querySelector('.hs-row.target .hs-main');
@@ -221,7 +221,7 @@ function aeClipSay() { const ks = ['clip', 'clipb'].filter(k => MSG.says['ae.' +
 function edSay(which, key) {
   const text = MSG.says[which + '.' + key]; if (!text) return;
   const d = edSay.done || (edSay.done = { pe: {}, ae: {} }); if (d[which][key]) return; d[which][key] = 1;
-  edLead(which, text, false, 2100);
+  edLead(which, text, false, AE_NOTE_MS);
 }
 function edLeadStop(which) { const el = $('#' + which + 'Lead'); el._tok = (el._tok || 0) + 1; if (el.dataset.normal) el.textContent = el.dataset.normal; el.classList.remove('quip'); el.style.minHeight = ''; }
 /* editors fade and settle in and out instead of popping */
@@ -245,7 +245,7 @@ function sheetHide(el) {
   el.classList.add('closing'); el.inert = true;
   el._ct = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); el.inert = false; }, 240);
 }
-function aeDropPreview() { if (NRJ.pv && S.audio && nrReady(S.set.fx.noise) && NRJ.pv.key === nrKey(S.set.fx.noise)) return; if (NRJ.pv) { NRJ.pv.run.cancel(); NRJ.pv = null; } }
+function aeDropPreview(d) { const n = d ? d.fx.noise : S.set.fx.noise; if (NRJ.pv && S.audio && nrReady(n) && !(d && aeBp('noise')) && NRJ.pv.key === nrKey(n)) return; if (NRJ.pv) { NRJ.pv.run.cancel(); NRJ.pv = null; if (NRJ.onProg) NRJ.onProg(1); } }          // a run dropped with nothing to take its place ends its bar
 /* leaving while the audio is still being exported would throw the export away, so ask first */
 function aeLeave() {
   return AE.exporting ? askWarn('Close the editor?', 'Your audio is still being exported. Closing the editor now stops the export and nothing is saved.', 'Stop export and close', 'Keep exporting') : Promise.resolve(true);
@@ -261,8 +261,8 @@ function aeApply() {
     S.time = clamp(S.time, S.vStart, vEnd());
     normalizeTurns(); onTurnsChanged(); onTrimChanged(); syncControls(); saveSettings(); stageDirty = true;
     TL.staticDirty = true;
-    fxGet(soundSet().fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 5000); });
-    toast(tx('vid.updated'), 2400);
+    fxGet(soundSet().fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), TOAST_LONG_MS); });
+    toast(tx('vid.updated'));
   }
   closeAudioEditor();
 }
@@ -286,9 +286,19 @@ function aeTrimStop(which, t, d) {
 }
 /* says why the trim stopped (once per drag or trim): the turn in the way */
 /* the picture's one note (a toast sits behind the editor): shown on the waveform's center line (aeNotePlace) for a few seconds, whatever it says */
+/* the noise graph's note, as the waveform's (the same look, on the graph's center): what the noise work found, such as no hum */
+function aeNrNote(text) {
+  const el = $('#aeNrNote'); if (!el) return; el.textContent = text; el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(AE.nrNoteT); AE.nrNoteT = setTimeout(() => { el.classList.remove('show'); setTimeout(() => { if (!el.classList.contains('show')) el.hidden = true; }, AE_TOOL_MS + 40); }, AE_NOTE_MS);
+}
+/* a hint drawn on the picture (the dark pill, as the wait pill): says what a drag will do, centered on x and y */
+function aeHint(c, W, Hc, txt) {          // a pill on the picture's center, the same place the stop note sits (aeCy), for the waveform and the spectrogram alike
+  const x = W / 2, y = aeCy(Hc); c.save(); c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 26;
+  roundRect(c, x - w / 2, y - 12, w, 24, 12); c.fillStyle = TL.C.pill; c.fill(); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, x, y + 0.5); c.restore();
+}
 function aeNote(text, mark) {
   const el = $('#aeStopNote'); if (!el) return; el.textContent = text; aeNotePlace(); el.hidden = false; requestAnimationFrame(() => el.classList.add('show'));
-  AE.stopMark = mark || null; clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, 4200); aeAnim(); aeDraw();
+  AE.stopMark = mark || null; clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, AE_NOTE_MS); aeAnim(); aeDraw();
 }
 function aeTrimSaid(which, s) {          // with a dashed line where the page turn holds the handle
   if (!s.turn) return; aeNote(tx('ae.turnstop', { n: s.turn, which }), { t: s.t, which });
@@ -315,18 +325,19 @@ function aeNormUI(d) {
   const hit = d.normPreset === 'custom' ? null : pr.find(p => p.id === d.normPreset && Math.abs(p.lufs - d.normLufs) < 0.05) || pr.find(p => Math.abs(p.lufs - d.normLufs) < 0.05); sel.value = hit ? hit.id : 'custom';
   if (document.activeElement !== $('#aeLoudDb')) $('#aeLoudDb').value = (+d.normLufs).toFixed(1);
   const note = $('#aeLoudNote'), i = aeLoudInfo(d); let txt = '', cls = '';
-  if (mode === 'loud') { if (!i || !i.ready) { txt = 'Processing…'; cls = 'busy'; } else if (i.silent) txt = 'Nothing to measure.'; else if (i.capped) { txt = 'Capped at +24dB · reaches ' + LUFS_TXT(i.reached); cls = 'warn'; } else txt = 'Reaches ' + LUFS_TXT(i.reached); }
+  if (mode === 'loud') { if (!i || !i.ready) { txt = 'Processing…'; cls = 'busy'; } else if (i.silent) txt = 'Nothing to measure.'; else if (i.capped) { txt = 'Capped at +24dB. Reaches ' + LUFS_TXT(i.reached) + '.'; cls = 'warn'; } }          // on target, the box beside it already says so: a note only appears while measuring or when the target could not be reached
   const lim = mode === 'loud' && d.limiter;
-  if (lim && i && i.ready && !i.silent) { if (!i.lim) { txt = 'Processing…'; cls = 'busy'; } else if (i.lim.short) { txt = 'Limiter at its limit · reaches ' + LUFS_TXT(i.lim.I); cls = 'warn'; } else txt = 'Reaches ' + LUFS_TXT(i.lim.I); }
+  if (lim && i && i.ready && !i.silent) { if (!i.lim) { txt = 'Processing…'; cls = 'busy'; } else if (i.lim.short) { txt = 'Limiter at its limit. Reaches ' + LUFS_TXT(i.lim.I) + '.'; cls = 'warn'; } else txt = ''; }
   setDots(note, txt); note.className = 't-note lv-note' + (cls ? ' ' + cls : '');
   const pn = $('#aePeakNote'); let ptxt = '', pcls = '';
-  if (mode === 'peak') { const mx = aePeakMax(d); if (mx > 1e-4 && Math.pow(10, d.normPeakDb / 20) / mx > Math.pow(10, 24 / 20)) { ptxt = 'Capped at +24dB · reaches ' + DB_TXT(20 * Math.log10(mx * Math.pow(10, 24 / 20))); pcls = 'warn'; } }
+  if (mode === 'peak') { const mx = aePeakMax(d); if (mx > 1e-4 && Math.pow(10, d.normPeakDb / 20) / mx > Math.pow(10, 24 / 20)) { ptxt = 'Capped at +24dB. Reaches ' + DB_TXT(20 * Math.log10(mx * Math.pow(10, 24 / 20))) + '.'; pcls = 'warn'; } }
   setDots(pn, ptxt); pn.className = 't-note lv-note' + (pcls ? ' ' + pcls : '');
   const lhint = mode === 'loud' && i && i.ready && i.clips && !d.limiter;
   const lt = $('#aeLimTip'); lt.style.visibility = lhint ? 'visible' : 'hidden'; $('#aeLimiter').checked = !!d.limiter; $('#aeLimRow').classList.toggle('nudge', !!lhint);          // when the target would clip, the switch gently asks to be tried
   if (mode === 'loud' || AE.tool === 'level') loudWant(d);
 }
 function aeRefresh() {
+  aeDropPreview(AE.d);          // a removal that is no longer wanted (Reduction set to Off, a slider moved on, Bypass pressed) stops at once, and its bar goes
   const d = AE.d, L = S.audio.duration, end = aeEnd(d), hd = aeHeard(d);          // hd: the draft as it is heard; every reading and picture of what runs reads hd, the controls keep d
   $('#aeStart').textContent = fmt(d.vStart); $('#aeEnd').textContent = fmt(end);
   aeNormUI(d);
@@ -337,13 +348,13 @@ function aeRefresh() {
     const shp = document.querySelector('input[name=aeFadeShape][value=' + aeShape(d.audioFadeShape) + ']'); if (shp && !shp.checked) { shp.checked = true; const sg = $('#aeFadeShape'); if (sg._place) sg._place(true); }
     aeFadeDraw(); }
   const gdb = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(Math.abs(v % 1) > 0.04 ? 1 : 0) + 'dB';
-  { const from = Math.max(0, d.vStart), to = Math.min(end, L), G = aeLevel(hd, from, to), gdBnow = 20 * Math.log10(G), gSet = hd === d ? G : aeLevel(d, from, to), gdSet = 20 * Math.log10(gSet); AE.G = G;          // gdBnow: what runs (Net gain, the meter); gdSet: the setting (the slider and the Gain number)
-    const busy = fxActive(hd.fx, fxChannels()).length > 0 && !aeFxPeek(hd.fx); if (busy) fxWait(hd);          // the meter waits for the finished sound rather than show the one before
+  { const from = Math.max(0, d.vStart), to = Math.min(end, L), G = aeLevel(hd, from, to), gdBnow = 20 * Math.log10(G), gSet = hd === d ? G : aeLevel(d, from, to), gdSet = 20 * Math.log10(gSet); AE.G = G;          // gdBnow: what runs (the meter); gdSet: the setting (the slider and the Gain number)
+    const busy = fxActive(hd.fx, fxChannels()).length > 0 && !aeFxPeek(hd.fx); if (busy && !AE.nrHold) fxWait(hd);          // the meter waits for the finished sound rather than show the one before
     const pkN = aeLevelPeaks(hd), i0 = Math.max(0, Math.floor(from * 100)), i1 = Math.min(pkN.length - 1, Math.ceil(to * 100));
     const pkO = srcTp(S.audio); let mN = 0, mO = 0, over = 0; for (let i = i0; i <= i1; i++) { if (pkN[i] > mN) mN = pkN[i]; if (pkO[i] > mO) mO = pkO[i]; if (pkN[i] * G > 1) over++; }
     const db = m => m > 1e-4 ? 20 * Math.log10(m) : -Infinity, mNow = limOn(hd) ? Math.min(mN * G, Math.pow(10, LIM_CEIL / 20)) : mN * G, pos = v => isFinite(v) ? clamp((v + 36) / 48, 0, 1) * 100 : 0;          // the meter runs from -36 to +12 dB
     $('#aeGain').disabled = !!d.normalize; $('#aeGainCard').classList.toggle('dim', !!d.normalize); aeSlide($('#aeGain'), d.normalize ? clamp(gdSet, -12, 12) : d.gainDb); $('#aeLvLed').classList.toggle('on', !!d.normalize || d.gainDb !== 0);
-    $('#aeGainBig').textContent = gdb(Math.round(gdSet * 10) / 10); $('#aeNet').innerHTML = 'Net gain <b>' + (Math.abs(gdBnow) < 0.05 ? '0dB' : gdb(Math.round(gdBnow * 10) / 10)) + '</b>'; $('#aeLvBadge').textContent = d.normalize ? (d.normBy === 'loud' ? LUFS_TXT(d.normLufs) : DB_TXT(d.normPeakDb)) : d.gainDb ? gdb(d.gainDb) : '';
+    $('#aeGainBig').textContent = gdb(Math.round(gdSet * 10) / 10); $('#aeLvBadge').textContent = d.normalize ? (d.normBy === 'loud' ? LUFS_TXT(d.normLufs) : DB_TXT(d.normPeakDb)) : d.gainDb ? gdb(d.gainDb) : '';
     const dbf = v => isFinite(v) ? (v >= 0.05 ? '+' : '') + v.toFixed(1).replace('-', '−') + 'dB' : '—';
     AE.ms = busy ? { fill: 0, orig: pos(db(mO)), hot: false, good: false, text: '…' } : { fill: pos(db(mNow)), orig: pos(db(mO)), hot: mNow > 1.0005, good: mNow >= 0.5 && mNow <= 1.0005, text: dbf(db(mNow)) };          // at rest the bar is the loudest peak you will get; the tick is the file's own
     if (aeBpAny()) loudWant(hd);          // the Loudness of what runs is measured when a tool is bypassed (the setting's own is measured by Level)
@@ -549,7 +560,7 @@ function spOverlay(c, W, H) {
     box({ x0, x1, y0, y1 }, SP.mode, 1);
   }
   c.restore();
-  if (tool && SP.arm && !ed.length && !dr) { const txt = 'Drag over a sound to fix'; c.save(); c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 26; roundRect(c, W / 2 - w / 2, 14, w, 24, 12); c.fillStyle = 'rgba(14,17,40,.78)'; c.fill(); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 26.5); c.restore(); }
+  if (tool && SP.arm && !ed.length && !dr) aeHint(c, W, H, 'Drag over a sound to fix.');
 }
 /* the waveform's frame: a pane of frosted glass. A light from above, a soft shade at the bottom, a bright hairline just inside the top edge */
 const AE_RULER = 24;          // the ruler: the time labels and the tabs of the start and end sit in this band across the top
@@ -709,7 +720,7 @@ function aeDraw() {
     if (showWave) pass(true, 1 - e); if (showSpec) pass(false, e); } }
   { const nsA = hsGet('ae-ns', AE.nsel && AE.tool === 'noise' ? 1 : 0); if (AE.nsel) AE.nsShow = AE.nsel; if (nsA > 0.01 && AE.nsShow) { const x1 = aeX(AE.nsShow.a), x2 = aeX(AE.nsShow.b); c.save(); c.globalAlpha = nsA; c.fillStyle = 'rgba(217,119,6,.2)'; c.fillRect(x1, 0, Math.max(1, x2 - x1), H); c.fillStyle = C.turn; c.fillRect(x1, 0, 2, H); c.fillRect(x2 - 2, 0, 2, H); c.restore(); } }
   c.restore();
-  if (AE.nsArm) { const txt = 'Drag over isolated noise', w = c.measureText ? (c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif', c.measureText(txt).width + 26) : 190; c.save(); roundRect(c, W / 2 - w / 2, 12, w, 24, 12); c.fillStyle = 'rgba(217,119,6,.92)'; c.shadowColor = 'rgba(217,119,6,.45)'; c.shadowBlur = 10; c.fill(); c.shadowBlur = 0; c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, W / 2, 24.5); c.restore(); }
+  if (AE.nsArm && !AE.nsel && !AE.nsDrag) aeHint(c, W, Hc, 'Drag over a stretch of noise.');          // gone once a stretch is picked
   { const za = hsGet('ae-zb', AE.zoom ? 1 : 0); if (za > 0.01) { const [flo, fhi] = aeFull(), fx = t => x0 + (t - flo) / (fhi - flo) * (x1 - x0), tx0 = fx(AE.rlo), tx1 = fx(AE.rhi); c.save(); c.globalAlpha = za; roundRect(c, x0, Hc - 6, x1 - x0, 3, 1.5); c.fillStyle = C.line; c.fill(); roundRect(c, tx0, Hc - 6, Math.max(8, tx1 - tx0), 3, 1.5); c.fillStyle = C.accent; c.globalAlpha = 0.55 * za; c.fill(); c.restore(); } }
   if (AE.stopMark) { const px = Math.round(aeX(AE.stopMark.t)); c.save(); c.strokeStyle = C.accent; c.globalAlpha = 0.7; c.lineWidth = 1.5; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(px, AE_RULER); c.lineTo(px, Hc - 1); c.stroke(); c.restore(); }          // where the page turn holds the handle
   // the start and end: a thin line down the picture, with a grip tab in the ruler (the same design as the video timeline)
@@ -744,7 +755,7 @@ function aeBindCanvas() {
     if (AE.scrub) { aeSeek(aeT(x)); return; }
     if (!dr) { const h = aeHit(x); if (h !== AE.hover) { AE.hover = h; aeAnim(); } if (spInSpec()) { const hv = spHit(x, AE.mxy.y, aeHc()); if (hv !== AE.spHov) { AE.spHov = hv; aeAnim(); } } cv.style.cursor = h ? 'ew-resize' : spArmed() ? 'crosshair' : AE.tool === 'noise' && AE.nsArm ? 'crosshair' : (aeT(x) >= Math.max(0, AE.d.vStart) && aeT(x) <= Math.min(aeEnd(AE.d), S.audio.duration) ? 'pointer' : 'default'); return; }
     let t = aeT(x) + dr.dx; const d = AE.d, st = Math.max(0, d.vStart), en = Math.min(aeEnd(d), L);
-    const stop = aeTrimStop(dr.which, t, d); t = stop.t; if (stop.turn) { if (!dr.said) { dr.said = true; aeTrimSaid(dr.which, stop); } else { clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, 4200); } }
+    const stop = aeTrimStop(dr.which, t, d); t = stop.t; if (stop.turn) { if (!dr.said) { dr.said = true; aeTrimSaid(dr.which, stop); } else { clearTimeout(AE.stopT); AE.stopT = setTimeout(aeStopClear, AE_NOTE_MS); } }
     if (dr.which === 'start') { t = clamp(t, 0, en - 1); if (Math.abs(aeX(t) - aeX(0)) <= 8) t = 0; if (t !== d.vStart) { d.vStart = t; dr.moved = true; } }
     else { t = clamp(t, st + 1, L); if (Math.abs(aeX(t) - aeX(L)) <= 8) t = L; const nv = t >= L - 1e-6 ? null : t; if (nv !== d.vEndSet) { d.vEndSet = nv; dr.moved = true; } }
     aeRefresh();
@@ -848,7 +859,7 @@ async function aePlay() {
   try {
     if (dk) { DISK.fxUse(aeDiskFx(), { listen: AE.nrListen && !aeBp('noise'), slot: 'ply' }); ph = await DISK.play(ac, Math.floor(from * S.audio.sr), src, Object.assign({ fx: true, slot: 'ply' }, opt)); AE.dsSig = DISK.fxSigP; }
     else { AE.mem = memSound(ac, aeSrcBuffer()); ph = await soundPlay(ac, AE.mem, Math.floor(from * ac.sampleRate), src, opt); }
-  } catch (e) { clearTimeout(AE.startT); if (AE.playTok === tok) { AE.starting = false; aeWaitUI(false); } if (e !== STALE) { console.error(e); toast(tx('ae.playfail2') + ' ' + (e && e.message || ''), 5000); } return; }
+  } catch (e) { clearTimeout(AE.startT); if (AE.playTok === tok) { AE.starting = false; aeWaitUI(false); } if (e !== STALE) { console.error(e); toast(tx('ae.playfail2') + ' ' + (e && e.message || ''), TOAST_LONG_MS); } return; }
   if (AE.playTok !== tok || !AE.d) { ph.stop(); return; }          // stopped, or the editor closed, while the first sound was being made
   AE.starting = false; clearTimeout(AE.startT); aeWaitUI(false);
   const g = ac.createGain(), tapC = ac.createGain(), out = ac.createGain(); out.gain.setValueAtTime(0, ac.currentTime); out.gain.setValueAtTime(0, ac.currentTime + 0.02); out.gain.linearRampToValueAtTime(1, ac.currentTime + 0.03); src.connect(out); out.connect(ac.destination); AE.out = out;          // silent for 20ms (the graph takes a moment to start), then eased in over 10ms, so starting mid-wave does not click
@@ -1362,16 +1373,16 @@ async function aeExport() {
     let file = null; if (dk) { await wr.done(); file = await DISK.fileDone(); }
     const name = ((S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio') + ' - Audio.wav';
     await saveFile(file ? file.slice(0, file.size, 'audio/wav') : new Blob(parts, { type: 'audio/wav' }), name); toast(tx('ae.saved.wav', { len: fmt(ve - vs), kind: bits === 32 ? '32-bit float' : bits + '-bit' }));
-  } catch (e) { failed = e; if (AE.expStop) { toast(tx('ae.expstop')); if (S.audio && S.audio.disk) DISK.fileDrop(); } else { console.error(e); toast(tx(e && /changed while exporting/.test(e.message) ? 'ae.expchanged' : 'ae.expfail'), 5000); } }
+  } catch (e) { failed = e; if (AE.expStop) { toast(tx('ae.expstop')); if (S.audio && S.audio.disk) DISK.fileDrop(); } else { console.error(e); toast(tx(e && /changed while exporting/.test(e.message) ? 'ae.expchanged' : 'ae.expfail'), TOAST_LONG_MS); } }
   finally { const stopped = AE.expStop; $('#aeExpStop').hidden = true; AE.expStop = false; AE.exporting = false; aeRunEnd(failed ? (stopped ? 'stopped' : 'error') : 'done'); btn.classList.remove('exporting'); btn.style.removeProperty('--p'); lb.textContent = label; }
 }
 /* the draft as an M4A (AAC) file: the same trimmed, faded, leveled sound, encoded in the browser and wrapped in an MP4 container */
 const AAC_TOP = 0.985;          // the highest a decoded M4A may stand when the limiter is on (just under full scale; a peak between two samples can be a touch higher than the samples)
 async function aeExportM4a(d, ui) {
-  if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined') { toast(tx('ae.nom4a'), 6000); return; }
+  if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined') { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
   const dk = !!S.audio.disk; ui('Processing'); const buf = dk ? (await fxGet(d.fx), { sampleRate: audSr(), numberOfChannels: audCh() }) : (await fxGet(d.fx)).buffer, sr = aeOutRate(buf), ch = Math.min(2, buf.numberOfChannels), vs = d.vStart, ve = aeEnd(d);
   const kbps = +(String(S.set.audioFormat).replace('m4a', '')) || 256, cfg = await aacConfig(sr, ch, kbps * 1000);
-  if (!cfg) { toast(tx('ae.nom4a'), 6000); return; }
+  if (!cfg) { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
   const mm = dk ? await aeMasterDisk(d, ch, true, ui) : await aeMasterFor(d, buf, ch, true, ui), total = mm.total;
   /* AAC does not keep peaks exactly: what a player decodes can stand a little higher than what went in. The limiter's ceiling leaves room for that, and with the limiter on the file is also checked:
      it is decoded as it is made, and if anything would reach full scale it is made once more, turned down by just that much. So a limited M4A never plays back clipped. */
@@ -1701,7 +1712,7 @@ async function aeDynAuto(i, quiet) {
       if (performance.now() - tick > 8) { await new Promise(r => setTimeout(r, 0)); tick = performance.now(); }
     }
     btn.style.setProperty('--p', '100%'); btn.textContent = 'Processing 100%'; const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent));          // a short recording is read in a blink; the bar stays long enough to be seen
-    if (total < 50) { if (!quiet) toast(tx('ae.dyn.nosound'), 3600); return; }
+    if (total < 50) { if (!quiet) toast(tx('ae.dyn.nosound')); return; }
     let acc = 0, lvl = -120; for (let k = 0; k < 240; k++) { acc += hist[k]; if (acc >= total * 0.9) { lvl = k / 2 - 120; break; } }
     const thr = clamp(Math.round(lvl - 3), -80, 0); aeFx(fx => { const x = fx.eq.bands[i]; if (x && x.dyn) { if (!(x.dyn.auto != null && x.dyn.thr === x.dyn.auto)) x.dyn.prev = x.dyn.thr; x.dyn.auto = thr; x.dyn.thr = thr; } });
   } catch (e) { console.error(e); } finally { AE.dynBusy = false; btn.disabled = false; btn.classList.remove('loading'); btn.style.removeProperty('--p'); btn.textContent = 'Auto'; }
@@ -1812,7 +1823,7 @@ function aeImBind() {
   $('#aeWidth').addEventListener('input', e => { aeFx(fx => { fx.imager.width = 100 + +e.target.value; fx.imager.on = true; }, true); if (+e.target.value === -100) edSay('ae', 'mono'); });
   [['#aeBwLo', 0], ['#aeBwMid', 1], ['#aeBwHi', 2]].forEach(([id, i]) => $(id).addEventListener('input', e => aeFx(fx => { fx.imager.bw = (fx.imager.bw || [100, 100, 100]).slice(); fx.imager.bw[i] = 100 + +e.target.value; fx.imager.on = true; }, true)));
   $('#aeBal').addEventListener('input', e => aeFx(fx => { fx.imager.bal = Math.round(+e.target.value * 10) / 10; fx.imager.on = true; }, true));
-  $('#aeBalAuto').addEventListener('click', () => { const m = imMeasure(); if (!m) { toast(tx('ae.nosound'), 4200); return; } const target = Math.round(clamp(m.db, -12, 12) * 10) / 10, on = Math.abs(m.db) >= 0.05 && Math.abs((AE.d.fx.imager.bal || 0) - target) < 0.06; if (!on && Math.abs(m.db) < 0.05) { toast(tx('ae.balmatch'), 3200); return; } aeFx(fx => { fx.imager.bal = on ? 0 : target; if (!on) fx.imager.on = true; }); });          // Auto is a switch: it sets the shift that evens the two sides, and pressing it again puts the shift back to none          // left louder by 2 dB: take 1 off the left and put 1 on the right
+  $('#aeBalAuto').addEventListener('click', () => { const m = imMeasure(); if (!m) { toast(tx('ae.nosound')); return; } const target = Math.round(clamp(m.db, -12, 12) * 10) / 10, on = Math.abs(m.db) >= 0.05 && Math.abs((AE.d.fx.imager.bal || 0) - target) < 0.06; if (!on && Math.abs(m.db) < 0.05) { toast(tx('ae.balmatch')); return; } aeFx(fx => { fx.imager.bal = on ? 0 : target; if (!on) fx.imager.on = true; }); });          // Auto is a switch: it sets the shift that evens the two sides, and pressing it again puts the shift back to none          // left louder by 2 dB: take 1 off the left and put 1 on the right
   $('#aeMonoBassF').addEventListener('input', e => aeFx(fx => { fx.imager.monoBass = +e.target.value; fx.imager.on = true; }, true));
   ['#aeWidth', '#aeMonoBassF', '#aeBal', '#aeBwLo', '#aeBwMid', '#aeBwHi'].forEach(id => $(id).addEventListener('change', () => { AE.sliding = false; }));
   $('#aeMonoBass').addEventListener('change', e => aeFx(fx => { fx.imager.monoBass = e.target.checked ? +$('#aeMonoBassF').value : 0; if (e.target.checked) fx.imager.on = true; }));
@@ -2129,7 +2140,7 @@ function aeToolsRefresh() {
   aeToolLive();
   const hd = aeHeard(AE.d);          // the sound that runs is the one made (the setting's own is kept for when Bypass comes back)
   if (!aeFxPeek(hd.fx)) aeQuickKick();
-  if ((!aeFxPeek(hd.fx) || (AE.nrListen && !S.audio.disk && !nrPeek(hd.fx.noise, true))) && (!AE.playing || hd.normalize || limOn(hd) || AE.tool === 'level')) { clearTimeout(AE.fxT); const rest = Math.max(AE.sliding ? 220 : 60, Math.min(1400, S.audio.duration * 5)); AE.fxT = setTimeout(() => { const d = AE.d; if (!d) return; const h = aeHeard(d); fxGet(h.fx, { preview: true }).then(() => AE.nrListen && !S.audio.disk && d === AE.d && nrReady(h.fx.noise) ? nrGet(h.fx.noise, true, { preview: true }) : null).then(() => { if (AE.d) { aeSwapSrc(); aeRefresh(); } }, () => {}); }, rest); }       // the processed sound, for Normalize's loudest peak and the picture: a long recording waits longer, and while the sound plays it waits for Stop (the live chain is what you hear, and the quick sketch already moves the picture)
+  if ((!aeFxPeek(hd.fx) || (AE.nrListen && !S.audio.disk && !nrPeek(hd.fx.noise, true))) && (!AE.playing || hd.normalize || limOn(hd) || AE.tool === 'level') && !AE.nrHold) { clearTimeout(AE.fxT); const rest = Math.max(AE.sliding ? 220 : 60, Math.min(1400, S.audio.duration * 5)); AE.fxT = setTimeout(() => { const d = AE.d; if (!d) return; const h = aeHeard(d); fxGet(h.fx, { preview: true }).then(() => AE.nrListen && !S.audio.disk && d === AE.d && nrReady(h.fx.noise) ? nrGet(h.fx.noise, true, { preview: true }) : null).then(() => { if (AE.d) { aeSwapSrc(); aeRefresh(); } }, () => {}); }, rest); }       // the processed sound, for Normalize's loudest peak and the picture: a long recording waits longer, and while the sound plays it waits for Stop (the live chain is what you hear, and the quick sketch already moves the picture)
 }
 function aeToggleBypass() {
   if ($('#aeAB').disabled || !AE.d) return; const lit = aeLit(AE.d), set = aeBpSet(AE.tool), off = aeBpTool(AE.tool);
@@ -2378,16 +2389,16 @@ async function aeMatchTarget() {
   return sm.map(v => clamp(v * amt, -EQ_DB, EQ_DB));
 }
 async function aeMatchApply(slide) {
-  const t = await aeMatchTarget(); if (!t) { toast(tx('ae.nosound'), 4500); return; }
+  const t = await aeMatchTarget(); if (!t) { toast(tx('ae.nosound')); return; }
   AE.match.target = t; const curve = Array.from(t, v => Math.round(v * 10) / 10), has = curve.some(v => Math.abs(v) >= 0.05);
   aeFx(fx => { if (has) { fx.eq.on = true; fx.eq.curve = curve; } else delete fx.eq.curve; AE.band = Math.max(0, Math.min(AE.band, fx.eq.bands.length - 1)); }, slide); if (!slide) edSay('ae', 'match');          // the match is a free curve of its own, made exactly (EQ Match), and the bands stay yours
 }
 /* the free curve turned into bands you can move: the nearest handful of bells, set beside the bands you have */
 function aeMatchToBands() {
   const fx = AE.d.fx, c = fx.eq.curve; if (!c) return; const room = EQ_MAX_BANDS - fx.eq.bands.length;
-  if (room < 1) { toast(tx('ae.nobands'), 4200); return; }
+  if (room < 1) { toast(tx('ae.nobands')); return; }
   const made = eqFit(Float32Array.from(c), Math.min(8, room)), first = fx.eq.bands.length;
-  if (!made.length) { toast(tx('ae.flatbands'), 4200); return; }          // a flat match has nothing to turn into bands: keep it as it is
+  if (!made.length) { toast(tx('ae.flatbands')); return; }          // a flat match has nothing to turn into bands: keep it as it is
   aeFx(fx2 => { fx2.eq.bands.push(...made); delete fx2.eq.curve; fx2.eq.on = true; AE.band = first; }); if (AE.match) { AE.match.ref = null; AE.match.target = null; AE.match.refName = ''; } AE.matchOpen = false; aeMatchUi(); aeEqDraw();
 }
 async function aeMatchLoad(file, kind) {
@@ -2401,9 +2412,9 @@ async function aeMatchLoad(file, kind) {
     }
     if (AE.match !== m) return;           // the editor was reset while this was loading
     m.busy = false;
-    if (!curve) { m.refName = ''; aeMatchUi(); toast(tx(kind === 'profile' ? 'ae.badprofile.long' : 'ae.measurefail'), 5200); return; }
+    if (!curve) { m.refName = ''; aeMatchUi(); toast(tx(kind === 'profile' ? 'ae.badprofile.long' : 'ae.measurefail'), TOAST_LONG_MS); return; }
     m.ref = curve; aeMatchUi(); aeMatchApply(false);
-  } catch (e) { console.error(e); if (AE.match === m) { m.busy = false; m.refName = ''; aeMatchUi(); } toast(tx(kind === 'profile' ? 'ae.badprofile' : 'ae.readfail'), 5200); }
+  } catch (e) { console.error(e); if (AE.match === m) { m.busy = false; m.refName = ''; aeMatchUi(); } toast(tx(kind === 'profile' ? 'ae.badprofile' : 'ae.readfail'), TOAST_LONG_MS); }
 }
 /* the band controls and EQ Match take turns: one folds shut (its height glides to nothing, grid 0fr) as the other opens, so the curve above grows and shrinks with them */
 function eqFold(sel, open) { const el = $(sel); el.classList.toggle('shut', !open); el.inert = !open; el.setAttribute('aria-hidden', String(!open)); }
@@ -2428,9 +2439,9 @@ function aeMatchBind() {
   $('#aeRefClear').addEventListener('click', () => { if (AE.match) { AE.match.ref = null; AE.match.target = null; AE.match.busy = false; AE.match.refName = ''; } if (AE.d.fx.eq.curve) aeFx(fx => { delete fx.eq.curve; }); aeMatchUi(); });          // the curve goes with its reference (Turn into bands keeps it as bands)
   $('#aeRefBands').addEventListener('click', aeMatchToBands);
   $('#aeRefSave').addEventListener('click', async () => {
-    let c = null; try { c = await aeOwnCurveA(); } catch (e) { console.error(e); } if (!c) { toast(tx('ae.nosound'), 4500); return; }
+    let c = null; try { c = await aeOwnCurveA(); } catch (e) { console.error(e); } if (!c) { toast(tx('ae.nosound')); return; }
     const base = (S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio';
-    try { await saveFile(new Blob([curveToText(c, base)], { type: 'text/plain' }), base + ' - glisscore EQ profile.txt'); toast(tx('ae.profilesaved')); } catch (e) { toast(tx('ae.filefail'), 5000); }
+    try { await saveFile(new Blob([curveToText(c, base)], { type: 'text/plain' }), base + ' - glisscore EQ profile.txt'); toast(tx('ae.profilesaved')); } catch (e) { toast(tx('ae.filefail'), TOAST_LONG_MS); }
   });
   $('#aeMatchAmt').addEventListener('input', () => { aeMatchUi(); if (AE.match && AE.match.ref) aeMatchApply(true); });
   $('#aeMatchAmt').addEventListener('change', () => { AE.sliding = false; });
@@ -2502,10 +2513,10 @@ async function aeEmLoad(file) {
     await sleep(30); if (AE.em !== em) return;
     const nch = Math.min(2, buf.numberOfChannels), ch = []; for (let c = 0; c < nch; c++) ch.push(buf.getChannelData(c));
     const pr = await emPrint((p, n) => ch.map(a => a.subarray(p, p + n)), 0, buf.length, buf.sampleRate, nch, () => AE.em === em, v => emBar(em, v * 0.8)); if (AE.em !== em) return;
-    if (!pr) { AE.em = null; aeEmUi(); toast(tx('ae.emnosound'), 4800); return; }
+    if (!pr) { AE.em = null; aeEmUi(); toast(tx('ae.emnosound')); return; }
     const lu = await LU.measure((pos, len, out) => { for (let c = 0; c < nch; c++) out.set(ch[c].subarray(pos, pos + len), c * len); }, buf.length, buf.sampleRate, nch, tick); if (AE.em !== em) return; emBar(em, 1);
     em.ref = { tone: pr.tone, side: pr.side, I: lu.I, LRA: lu.LRA }; em.busy = false; aeEmUi(); aeEmOwn();
-  } catch (e) { console.error(e); if (AE.em === em) { AE.em = null; aeEmUi(); } toast(tx('ae.readfail'), 5200); }
+  } catch (e) { console.error(e); if (AE.em === em) { AE.em = null; aeEmUi(); } toast(tx('ae.readfail'), TOAST_LONG_MS); }
 }
 /* Emulate sets everything in one undo step and stays solid while the editor holds it; pressing it again puts the settings back as they were.
    Moving Amount or the three choices while it is solid sets it again from the same starting point */
@@ -2514,7 +2525,7 @@ async function aeEmGo(again) {
   if (!again && live) { aePush(); AE.d = aeCopy(em.base); em.result = null; aeRefresh(); aeLive(); return; }
   if (again && !live) { aeEmUi(); return; }
   const own = await aeEmOwn(); if (AE.em !== em || !AE.d) return;
-  if (!own) { toast(tx('ae.nosound'), 4500); return; }
+  if (!own) { toast(tx('ae.nosound')); return; }
   if (!live) { aePush(); em.base = aeCopy(AE.d); } else if (!emLive()) return;
   AE.d = emApply(em.base, emPlan(own, em.ref, +$('#aeEmAmt').value / 100, emTake())); em.result = aeCopy(AE.d);
   aeRefresh(); aeLive(); if (!again) edSay('ae', 'match');
@@ -2540,7 +2551,7 @@ function emSum() {
   if (!own) { $('#aeEmT').textContent = $('#aeEmW').textContent = '–'; $('#aeEmL').textContent = has && Number.isFinite(em.ref.I) ? LUFS_TXT(Math.round(em.ref.I * 10) / 10) : '–'; $('#aeEmT2').textContent = $('#aeEmW2').textContent = ''; $('#aeEmR').textContent = has ? 'Range ' + db1(em.ref.LRA) + ' LU' : ''; return; }
   const plan = emPlan(own, em.ref, amt, t), cur = emLive() ? em.base : AE.d, was = (cur.fx.imager.bw || [100, 100, 100]).map(Math.round);
   if (plan.curve && t.tone) { let k = 0; plan.curve.forEach((v, i) => { if (Math.abs(v) > Math.abs(plan.curve[k])) k = i; }); const v = plan.curve[k]; $('#aeEmT').textContent = Math.abs(v) < 0.05 ? 'No change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + 'dB at ' + hz(eqAxis[k]); $('#aeEmT2').textContent = 'Biggest move'; } else { $('#aeEmT').textContent = t.tone ? 'No change' : 'Not taken'; $('#aeEmT2').textContent = ''; }
-  if (plan.bw && t.width) { $('#aeEmW').textContent = plan.bw.join(' · ') + '%'; $('#aeEmW2').textContent = 'Was ' + was.join(' · ') + '%, low · mid · high'; } else { $('#aeEmW').textContent = t.width ? 'No change' : 'Not taken'; $('#aeEmW2').textContent = ''; }
+  if (plan.bw && t.width) { $('#aeEmW').textContent = plan.bw.slice(0, -1).join(', ') + ', and ' + plan.bw[plan.bw.length - 1] + '%'; $('#aeEmW2').textContent = 'Was ' + was.slice(0, -1).join(', ') + ', and ' + was[was.length - 1] + '% (low, mid, and high).'; } else { $('#aeEmW').textContent = t.width ? 'No change' : 'Not taken'; $('#aeEmW2').textContent = ''; }
   $('#aeEmL').textContent = t.loud && plan.lufs != null ? LUFS_TXT(plan.lufs) : 'Not taken'; $('#aeEmR').textContent = Number.isFinite(em.ref.LRA) ? 'Reference range ' + db1(em.ref.LRA) + ' LU' : '';
 }
 /* the picture: yours, the reference's and yours with the curve added, on the EQ's frequency scale; it draws in and moves with Amount and the choices */
@@ -2581,7 +2592,7 @@ const NR_MIN = 0.3;          // the shortest sample worth learning from, in seco
 function nrArm(on) { AE.nsArm = !!on; const cv = $('#aeCanvas'); if (cv && !AE.nsArm) cv.style.cursor = ''; aeAnim(); }
 function nrMethod(m, quiet) {
   AE.nrMethod = m; const r = document.querySelector('input[name=aeNrMethod][value=' + m + ']'); if (r && !r.checked) r.checked = true; const sg = $('#aeNrMethod'); if (sg && sg._place) sg._place(!quiet);
-  nrArm(m === 'manual'); if (m === 'auto' && AE.nsel) AE.nsel = null; if (AE.d) { aeNrPanel(); aeRefresh(); }          // going back to Auto lets go of a stretch picked by hand
+  nrArm(m === 'manual'); if (AE.d) aeNrPanel();          // only the choice changes: the stretch picked by hand stays on the waveform and nothing is redone until Learn is pressed (Learn in Auto then lets the stretch go)
 }
 function nrFindQuiet() {
   const pk = S.audio.peaks, L = S.audio.duration, win = Math.min(1.5, Math.max(0.5, L / 4)), n = Math.round(win * 100); if (pk.length < n + 2) return null;
@@ -2591,29 +2602,29 @@ function nrFindQuiet() {
 }
 function aeNrLearn() {
   const sel = AE.nsel; if (!sel || sel.b - sel.a < NR_MIN || AE.nrLearning) return;
-  AE.nrLearning = true; const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => aeNrProg(Math.min(pc, 99) / 100);          // the wait pill over the graph says it, as for every other wait
-  btn.disabled = true; show(0); aeNrHumUi(); NRJ.onProg(0);          // the bar shows at once; the analysis runs after one frame has painted
+  AE.nrLearning = true; AE.nrBase = nrChain(); const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => aeNrProg(Math.min(pc, 99) / 100 * (AE.nrBase || 1));          // the wait pill over the graph says it, as for every other wait
+  btn.disabled = true; show(0); aeNrHumUi();          // the bar shows at once; the analysis runs after one frame has painted
   requestAnimationFrame(() => setTimeout(async () => {
     try {
       const sr = audSr(), d0 = AE.d, hc = humCoefs(d0.fx.noise.hum, sr), a0 = Math.floor(sel.a * sr), lead = hc ? Math.min(a0, sr) : 0; let from = lead, to = lead + Math.floor(sel.b * sr) - a0;          // only the picked stretch is read (with a second ahead of it for the notches to settle, when a hum is being removed): the learning looks at nothing outside it
       const ch = await nrBlock(a0 - lead, to, fxChannels()); if (AE.d !== d0) return; to = Math.min(to, ch[0].length); if (hc) KFX.nrHum(ch, hc); show(50);
       const prof = NR.nrLearn(ch, sr, from, to, Array.from(eqAxis)); show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent)); if (AE.d !== d0) return;          // a short stretch is read in a blink; the bar stays long enough to be seen
-      if (!prof) { NRJ.onProg(1); toast(tx('ae.nr.silent'), 5600); return; }
+      if (!prof) { aeNote(tx('ae.nr.silent')); return; }
       const dur = Math.round((sel.b - sel.a) * 10) / 10;
       aeFx(fx => { fx.noise.profile = prof; fx.noise.dur = dur; fx.noise.auto = false; }); edSay('ae', 'learn');
-    } finally { AE.nrLearning = false; btn.disabled = false; if (!AE.nrBusy) aeNrProg(1); if (AE.d) aeNrPanel(); aeNrHumUi(); }
+    } finally { AE.nrLearning = false; btn.disabled = false; nrDone(); if (AE.d) aeNrPanel(); aeNrHumUi(); }
   }, 0));
 }
 /* Auto: Learn works the noise out from the whole recording (audio-fx.js, NoiseFloor), so no stretch of noise alone has to be found. A recording too short to judge learns from its quietest stretch instead */
 async function aeNrAuto() {
   const d = AE.d; if (!d || !S.audio || AE.nrAutoBusy || AE.humBusy || AE.nrLearning) return; const nz = d.fx.noise; let quiet = null;
-  AE.nrAutoBusy = true; const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; aeNrProg(Math.min(pc, 99) / 100); aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; aeNrHumUi(); show(0);
+  AE.nrAutoBusy = true; AE.nrBase = nrChain(); const btn = $('#aeNrLearn'), t00 = performance.now(), show = pc => { AE.nrAutoPc = pc; aeNrProg(Math.min(pc, 99) / 100 * (AE.nrBase || 1)); aeRingSync(); if (pc === 0) aeNrPanel(); }; btn.disabled = true; aeNrHumUi(); show(0);
   try {
     const prof = await nrFloor(d, nz.hum, v => show(Math.round(v * 100))); if (prof === undefined) return;
     show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent)); if (AE.d !== d) return;          // a short recording is read in a blink; the bar stays long enough to be seen
-    if (!prof) { quiet = nrFindQuiet(); if (!quiet) { toast(tx('ae.nr.noquiet'), 4600); return; } AE.nsel = quiet; AE.nsBy = 'auto'; }
+    if (!prof) { quiet = nrFindQuiet(); if (!quiet) { aeNrNote(tx('ae.nr.noquiet')); return; } AE.nsel = quiet; AE.nsBy = 'auto'; }
     else { AE.nsel = null; AE.nsBy = null; aeFx(fx => { fx.noise.profile = prof; fx.noise.dur = 0; fx.noise.auto = true; }); edSay('ae', 'learn'); }
-  } catch (e) { console.error(e); } finally { AE.nrAutoBusy = false; AE.nrAutoPc = null; btn.disabled = false; if (!AE.nrBusy) aeNrProg(1); if (AE.d) aeNrPanel(); }
+  } catch (e) { console.error(e); } finally { AE.nrAutoBusy = false; AE.nrAutoPc = null; btn.disabled = false; if (!quiet) nrDone(); if (AE.d) aeNrPanel(); }
   if (quiet && AE.d === d) aeNrLearn();
 }
 /* the notches for a mains hum as numbers, and the sound as the noise is to be judged from: with the hum already out when one is being removed (it is taken out ahead of the noise reduction, so the noise learned must not have it in) */
@@ -2632,9 +2643,9 @@ async function nrFloor(d, hum, prog) {
 /* Remove hum: the switch looks for a steady 50 or 60Hz power-line hum (audio-fx.js, HumFind: slices from all over the recording) and, when there is one, takes out it and its overtones with narrow notches ahead of the noise reduction.
    The wait pill over the graph says it is working, as for every other job; the graph then marks the notches, and a hum that is not there says so in a toast */
 async function aeNrHum() {
-  const d = AE.d; if (!d || !S.audio || AE.humBusy || AE.nrAutoBusy || AE.nrLearning) return; const nz = d.fx.noise, redo = !!(nz.auto && nz.profile);          // redo: Auto's reading of the noise is taken again without (or with) the hum, in the same step
+  const d = AE.d; if (!d || !S.audio || AE.humBusy || AE.nrAutoBusy || AE.nrLearning || AE.nrBusy) return; const nz = d.fx.noise, redo = !!(nz.auto && nz.profile);          // redo: Auto's reading of the noise is taken again without (or with) the hum, in the same step
   if (nz.hum && !redo) { aeFx(fx => { fx.noise.hum = null; }); return; }
-  AE.humBusy = true; const t00 = performance.now(), show = pc => { AE.humPc = pc; aeNrProg(Math.min(pc, 99) / 100); aeNrHumUi(); }; show(0);
+  AE.humBusy = true; AE.nrBase = nrChain(true); const t00 = performance.now(), show = pc => { AE.humPc = pc; aeNrProg(Math.min(pc, 99) / 100 * (AE.nrBase || 1)); aeNrHumUi(); }; show(0);
   try {
     let r = null;
     if (!nz.hum) {
@@ -2643,17 +2654,17 @@ async function aeNrHum() {
         const at = Math.floor(j * (total - F.n) / Math.max(1, count - 1)), ch = await nrBlock(at, F.n, nch); if (AE.d !== d) return; F.push(ch); show(Math.round((j + 1) / count * (redo ? 50 : 100)));
         if (performance.now() - tick > 8) { await new Promise(r2 => setTimeout(r2, 0)); tick = performance.now(); }
       }
-      r = F.find(); if (!r) { const left = 400 - (performance.now() - t00); if (left > 0) await new Promise(r2 => setTimeout(r2, left)); if (AE.d !== d) return; toast(count < 6 ? 'Too short to look for a hum' : 'No hum found', 4600); return; }
+      r = F.find(); if (!r) { const left = 400 - (performance.now() - t00); if (left > 0) await new Promise(r2 => setTimeout(r2, left)); if (AE.d !== d) return; show(100); aeNrNote(count < 6 ? 'Too short to check.' : 'No hum found.'); return; }
     }
     const prof = redo ? await nrFloor(d, r, v => show(Math.round((r ? 50 : 0) + v * (r ? 50 : 100)))) : null; if (prof === undefined || AE.d !== d) return;
     show(100); const spent = performance.now() - t00; if (spent < 400) await new Promise(r2 => setTimeout(r2, 400 - spent)); if (AE.d !== d) return;
     aeFx(fx => { fx.noise.hum = r; if (prof) fx.noise.profile = prof; });
-  } catch (e) { console.error(e); } finally { AE.humBusy = false; AE.humPc = null; if (!AE.nrBusy) aeNrProg(1); if (AE.d) aeNrPanel(); }
+  } catch (e) { console.error(e); } finally { AE.humBusy = false; AE.humPc = null; nrDone(); if (AE.d) aeNrPanel(); }
 }
 /* the Remove hum switch shows what the hum is doing, not what a click would do: on while the hum is out (or while it is being taken out), and held still while a job runs */
 function aeNrHumUi() {
   if (!AE.d) return; aeRingSync(); const nz = AE.d.fx.noise, busy = !!AE.humBusy, sw = $('#aeNrHum');
-  sw.checked = busy ? !!AE.humWas : !!nz.hum; sw.disabled = busy || !!AE.nrAutoBusy || !!AE.nrLearning;
+  sw.checked = busy ? !!AE.humWas : !!nz.hum; sw.disabled = busy || !!AE.nrAutoBusy || !!AE.nrLearning || !!AE.nrBusy;
 }
 /* what shows beside the waveform and in the pane follows the draft */
 /* Learn grows into Learn again once something is learned: the word changes and the button glides to its new width from the same left edge, then the chip fades in beside it */
@@ -2670,7 +2681,7 @@ function aeNrPanel() {
   $('#aeNrCtl').classList.toggle('dim', !has); ['#aeNrRed', '#aeNrSens', '#aeNrSmooth'].forEach(id => { $(id).disabled = !has; });
   document.querySelectorAll('input[name=aeNrMode]').forEach(r => { r.disabled = !has; const on = r.value === nz.mode; if (r.checked !== on) { r.checked = on; const sg = $('#aeNrMode'); if (on && sg._place) sg._place(true); } });
   { const busy = !!(AE.nrBusy || AE.nrAutoBusy || AE.humBusy || AE.nrLearning); $('#aeNrListen').disabled = !(has && nz.on) || busy; $('#aeNrListen').closest('label').title = busy ? 'Available when processing finishes' : 'Plays only the noise being removed'; } if (!(has && nz.on) && AE.nrListen) { AE.nrListen = false; aeSwapSrc(); } $('#aeNrListen').checked = !!AE.nrListen;
-  foldSet('#aeNrSub', has && nz.reduction > 0);
+  $('#aeNrSens').disabled = $('#aeNrSmooth').disabled = !has || !nz.reduction;          // Sensitivity and Smoothing stay in place (greyed while Reduction is Off), so the card is the same height before and after Learn
   { const mr = document.querySelector('input[name=aeNrMethod][value=' + (AE.nrMethod || 'auto') + ']'); if (mr && !mr.checked) { mr.checked = true; const sg = $('#aeNrMethod'); if (sg._place) sg._place(true); } }
   $('#aeNrChip').hidden = !has; $('#aeNrChipTxt').textContent = has ? (nz.auto ? 'Whole recording' : 'Learned ' + nz.dur.toFixed(1) + 's') : '';
   aeNrHumUi();
@@ -2689,8 +2700,13 @@ function nrLive() {
   const mix = (a, b) => { if (!b) return null; if (!a) return b; return b.map((v, i) => a[i] + (v - a[i]) * 0.45); };
   L.inp = mix(L.inp, pick(buf)); const r = nrPeek(AE.d.fx.noise, false); L.out = r && AE.d.fx.noise.on && !aeBp('noise') ? mix(L.out, pick(r.buffer)) : null; return L;
 }
+/* a job of the pane ends: the bar goes, unless the removal itself is about to start on the new settings (then its own run carries the bar on, so it does not go and come back) */
+/* one job from the user's point of view: when a Learn (or Remove hum) is followed by the removal on the new settings, the bar fills through both, the first half for the learning and the second for the removal, and ends once, when the sound is ready */
+function nrChain(hum) { const d = AE.d; return d && !aeBp('noise') && !S.audio.disk && (hum || d.fx.noise.reduction > 0) ? 0.5 : 0; }
+function nrDone() { const d = AE.d, wait = !!d && nrReady(d.fx.noise) && !aeBp('noise') && !AE.playing && !S.audio.disk && !nrPeek(d.fx.noise, false) && fxActive(d.fx, fxChannels()).includes('noise'); if (!AE.nrBusy && !wait) { AE.nrBase = 0; aeNrProg(1); } }
 function aeNrProg(v) {
   const bar = $('#aeNrProgBar'), busy = v < 0.999; if (!bar) return;
+  if (AE.nrShown && v < 0.999 && v < AE.nrTarget) return;          // one wait for the user's one press: its share never goes back down, however many steps it takes (the first Learn on a short recording reads it twice)
   AE.nrTarget = clamp(v, 0, 1); { const tr = bar.querySelector('.nr-prog-t'); if (busy && AE.nrTarget <= 0.001) sweepStart(tr); else sweepStop(tr); }          // no tick yet: a sweep shows it is working
   if (busy !== !!AE.nrShown) { AE.nrShown = busy; if (busy) AE.nrCur = 0;          // a new job fills from empty, not down from where the last one ended
      bar.classList.toggle('on', busy); aeToolsRefresh(); if (AE.d && !$('#audioDlg').hidden) aeNrPanel(); }          // the light, the badge and the row change once per job, not per tick
@@ -2726,7 +2742,7 @@ function aeNrDraw() {
   { const hm = nz.hum && !aeBp('noise') ? nz.hum : null, ha = hsGet('ae-hum', hm ? 1 : 0); if (hm) AE.humLast = hm; const hh = hm || AE.humLast;
     if (hh && ha > 0.01) { c.save(); c.globalAlpha = ha; const col = C.accent, hs = (hh.n && hh.n.length ? hh.n : [1]).filter(k => hh.f * k < 20000);          // the hum's own pitch and its overtones: thin dashed lines where the notches are
       hs.forEach((k, i) => { const x = Math.round(eqFx(hh.f * k, W)); c.save(); c.globalAlpha = ha * (i ? 0.55 : 0.9); c.strokeStyle = col; c.lineWidth = 1.4; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x + 0.5, 22); c.lineTo(x + 0.5, H - 24); c.stroke(); c.restore(); });
-      c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out · ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
+      c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out at ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
   const P = AE.nrProf;
   if (P && pa > 0.01) {
     let mx = -1e9; P.forEach(v => { if (v > mx) mx = v; }); const lv = nrLive(); let lm = -1e9; if (lv.inp) lv.inp.forEach(v => { if (v > lm) lm = v; });
@@ -2746,7 +2762,7 @@ function aeNrDraw() {
       if (la > 0.01) { c.globalAlpha = pa * la; c.fillStyle = C.accent; c.fillText('╍ After', lx + 10 * (1 - e), 16); }
       c.globalAlpha = pa; c.fillStyle = C.turn; c.fillText('━ Noise', lx - 68 * e, 16); c.restore(); }
   }
-  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet', W / 2, H / 2 - 6); c.restore(); }
+  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet.', W / 2, H / 2 - 6); c.restore(); }
   aePill(c, W, by); c.restore();
 }
 /* what the editor plays: the cleaned-up sound while Noise reduction is on (the last one that was ready until a new one is), or just the noise */
@@ -2761,7 +2777,7 @@ function aeSwapSrc() {
   AE.mem.use(buf); AE.ph.refresh(Math.round(AE.ph.sr * 0.03)).catch(() => {});          // the player carries on for a moment with what it holds, then eases into the new sound
 }
 function aeNrBind() {
-  NRJ.onProg = v => { AE.nrBusy = v < 0.999; aeNrProg(v); };
+  NRJ.onProg = v => { AE.nrBusy = v < 0.999; aeNrProg(AE.nrBase ? AE.nrBase + (1 - AE.nrBase) * v : v); if (!AE.nrBusy) AE.nrBase = 0; };          // the removal continues the bar from where the learning left it
   document.querySelectorAll('input[name=aeNrMethod]').forEach(r => r.addEventListener('change', e => { if (e.target.checked) nrMethod(e.target.value); }));
   $('#aeNrHum').addEventListener('click', e => { e.preventDefault(); AE.humWas = !!(AE.d && AE.d.fx.noise.hum); aeNrHum(); });          // the switch shows what the hum is doing (aeNrHumUi), not what a click would do
   $('#aeNrLearn').addEventListener('click', () => { if (AE.nrMethod === 'manual') aeNrLearn(); else aeNrAuto(); });
@@ -2769,7 +2785,7 @@ function aeNrBind() {
   const nzS = (id, key) => $(id).addEventListener('input', e => aeFx(fx => { fx.noise[key] = +e.target.value; if (fx.noise.profile) fx.noise.on = fx.noise.reduction > 0; }, true));
   nzS('#aeNrRed', 'reduction'); nzS('#aeNrSens', 'sensitivity'); nzS('#aeNrSmooth', 'smoothing');
   document.querySelectorAll('input[name=aeNrMode]').forEach(r => r.addEventListener('change', e => { if (e.target.checked) aeFx(fx => { fx.noise.mode = e.target.value; }); }));
-  ['#aeNrRed', '#aeNrSens', '#aeNrSmooth'].forEach(id => $(id).addEventListener('change', () => { AE.sliding = false; }));
+  ['#aeNrRed', '#aeNrSens', '#aeNrSmooth'].forEach(id => { $(id).addEventListener('input', () => { AE.nrHold = true; clearTimeout(AE.fxT); }, true); $(id).addEventListener('change', () => { AE.sliding = false; AE.nrHold = false; aeRefresh(); }); });          // the removal waits for the slider to be let go: one run, for the value chosen
   $('#aeNrListen').addEventListener('change', e => { AE.nrListen = e.target.checked; aeSwapSrc(); aeToolsRefresh(); if (AE.dh) aeLive(); });          // on the store the player is told to listen to the noise alone
 }
 function aeBind() {
@@ -2784,9 +2800,9 @@ function aeBind() {
   $('#aePlay').addEventListener('click', aeToggle);
   $('#aeCancel').addEventListener('click', () => { const go = () => { aeDropPreview(); closeAudioEditor(); }; if (AE.exporting) aeLeave().then(ok => { if (ok) go(); }); else go(); }); $('#aeDone').addEventListener('click', aeApply); $('#aeExport').addEventListener('click', aeExpOpen); $('#aeExpStop').addEventListener('click', () => { AE.expStop = true; $('#aeExpStop').hidden = true; });
   $('#aeExpCancel').addEventListener('click', aeExpClose); $('#aeExpGo').addEventListener('click', aeExport); $('#aeRunHide').addEventListener('click', aeExpClose); $('#aeRunClose').addEventListener('click', () => { aeExpClose(); aeRunReset(); }); $('#aeRunStop').addEventListener('click', () => { AE.expStop = true; $('#aeExpStop').hidden = true; $('#aeRunStop').disabled = true; $('#aeRunMsg').textContent = 'Stopping…'; });
-  $('#aeSilence').addEventListener('click', e => { const b = e.currentTarget; if (b.classList.contains('soft')) { b.classList.add('say'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('say'), 2200); return; } aeTrimSilence(); });
+  $('#aeSilence').addEventListener('click', e => { const b = e.currentTarget; if (b.classList.contains('soft')) { b.classList.add('say'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('say'), AE_NOTE_MS); return; } aeTrimSilence(); });
   document.querySelectorAll('input[name=aeView]').forEach(r => r.addEventListener('change', e => { aeSetView(e.target.value); }));
-  $('#aeNormDb').addEventListener('change', e => { const v = clamp(Math.round((+e.target.value) * 10) / 10, -12, 0); if (!Number.isFinite(v) || e.target.value === '') { aeRefresh(); return; } aePush(); AE.d.normPeakDb = v; aeRefresh(); aeLive(); });
+  $('#aeNormDb').addEventListener('change', e => { const v = clamp(Math.round((+e.target.value) * 10) / 10, -12, 0); if (!Number.isFinite(v) || e.target.value === '') { e.target.value = (+AE.d.normPeakDb).toFixed(1); aeRefresh(); return; } e.target.value = v.toFixed(1); aePush(); AE.d.normPeakDb = v; aeRefresh(); aeLive(); });          // the box shows what was taken (clamped, one decimal) even while it still has focus
   $('#aeNormDb').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
   $('#aeGain').addEventListener('input', e => { AE.clipLatch = false; if (!AE.sliding) { aePush(); AE.sliding = true; } AE.d.gainDb = +e.target.value; aeRefresh(); if (AE.playing && AE.ph) { AE.gT = aeGainAt(AE.d, Math.max(0, AE.d.vStart), Math.min(aeEnd(AE.d), S.audio.duration), AE.pos); AE.ph.post({ gain: AE.gT }); } });
   $('#aeGain').addEventListener('change', () => { AE.sliding = false; });
@@ -2797,7 +2813,7 @@ function aeBind() {
   $('#aePeakNow').addEventListener('click', () => { AE.hold = 0; if (AE.mLive) aeMeterLive(); });          // like Logic and Cubase: a click on the number resets the peak hold
   $('#aeLimiter').addEventListener('change', e => { aePush(); AE.d.limiter = e.target.checked; aeRefresh(); aeLimSync(); });
   $('#aeLoudPreset').addEventListener('change', e => { const id = e.target.value, p = loudPresets().find(x => x.id === id); aePush(); AE.d.normPreset = id; if (p) AE.d.normLufs = p.lufs; aeRefresh(); aeLive(); });
-  $('#aeLoudDb').addEventListener('change', e => { const v = clamp(Math.round((+e.target.value) * 10) / 10, -36, -6); if (!Number.isFinite(v) || e.target.value === '') { aeRefresh(); return; } aePush(); AE.d.normLufs = v; const m = loudPresets().find(x => Math.abs(x.lufs - v) < 0.05); AE.d.normPreset = m ? m.id : 'custom'; aeRefresh(); aeLive(); });
+  $('#aeLoudDb').addEventListener('change', e => { const v = clamp(Math.round((+e.target.value) * 10) / 10, -36, -6); if (!Number.isFinite(v) || e.target.value === '') { e.target.value = (+AE.d.normLufs).toFixed(1); aeRefresh(); return; } e.target.value = v.toFixed(1); aePush(); AE.d.normLufs = v; const m = loudPresets().find(x => Math.abs(x.lufs - v) < 0.05); AE.d.normPreset = m ? m.id : 'custom'; aeRefresh(); aeLive(); });
   $('#aeLoudDb').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } e.stopPropagation(); });
   window.addEventListener('resize', () => { if (AE.d && !$('#audioDlg').hidden) { aeFsLayout(); aeSize(); aeDraw(); } });
 }

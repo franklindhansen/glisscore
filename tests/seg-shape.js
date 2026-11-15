@@ -22,8 +22,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const off = geo.filter(g => g.dl > 1 || g.dw > 1 || g.op !== '1' || g.inT < 2.5 || g.inB < 2.5);
     ok(label + ': the pill sits on the selected option, inside the inset (' + geo.length + ' visible)', geo.length >= 3 && !off.length, JSON.stringify(off.slice(0, 3)));
     if (width > 760) {
-      const hs = await p.evaluate(() => { const h = e => e && Math.round(e.getBoundingClientRect().height * 10) / 10; return { view: h(document.querySelector('#aeView')), trim: h([...document.querySelectorAll('.ae-bar .btn')].find(b => /Trim silence/.test(b.textContent))) }; });
-      ok(label + ': Wave | Spec is as tall as Trim silence beside it', hs.view && hs.view === hs.trim, JSON.stringify(hs));
+      const hs = await p.evaluate(() => { const h = e => e && Math.round(e.getBoundingClientRect().height * 10) / 10, tok = n => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n)); return { view: h(document.querySelector('#aeView')), trim: h(document.querySelector('#aeSilence')), full: h(document.querySelector('#aeFull')), play: h(document.querySelector('#aePlay')), m: tok('--h-m'), l: tok('--h-l') }; });
+      ok(label + ': the transport matches the video editor\'s: Wave | Spec is --h-m; Play, Trim silence, and Full screen are --h-l', hs.view === hs.m && hs.trim === hs.l && hs.full === hs.l && hs.play === hs.l, JSON.stringify(hs));
     }
     ok(label + ': no label is cut off', !geo.some(g => g.clip), JSON.stringify(geo.filter(g => g.clip).map(g => g.id)));
     if (width < 600) {
