@@ -805,6 +805,14 @@ class Mp4Writer {
     return _box('udta', _full('meta', 0, 0, _full('hdlr', 0, 0, _u32(0), 'mdir', 'appl', _u32(0), _u32(0), [0]), ilst));
   }
   setAudioTrim(delay, length) { this.trim = { delay: Math.max(0, Math.round(delay)), length: Math.round(length) }; }
+  /* The sound ends where the edit list says, so the media ends there too: the encoder's last frames past the end are dropped and the last one is cut short. Some players (Apple's decoder among them) play to the end of the media and ignore the end of the edit list, which would add a stretch of padding. */
+  _cutTail() {
+    const t = this.trim; if (!t || this.pcm || !(t.length > 0) || !this.a.length) return;
+    const need = t.delay + t.length; let sum = 0, keep = 0;
+    for (; keep < this.a.length && sum < need; keep++) sum += this.a[keep].dur;
+    if (sum < need) return;
+    this.a.length = keep; if (sum > need) this.a[keep - 1].dur -= sum - need;
+  }
   addVideo(chunk, meta) {
     if (meta && meta.decoderConfig && meta.decoderConfig.description && !this.avcC) this.avcC = new Uint8Array(meta.decoderConfig.description.slice ? meta.decoderConfig.description.slice(0) : meta.decoderConfig.description);
     const d = new Uint8Array(chunk.byteLength); chunk.copyTo(d); const sm = { d, key: chunk.type === 'key' }; this.v.push(sm); if (this.sink) this.pend.push(sm);
@@ -840,7 +848,8 @@ class Mp4Writer {
     const stsz = _full('stsz', 0, 0, _u32(0), _u32(samples.length), _table(samples.map(s => s.d.length)));
     const stco = this._stco(offsets);
     const stss = keyList ? _full('stss', 0, 0, _u32(keyList.length), _table(keyList)) : new Uint8Array(0);
-    const stbl = _box('stbl', stsd, stts, stss, stsc, stsz, stco);
+    const roll = kind === 'soun' ? [_full('sgpd', 1, 0, 'roll', _u32(2), _u32(1), [0xff, 0xff]), _full('sbgp', 0, 0, 'roll', _u32(1), _u32(samples.length), _u32(1))] : [];          // every AAC frame needs the one before it to start cleanly (a pre-roll of one frame): without this, Apple's decoder ignores the edit list and plays the padding
+    const stbl = _box('stbl', stsd, stts, stss, stsc, stsz, stco, ...roll);
     return _box('trak', tkhd, edts, _box('mdia', mdhd, hdlr, _box('minf', mhd, dinf, stbl)));
   }
   /* the bitrate the encoder really produced, so players show the true figure (kbps) */
@@ -892,7 +901,7 @@ class Mp4Writer {
   /* the table of where everything is goes after the media data; the size of the media data is then written into its header. The file is over 4GB: places are 64-bit */
   async finalizeStream() {
     if (!this.noVideo && !this.avcC) throw new Error('No video data was produced.');
-    await this.drain();
+    await this.drain(); this._cutTail();
     const vPer = Math.max(1, Math.round(this.fps)), aPer = this.audio && !this.pcm ? Math.max(1, Math.ceil(this.audio.sampleRate / 1024)) : 1;
     const vChunks = this._chunks(this.v, vPer), aChunks = (this.audio && this.a.length && (this.asc || this.pcm)) ? this._chunks(this.a, aPer) : [];
     this.big = this.co64 || this.pos > 0xfffffff0;
@@ -903,7 +912,7 @@ class Mp4Writer {
     return this.pos + moov.length;
   }
   finalize() {
-    if (!this.noVideo && !this.avcC) throw new Error('No video data was produced.');
+    if (!this.noVideo && !this.avcC) throw new Error('No video data was produced.'); this._cutTail();
     const vPer = Math.max(1, Math.round(this.fps));
     const aPer = this.audio && !this.pcm ? Math.max(1, Math.ceil(this.audio.sampleRate / 1024)) : 1;
     const vChunks = this._chunks(this.v, vPer), aChunks = (this.audio && this.a.length && (this.asc || this.pcm)) ? this._chunks(this.a, aPer) : [];
