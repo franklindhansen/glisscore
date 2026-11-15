@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.14
+
+EQ Match, the Emulator, and the EQ's Dynamic Auto now show their progress as a Processing note over the graph, and their buttons keep a steady size. The Dynamic row lines up, and the start cards no longer jump back after a hover.
+
 ## 1.2.13
 
 The Audio Editor's buttons now match the video editor's, including a Hide tools button in full screen. Tools that need more room scroll instead of being cut off, and Spectra, Fades, and Level fill their window at every size.
