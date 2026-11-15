@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.12
+
+Ogg and M4A files now come in and go out at their exact length, and M4A exports fall back to a lower bitrate with a notice when the browser can't do the one chosen. The spectrogram shows high tones at their true brightness.
+
 ## 1.2.11
 
 Level is simpler, with Gain shown once and clearer notes. Number boxes and menus now share one look, and Spectra and Trim silence show an icon or a word, never both.
