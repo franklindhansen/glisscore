@@ -521,7 +521,7 @@ const DISK = {
       dec = new AudioDecoder({ output: out, error: e => { err = e; } }); dec.configure(cfg);
       token = (await this.call('create', { key, name: file.name, sr, ch, piece: opt.piece })).token;
     };
-    let idx = 0, pos = 0, partial = [], seq = 0;
+    let idx = 0, pos = 0, partial = [], seq = 0; const skel = new Set();
     try {
       for (;;) {
         if (opt.stale && opt.stale()) throw STALE; if (err || fail || bad) break;
@@ -530,6 +530,8 @@ const DISK = {
         if (!(win[pos] === 0x4f && win[pos + 1] === 0x67 && win[pos + 2] === 0x67 && win[pos + 3] === 0x53)) { bad = true; break; }          // damage between pages: the usual way
         const dv = new DataView(win.buffer, win.byteOffset), ns = win[pos + 26], ser = dv.getUint32(pos + 14, true), flags = win[pos + 5]; if (pos + 27 + ns > win.length) break;
         let size = 0; for (let i = 0; i < ns; i++) size += win[pos + 27 + i]; if (pos + 27 + ns + size > win.length) break;
+        if (skel.has(ser)) { pos += 27 + ns + size; continue; }          // an Ogg Skeleton track (index data that rides beside the sound) holds no sound: its pages are skipped
+        if ((flags & 2) && size >= 8 && String.fromCharCode.apply(null, win.subarray(pos + 27 + ns, pos + 27 + ns + 8)) === 'fishead\0') { skel.add(ser); pos += 27 + ns + size; continue; }
         if (serial === null) { if (!(flags & 2)) { bad = true; break; } serial = ser; } else if (ser !== serial || (flags & 2)) { bad = true; break; }          // one stream only
         if (dv.getUint32(pos + 18, true) !== seq++) { bad = true; break; }          // a page missing
         let at = pos + 27 + ns; for (let i = 0; i < ns; i++) { const l = win[pos + 27 + i]; partial.push(win.slice(at, at + l)); at += l; if (l < 255) { const d = partial.length === 1 ? partial[0] : (() => { const t = new Uint8Array(partial.reduce((a, x) => a + x.length, 0)); let o = 0; for (const x of partial) { t.set(x, o); o += x.length; } return t; })(); partial = []; await onPacket(d, idx++); if (err || fail || bad) break; } }
@@ -642,6 +644,24 @@ function adoptAudio(file, audio, frames) {
   fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {});
   return movedMsg;
 }
+/* The browser's own decoder gives a Vorbis file a few hundred frames too many at the end (it does not cut the last page where the file says the sound ends). The file's last page says exactly how long it is. */
+function oggVorbisLength(ab) {
+  const u = new Uint8Array(ab); if (u.length < 64 || u[0] !== 0x4f || u[1] !== 0x67 || u[2] !== 0x67 || u[3] !== 0x53) return null;
+  const dv = new DataView(ab); let pos = 0, serial = -1, sr = 0;
+  for (let n = 0; n < 8 && pos + 27 <= u.length && u[pos] === 0x4f && u[pos + 1] === 0x67; n++) {
+    const ns = u[pos + 26]; let size = 0; for (let i = 0; i < ns; i++) size += u[pos + 27 + i]; const at = pos + 27 + ns;
+    if ((u[pos + 5] & 2) && size >= 16 && u[at] === 1 && String.fromCharCode.apply(null, u.subarray(at + 1, at + 7)) === 'vorbis') { serial = dv.getUint32(pos + 14, true); sr = dv.getUint32(at + 12, true); break; }
+    pos = at + size;
+  }
+  if (serial < 0 || !sr) return null;
+  for (let i = u.length - 27; i >= Math.max(0, u.length - 70000); i--) if (u[i] === 0x4f && u[i + 1] === 0x67 && u[i + 2] === 0x67 && u[i + 3] === 0x53 && dv.getUint32(i + 14, true) === serial) { const g = Number(dv.getBigInt64(i + 6, true)); return g > 0 ? { frames: g, sr } : null; }
+  return null;
+}
+function cutBuffer(buf, frames) {
+  const out = new AudioBuffer({ numberOfChannels: buf.numberOfChannels, length: frames, sampleRate: buf.sampleRate });
+  for (let c = 0; c < buf.numberOfChannels; c++) out.copyToChannel(buf.getChannelData(c).subarray(0, frames), c);
+  return out;
+}
 async function loadAudio(file) {
   const mine = ++loadSeq, live = () => { if (mine !== loadSeq) throw STALE; };
   setBusy('Listening…', 'audio', file.name, 0);
@@ -658,7 +678,8 @@ async function loadAudio(file) {
     let buffer = null; try { buffer = wavFloatBuffer(ab); } catch (e) { buffer = null; }          // float WAVs are read here, so no sample above full scale is lost on the way in
     const direct = !!buffer;
     if (new Uint8Array(ab, 4, 4).every((b, i) => b === 'ftyp'.charCodeAt(i))) { try { buffer = await mp4DecodeAac(ab, f => { live(); setBusyFrac(f * 0.9); }); } catch (e) { if (e === STALE) throw e; buffer = null; } }          // M4A: decoded a piece at a time, so there is a real progress bar and Safari is not stuck in one long call
-    if (!buffer) { live(); setBusyFrac(null); buffer = await new Promise((res, rej) => { const p = ac.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); }          // everything else (and any M4A this cannot read): the browser's own decoder, with no progress to show
+    const vorbisLen = buffer ? null : oggVorbisLength(ab);          // read before decoding, which empties the data
+    if (!buffer) { live(); setBusyFrac(null); buffer = await new Promise((res, rej) => { const p = ac.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }); if (vorbisLen && buffer.sampleRate === vorbisLen.sr && buffer.length > vorbisLen.frames) buffer = cutBuffer(buffer, vorbisLen.frames); }          // everything else (and any M4A this cannot read): the browser's own decoder, with no progress to show
     live(); setBusyFrac(0.95); Transport.pause(); playPrepare(ac);          // the player is loaded now, so it is there by the first play
     await new Promise(r => { requestAnimationFrame(() => setTimeout(r, 0)); setTimeout(r, 80); }); live();          // let the bar paint before the heavy sync work
     const sourceCh = buffer.numberOfChannels; if (sourceCh > 2) buffer = downmixStereo(buffer);

@@ -30,5 +30,21 @@ const cases = [
     await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio && S.audio.name === 'five.opus', null, { timeout: 30000 }).catch(() => {}); await p.waitForTimeout(300); ok('a surround Opus file is not taken by the store (the page decides what to do)', await p.evaluate(() => !(S.audio && S.audio.name === 'five.opus' && S.audio.disk))); }
   { const f = path.join(tmp, 'cut.opus'); const w = fs.readFileSync(path.join(tmp, 'a.opus')), b = Buffer.from(w.subarray(0, Math.floor(w.length / 2))); fs.writeFileSync(f, b);
     await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio && S.audio.name === 'cut.opus', null, { timeout: 30000 }).catch(() => {}); await p.waitForTimeout(300); ok('an Opus file cut short is not taken by the store', await p.evaluate(() => !(S.audio && S.audio.name === 'cut.opus' && S.audio.disk))); }
+  { // an Ogg Skeleton track (index data riding beside the sound, as oggz and many web tools write it) must not turn the file away from the store: the sound is the same as the file without it
+    const crcT = new Uint32Array(256); for (let i = 0; i < 256; i++) { let r = i << 24; for (let k = 0; k < 8; k++) r = r & 0x80000000 ? (r << 1) ^ 0x04c11db7 : r << 1; crcT[i] = r >>> 0; }
+    const page = (flags, gran, serial, seq, body) => { const h = Buffer.alloc(27 + 1); h.write('OggS', 0); h[5] = flags; h.writeBigInt64LE(BigInt(gran), 6); h.writeUInt32LE(serial, 14); h.writeUInt32LE(seq, 18); h[26] = 1; h[27] = body.length; const all = Buffer.concat([h, body]); let c = 0; for (const b of all) c = ((c << 8) ^ crcT[((c >>> 24) ^ b) & 255]) >>> 0; all.writeUInt32LE(c, 22); return all; };
+    const w = fs.readFileSync(path.join(tmp, 'h.ogg')); const ns = w[26]; let sz = 0; for (let i = 0; i < ns; i++) sz += w[27 + i]; const first = w.subarray(0, 27 + ns + sz), rest = w.subarray(27 + ns + sz);
+    const fish = page(2, 0, 7777, 0, Buffer.concat([Buffer.from('fishead\0'), Buffer.alloc(56)])), fend = page(4, 0, 7777, 1, Buffer.from('fisbone\0'));
+    const f = path.join(tmp, 'skel.ogg'); fs.writeFileSync(f, Buffer.concat([fish, first, fend, rest]));
+    const raw = path.join(tmp, 'sk.raw'); sh(`ffmpeg -v error -y -i ${path.join(tmp, 'h.ogg')} -f f32le -c:a pcm_f32le ${raw}`); const want = fs.statSync(raw).size / 8;
+    await p.setInputFiles('#audioIn', f); await p.waitForFunction(() => S.audio && S.audio.name === 'skel.ogg' && !document.querySelector('#chips .busybar'), null, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(300);
+    const got = await p.evaluate(() => S.audio && S.audio.name === 'skel.ogg' ? { disk: !!S.audio.disk, frames: S.audio.disk ? DISK.meta.frames : S.audio.buffer.length } : null);
+    ok('Vorbis with an Ogg Skeleton track: taken by the store, with the length ffmpeg decodes', !!got && got.disk && got.frames === want, JSON.stringify({ got, want })); }
+  { // the memory route (no store): the browser's decoder runs a Vorbis file past the end its last page gives; the length must be the one ffmpeg decodes
+    const q = await br.newPage(); q.setDefaultTimeout(60000); await q.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0');
+    for (const nm of ['f.ogg', 'h.ogg', 'a.opus']) { const f = path.join(tmp, nm), raw = path.join(tmp, 'm.raw'); const info = JSON.parse(sh(`ffprobe -v error -show_entries stream=sample_rate -of json ${f}`)).streams[0]; sh(`ffmpeg -v error -y -i ${f} -ar ${info.sample_rate} -f f32le -c:a pcm_f32le ${raw}`); const want = fs.statSync(raw).size / 8;
+      await q.setInputFiles('#audioIn', f); await q.waitForFunction(x => S.audio && S.audio.name === x && S.audio.buffer, nm, { timeout: 60000 }).catch(() => {}); await q.waitForTimeout(300);
+      const got = await q.evaluate(() => S.audio.buffer.length); ok(nm + ' in memory: the length is the one ffmpeg decodes', got === want, got + ' vs ' + want); }
+    await q.close(); }
   ok('no errors', errs.length === 0, errs.join(' | ')); await br.close();
 })();
