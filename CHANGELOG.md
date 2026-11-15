@@ -2,11 +2,11 @@
 
 ## 1.2.17
 
-Every spacing, corner, and color in the Audio Editor now comes from a shared value, so it stays consistent. The Level warning note uses the app's shared warning color, which reads better in dark mode, and the Imager's Both, Middle, and Sides choice is no longer cut off in narrow windows.
+The Audio Editor looks the same from tool to tool. The Level warning note now reads better in dark mode, and the Imager's Both, Middle, and Sides choice is no longer cut off in narrow windows.
 
 ## 1.2.16
 
-The Audio Editor's spacing now comes from shared values, so every tool lines up the same way. The EQ band also switches layouts sooner, so its Gain and Width sliders stay wide enough on screens around 1000px.
+The Audio Editor's spacing is more even from tool to tool. The EQ band also switches layouts sooner, so its Gain and Width sliders stay wide enough on screens around 1000px.
 
 ## 1.2.15
 

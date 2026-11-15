@@ -20,6 +20,11 @@
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px; --gap-group:18px;   /* the spacing scale (2, 4, 8, 12, 16, with --gap-group, 18, the space above and below a divider between the video panel's groups): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
+  --x-size:26px;   /* the remove (x) button on a Spectra list row: a square */
+  --tip-x:66px;   /* how far in from the Limiter row's left edge its warning note starts (after the word Limiter) */
+  --corr-h:14px;   /* the Imager's correlation tick: it stands this tall, reaching above and below its bar */
+  --eq-sel-w:104px;   /* the EQ band's filter-type menu: one width in every band */
+  --jack:20px;   /* the cable's progress ring at a tool's jack: its diameter */
   --ae-side:16px;   /* the tool window's one left line and one right line: the tool's name, its subtitle and buttons, the cards, and the status bar all sit this far in from the window's edges */
   --pill-bg:rgba(14,17,40,.92);   /* the dark pill: the wait pill and the hints drawn on the waveform, the same in light and dark */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
@@ -737,7 +742,7 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 
 /* ----- PDF Editor ----- */
 
-.t-note.warn{color:var(--turn-ink)}          /* a note is the same size and weight whatever it says; only its color says the result is not what was asked for (a target that could not be reached) */
+.t-note.warn,.lv-tip-warn{color:var(--turn-ink)}          /* a note is the same size and weight whatever it says; only its color says the result is not what was asked for (a target that could not be reached) */
 
 /* ==================== 16. FILE CHIPS (a steady size) ==================== */
 /* the name is cut with an ellipsis, and on hover the small text (page count or length) trades places with the action, in the same space,
@@ -1122,7 +1127,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 .im-cols{display:grid}
 .im-corr{display:grid;grid-template-columns:1fr;gap:var(--gap-head);align-items:center;font-size:var(--type-small);color:var(--muted)}
 .im-corr i{position:relative;height:6px;border-radius:99px}
-.im-corr i::after{content:'';position:absolute;top:-4px;left:calc(var(--c,.5) * 100%);width:1px;height:14px;margin-left:calc(var(--hair) * -.5);background:var(--muted);pointer-events:none}          /* a reading, not a control: a thin tick in the scale ticks' gray, never a handle */
+.im-corr i::after{content:'';position:absolute;top:calc(-1 * var(--gap-label));left:calc(var(--c,.5) * 100%);width:var(--hair);height:var(--corr-h);margin-left:calc(var(--hair) * -.5);background:var(--muted);pointer-events:none}          /* a reading, not a control: a thin tick in the scale ticks' gray, never a handle */
 #audioDlg:not(.afull) #aeBalCard{flex:none}
 /* narrow but not a phone (521–760px): Fades and Noise use two columns, so the tool fits its window with less scrolling */
 /* phones (520px and below): there is no room for a fixed window, so the whole dialog scrolls like a page and each tool shows at its full height */
@@ -1302,7 +1307,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .eq-cell[hidden]{display:none}
 .eq-bn .eq-ctl{gap:var(--gap-set)}
 .eq-ctl .seg{width:100%;font-size:var(--type-small)}
-.eq-top select{flex:0 0 auto;width:104px;min-width:0}
+.eq-top select{flex:0 0 auto;width:var(--eq-sel-w);min-width:0}
 /* EQ Match fits beside the curve without growing the window */
 .mt-steps.two{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:var(--gap-head) calc(var(--gap-card) * 2)}
 /* Noise reduction steps */
@@ -1310,13 +1315,12 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-learn .mt-chip{padding-top:var(--gap-label);padding-bottom:var(--gap-label)}
 .mt-n.inl{display:inline-grid;margin-right:var(--gap-head);vertical-align:middle}
 /* live meter */
-@keyframes clippulse{50%{box-shadow:0 0 3px rgba(229,72,77,.3)}}
+@keyframes clippulse{50%{box-shadow:0 0 3px color-mix(in srgb,var(--clip) 30%,transparent)}}
 @media (prefers-reduced-motion:reduce){.lv-clip,.led.shake{animation:none}}
 @container aedlg (max-width:728px){
   .ae-main{grid-template-columns:minmax(0,1fr)}
   .ae-win{min-height:0;padding:var(--gap-set)}
   .mt-steps.two{grid-template-columns:1fr}
-  .ae-jack{width:22px}
 }
 
 @container aedlg (max-width:728px){.ae-bar .push-right.gone{display:none}}
@@ -1410,7 +1414,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ae-bar{grid-row:3;z-index:2}
 #audioDlg.afull .ae-main{grid-row:4;z-index:2;overflow:auto;overscroll-behavior:contain}
 #audioDlg.afull .ed-head,#audioDlg.afull .ae-bar,#audioDlg.afull .ae-main{padding:var(--gap-card) var(--gap-field)}
-#audioDlg.afull.dock-off .ae-main{position:absolute;left:14px;right:14px;bottom:14px;transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform var(--ae-move) var(--ease-out),opacity var(--ae-ms) var(--ease-ui),visibility 0s var(--ae-move)}
+#audioDlg.afull.dock-off .ae-main{position:absolute;left:var(--ae-side);right:var(--ae-side);bottom:var(--ae-side);transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none;visibility:hidden;transition:transform var(--ae-move) var(--ease-out),opacity var(--ae-ms) var(--ease-ui),visibility 0s var(--ae-move)}
 #audioDlg.afull.dock-off .ae-bar{grid-row:4}
 @container aedlg (max-width:728px){#audioDlg.afull .ae-main{max-height:50dvh}#audioDlg.afull>.dlg.editor.ae{padding:var(--gap-head)}}
 
@@ -1434,7 +1438,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sp-t b{font-weight:600;font-size:var(--type-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sp-t small{font-size:var(--type-note);color:var(--muted)}
 .sp-item em{font-style:normal;font-size:var(--type-small);color:var(--muted)}
-.sp-x{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color)}
+.sp-x{display:grid;place-items:center;width:var(--x-size);height:var(--x-size);border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color)}
 .sp-x:hover{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
 .sp-x svg{width:13px;height:13px}
 .sp-empty{display:grid;place-items:center;flex:1;color:var(--muted);opacity:.45}
@@ -1760,7 +1764,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .lv-noterow .lv-note{margin:0;min-width:0;flex:0 1 auto;height:var(--line-s);line-height:var(--line-s)}
 .lv-note.busy{animation:note-pulse 1.4s var(--ease-ui) infinite alternate}
 .lv-limrow .check-row{flex:1;min-width:0;cursor:pointer;font-size:var(--type-value)}
-.lv-tip-warn{position:absolute;left:66px;top:50%;transform:translateY(-50%);font-size:var(--type-small);color:var(--turn-ink);white-space:nowrap;pointer-events:none}
+.lv-tip-warn{position:absolute;left:var(--tip-x);top:50%;transform:translateY(-50%);font-size:var(--type-small);white-space:nowrap;pointer-events:none}
 .lv-limrow.nudge .switch:not(:checked){animation:lim-nudge 2.2s var(--ease-ui) infinite}
 @media (prefers-reduced-motion:reduce){.lv-note.busy{animation:none}.lv-limrow.nudge .switch:not(:checked){animation:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--neutral) 22%,transparent),0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}}
 
@@ -1771,15 +1775,15 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .lv-meter>.lv-scale{grid-row:4;margin-bottom:calc(var(--gap-set) - var(--inset))}
 .lv-meter>.lv-sum{grid-row:6}
 .lv-hit{cursor:pointer}
-.lv-clip{box-sizing:border-box;height:var(--clip-h);padding:var(--gap-sub) var(--gap-card);border:0;border-radius:99px;background:var(--bad);color:var(--pill-ink);font:600 var(--type-note)/18px inherit;font-family:inherit;cursor:pointer;box-shadow:0 0 10px color-mix(in srgb,var(--clip) 55%,transparent);animation:clippulse 1.2s ease-in-out infinite}
+.lv-clip{box-sizing:border-box;height:var(--clip-h);padding:var(--gap-sub) var(--gap-card);border:0;border-radius:99px;background:var(--bad);color:var(--pill-ink);font:600 var(--type-note)/calc(var(--clip-h) - 3 * var(--gap-sub)) inherit;font-family:inherit;cursor:pointer;box-shadow:0 0 10px color-mix(in srgb,var(--clip) 55%,transparent);animation:clippulse 1.2s ease-in-out infinite}
 .lv-clip:not(.on){visibility:hidden;animation:none;pointer-events:none}          /* its place is reserved, so True peak never moves when Clip shows */
 .lv-track{position:relative;height:14px;border-radius:99px;overflow:hidden;background:var(--line)}
 .lv-zone{position:absolute;top:0;bottom:0;right:0;width:25%;background:color-mix(in srgb,var(--clip) 18%,transparent)}
 .lv-zone::before{content:'';position:absolute;top:0;bottom:0;right:100%;width:50%;background:color-mix(in srgb,var(--safe) 16%,transparent)}
 .lv-ceil{position:absolute;top:0;bottom:0;width:0;border-left:1.5px dashed var(--ink);opacity:.5;pointer-events:none}          /* the ceiling: a dashed tick across the bar */
 .lv-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:var(--accent);transition:width .5s var(--spring-press),background-color .3s var(--ease-color)}
-.lv-orig{position:absolute;z-index:2;top:2px;bottom:2px;width:2px;margin-left:calc(var(--hair) * -1);border-radius:var(--r-mark);background:var(--ink);opacity:.55;transition:left .5s var(--spring-press)}
-.lv-hold{position:absolute;z-index:3;top:1px;bottom:1px;width:3px;margin-left:calc(var(--hair) * -1.5);border-radius:var(--r-mark);background:var(--ink);opacity:0;box-shadow:0 0 6px color-mix(in srgb,var(--pill-ink) 70%,transparent);transition:opacity .25s var(--ease-ui)}
+.lv-orig{position:absolute;z-index:2;top:var(--gap-sub);bottom:var(--gap-sub);width:var(--gap-sub);margin-left:calc(var(--hair) * -1);border-radius:var(--r-mark);background:var(--ink);opacity:.55;transition:left .5s var(--spring-press)}
+.lv-hold{position:absolute;z-index:3;top:var(--hair);bottom:var(--hair);width:calc(var(--gap-sub) + var(--hair));margin-left:calc(var(--hair) * -1.5);border-radius:var(--r-mark);background:var(--ink);opacity:0;box-shadow:0 0 6px color-mix(in srgb,var(--pill-ink) 70%,transparent);transition:opacity .25s var(--ease-ui)}
 .lv-meter.good .lv-fill{background:var(--ok)}
 .lv-meter.hot .lv-fill{background:var(--bad)}
 .lv-meter.good #aePeakNow{color:var(--ok-ink)}
@@ -2210,7 +2214,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* working in the background: a thin blue ring fills around the tool's light (Noise reduction) or in its empty slot (Emulator) with the share done, only while another tool is open: the open tool's own window says it in its bar. Nothing is said in words. It fades in with the job and out when it ends; before the first tick a short arc turns */
 @property --ring{syntax:'<number>';inherits:true;initial-value:0}
 .ae-jack{position:relative}
-.ae-jack::before{content:'';position:absolute;left:50%;top:50%;width:20px;height:20px;margin:calc(-1 * var(--gap-card)) 0 0 calc(-1 * var(--gap-card));border-radius:50%;background:conic-gradient(var(--accent) calc(var(--ring) * 360deg),color-mix(in srgb,var(--accent) 20%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent 7.5px,#000 8px);mask:radial-gradient(circle,transparent 7.5px,#000 8px);opacity:0;transform:scale(.82);pointer-events:none;transition:opacity .3s var(--ease-ui),transform .4s var(--ease-out),--ring .25s linear}          /* the share glides between ticks */
+.ae-jack::before{content:'';position:absolute;left:50%;top:50%;width:var(--jack);height:var(--jack);margin:calc(var(--jack) / -2) 0 0 calc(var(--jack) / -2);border-radius:50%;background:conic-gradient(var(--accent) calc(var(--ring) * 360deg),color-mix(in srgb,var(--accent) 20%,transparent) 0);-webkit-mask:radial-gradient(circle,transparent calc(var(--jack) * .375),#000 calc(var(--jack) * .4));mask:radial-gradient(circle,transparent calc(var(--jack) * .375),#000 calc(var(--jack) * .4));opacity:0;transform:scale(.82);pointer-events:none;transition:opacity .3s var(--ease-ui),transform .4s var(--ease-out),--ring .25s linear}          /* the share glides between ticks */
 .ae-jack.start::before{transition:opacity .3s var(--ease-ui),transform .4s var(--ease-out)}
 .ae-jack.busy::before{opacity:1;transform:none}
 .ae-jack.busy.wait::before{--ring:.25;animation:ring-turn 1s linear infinite}
@@ -2262,7 +2266,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* EQ Match: the two buttons in the card's head sit together; the EQ Match button carries a dot while a curve is made */
 .mt-acts{display:inline-flex;gap:var(--gap-head);margin-left:auto}
 #aeMatchBtn{position:relative}
-#aeMatchBtn.has::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--panel)}
+#aeMatchBtn.has::after{content:'';position:absolute;top:calc(-1 * (var(--gap-sub) + var(--hair)));right:calc(-1 * (var(--gap-sub) + var(--hair)));width:var(--gap-head);height:var(--gap-head);border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--panel)}
 .mt-head .mt-acts .btn{margin-left:0}
 
 /* Emulator: the three steps on the left, the picture of both tones and the reference's numbers on the right */
@@ -2374,9 +2378,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
 #fadeLenField .fade-ends{position:relative;display:block;height:20px}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin-inline:0}
-#fadeLenField .fade-ends .sl-end[data-v="0"]{left:-4px}
-#fadeLenField .fade-ends .sl-end.auto{left:calc(8px + (100% - 16px) * var(--apos,.333));transform:translateX(-50%)}
-#fadeLenField .fade-ends .sl-end:last-child{right:-4px}
+#fadeLenField .fade-ends .sl-end[data-v="0"]{left:calc(-1 * var(--gap-label))}
+#fadeLenField .fade-ends .sl-end.auto{left:calc(var(--gap-head) + (100% - 2 * var(--gap-head)) * var(--apos,.333));transform:translateX(-50%)}
+#fadeLenField .fade-ends .sl-end:last-child{right:calc(-1 * var(--gap-label))}
 
 /* ---- Button group: the one pill for buttons that belong together (the Undo group in the video, Audio and PDF editors; the video's turn tools).
    One outline round the group, flat buttons inside it, a thin divider between them. The group corner is the button corner plus the gap (7px + 2px = 9px), so the curves nest.

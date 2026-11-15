@@ -9,6 +9,8 @@ const { chromium } = require('playwright-core');
 const { install } = require('./lib/measure.js'), { lines } = require('./lib/layout-lines.js'), { fitMeasure } = require('./lib/fit-measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 const EXPECTED = path.join(__dirname, 'audio-editor-layout-expected.txt'), HEIGHTS = path.join(__dirname, 'audio-editor-card-heights.txt');
+// where the tool pane, its cards, its heading bar, and its body are: this check passes them to the rules, so the PDF Editor's check uses the same rules with its own
+const SEL = { pane: '.ae-pane:not([hidden])', card: '.ae-card', head: '.ae-phead', body: '.ae-pbody' };
 const SIZES = [[1440, 900], [1440, 720], [1040, 760], [900, 760], [761, 800], [700, 800], [600, 800], [521, 800], [390, 800], [360, 800], 'full'];          // 'full' is full screen at 1440x900
 // a tool, and the states that change what its cards hold; each state is set from the one before it
 const radio = (name, v) => { const r = document.querySelector('input[name=' + name + '][value=' + v + ']'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); };
@@ -39,7 +41,7 @@ const data = f => readFile(f).map((l, i) => [l.replace(/\s+#.*$/, '').trim(), i 
       await p.evaluate(t => aeTool(t), tool); await p.waitForTimeout(500);
       for (const [state, go] of states) {
         if (go) { await p.evaluate('(' + go + ')()'); await p.waitForTimeout(tool === 'level' ? 1000 : 500); }
-        const m = await p.evaluate(lines, { main }), fit = await p.evaluate(fitMeasure, { card: '.ae-card', body: '.ae-pbody', root: '.ae-pane:not([hidden])' }), at = tool + ' ' + state + ' ' + tag + ' ';
+        const m = await p.evaluate(lines, { main, sel: SEL }), fit = await p.evaluate(fitMeasure, { card: SEL.card, body: SEL.body, root: SEL.pane }), at = tool + ' ' + state + ' ' + tag + ' ';
         counts[tag].states++; counts[tag].n += m.n;
         if (!m.n) seen.set(at + 'measured nothing', 'no card was found in the tool');
         for (const [rule, el, note] of m.fails) seen.set(at + rule + ' ' + el, note);

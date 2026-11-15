@@ -22,8 +22,7 @@ const paneIds = new Set(); {
   }
 }
 // the stylesheet as rules: { ctx: ['@media (max-width:700px)'], sels: [...], props: [...] }
-const rules = require('./lib/css-rules.js').readRules(css).map(r => ({ ctx: r.ctx, sels: r.sels, props: r.decls.map(d => d.prop) }));
-const SPACING = /^(margin|padding)(-[a-z-]+)?$|^(row-|column-)?gap$/;
+const { readRules, SPACING } = require('./lib/css-rules.js'), rules = readRules(css).map(r => ({ ctx: r.ctx, sels: r.sels, props: r.decls.map(d => d.prop) }));
 const TOOL_CLASS = /\.(ae-[\w-]+|(nr|sp|im|eq|lv|fd|em|mt)-[\w-]+|tool-grid|on-grid)\b/;
 const idsOf = sel => [...sel.matchAll(/#([\w-]+)/g)].map(m => m[1]);
 const touchesTool = sel => idsOf(sel).some(id => paneIds.has(id) || id === 'audioDlg' || id === 'aeWin') || TOOL_CLASS.test(sel);
