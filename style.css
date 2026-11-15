@@ -1221,7 +1221,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-body .field label{display:flex;justify-content:space-between}
 .mt-body .field .mt-title{margin:0}
 .mt-pick{display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:13px}
-.mt-chip{display:flex;align-items:center;gap:8px;max-width:100%;padding:6px 8px 6px 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:13px}
+.mt-chip{display:flex;align-items:center;gap:8px;max-width:100%;height:var(--h-s);box-sizing:border-box;padding:0 3px 0 12px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:13px}
 .mt-chip b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
 .mt-chip button{display:grid;place-items:center;flex:none;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .35s var(--spring-hover)}
 @media (hover:hover) and (pointer:fine){.mt-chip button:hover{background:var(--accent-soft);color:var(--accent);transform:scale(1.1)}}
@@ -1319,7 +1319,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-learn .btn,.nr-learn .mt-chip{height:var(--h-s);box-sizing:border-box;margin:0}
 .nr-learn .mt-chip{padding:0 4px 0 12px;white-space:nowrap}
 .mt-pick{min-height:var(--h-s)}
-.eq-match .mt-chip{height:var(--h-s);box-sizing:border-box;padding-top:0;padding-bottom:0}          /* as tall as the two buttons it replaces, so a reference arriving does not shrink the graph */
 .mt-pick span.bad{color:var(--bad)}
 
 /* tool windows slide */
@@ -2259,7 +2258,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* Emulator: the three steps on the left, the picture of both tones and the reference's numbers on the right */
 .em-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:var(--gap-card);align-items:stretch}
 .em-take{display:flex;flex-wrap:wrap;gap:6px}
-#aeEmChip{width:fit-content}
+.mt-body>.mt-chip{width:fit-content}          /* a reference chip hugs its name and its clear button, in EQ Match and the Emulator alike */
 .em-go{display:flex;align-items:center;gap:12px;margin-top:12px;min-height:var(--h-s)}
 .em-say{min-width:0}
 .em-view{display:flex;flex-direction:column;min-width:0}
