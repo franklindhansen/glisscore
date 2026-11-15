@@ -30,5 +30,14 @@ const dig = (b, path) => { let s = 0, e = b.length, hit = null; for (const t of 
     if (process.platform === 'darwin' && fs.existsSync('/usr/bin/afconvert')) { const w = path.join(tmp, 'a.wav'); cp.spawnSync('/usr/bin/afconvert', ['-f', 'WAVE', '-d', 'LEI16', f, w]); const r = cp.spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=duration_ts', '-of', 'csv=p=0', w], { encoding: 'utf8' });
       ok(tag + "Apple's decoder gives exactly the length of the sound", +r.stdout.trim() === want, r.stdout.trim() + ' vs ' + want); }
   }
+  { // a bitrate this browser's encoder cannot do: the file is made at the best it can, and the message says which rate was used and which was asked for
+    const has256 = await p.evaluate(() => aacConfig(44100, 2, 256000).then(c => !!c)), has192 = await p.evaluate(() => aacConfig(44100, 2, 192000).then(c => !!c));
+    if (has256 || !has192) console.log('skip the fallback check: this browser ' + (has256 ? 'can encode 256kbps' : 'has no 192kbps encoder'));
+    else {
+      await p.evaluate(() => { window.__saved = null; S.set.audioFormat = 'm4a256'; AE.d.vStart = 0; AE.d.vEndSet = null; aeRefresh(); }); await p.waitForTimeout(500); await p.evaluate(() => aeExport()); for (let i = 0; i < 200 && !(await p.evaluate(() => window.__saved)); i++) await p.waitForTimeout(250);
+      const saved = await p.evaluate(() => window.__saved), text = await p.evaluate(() => document.body.innerText);
+      ok('256kbps asked for, this browser stops at 192kbps: the file is still made', !!saved);
+      ok('and the message says it was made at 192kbps because the browser cannot encode 256kbps', /M4A at 192kbps/.test(text) && /can’t encode M4A at 256kbps/.test(text), text.match(/Audio saved[^\n]*\n?[^\n]*/) && text.match(/Audio saved[^\n]*\n?[^\n]*/)[0]);
+    } }
   ok('no errors', errs.length === 0, errs.join(' | ')); await br.close();
 })();

@@ -1381,7 +1381,8 @@ const AAC_TOP = 0.985;          // the highest a decoded M4A may stand when the 
 async function aeExportM4a(d, ui) {
   if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined') { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
   const dk = !!S.audio.disk; ui('Processing'); const buf = dk ? (await fxGet(d.fx), { sampleRate: audSr(), numberOfChannels: audCh() }) : (await fxGet(d.fx)).buffer, sr = aeOutRate(buf), ch = Math.min(2, buf.numberOfChannels), vs = d.vStart, ve = aeEnd(d);
-  const kbps = +(String(S.set.audioFormat).replace('m4a', '')) || 256, cfg = await aacConfig(sr, ch, kbps * 1000);
+  const want = +(String(S.set.audioFormat).replace('m4a', '')) || 256; let kbps = want, cfg = await aacConfig(sr, ch, kbps * 1000);
+  if (!cfg) for (const k of [320, 256, 192, 160, 128, 96, 64]) if (k < want && (cfg = await aacConfig(sr, ch, k * 1000))) { kbps = k; break; }          // this browser's encoder may stop short of the rate asked for (many stop at 192kbps): the best it can do is used, and the saved message says so
   if (!cfg) { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
   const mm = dk ? await aeMasterDisk(d, ch, true, ui) : await aeMasterFor(d, buf, ch, true, ui), total = mm.total;
   /* AAC does not keep peaks exactly: what a player decodes can stand a little higher than what went in. The limiter's ceiling leaves room for that, and with the limiter on the file is also checked:
@@ -1412,7 +1413,7 @@ async function aeExportM4a(d, ui) {
   const mx = made.mx, tg = aeTags(); if (tg) mx.setTags(tg);
   const blob = mx.finalize(); dbg('Audio export (M4A): asked the encoder for ' + cfg.bitrate / 1000 + ' kbps, it produced about ' + Math.round(mx.audioKbps()) + ' kbps');
   const name = ((S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio') + ' - Audio.m4a';
-  await saveFile(blob, name); toast(tx('ae.saved.m4a', { len: fmt(ve - vs) }));
+  await saveFile(blob, name); toast(kbps === want ? tx('ae.saved.m4a', { len: fmt(ve - vs) }) : tx('ae.saved.m4alow', { len: fmt(ve - vs), got: kbps, want }), kbps === want ? undefined : TOAST_LONG_MS);
 }
 /* ---------------- Audio Editor tools: the rail, EQ, and Imager ---------------- */
 const FX_NAMES = { eq: 'EQ', imager: 'Imager' };
