@@ -168,10 +168,9 @@
         <button class="btn tapbtn" id="bTap" type="button" aria-label="Add page turn" title="While the music plays, press T at each moment a page should turn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V2.8a.8.8 0 0 1 1.17-.71l11.38 5.69a.8.8 0 0 1 0 1.44L6 15.5"/></svg><span class="tw">Add page turn</span> <kbd>T</kbd></button>
         <span class="spacer"></span>
         <span class="info" id="spreadInfo"><span class="si"><span id="spreadNow"></span><span id="spreadMax" aria-hidden="true"></span></span></span>
-        <!-- ----- BUTTONS (full screen only): Hide editor, Show editor, Exit full screen ----- -->
-        <button class="btn fs-only" id="btnHideEditor" type="button" title="Hide the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>Hide editor</button>
-        <button class="btn fs-only" id="btnShowEditor" type="button" title="Show the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>Show editor</button>
-        <button class="btn fs-only" id="btnExitFull" type="button">Exit full screen</button>
+        <!-- ----- BUTTONS (full screen only): Hide editor, Show editor (the picture's strip has the full screen button that exits) ----- -->
+        <button class="btn fs-only fs-dock" id="btnHideEditor" type="button" title="Hide the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>Hide editor</button>
+        <button class="btn fs-only fs-dock" id="btnShowEditor" type="button" title="Show the editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>Show editor</button>
       </div>
     </section>
 
@@ -722,8 +721,8 @@
       <button class="icon-btn play" id="aePlay" type="button" aria-label="Play preview"><svg viewBox="0 0 24 24" id="aePlayIcon" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button>
       <div class="ae-times"><span>Start <b id="aeStart">0:00.0</b></span><span>End <b id="aeEnd">0:00.0</b></span></div>
       <div class="seg ae-view" id="aeView" role="radiogroup" aria-label="Show"><label><input type="radio" name="aeView" value="wave" checked><span>Wave</span></label><label><input type="radio" name="aeView" value="spec"><span>Spec</span></label></div>
-      <button class="btn small gone" id="aeDock" type="button" aria-pressed="true" title="Show or hide the tools (T)">Tools</button>
       <button class="btn small push-right gone" id="aeZoomFit" type="button" title="Show the whole sound again (Cmd 0)">Fit</button>
+      <button class="btn small ae-ib fs-dock gone" id="aeDock" type="button" aria-expanded="true" title="Hide the tools (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span class="ae-lb" id="aeDockLb">Hide tools</span></button>
       <button class="btn small ico ae-tail" id="aeSilence" type="button" title="Trim silence: move the start and end markers past any silence" aria-label="Trim silence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h6"/><path d="M22 12h-6"/><path d="M12 2v2"/><path d="M12 8v2"/><path d="M12 14v2"/><path d="M12 20v2"/><path d="m19 9-3 3 3 3"/><path d="m5 15 3-3-3-3"/></svg></button>
       <button class="icon-btn ae-fullbtn" id="aeFull" type="button" aria-label="Full screen" title="Full screen (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
     </div>

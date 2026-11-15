@@ -2820,7 +2820,7 @@ function aeBind() {
 }
 /* full screen for the Audio Editor: the picture fills the screen and everything else floats over it as frosted glass */
 function aeFsApply(on) {
-  const dlg = $('#audioDlg'); AE.full = on; dlg.classList.toggle('afull', on); { const small = on && aeNarrow(); dlg.classList.toggle('dock-off', small); $('#aeDock').setAttribute('aria-pressed', !small); } $('#aeDock').classList.toggle('gone', !on);
+  const dlg = $('#audioDlg'); AE.full = on; dlg.classList.toggle('afull', on); { const small = on && aeNarrow(); dlg.classList.toggle('dock-off', small); aeDockSync(!small); } $('#aeDock').classList.toggle('gone', !on);
   $('#aeFull').setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen'); $('#aeFull').title = (on ? 'Exit full screen' : 'Full screen') + ' (F)';
   $('#aeFull').innerHTML = on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>';
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
@@ -2891,9 +2891,12 @@ function aeFsLayout(force) {          // force: measure for full screen before i
   const top = hd.getBoundingClientRect().bottom - root.top, bot = root.bottom - (off ? bar.getBoundingClientRect().top : Math.min(bar.getBoundingClientRect().top, mn.getBoundingClientRect().top));
   w.style.top = '0px'; w.style.bottom = Math.max(0, bot - 18 + (off ? 0 : 0)) + 'px';
 }
+function aeDockSync(on) {          // the button names what it will do, with a chevron that points the way, as the video editor's Hide editor and Show editor do
+  const d = $('#aeDock'); d.setAttribute('aria-expanded', on); d.title = (on ? 'Hide' : 'Show') + ' the tools (T)'; $('#aeDockLb').textContent = on ? 'Hide tools' : 'Show tools';
+}
 function aeDockToggle(on) {
   const dlg = $('#audioDlg'), bar = dlg.querySelector('.ae-bar'), y0 = bar.getBoundingClientRect().top; on = on == null ? dlg.classList.contains('dock-off') : !!on;
-  dlg.classList.toggle('dock-off', !on); $('#aeDock').setAttribute('aria-pressed', on);
+  dlg.classList.toggle('dock-off', !on); aeDockSync(on);
   const dy = y0 - bar.getBoundingClientRect().top; if (dy && !reducedMotion() && bar.animate) bar.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 320, easing: EASE_OUT });
   requestAnimationFrame(aeFsLayout); setTimeout(() => { if (AE.d) { aeFsLayout(); aeRailSel(false); aeWiresFollow(); } }, 400);
 }
