@@ -735,7 +735,7 @@ TL.sc = document.createElement('canvas'); TL.sctx = TL.sc.getContext('2d');
 
 function readColors() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
-  TL.C = { bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), hairline: g('--hairline'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), turnSysSoft: g('--turn-sys-soft'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2'), pill: g('--pill-bg') };
+  TL.C = { bad: g('--bad'), bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), hairline: g('--hairline'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), turnSysSoft: g('--turn-sys-soft'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2'), pill: g('--pill-bg') };
   TL.staticDirty = true;
   aeColorsChanged();          // the editors' pictures are drawn again in the new theme, in the same frame
   peColorsChanged();

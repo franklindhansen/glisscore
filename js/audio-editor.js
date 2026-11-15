@@ -293,7 +293,7 @@ function aeNrNote(text) {
 }
 /* a hint drawn on the picture (the dark pill, as the wait pill): says what a drag will do, centered on x and y */
 function aeHint(c, W, Hc, txt) {          // a pill on the picture's center, the same place the stop note sits (aeCy), for the waveform and the spectrogram alike
-  const x = W / 2, y = aeCy(Hc); c.save(); c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 26;
+  const x = W / 2, y = aeCy(Hc); c.save(); c.font = aeFont('small', '600'); const w = c.measureText(txt).width + 26;
   roundRect(c, x - w / 2, y - 12, w, 24, 12); c.fillStyle = TL.C.pill; c.fill(); c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(txt, x, y + 0.5); c.restore();
 }
 function aeNote(text, mark) {
@@ -483,7 +483,7 @@ function specDraw(c, top, bot) {
 const specY = (f, top, bot) => bot - specFrac(f, AE.spec ? AE.spec.fmax : 20000) * (bot - top);
 function specAxis(c, top, bot) {
   const S0 = AE.spec; if (!S0) return;
-  c.save(); c.font = '10px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.textAlign = 'left';
+  c.save(); c.font = aeFont('axis'); c.textBaseline = 'middle'; c.textAlign = 'left';
   [[100, '100'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { if (f > S0.fmax) return; const y = Math.round(specY(f, top, bot)) + 0.5; c.globalAlpha = 0.16; c.fillStyle = '#fff'; c.fillRect(AE_PAD, y, aeW() - 2 * AE_PAD, 1); c.globalAlpha = 0.78; c.fillStyle = '#fff'; c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 3; c.fillText(t, AE_PAD + 14, y - 0.5); });
   c.restore();
 }
@@ -492,7 +492,7 @@ function specHover(c, top, bot) {
   const ra = specRaw(SPEC_FMIN), rb = specRaw(S0.fmax), f = specRawInv(ra + (bot - m.y) / (bot - top) * (rb - ra)), col = clamp(Math.floor((t - S0.t0) / S0.cs), 0, S0.cols - 1), inside = t >= S0.t0 && t <= S0.t0 + S0.cols * S0.cs, band = clamp(Math.round(Math.log(f / SPEC_FMIN) / Math.log(S0.fmax / SPEC_FMIN) * SPEC_B - 0.5), 0, SPEC_B - 1);
   const db = inside && col < S0.done ? S0.db[col * SPEC_B + band] : null, txt = fmt(t, 1) + '   ' + (f >= 1000 ? (f / 1000).toFixed(2) + 'kHz' : Math.round(f) + 'Hz') + (db != null ? '   ' + Math.round(db) + 'dB' : '');
   c.save(); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(m.x + 0.5, top); c.lineTo(m.x + 0.5, bot); c.moveTo(AE_PAD, m.y + 0.5); c.lineTo(aeW() - AE_PAD, m.y + 0.5); c.stroke(); c.setLineDash([]);
-  c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; const w = c.measureText(txt).width + 16, bx = clamp(m.x + 12, 4, aeW() - w - 4), by = clamp(m.y - 30, top + 4, bot - 24); roundRect(c, bx, by, w, 20, 8); c.fillStyle = 'rgba(14,17,40,.88)'; c.fill(); c.fillStyle = '#fff'; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5); c.restore();
+  c.font = aeFont('note', '600'); const w = c.measureText(txt).width + 16, bx = clamp(m.x + 12, 4, aeW() - w - 4), by = clamp(m.y - 30, top + 4, bot - 24); roundRect(c, bx, by, w, 20, 8); c.fillStyle = 'rgba(14,17,40,.88)'; c.fill(); c.fillStyle = '#fff'; c.textBaseline = 'middle'; c.fillText(txt, bx + 8, by + 10.5); c.restore();
 }
 /* ---------------- Spectra: rectangles on the picture ----------------
    Drag over a blip, a hum, or a squeak. Each rectangle is healed (bridged from the sound around it) or turned down. They are listed beside the picture, and each can be picked, changed or removed. */
@@ -570,7 +570,7 @@ function aeTicks(lo, hi, px) { const span = hi - lo, want = span / Math.max(1, p
 /* the ruler across the top of the picture, the same in the wave and the spectrogram: its floor, a tall tick and a time at every step, and small ticks between (as in the video timeline) */
 function aeRuler(c, W, C, lo, hi, grid, Hc) {
   const x0 = AE_PAD, x1 = W - AE_PAD, st = aeTicks(lo, hi, x1 - x0), k = (x1 - x0) / (hi - lo), first = Math.ceil(lo / st) * st, minor = st / 5;
-  c.save(); c.font = '10px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.save(); c.font = aeFont('axis'); c.textBaseline = 'alphabetic'; c.textAlign = 'left';
   c.globalAlpha = 0.5; c.fillStyle = C.line; c.fillRect(0, AE_RULER - 1, W, 1);          // the ruler's floor
   c.globalAlpha = 0.55; c.fillStyle = C.muted; for (let t = Math.ceil(lo / minor) * minor, n = 0; t <= hi && n < 400; t += minor, n++) { const x = Math.round(x0 + (t - lo) * k) + 0.5; if (x < x0 - 1 || x > x1 + 1) continue; c.fillRect(x - 0.5, AE_RULER - 5, 1, 4); }          // the small ticks
   for (let t = first, n = 0; t <= hi && n < 80; t += st, n++) {
@@ -640,7 +640,7 @@ function aePaintBase(c, o) {
       const m = arr[j]; if (m < 0) continue; const x = x0 + j, amp = cap && !ghost ? Math.min(cap, m * g) : m * g, a = Math.max(1, Math.min(1, amp) * half);          // cap: the limiter's ceiling, which nothing that comes out goes over
       if (ghost) { c.fillRect(x, cy - a, 1, 1); c.fillRect(x, cy + a - 1, 1, 1); continue; }
       c.fillRect(x, cy - a, 1, a * 2);
-      if (amp > 1) { c.fillStyle = '#e5484d'; c.fillRect(x, cy - half, 1, 3); c.fillRect(x, cy + half - 3, 1, 3); c.fillStyle = base; }
+      if (amp > 1) { c.fillStyle = TL.C.bad; c.fillRect(x, cy - half, 1, 3); c.fillRect(x, cy + half - 3, 1, 3); c.fillStyle = base; }
     }
   };
   const wg = c.createLinearGradient(0, cy - half, 0, cy + half); wg.addColorStop(0, 'rgba(255,255,255,0)'); wg.addColorStop(0.5, 'rgba(255,255,255,.42)'); wg.addColorStop(1, 'rgba(255,255,255,0)');          // a lighter core, so the wave reads as a rounded form
@@ -658,7 +658,7 @@ function specVeil(c, W, Hc, hadPicture) {
   const top = AE_RULER, L = AE.specLoad, R = AE.specRev, C = TL.C, now = performance.now();
   if (L) {
     if (hadPicture) { c.fillStyle = C.panel2; c.globalAlpha = 0.6; c.fillRect(0, top, W, Hc - top); c.globalAlpha = 1; }
-    c.font = '600 12.5px "Hanken Grotesk",system-ui,sans-serif'; const txt = (hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + (L.f > 0.02 ? ' ' + Math.round(L.f * 100) + '%' : ''), tw = Math.ceil(c.measureText((hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + ' 100%').width), w = tw + 46, h = 34, x = W / 2 - w / 2, y = top + (Hc - top) / 2 - h / 2;
+    c.font = aeFont('small', '600'); const txt = (hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + (L.f > 0.02 ? ' ' + Math.round(L.f * 100) + '%' : ''), tw = Math.ceil(c.measureText((hadPicture ? 'Repainting the spectrum' : 'Painting the spectrum') + ' 100%').width), w = tw + 46, h = 34, x = W / 2 - w / 2, y = top + (Hc - top) / 2 - h / 2;
     c.save(); c.shadowColor = 'rgba(20,24,60,.16)'; c.shadowBlur = 14; c.shadowOffsetY = 3; roundRect(c, x, y, w, h, 17); c.fillStyle = C.bg; c.fill(); c.restore();
     roundRect(c, x, y, w, h, 17); c.strokeStyle = C.line; c.lineWidth = 1; c.stroke();
     const a0 = reducedMotion() ? 0 : now / 260, cx = x + 20, cy = y + h / 2;
@@ -1575,6 +1575,8 @@ const eqQtoPos = q => Math.round(100 * (1 - Math.log(clamp(q, 0.2, 10) / 0.2) / 
 const eqPosToQ = v => Math.round(0.2 * Math.pow(50, 1 - v / 100) * 100) / 100;
 const eqOct = q => (2 / Math.LN2) * Math.asinh(1 / (2 * q));
 const eqFixedQ = t => t === 'highpass' || t === 'lowpass' || t === 'lowshelf' || t === 'highshelf';          // these have no adjustable width
+/* the type a graph draws its own text in, read from the same tokens as the page's (--type-axis, -note, -small, -body), so a graph's words are the size of the words around it */
+const aeFontSz = {}, aeFont = (k, w) => (w ? w + ' ' : '') + (aeFontSz[k] || (aeFontSz[k] = getComputedStyle(document.documentElement).getPropertyValue('--type-' + k).trim() || '12.5px')) + ' "Hanken Grotesk",system-ui,sans-serif';
 const EQ_PAD = 34, EQ_DB = 12;          // like most EQ windows, 12 dB up or down is plenty for a score video (and keeps a stray drag from going far)
 const eqFx = (f, W) => EQ_PAD + Math.log(f / 20) / Math.log(1000) * (W - 2 * EQ_PAD);
 const eqXf = (x, W) => clamp(20 * Math.pow(1000, (x - EQ_PAD) / (W - 2 * EQ_PAD)), 20, 20000);
@@ -1613,7 +1615,7 @@ function aeEqDraw() {
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, real = AE.d.fx.eq.bands, bands = eqDisp(real), on = AE.d.fx.eq.on;
   c.clearRect(0, 0, W, H); c.fillStyle = C.panel2; c.fillRect(0, 0, W, H); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fillRect(0, 0, W, H); c.restore();          // no frame of its own: the card's line is the only one
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
-  c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted;
+  c.font = aeFont('axis'); c.textBaseline = 'middle'; c.fillStyle = C.muted;
   [-9, -6, -3, 3, 6, 9].forEach(g => { c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(EQ_PAD, Math.round(eqY(g, H)), W - 2 * EQ_PAD, 1); });
   c.globalAlpha = 1; c.fillStyle = C.hairline; c.fillRect(EQ_PAD, Math.round(eqY(0, H)), W - 2 * EQ_PAD, 1.5);
   [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
@@ -1646,7 +1648,7 @@ function aeEqDraw() {
   bands.forEach((b, i) => {
     if (b.a < 0.02) return; const x = eqFx(b.f, W), y = eqY(eqNoGain(b.type) ? 0 : b.g, H), sel = i === AE.band, hot = AE.eqHover === i || (AE.eqDrag && AE.eqDrag.i === i), r = (sel || hot ? 9.5 : 8) * (0.5 + 0.5 * b.a);
     c.beginPath(); c.arc(x, y, r, 0, 7); c.globalAlpha = (b.on && on ? 1 : 0.5) * (1 - 0.55 * by) * b.a; const hue = b.place === 'side' ? C.fade : C.accent; c.fillStyle = sel ? hue : C.panel2; c.fill(); c.lineWidth = 2; c.strokeStyle = hue; c.stroke();
-    c.fillStyle = sel ? '#fff' : hue; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.fillText(String(i + 1), x, y + 0.5); c.globalAlpha = 1;
+    c.fillStyle = sel ? '#fff' : hue; c.font = aeFont('axis', '600'); c.textAlign = 'center'; c.fillText(String(i + 1), x, y + 0.5); c.globalAlpha = 1;
   });
   { // the match target: a clear line, with the gap between it and your EQ softly shaded
     const tgOn = !!(AE.matchOpen && AE.match && AE.match.target); if (tgOn) AE.tgt = AE.match.target; const ta = hsGet('ae-tg', tgOn ? 1 : 0);
@@ -1655,11 +1657,11 @@ function aeEqDraw() {
       c.save(); c.globalAlpha = 0.14 * ta; c.fillStyle = C.turn; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); });
       for (let i = eqAxis.length - 1; i >= 0; i--) c.lineTo(eqFx(eqAxis[i], W), y(cur[i])); c.closePath(); c.fill(); c.restore();
       c.save(); c.globalAlpha = ta; c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.6; c.strokeStyle = C.turn; c.shadowColor = C.turn; c.shadowBlur = 8; c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W); if (i) c.lineTo(x, y(T[i])); else c.moveTo(x, y(T[i])); }); c.stroke(); c.restore();
-      c.save(); c.globalAlpha = ta; c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = C.turn; c.fillText('━ Target', EQ_PAD + 8, 16); c.fillStyle = C.accent; c.fillText('━ Your EQ', EQ_PAD + 76, 16); if (AE.zoneShown) { c.globalAlpha = 0.45 * ta; c.fillStyle = C.turn; c.fillRect(EQ_PAD + 150, 11, 12, 10); c.globalAlpha = ta; c.fillStyle = C.muted; c.fillText('Spread of six recordings', EQ_PAD + 167, 16); } c.restore();
+      c.save(); c.globalAlpha = ta; c.font = aeFont('note', '600'); c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = C.turn; c.fillText('━ Target', EQ_PAD + 8, 16); c.fillStyle = C.accent; c.fillText('━ Your EQ', EQ_PAD + 76, 16); if (AE.zoneShown) { c.globalAlpha = 0.45 * ta; c.fillStyle = C.turn; c.fillRect(EQ_PAD + 150, 11, 12, 10); c.globalAlpha = ta; c.fillStyle = C.muted; c.fillText('Spread of six recordings', EQ_PAD + 167, 16); } c.restore();
     }
-    if (split) { c.save(); c.globalAlpha = 1 - by * 0.5; c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'middle'; const ly = tgOn ? 34 : 16; c.fillStyle = C.accent; c.fillText('━ Mid', EQ_PAD + 8, ly); c.fillStyle = C.fade; c.fillText('━ Side', EQ_PAD + 56, ly); c.restore(); }
+    if (split) { c.save(); c.globalAlpha = 1 - by * 0.5; c.font = aeFont('note', '600'); c.textAlign = 'left'; c.textBaseline = 'middle'; const ly = tgOn ? 34 : 16; c.fillStyle = C.accent; c.fillText('━ Mid', EQ_PAD + 8, ly); c.fillStyle = C.fade; c.fillText('━ Side', EQ_PAD + 56, ly); c.restore(); }
     const nud = AE.eqNudge ? clamp(1 - (performance.now() - AE.eqNudge) / 900, 0, 1) : 0;
-    if (!real.length && !AE.d.fx.eq.curve && !(ta > 0.01)) { c.save(); c.fillStyle = nud > 0 ? C.accent : C.muted; c.font = (nud > 0 ? '600 ' : '') + '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.9; c.translate(W / 2, eqY(0, H) - 22); c.scale(1 + 0.06 * nud, 1 + 0.06 * nud); c.fillText(AE.matchOpen ? 'Import a reference to see its target' : 'Double-click to add a band', 0, 0); c.restore(); }
+    if (!real.length && !AE.d.fx.eq.curve && !(ta > 0.01) && !AE.matchOpen) { c.save(); c.fillStyle = nud > 0 ? C.accent : C.muted; c.font = (nud > 0 ? '600 ' : '') + aeFont('body'); c.textAlign = 'center'; c.globalAlpha = 0.9; c.translate(W / 2, eqY(0, H) - 22); c.scale(1 + 0.06 * nud, 1 + 0.06 * nud); c.fillText('Double-click to add a band', 0, 0); c.restore(); }
     if (nud > 0) AE.eqMoving = true;
   }
   aePill(c, W, by);
@@ -1669,7 +1671,7 @@ function aeEqDraw() {
 /* "Bypassed" slides in at the top corner of a stage while the processing is switched off */
 function aePill(c, W, by) {
   if (by < 0.02) return; c.save(); c.globalAlpha = Math.min(1, by * 1.4); const t = 'Bypassed', w = 70, h = 22, x = W - w - 12, y = 10 + (1 - Math.min(1, by)) * -8;
-  roundRect(c, x, y, w, h, 11); c.fillStyle = TL.C.ink; c.fill(); c.globalAlpha *= 1; c.fillStyle = TL.C.panel2; c.font = '600 11.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, x + w / 2, y + h / 2 + 0.5); c.restore();
+  roundRect(c, x, y, w, h, 11); c.fillStyle = TL.C.ink; c.fill(); c.globalAlpha *= 1; c.fillStyle = TL.C.panel2; c.font = aeFont('note', '600'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(t, x + w / 2, y + h / 2 + 0.5); c.restore();
 }
 function eqSelected() { const b = AE.d && AE.d.fx.eq.bands[AE.band]; return b || null; }
 function aeEqPanel() {
@@ -1848,9 +1850,9 @@ function aeScopeDraw() {
   const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 18, bw = Math.min(W, H), bx = (W - bw) / 2;          // a picture wider than tall (the narrow layout) draws its box as a centered square, as it looks beside the cards
   c.clearRect(0, 0, W, H); roundRect(c, bx + 0.5, 0.5, bw - 1, H - 1, 12); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); c.strokeStyle = C.hairline; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(cx, cy - R); c.lineTo(cx, cy + R); c.moveTo(cx - R, cy); c.lineTo(cx + R, cy); c.moveTo(cx - R * 0.7071, cy + R * 0.7071); c.lineTo(cx + R * 0.7071, cy - R * 0.7071); c.moveTo(cx - R * 0.7071, cy - R * 0.7071); c.lineTo(cx + R * 0.7071, cy + R * 0.7071); c.stroke(); c.restore();
-  c.fillStyle = C.muted; c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = C.muted; c.font = aeFont('axis'); c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText('L', cx - R * 0.7071 - 9, cy - R * 0.7071 - 6); c.fillText('R', cx + R * 0.7071 + 9, cy - R * 0.7071 - 6);
-  if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.fillText('Mono audio', cx, cy + R + 4); }
+  if (fxChannels() < 2) { c.fillStyle = C.muted; c.font = aeFont('body'); c.fillText('Mono audio', cx, cy + R + 4); }
   c.save(); c.translate(bx, 0); aePill(c, bw, hsGet('ae-by', aeBy())); c.restore();
   if (!AE.an || !AE.playing) return;
   const a = AE.an; a.l.getFloatTimeDomainData(a.buf); a.r.getFloatTimeDomainData(a.buf2);
@@ -1918,7 +1920,7 @@ function aeFadeDraw() {
   const { Li, Lo, f } = aeFadeFn(d);
   const top = 24, bot = H - 36, span = Math.max(0.5, +$('#aeFadeLen').max || 3), a0 = 8, a1 = W * 0.42, b0 = W * 0.58, b1 = W - 8;
   c.clearRect(0, 0, W, H); c.strokeStyle = C.line; c.lineWidth = 1; c.beginPath(); c.moveTo(0, top + 0.5); c.lineTo(W, top + 0.5); c.moveTo(0, bot + 0.5); c.lineTo(W, bot + 0.5); c.stroke();
-  const y = v => top + (1 - v) * (bot - top), font = '11px "Hanken Grotesk",system-ui,sans-serif';
+  const y = v => top + (1 - v) * (bot - top), font = aeFont('note');
   /* time runs left to right in both pictures: the first rises into the music, the second falls away from it, each with a caption */
   const zone = (x0, x1, L, dir, name, on) => {
     const al = (on ? 1 : 0.4) * (0.35 + 0.65 * Math.min(1, L / 0.25)), pt = px => { const t = (dir > 0 ? px : (x1 - x0) - px) / (x1 - x0) * span; return [x0 + px, y(L < 0.001 ? 1 : f(t / L))]; };
@@ -1929,7 +1931,7 @@ function aeFadeDraw() {
       const k = Math.max(3, Math.round(L / span * (x1 - x0))), tx = dir > 0 ? x0 + k : x1 - k;
       c.globalAlpha = Math.min(1, L / 0.15) * (on ? 1 : 0.5); c.fillStyle = C.muted; c.font = font; c.textBaseline = 'top'; c.fillRect(Math.round(tx), bot - 3, 1, 7); c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(L.toFixed(1) + 's', tx + (dir > 0 ? -3 : 3), bot + 7);
     }
-    c.globalAlpha = on ? 0.9 : 0.45; c.fillStyle = C.muted; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'bottom'; c.textAlign = dir > 0 ? 'right' : 'left'; c.fillText(name, dir > 0 ? x1 - 6 : x0 + 6, bot - 6); c.globalAlpha = 1;
+    c.globalAlpha = on ? 0.9 : 0.45; c.fillStyle = C.muted; c.font = aeFont('axis', '600'); c.textBaseline = 'bottom'; c.textAlign = dir > 0 ? 'right' : 'left'; c.fillText(name, dir > 0 ? x1 - 6 : x0 + 6, bot - 6); c.globalAlpha = 1;
   };
   zone(a0, a1, Li, 1, 'IN', side !== 'out'); zone(b0, b1, Lo, -1, 'OUT', side !== 'in'); AE.fadeShown = { li: Li, lo: Lo, span };          // (what is drawn, for the check that the picture shows the chosen length once it has settled)
   c.save(); c.setLineDash([2, 5]); c.strokeStyle = C.muted; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(a1 + 4, y(1)); c.lineTo(b0 - 4, y(1)); c.stroke(); c.restore();          // the music carries on in between
@@ -2551,42 +2553,46 @@ function aeEmUi() {
   const amt = $('#aeEmAmt'); amt.disabled = !has; $('#aeEmAmtVal').textContent = amt.value + '%'; paintRange(amt);
   const t = emTake(), go = $('#aeEmGo'); btnHold(go, ['Emulate', 'Emulated']); go.disabled = !has || busy || !(t.tone || t.width || t.loud); go.classList.toggle('on', live && !busy); go.setAttribute('aria-pressed', String(live && !busy));
   go.textContent = live ? 'Emulated' : 'Emulate';
-  const w = [t.tone && 'the EQ', t.width && 'the Imager', t.loud && 'Level'].filter(Boolean); $('#aeEmSay').textContent = live && w.length ? 'Press again to put ' + (w.length > 1 ? 'them' : 'it') + ' back.' : '';
   $('#aeEmBadge').textContent = live ? amt.value + '%' : ''; $('#aeRail .ae-proc[data-tool=emu]').classList.toggle('off', !live);          // the row is lit only while the Emulator's result is applied, as a tool that does nothing is dimmed
-  emSum(); $('#aeEmEmptyMsg').hidden = has || busy; aeRingSync(); aeAnim();
+  $('#aeEmKey').hidden = !has; emSum(); aeRingSync(); aeAnim();
 }
 /* the share of the sound read so far, shown by the wait pill over the graph (aeEmUi) */
 function emBar(em, v) { if (AE.em !== em) return; const was = Math.round((em.prog || 0) * 100); em.prog = v; if (Math.round(v * 100) !== was && (em.busy || em.busyOwn) && AE.d) aeEmUi(); }
-/* what Emulate would set, set beside what is there now: the EQ's biggest move, the Imager's three widths and the loudness */
+/* what Emulate would set: the EQ's biggest move, the Imager's three widths and the loudness; a part that is not taken, or cannot be, has no cell, and with no reference there is no strip */
 function emSum() {
-  const em = AE.em, has = !!(em && em.ref), own = has && em.own, t = emTake(), amt = +$('#aeEmAmt').value / 100, db1 = v => (Math.round(v * 10) / 10).toFixed(1).replace('-', '−'), hz = f => f >= 1000 ? (f / 1000).toFixed(f % 1000 ? 1 : 0) + 'kHz' : Math.round(f) + 'Hz';
-  if (!own) { $('#aeEmT').textContent = $('#aeEmW').textContent = '–'; $('#aeEmL').textContent = has && Number.isFinite(em.ref.I) ? LUFS_TXT(Math.round(em.ref.I * 10) / 10) : '–'; $('#aeEmT2').textContent = $('#aeEmW2').textContent = ''; $('#aeEmR').textContent = has ? 'Range ' + db1(em.ref.LRA) + ' LU' : ''; return; }
-  const plan = emPlan(own, em.ref, amt, t), cur = emLive() ? em.base : AE.d, was = (cur.fx.imager.bw || [100, 100, 100]).map(Math.round);
-  if (plan.curve && t.tone) { let k = 0; plan.curve.forEach((v, i) => { if (Math.abs(v) > Math.abs(plan.curve[k])) k = i; }); const v = plan.curve[k]; $('#aeEmT').textContent = Math.abs(v) < 0.05 ? 'No change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + 'dB at ' + hz(eqAxis[k]); $('#aeEmT2').textContent = 'Biggest move'; } else { $('#aeEmT').textContent = t.tone ? 'No change' : 'Not taken'; $('#aeEmT2').textContent = ''; }
-  if (plan.bw && t.width) { $('#aeEmW').textContent = plan.bw.slice(0, -1).join(', ') + ', and ' + plan.bw[plan.bw.length - 1] + '%'; $('#aeEmW2').textContent = 'Was ' + was.slice(0, -1).join(', ') + ', and ' + was[was.length - 1] + '% (low, mid, and high).'; } else { $('#aeEmW').textContent = t.width ? 'No change' : 'Not taken'; $('#aeEmW2').textContent = ''; }
-  $('#aeEmL').textContent = t.loud && plan.lufs != null ? LUFS_TXT(plan.lufs) : 'Not taken'; $('#aeEmR').textContent = Number.isFinite(em.ref.LRA) ? 'Reference range ' + db1(em.ref.LRA) + ' LU' : '';
+  const em = AE.em, has = !!(em && em.ref), own = has && em.own, t = emTake(), amt = +$('#aeEmAmt').value / 100, hz = f => f >= 1000 ? (f / 1000).toFixed(f % 1000 ? 1 : 0) + 'kHz' : Math.round(f) + 'Hz', list = a => a.join(', ') + '%';
+  const plan = own ? emPlan(own, em.ref, amt, t) : { curve: null, bw: null, lufs: Number.isFinite(em && em.ref && em.ref.I) && t.loud ? clamp(Math.round(em.ref.I * 10) / 10, -36, -6) : null };
+  const show = (id, on) => { $(id).hidden = !on; }, set = (id, v) => { $(id).textContent = v; };
+  let eq = false, wd = false, ld = plan.lufs != null;
+  if (plan.curve) { eq = true; let k = 0; plan.curve.forEach((v, i) => { if (Math.abs(v) > Math.abs(plan.curve[k])) k = i; }); const v = plan.curve[k]; set('#aeEmT', Math.abs(v) < 0.05 ? 'No change' : (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + 'dB at ' + hz(eqAxis[k])); }
+  if (plan.bw) { wd = true; set('#aeEmW', plan.bw.every(v => v === plan.bw[0]) ? plan.bw[0] + '%' : list(plan.bw)); }
+  if (ld) set('#aeEmL', LUFS_TXT(plan.lufs));
+  show('#aeEmTc', eq); show('#aeEmWc', wd); show('#aeEmLc', ld); show('#aeEmSum', has && (eq || wd || ld));
 }
 /* the picture: yours, the reference's and yours with the curve added, on the EQ's frequency scale; it draws in and moves with Amount and the choices */
 const emHs = (k, t) => { if (!TL.hs || !TL.hs[k]) hsSnap(k, 0); return hsGet(k, t); };
 function aeEmDraw() {
-  const cv = $('#aeEmCv'), em = AE.em; if (!cv || !cv.clientWidth) return; const dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth, H = cv.clientHeight;
-  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
-  const c = cv.getContext('2d'), cs = getComputedStyle(cv), col = k => cs.getPropertyValue(k).trim(); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
-  const fx = f => Math.log(f / 20) / Math.log(1000) * W, R = 20, y = v => H / 2 - v / R * (H / 2 - 6);
-  c.strokeStyle = col('--line'); c.lineWidth = 1; c.fillStyle = col('--muted'); c.font = '10.5px ' + cs.fontFamily; c.textBaseline = 'bottom';
-  [[100, '100Hz'], [1000, '1kHz'], [10000, '10kHz']].forEach(q => { const x = Math.round(fx(q[0])) + 0.5; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); c.fillText(q[1], x + 4, H - 2); });
+  const cv = $('#aeEmCv'), em = AE.em; if (!cv || !aeCvSize(cv)) return; const c = cv.getContext('2d'), W = cv.clientWidth, H = cv.clientHeight, C = TL.C, TOP = 8, BOT = H - 22, fx = f => eqFx(f, W);          // the EQ window's frequency axis, colors and grid, so the two graphs read as one
+  c.clearRect(0, 0, W, H);
   const has = !!(em && em.ref), reveal = emHs('em-in', has ? 1 : 0), own = has && em.own, tone = emTake().tone, amt = +$('#aeEmAmt').value / 100;
   if (em && em.fullOf !== own) { em.fullOf = own; em.full = own ? emPlan(own, em.ref, 1, { tone: true }).curve : null; }
-  const mix = emHs('em-f', em && em.full && tone ? amt : 0), x1 = Math.max(0, reveal * W), mid = y(0);
+  const sm = a => a && smoothCurve(a, 8), SA = sm(own && own.tone), SB = sm(has && em.ref.tone), SQ = SA && em.full ? SA.map((v, i) => v + em.full[i]) : null;
+  /* the vertical scale fits what is drawn (yours, the reference, and yours with the full curve), so no line runs off the graph */
+  let hi = -1e9, lo = 1e9; [SA, SB, SQ].forEach(a => { if (a) a.forEach(v => { if (v > hi) hi = v; if (v < lo) lo = v; }); });
+  if (hi < lo) { hi = 10; lo = -10; } const padv = (hi - lo) * 0.08; hi += padv; lo -= padv;
+  const y = v => TOP + (hi - clamp(v, lo, hi)) / (hi - lo) * (BOT - TOP);
+  c.font = aeFont('axis'); c.textBaseline = 'middle'; c.textAlign = 'center';
+  [[100, '100'], [1000, '1k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(fx(f)); c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(x, TOP, 1, BOT - TOP); c.globalAlpha = 1; c.fillStyle = C.muted; c.fillText(t, x, H - 9); });
+  const mix = emHs('em-f', em && em.full && tone ? amt : 0), x1 = Math.max(0, reveal * W);
   c.save(); c.beginPath(); c.rect(0, 0, x1, H); c.clip();
-  const pts = (a, add) => { if (!a) return null; const q = smoothCurve(a, 8); return Array.from(q, (v, i) => [fx(eqAxis[i]), y(clamp(v + (add ? add[i] * mix : 0), -R, R))]); };
+  const pts = (a, add) => a && Array.from(a, (v, i) => [fx(eqAxis[i]), y(v + (add ? em.full[i] * mix : 0))]);
   const path = P => { c.beginPath(); P.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); };
-  const A = pts(own && own.tone), B = pts(has && em.ref.tone), Q = em && em.full && A ? pts(own.tone, em.full) : null;
-  if (A && Q && mix > 0.01) { c.beginPath(); Q.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); for (let i = A.length - 1; i >= 0; i--) c.lineTo(A[i][0], A[i][1]); c.closePath(); c.globalAlpha = 0.14 * Math.min(1, mix * 2); c.fillStyle = col('--accent'); c.fill(); c.globalAlpha = 1; }
-  c.lineJoin = 'round'; if (A) { path(A); c.strokeStyle = col('--muted'); c.lineWidth = 1.6; c.stroke(); } if (B) { path(B); c.strokeStyle = col('--turn'); c.lineWidth = 2; c.stroke(); }
-  if (Q && mix > 0.01) { path(Q); c.globalAlpha = Math.min(1, mix * 3); c.strokeStyle = col('--accent'); c.lineWidth = 2.2; c.stroke(); c.globalAlpha = 1; }
+  const A = pts(SA), B = pts(SB), Q = SA && em.full ? pts(SA, true) : null;
+  if (A && Q && mix > 0.01) { c.beginPath(); Q.forEach((q, i) => i ? c.lineTo(q[0], q[1]) : c.moveTo(q[0], q[1])); for (let i = A.length - 1; i >= 0; i--) c.lineTo(A[i][0], A[i][1]); c.closePath(); c.globalAlpha = 0.12 * Math.min(1, mix * 2); c.fillStyle = C.accent; c.fill(); c.globalAlpha = 1; }
+  c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.2;
+  if (A) { path(A); c.strokeStyle = C.muted; c.stroke(); } if (B) { path(B); c.strokeStyle = C.turn; c.stroke(); }
+  if (Q && mix > 0.01) { path(Q); c.globalAlpha = Math.min(1, mix * 3); c.strokeStyle = C.accent; c.stroke(); c.globalAlpha = 1; }
   c.restore();
-  if (reveal > 0.01 && reveal < 0.995) { c.strokeStyle = col('--line'); c.beginPath(); c.moveTo(x1, 0); c.lineTo(x1, H); c.stroke(); }
 }
 function aeEmBind() {
   $('#aeEmPick').addEventListener('click', () => $('#aeEmIn').click());
@@ -2749,12 +2755,12 @@ function aeNrDraw() {
   const pa = hsGet('ae-nrp', has ? 1 : 0), red = hsGet('ae-nrr', has && nz.on ? nz.reduction : 0), by = hsGet('ae-by', aeBy());
   c.clearRect(0, 0, W, H); roundRect(c, 0.5, 0.5, W - 1, H - 1, 10); c.fillStyle = C.panel2; c.fill(); c.save(); c.globalAlpha = 0.06; c.fillStyle = C.ink; c.fill(); c.restore(); c.strokeStyle = C.hairline; c.lineWidth = 1; c.stroke();
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 9); c.clip();
-  c.font = '10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle';
+  c.font = aeFont('axis'); c.textBaseline = 'middle';
   [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([f, t]) => { const x = Math.round(eqFx(f, W)); c.globalAlpha = 0.35; c.fillStyle = C.hairline; c.fillRect(x, 8, 1, H - 24); c.globalAlpha = 1; c.fillStyle = C.muted; c.textAlign = 'center'; c.fillText(t, x, H - 9); });
   { const hm = nz.hum && !aeBp('noise') ? nz.hum : null, ha = hsGet('ae-hum', hm ? 1 : 0); if (hm) AE.humLast = hm; const hh = hm || AE.humLast;
     if (hh && ha > 0.01) { c.save(); c.globalAlpha = ha; const col = C.accent, hs = (hh.n && hh.n.length ? hh.n : [1]).filter(k => hh.f * k < 20000);          // the hum's own pitch and its overtones: thin dashed lines where the notches are
       hs.forEach((k, i) => { const x = Math.round(eqFx(hh.f * k, W)); c.save(); c.globalAlpha = ha * (i ? 0.55 : 0.9); c.strokeStyle = col; c.lineWidth = 1.4; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x + 0.5, 22); c.lineTo(x + 0.5, H - 24); c.stroke(); c.restore(); });
-      c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out at ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
+      c.font = aeFont('note', '600'); c.textAlign = 'left'; c.fillStyle = col; c.fillText('Hum out at ' + Math.round(hh.f) + 'Hz', Math.min(W - 150, Math.round(eqFx(hh.f * (hs[0] || 1), W)) + 6), 16); c.restore(); } }
   const P = AE.nrProf;
   if (P && pa > 0.01) {
     let mx = -1e9; P.forEach(v => { if (v > mx) mx = v; }); const lv = nrLive(); let lm = -1e9; if (lv.inp) lv.inp.forEach(v => { if (v > lm) lm = v; });
@@ -2770,11 +2776,11 @@ function aeNrDraw() {
     if (lv.out && by < 0.5) { c.beginPath(); eqAxis.forEach((f, i) => { const x = eqFx(f, W), yy = Math.min(bot, y(lv.out[i])); if (i) c.lineTo(x, yy); else c.moveTo(x, yy); }); c.lineWidth = 1.6; c.strokeStyle = C.accent; c.globalAlpha = 0.9 * pa * (1 - 2 * by); c.stroke(); }
     c.restore();
     { const la = clamp(red / 2, 0, 1), e = 1 - Math.pow(1 - la, 3);          // 'After' slides in beside 'Noise' as Reduction rises from Off and slides out as it falls
-      c.save(); c.font = '600 11px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'right'; const lx = W - 14;
+      c.save(); c.font = aeFont('note', '600'); c.textAlign = 'right'; const lx = W - 14;
       if (la > 0.01) { c.globalAlpha = pa * la; c.fillStyle = C.accent; c.fillText('╍ After', lx + 10 * (1 - e), 16); }
       c.globalAlpha = pa; c.fillStyle = C.turn; c.fillText('━ Noise', lx - 68 * e, 16); c.restore(); }
   }
-  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = '13px "Hanken Grotesk",system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet.', W / 2, H / 2 - 6); c.restore(); }
+  if (pa < 0.5) { c.save(); c.fillStyle = C.muted; c.font = aeFont('body'); c.textAlign = 'center'; c.globalAlpha = 1 - pa * 2; c.fillText('No noise learned yet.', W / 2, H / 2 - 6); c.restore(); }
   aePill(c, W, by); c.restore();
 }
 /* what the editor plays: the cleaned-up sound while Noise reduction is on (the last one that was ready until a new one is), or just the noise */

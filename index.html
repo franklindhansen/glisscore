@@ -824,13 +824,13 @@
           </div></div>
           <div class="eq-fold card-fold shut" id="aeMatchFold" inert aria-hidden="true"><div class="eq-fold-in">
           <div class="eq-match ae-card" id="aeMatch">
-            <div class="mt-head t-head"><h4>EQ Match</h4><button class="info-i" type="button" aria-label="About EQ Match" aria-expanded="false">i</button><span class="tip" role="tooltip" data-tip="tip.match">Matches the tone of another recording. Nothing leaves your device.</span><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button" title="Save the tone of the sound you are editing, to use as a reference in another project">Export EQ profile</button></span></div>
+            <div class="mt-head t-head"><h4>EQ Match</h4><span class="mt-acts"><button class="btn small" id="aeRefBands" type="button" title="Replace the curve with bands you can move" disabled>Turn into bands</button><button class="btn small" id="aeRefSave" type="button" title="Save the tone of the sound you are editing, to use as a reference in another project">Export profile</button></span></div>
             <div class="mt-steps two">
               <div class="mt-step" id="aeRefStep"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Reference</div>
-                <div class="mt-pick" id="aeRefEmpty"><button class="btn small" id="aeRefProfile" type="button">Import EQ profile</button><span>or</span><button class="btn small" id="aeRefAudio" type="button">Use an audio file</button></div>
+                <div class="mt-pick" id="aeRefEmpty"><button class="btn small" id="aeRefProfile" type="button">Import profile</button><span>or</span><button class="btn small" id="aeRefAudio" type="button">Choose audio</button></div>
                 <div class="mt-chip" id="aeRefChip" hidden><b id="aeRefName"></b><button id="aeRefClear" type="button" aria-label="Remove the reference" title="Remove the reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
               </div></div>
-              <div class="mt-step dim" id="aeAmtStep"><span class="mt-n">2</span><div class="mt-body"><div class="field" id="aeMatchAmtField"><label for="aeMatchAmt"><span class="mt-title t-lbl">Amount</span><output id="aeMatchAmtVal">100%</output></label><input type="range" id="aeMatchAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div></div></div>
+              <div class="mt-step dim" id="aeAmtStep"><span class="mt-n">2</span><div class="mt-body"><div class="field" id="aeMatchAmtField"><label for="aeMatchAmt"><span class="mt-title t-lbl">Amount</span><output id="aeMatchAmtVal" class="t-lbl">100%</output></label><input type="range" id="aeMatchAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div></div></div>
             </div>
             <input type="file" id="aeRefIn" accept="audio/*" hidden><input type="file" id="aeProfIn" accept=".txt,.csv,.tsv,text/plain" hidden>
           </div>
@@ -895,22 +895,22 @@
             <div class="ae-card" id="aeEmCard">
               <div class="mt-steps">
                 <div class="mt-step"><span class="mt-n">1</span><div class="mt-body"><div class="mt-title t-lbl">Reference</div>
-                  <div class="mt-pick" id="aeEmEmpty"><button class="btn small" id="aeEmPick" type="button">Choose an audio file</button></div>
+                  <div class="mt-pick" id="aeEmEmpty"><button class="btn small" id="aeEmPick" type="button">Choose audio</button></div>
                   <div class="mt-chip" id="aeEmChip" hidden><b id="aeEmName"></b><button id="aeEmClear" type="button" aria-label="Remove the reference" title="Remove the reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
                 </div></div>
                 <div class="mt-step dim" id="aeEmTakeStep"><span class="mt-n">2</span><div class="mt-body"><div class="mt-title t-lbl" id="aeEmTakeL">Take its</div>
                   <div class="em-take" role="group" aria-labelledby="aeEmTakeL"><button class="btn small" id="aeEmTone" type="button" aria-pressed="true" title="Sets the EQ's curve">Tone</button><button class="btn small" id="aeEmWidth" type="button" aria-pressed="true" title="Sets the Imager's width for the low, middle, and high notes">Width</button><button class="btn small" id="aeEmLoud" type="button" aria-pressed="true" title="Sets Level to the reference's loudness, with the limiter on">Loudness</button></div>
                 </div></div>
-                <div class="mt-step dim" id="aeEmAmtStep"><span class="mt-n">3</span><div class="mt-body"><div class="field" id="aeEmAmtField"><label for="aeEmAmt"><span class="mt-title t-lbl">Amount</span><output id="aeEmAmtVal">100%</output></label><input type="range" id="aeEmAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div>
-                  <div class="em-go"><button class="btn small primary" id="aeEmGo" type="button" aria-pressed="false" disabled>Emulate</button><span class="t-note inline em-say" id="aeEmSay" aria-live="polite"></span></div>
+                <div class="mt-step dim" id="aeEmAmtStep"><span class="mt-n">3</span><div class="mt-body"><div class="field" id="aeEmAmtField"><label for="aeEmAmt"><span class="mt-title t-lbl">Amount</span><output id="aeEmAmtVal" class="t-lbl">100%</output></label><input type="range" id="aeEmAmt" min="0" max="100" step="1" value="100" data-default="100" disabled></div>
+                  <div class="em-go"><button class="btn small primary" id="aeEmGo" type="button" aria-pressed="false" disabled>Emulate</button></div>
                 </div></div>
               </div>
               <input type="file" id="aeEmIn" accept="audio/*" hidden>
             </div>
             <div class="ae-card em-view">
-              <div class="mt-head t-head"><h4>Tone</h4><span class="em-key" aria-hidden="true"><i class="a"></i>Yours<i class="b"></i>Reference<i class="c"></i>After</span></div>
-              <div class="em-stage"><canvas id="aeEmCv" aria-label="The tone of your recording and of the reference"></canvas><p class="em-empty" id="aeEmEmptyMsg">Choose a reference to see how yours differs.</p></div>
-              <div class="lv-sum"><div><span>Tone</span><b id="aeEmT">–</b><small id="aeEmT2"></small></div><div><span>Width</span><b id="aeEmW">–</b><small id="aeEmW2"></small></div><div><span>Loudness</span><b id="aeEmL">–</b><small id="aeEmR"></small></div></div>
+              <div class="mt-head t-head"><h4>Tone</h4><span class="em-key" id="aeEmKey" aria-hidden="true" hidden><i class="a"></i>Yours<i class="b"></i>Reference<i class="c"></i>After</span></div>
+              <div class="em-stage"><canvas id="aeEmCv" aria-label="The tone of your recording and of the reference"></canvas></div>
+              <div class="lv-sum" id="aeEmSum" hidden><div id="aeEmTc"><span>EQ</span><b id="aeEmT"></b></div><div id="aeEmWc"><span>Width</span><b id="aeEmW"></b></div><div id="aeEmLc"><span>Loudness</span><b id="aeEmL"></b></div></div>
             </div>
           </div>
         </section>
