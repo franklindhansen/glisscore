@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.16
+
+The Audio Editor's spacing now comes from shared values, so every tool lines up the same way. The EQ band also switches layouts sooner, so its Gain and Width sliders stay wide enough on screens around 1000px.
+
 ## 1.2.15
 
 The Emulator's graph now fits the music instead of running off the edge, and its summary and buttons are simpler and line up. EQ Match has shorter button names, and the Audio Editor's text sizes and buttons are more consistent.
