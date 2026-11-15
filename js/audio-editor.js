@@ -392,7 +392,7 @@ function specRun(mono, sr, hop, N, H, fmin, fmax, emit) {
     for (k = 0; k <= half; k++) pw[k] = re[k] * re[k] + im[k] * im[k];
     for (b = 0; b < H; b++) {
       var f0 = lo[b] / binHz, f1 = hi[b] / binHz, sum = 0, cnt = 0, k0 = Math.ceil(f0), k1 = Math.floor(f1);
-      if (k1 >= k0) { for (k = k0; k <= k1 && k <= half; k++) { sum += pw[k]; cnt++; } sum /= cnt; }
+      if (k1 >= k0) { for (k = k0; k <= k1 && k <= half; k++) if (pw[k] > sum) sum = pw[k]; }          // the loudest bin of the band, not the average: high up a band holds many bins, and a tone lives in only two or three of them, so an average would show a squeak or a whistle many decibels too quiet
       else { var fc = (f0 + f1) / 2, kk = Math.min(half - 1, Math.max(0, Math.floor(fc))), fr = fc - kk; sum = pw[kk] * (1 - fr) + pw[kk + 1] * fr; }
       out[n * H + b] = 10 * Math.log10(sum * norm * norm + 1e-14);
     }
