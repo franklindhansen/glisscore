@@ -5,7 +5,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 (async () => {
   const d = await PDFDocument.create(); for (let i = 0; i < 12; i++) d.addPage([612, 792]); const f = path.join(os.tmpdir(), 'kf-range.pdf'); fs.writeFileSync(f, await d.save());
   const b = await chromium.launch(), errs = [];
-  const open = async w => { const p = await b.newPage({ viewport: { width: w, height: 900 } }); p.setDefaultTimeout(30000); p.on('pageerror', e => errs.push(e.message)); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500); await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(700); return p; };
+  const open = async w => { const p = await b.newPage({ viewport: { width: w, height: 900 } }); p.setDefaultTimeout(30000); p.on('pageerror', e => errs.push(e.message + ' @ ' + String(e.stack).split('\n').slice(1, 4).join(' | '))); p.on('requestfailed', r => errs.push('request failed: ' + r.url() + ' ' + (r.failure() || {}).errorText)); p.on('response', r => { if (r.status() >= 400) errs.push('response ' + r.status() + ': ' + r.url()); }); await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', f); await p.waitForTimeout(1500); await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(700); return p; };
   const p = await open(1300);
   const field = () => p.inputValue('#pePages'), count = () => p.textContent('#peCount'), steps = () => p.evaluate(() => PE.undo.length);
   const act = () => p.evaluate(() => PE.d.order.filter(id => !PE.d.slots[id].x).map(id => PE.d.slots[id].src + 1).join(','));

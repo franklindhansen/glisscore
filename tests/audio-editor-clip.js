@@ -15,7 +15,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     await p.click('#aePlay'); await p.waitForTimeout(1200); const a = await st();
     ok(tag + 'gain +12 clips: the Clip pill shows, the Gain number is red, True peak is above zero, badge says +12dB', a.clip && a.gainRed && /^\+/.test(a.hold) && a.badge === '+12dB', JSON.stringify(a));
     ok(tag + 'there is no clip note or Loudness peak line any more', a.noNote);
-    await p.evaluate(() => { const r = document.querySelector('input[name=aeNormMode][value=loud]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(700);
+    await p.evaluate(() => { const r = document.querySelector('input[name=aeNormMode][value=loud]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); { const end = Date.now() + 15000; let good = 0; while (good < 4 && Date.now() < end) { const x = await st(); good = !x.clip && x.badge === '−14.0LUFS' && /^−/.test(x.hold) ? good + 1 : 0; await p.waitForTimeout(150); } }   // sound already queued at the old gain can light the pill again for a moment, so wait until the new state has held for a few reads
     const c = await st(); ok(tag + 'Loudness with the limiter: the pill clears while it plays, the badge shows the target (not "Auto")', !c.clip && c.badge === '−14.0LUFS', JSON.stringify(c));
     ok(tag + 'the held peak starts again with the new level', /^−/.test(c.hold), c.hold);
     await p.evaluate(() => { const r = document.querySelector('input[name=aeNormMode][value=peak]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(700);

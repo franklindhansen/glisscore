@@ -141,10 +141,11 @@ function staffPage(doc, n) {
   await p.keyboard.press('0'); await p.waitForTimeout(400);
   ok('both pictures are back at Fit', await p.evaluate(() => SZS.z === 1 && SZ.z === 1), JSON.stringify(await p.evaluate(() => [SZS.z, SZ.z, szOverPrev])));
   // Hide and back glide: the picture and the selector change a little each frame, never a jump when the selector goes or comes
-  await p.evaluate(() => { window.__w = []; const f = () => { window.__w.push([document.querySelector('#stage').offsetWidth, document.querySelector('#sysSel').hidden ? 0 : document.querySelector('#sysSel').offsetWidth]); window.__raf = requestAnimationFrame(f); }; f(); });
-  await preset('spOnly'); await p.waitForTimeout(900); await preset('spEq'); await p.waitForTimeout(900);
-  const gl = await p.evaluate(() => { cancelAnimationFrame(window.__raf); const w = window.__w.map(q => q[1]); let last = 0, first = 0, seenZero = false; for (const v of w) { if (v === 0) seenZero = true; else if (!seenZero) last = v; else if (!first) first = v; } const l = w.filter(v => v > 0 && !seenZero); return { last: Math.min(...w.slice(0, w.indexOf(0)).filter(v => v > 0)), first, zero: w.indexOf(0) >= 0 }; });
-  ok('hiding the selector narrows it all the way before it goes, and showing it widens from nothing', gl.zero && gl.last < 60 && gl.first < 60, JSON.stringify(gl));
+  await p.evaluate(() => { window.__w = []; const f = now => { window.__w.push([document.querySelector('#stage').offsetWidth, document.querySelector('#sysSel').hidden ? 0 : document.querySelector('#sysSel').offsetWidth, now]); window.__raf = requestAnimationFrame(f); }; f(); });
+  await preset('spOnly'); await p.waitForFunction(() => document.querySelector('#sysSel').hidden && !SPLIT.moving, null, { timeout: 30000 }); await preset('spEq'); await p.waitForFunction(() => !document.querySelector('#sysSel').hidden && !SPLIT.moving, null, { timeout: 30000 });
+  // The glide follows the clock, so how far it has moved by the first painted frame depends on how late that frame is. A jump is a first or last width that is a large share of the settled width, not a fixed number of pixels.
+  const gl = await p.evaluate(() => { cancelAnimationFrame(window.__raf); const w = window.__w, zi = w.findIndex(q => q[1] === 0), fi = zi < 0 ? -1 : w.findIndex((q, i) => i > zi && q[1] > 0), nz = w.slice(0, Math.max(zi, 0)).map(q => q[1]).filter(v => v > 0), full = Math.max(...w.map(q => q[1])); return { full, last: Math.min(...nz), first: fi < 0 ? full : w[fi][1], zero: zi >= 0 }; });
+  ok('hiding the selector narrows it all the way before it goes, and showing it widens from nothing', gl.zero && gl.last < gl.full * 0.2 && gl.first < gl.full * 0.2, JSON.stringify(gl));
   // narrow: stacked
   await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(800);
   if (process.env.SHOTS) await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/phone.png' });

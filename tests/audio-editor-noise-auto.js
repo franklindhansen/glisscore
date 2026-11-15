@@ -39,11 +39,12 @@ async function steps(b) {
   ok('Escape while armed goes back to Auto', esc.m === 'auto' && esc.checked === 'auto' && !esc.armed, JSON.stringify(esc));
   // the "Select at least" note: a drag under 0.3s, on the waveform's center line in the waveform, the spectrogram, and full screen; trim stops use the same place
   const note = () => p.evaluate(() => { const n = document.querySelector('#aeStopNote'), cv = document.querySelector('#aeCanvas'), bar = document.querySelector('#audioDlg .ae-bar'), full = document.querySelector('#audioDlg').classList.contains('afull'), inset = full ? 0 : (bar && bar.offsetHeight ? bar.offsetHeight + 8 : 0), top = cv.getBoundingClientRect().top, Hc = Math.max(60, cv.clientHeight - inset), want = top + AE_RULER + (Hc - AE_RULER) / 2 - 2, r = n.getBoundingClientRect(); return { hidden: n.hidden, text: n.textContent, op: +getComputedStyle(n).opacity, off: (r.top + r.bottom) / 2 - want }; });
+  const settle = async re => { const end = Date.now() + 10000; let n; do { n = await note(); if (!n.hidden && n.op > 0.9 && Math.abs(n.off) <= 0.5 && re.test(n.text)) break; await p.waitForTimeout(50); } while (Date.now() < end); return n; };   // wait for the note to finish fading in and sit on the line, however busy the machine is
   const short = async tag => {
-    await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=manual]').click()); await drag(0.5, 0.6); await p.waitForTimeout(700); const n = await note(), l = await p.evaluate(() => ({ dis: document.querySelector('#aeNrLearn').disabled, m: AE.nrMethod }));
+    await p.evaluate(() => document.querySelector('input[name=aeNrMethod][value=manual]').click()); await drag(0.5, 0.6); const n = await settle(/Select at least/), l = await p.evaluate(() => ({ dis: document.querySelector('#aeNrLearn').disabled, m: AE.nrMethod }));
     ok(tag + ': a drag under 0.3s shows "Select at least 0.3s" on the waveform\'s center line, and Learn stays off', !n.hidden && n.text === 'Select at least 0.3s.' && n.op > 0.9 && Math.abs(n.off) <= 0.5 && l.dis && l.m === 'manual', JSON.stringify({ n, l }));
     await p.evaluate(() => { aeStopClear(); }); await p.waitForTimeout(500);
-    await p.evaluate(() => aeTrimSaid('start', { turn: 2, t: 1 })); await p.waitForTimeout(700); const t = await note();
+    await p.evaluate(() => aeTrimSaid('start', { turn: 2, t: 1 })); const t = await settle(/Page turn 2/);
     ok(tag + ': a trim stop shows its note in the same place', !t.hidden && /Page turn 2/.test(t.text) && Math.abs(t.off) <= 0.5, JSON.stringify(t)); await p.evaluate(() => { aeStopClear(); }); await p.waitForTimeout(500);
   };
   await short('waveform');

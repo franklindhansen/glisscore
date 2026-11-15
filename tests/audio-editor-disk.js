@@ -91,9 +91,9 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Ma
 
   // 6: the video player
   const v = await open(1, 's24.wav', true);
-  const st = () => v.evaluate(() => ({ t: S.time, playing: Transport.playing, dh: !!Transport.dh }));
-  await v.click('#bPlay'); await v.waitForTimeout(1500); const a1 = await st(); await v.waitForTimeout(1000); const a2 = await st();
-  ok('the video plays the sound from the store, and the clock follows it', a1.playing && a1.dh && a1.t > 1 && near(a2.t - a1.t, 1, 0.12), a1.t.toFixed(2) + ' → ' + a2.t.toFixed(2));
+  const st = () => v.evaluate(() => ({ t: S.time, playing: Transport.playing, dh: !!Transport.dh, wall: performance.now() / 1000 }));   // the page's own clock beside the player's, so a busy machine stretches both alike
+  await v.click('#bPlay'); await v.waitForFunction(() => S.time > 1, null, { timeout: 30000 }); const a1 = await st(); await v.waitForTimeout(1000); const a2 = await st();
+  ok('the video plays the sound from the store, and the clock follows it', a1.playing && a1.dh && a1.t > 1 && near(a2.t - a1.t, a2.wall - a1.wall, 0.12), a1.t.toFixed(2) + ' → ' + a2.t.toFixed(2) + ' in ' + (a2.wall - a1.wall).toFixed(2) + 's');
   await v.evaluate(() => Transport.seek(2)); await v.waitForTimeout(700); const a3 = await st();
   ok('a jump while it plays carries on from there', a3.playing && a3.t > 2.4 && a3.t < 3.2, a3.t.toFixed(2));
   await v.click('#bPlay'); await v.waitForTimeout(200); ok('pause lets go', !(await st()).playing && !(await st()).dh);

@@ -19,14 +19,15 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const r = await p.evaluate(async K => {
       const { S, TL, Transport, t2x } = window[K]; if (S.turns.length < 1) return { none: true };
       const sleep = ms => new Promise(r => setTimeout(r, ms)); S.time = Math.max(S.vStart, S.turns[0] - 0.5); Transport.play(); await sleep(300);
-      const rc = TL.canvas.getBoundingClientRect(), x = rc.left + t2x(S.turns[0]), y = rc.top + rc.height * 0.6; return { x, y, t0: S.turns[0], playing: Transport.playing };
+      const rc = TL.canvas.getBoundingClientRect(), x = rc.left + t2x(S.turns[0]), y = rc.top + rc.height * 0.6; return { x, y, t0: S.turns[0], playing: Transport.playing, t: S.time, wall: performance.now() / 1000 };
     }, K);
     if (r.none) ok('Dragging a page turn while the video plays leaves the video alone', false, 'no turns in the test score');
     else {
       await p.mouse.move(r.x, r.y); await p.mouse.down(); await p.mouse.move(r.x + 30, r.y, { steps: 4 }); await p.waitForTimeout(150);
-      const mid = await p.evaluate(K => ({ playing: window[K].Transport.playing, t: window[K].S.time, turn: window[K].S.turns[0] }), K); await p.mouse.up(); await p.waitForTimeout(200);
+      const mid = await p.evaluate(K => ({ playing: window[K].Transport.playing, t: window[K].S.time, turn: window[K].S.turns[0], wall: performance.now() / 1000 }), K); await p.mouse.up(); await p.waitForTimeout(200);
       const end = await p.evaluate(K => ({ playing: window[K].Transport.playing }), K);
-      ok('Dragging a page turn while the video plays: the marker moves, the video keeps playing and the playhead stays on the video', mid.playing && end.playing && mid.turn !== r.t0 && Math.abs(mid.t - mid.turn) > 0.02, JSON.stringify({ r: [r.t0], mid, end }));
+      ok('Dragging a page turn while the video plays: the marker moves, the video keeps playing and the playhead stays on the video', mid.playing && end.playing && mid.turn !== r.t0 && Math.abs((mid.t - r.t) - (mid.wall - r.wall)) < 0.3,   // the playhead went on at the video's own pace (it may pass the marker on the way, so it is not compared to the marker)
+         JSON.stringify({ r: [r.t0], mid, end }));
       await p.evaluate(K => window[K].Transport.pause(), K); await p.waitForTimeout(100);
       const q = await p.evaluate(K => { const { S, TL, t2x } = window[K], rc = TL.canvas.getBoundingClientRect(); return { x: rc.left + t2x(S.turns[0]), y: rc.top + rc.height * 0.6 }; }, K);
       await p.mouse.move(q.x, q.y); await p.mouse.down(); await p.mouse.move(q.x + 25, q.y, { steps: 4 }); await p.waitForTimeout(100);

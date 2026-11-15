@@ -5,7 +5,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
 const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0';
 (async () => {
   const b = await chromium.launch(), errs = [];
-  const p = await (await b.newContext({ viewport: { width: 1300, height: 900 } })).newPage(); p.setDefaultTimeout(30000); p.on('pageerror', e => errs.push(e.message));
+  const p = await (await b.newContext({ viewport: { width: 1300, height: 900 } })).newPage(); p.setDefaultTimeout(30000); p.on('pageerror', e => errs.push(e.message + ' @ ' + String(e.stack).split('\n').slice(1, 4).join(' | '))); p.on('requestfailed', r => errs.push('request failed: ' + r.url() + ' ' + (r.failure() || {}).errorText)); p.on('response', r => { if (r.status() >= 400) errs.push('response ' + r.status() + ': ' + r.url()); });
   await p.goto(URL); await p.waitForTimeout(800);
   await p.evaluate(() => { window.__mark = 1; });
   await p.click('.brand .home'); await p.waitForTimeout(900);
