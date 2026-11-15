@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.15
+
+The Emulator's graph now fits the music instead of running off the edge, and its summary and buttons are simpler and line up. EQ Match has shorter button names, and the Audio Editor's text sizes and buttons are more consistent.
+
 ## 1.2.14
 
 EQ Match, the Emulator, and the EQ's Dynamic Auto now show their progress as a Processing note over the graph, and their buttons keep a steady size. The Dynamic row lines up, and the start cards no longer jump back after a hover.
