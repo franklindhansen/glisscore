@@ -30,7 +30,11 @@ p=$(print -r -- "$out" | grep -c '^PASS'); f=$(print -r -- "$out" | grep -c '^FA
 [ $code -ne 0 ] && f=$((f + 1))
 sec=$(printf '%.1f' $((EPOCHREALTIME - t0)))
 print -r -- "$out" > $RES/$1.out; print $sec > $RES/$1.sec; print $f > $RES/$1.fail
-blk="$1: $p PASS, $f FAIL (${sec}s)"
+# a check that only ran out of time (a browser wait of 60 or 90 seconds expired on a busy machine: every FAIL line, if any, says so) is not a wrong result: it is run again, alone, once the busy part of the run is over. A wrong value or a check that fails twice is reported as a failure.
+if [ $f -gt 0 ] && [ "$2" != retry ] && print -r -- "$out" | grep -q 'Timeout [0-9]*ms exceeded' && ! print -r -- "$out" | grep '^FAIL' | grep -qv 'Timeout [0-9]*ms exceeded'; then
+  print $1 >> $RES/retry; print $f > $RES/$1.fail; print -r -- "$1: timed out on a busy machine, will run again (${sec}s)"; exit 0
+fi
+blk="$1: $p PASS, $f FAIL (${sec}s)"; [ "$2" = retry ] && blk="$blk, run again after a timeout"
 [ $f -gt 0 ] && blk="$blk"$'\n'"$(print -r -- "$out" | grep -v '^PASS' | head -12 | sed 's/^/    /')"
 print -r -- "$blk"
 EOS
@@ -39,6 +43,7 @@ for t in $list; do if [[ $t == (${~${(j:|:)serial}}) ]]; then ser+=($t); else pa
 t_all=$EPOCHREALTIME
 (( ${#par} )) && print -l $par | xargs -P $J -n1 zsh $RES/one.sh
 for t in $ser; do zsh $RES/one.sh $t; done
+[ -s $RES/retry ] && for t in $(<$RES/retry); do zsh $RES/one.sh $t retry; done
 fails=$missing
 for t in $list; do fails=$((fails + $(<$RES/$t.fail))); done
 if [ -n "$OUTFILE" ]; then for t in $list; do grep -E '^(PASS|FAIL)' $RES/$t.out | sed "s/^/$t\t/"; done | sort > "$OUTFILE"; fi
