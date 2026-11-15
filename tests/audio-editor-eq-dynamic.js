@@ -26,16 +26,16 @@ function wav(secs, amp, skew) { const sr = 48000, n = sr * secs, ch = 2, bytes =
   // Auto threshold: loud for a fifth of the time, so the threshold lands just under the loud level (0.3 = −10.5dB in the band)
   const auto = await m.evaluate(async () => { aeFx(fx => { fx.eq.bands = [{ type: 'peaking', f: 6000, g: 0, q: 2, on: true }]; }); AE.band = 0; aeEqPanel(); document.querySelector('#aeBandDyn').click(); await sleep(2500); return AE.d.fx.eq.bands[0].dyn; });
   ok('Auto sets the threshold where the loud part of the band begins', auto && auto.thr >= -17 && auto.thr <= -11, JSON.stringify(auto));
-  // Auto works as Balance's Auto does: pressed when the threshold is the measured one, pressing it again puts the slider back, moving the slider lets it go; while it reads, the button is a loading bar
+  // Auto works as Balance's Auto does: pressed when the threshold is the measured one, pressing it again puts the slider back, moving the slider lets it go; while it reads, the wait pill over the EQ graph says it and the button keeps its size and its word
   const au = await m.evaluate(async () => { aeFx(fx => { fx.eq.bands = [{ type: 'peaking', f: 6000, g: 0, q: 2, on: true }]; }); AE.band = 0; aeEqPanel(); await sleep(200);
-    const btn = document.querySelector('#aeBandThrAuto'), o = {}; let sawBar = false; const watch = setInterval(() => { if (btn.classList.contains('loading') && /Processing \d+%/.test(btn.textContent) && btn.style.getPropertyValue('--p')) sawBar = true; }, 5);
-    document.querySelector('#aeBandDyn').click(); await sleep(2500); clearInterval(watch); o.bar = sawBar; o.end = !btn.classList.contains('loading') && btn.textContent === 'Auto';
+    const btn = document.querySelector('#aeBandThrAuto'), o = {}; let sawBar = false, w0 = btn.getBoundingClientRect().width, moved = false; const pill = () => document.querySelector('#aeEqCv').parentNode.querySelector('.aw .wait-pill'); const watch = setInterval(() => { const pl = pill(); if (pl && pl.classList.contains('on') && /Processing/.test(pl.textContent) && btn.disabled) sawBar = true; if (btn.textContent !== 'Auto' || btn.classList.contains('loading') || Math.abs(btn.getBoundingClientRect().width - w0) > 0.5) moved = true; }, 5);
+    document.querySelector('#aeBandDyn').click(); await sleep(2500); clearInterval(watch); o.bar = sawBar && !moved; o.end = !pill().classList.contains('on') && btn.textContent === 'Auto' && !btn.disabled;
     const d = () => AE.d.fx.eq.bands[0].dyn, pressed = () => btn.getAttribute('aria-pressed') === 'true';
     o.on = pressed() && d().thr === d().auto && d().prev === -30; const measured = d().thr;
     const sl = document.querySelector('#aeBandThr'); sl.value = -40; sl.dispatchEvent(new Event('input', { bubbles: true })); sl.dispatchEvent(new Event('change', { bubbles: true })); await sleep(200); o.freed = !pressed() && d().thr === -40;
     btn.click(); await sleep(2500); o.again = pressed() && d().thr === measured && d().prev === -40;
     btn.click(); await sleep(300); o.back = !pressed() && d().thr === -40 && d().auto === undefined; return o; });
-  ok('Auto threshold: a loading bar while it reads; pressed when set, the slider goes back when it is pressed again, moving the slider lets it go', au.bar && au.end && au.on && au.freed && au.again && au.back, JSON.stringify(au));
+  ok('Auto threshold: the wait pill over the EQ graph while it reads, the button unchanged; pressed when set, the slider goes back when it is pressed again, moving the slider lets it go', au.bar && au.end && au.on && au.freed && au.again && au.back, JSON.stringify(au));
   // the live EQ (audio thread): the loud part is turned down by the range, the quiet part is not
   const live = await m.evaluate(async () => { aeFx(fx => { fx.eq.on = true; fx.eq.auto = false; fx.eq.bands = [{ type: 'peaking', f: 6000, g: 0, q: 2, on: true, dyn: { thr: -30, range: -8 } }]; }); await sleep(300);
     AE.pos = 0; document.querySelector('#aePlay').click(); await sleep(800); const ac = AE.g.context;

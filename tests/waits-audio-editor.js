@@ -14,7 +14,7 @@ const STRAY = '/\\b(Preparing|Measuring|Working out|Loading|Finding|Finishing)\\
     // every change on the page is scanned: any text with a stray word, and any text that is a wait, is noted
     await p.evaluate(stray => {
       const bad = new RegExp(stray.slice(1, -1)); window.__stray = new Set(); window.__waits = new Set();
-      const scan = () => { for (const el of document.querySelectorAll('#aePaneNoise *, #aePaneLevel *, #aePaneEmu *, .ae-state, .ae-proc *')) { if (el.children.length || !el.offsetParent) continue; const t = el.textContent.trim(); if (bad.test(t)) window.__stray.add(t); if (/^Processing/.test(t)) window.__waits.add(t); } };
+      const scan = () => { for (const el of document.querySelectorAll('#aePaneNoise *, #aePaneEq *, #aePaneLevel *, #aePaneEmu *, .ae-state, .ae-proc *')) { const pill = el.matches('.nr-wait-t'); if (pill ? !el.closest('.wait-pill.on') : (el.children.length || !el.offsetParent)) continue; const t = pill ? el.firstChild.textContent.trim() : el.textContent.trim(); if (bad.test(t)) window.__stray.add(t); if (/^Processing/.test(t)) window.__waits.add(t); } };
       new MutationObserver(scan).observe(document.body, { childList: true, subtree: true, characterData: true }); window.__scan = scan;
     }, STRAY);
     // the Emulator: reading a reference, then Emulate
@@ -27,7 +27,7 @@ const STRAY = '/\\b(Preparing|Measuring|Working out|Loading|Finding|Finishing)\\
     await p.evaluate(async () => { aeTool('level'); await sleep(300); const d = AE.d; d.normalize = true; d.normBy = 'loud'; aeRefresh && aeRefresh(); await sleep(600); });
     const r = await p.evaluate(() => ({ stray: [...window.__stray], waits: [...window.__waits] }));
     ok(tag + 'no "Preparing", "Measuring", "Working out", "Loading", "Finding" or "Finishing" in the Audio Editor\'s waits', r.stray.length === 0, JSON.stringify(r.stray));
-    ok(tag + 'the waits that were seen say "Processing"', r.waits.length > 0 && r.waits.every(t => /^Processing( [^%]*…| \d+%|…|\.\.\.)( \d+%)?$/.test(t)), JSON.stringify(r.waits));
+    ok(tag + 'the waits that were seen say "Processing"', r.waits.length > 0 && r.waits.every(t => /^Processing(( [^%]*…| \d+%|…|\.\.\.)( \d+%)?)?$/.test(t)), JSON.stringify(r.waits));
     ok(tag + 'no errors', errs.length === 0, errs.join(' | ')); await p.close();
   }
   await b.close();

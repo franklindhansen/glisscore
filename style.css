@@ -1226,14 +1226,11 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .mt-chip button{display:grid;place-items:center;flex:none;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:none;color:var(--muted);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .35s var(--spring-hover)}
 @media (hover:hover) and (pointer:fine){.mt-chip button:hover{background:var(--accent-soft);color:var(--accent);transform:scale(1.1)}}
 .mt-chip button svg{width:12px;height:12px}
-.mt-spin{display:none;flex:none;width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:mtspin .8s linear infinite}
-.mt-chip.busy .mt-spin{display:block}
-.mt-chip.busy button{display:none}
-@keyframes mtspin{to{transform:rotate(360deg)}}
+.mt-chip button:disabled{opacity:var(--inactive);pointer-events:none}          /* held while the wait pill is up, so a clear never lands in the middle of the job */
 /* a card that gets a nudge: the tool wants something moved first */
 @keyframes nudge{0%{border-color:var(--line);box-shadow:none}30%{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}100%{border-color:var(--line);box-shadow:none}}
 .ae-card.nudge{animation:nudge .9s var(--ease-out)}
-@media (prefers-reduced-motion:reduce){.ae-card.nudge{animation:none}.mt-spin{animation-duration:2s}}
+@media (prefers-reduced-motion:reduce){.ae-card.nudge{animation:none}}
 @container aedlg (max-width:728px){
   .mt-head .btn{font-size:12.5px}
 }
@@ -2285,12 +2282,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.ae-bypill{transition:none}}
 
 /* Emulator: the measuring bar, the third line in the key, and the small second line under each summary figure */
-.em-bar{height:3px;margin-top:8px;border-radius:2px;background:var(--line);overflow:hidden}
-.em-bar[hidden]{display:block;visibility:hidden}
-.em-bar i{display:block;height:100%;border-radius:2px;background:var(--accent);transform-origin:left;transform:scaleX(.02);transition:transform .25s var(--ease-ui)}
 .em-key i.c{margin-left:8px;background:var(--accent)}
 .lv-sum small{display:block;margin-top:2px;min-height:round(calc(var(--lh) * 1em),1px);font-size:11.5px;--lh:1.3;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (prefers-reduced-motion:reduce){.em-bar i{transition:none}}
 .em-view .lv-sum b,.em-view .lv-sum small{white-space:normal;overflow:visible;text-overflow:clip}
 .lv-sum small:empty{display:none}          /* a line with nothing to say takes no room */
 /* the Emulator's strip keeps one height whether or not its lines have a second row, and its letters sit midway between its line and the card's bottom edge (--gap-set under the line, the rest centered, and the card's own padding below) */
