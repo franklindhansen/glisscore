@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.13
+
+The Audio Editor's buttons now match the video editor's, including a Hide tools button in full screen. Tools that need more room scroll instead of being cut off, and Spectra, Fades, and Level fill their window at every size.
+
 ## 1.2.12
 
 Ogg and M4A files now come in and go out at their exact length, and M4A exports fall back to a lower bitrate with a notice when the browser can't do the one chosen. The spectrogram shows high tones at their true brightness.
