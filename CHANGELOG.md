@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.11
+
+Level is simpler, with Gain shown once and clearer notes. Number boxes and menus now share one look, and Spectra and Trim silence show an icon or a word, never both.
+
 ## 1.2.10
 
 Noise reduction now picks its method with an Auto or Manual choice, with Learn doing the work for either. Remove hum and Output noise are simple switches, and Sensitivity and Smoothing are tidier.
