@@ -1,6 +1,6 @@
 // The stylesheet as a file (no browser): the tool windows' layout belongs to shared rules (the card, the heading row, the tool grid) and to the pane's own width, so style.css must not grow
 //   1) id-based spacing inside a tool pane: a rule whose selector names an element inside a tool pane by its id (#aeGainCard, #aePaneImager ...) and sets margin, padding, or gap;
-//   2) screen-width queries on the Audio Editor: an @media rule on a width that styles a tool pane or its parts (the ids above, #audioDlg, #aeWin, .ae-*, and the tool classes nr-, sp-, im-, eq-, lv-, fd-, em-, mt-, tool-grid).
+//   2) screen-width queries on an editor: an @media rule on a width that styles a tool pane or its parts (the ids above, #audioDlg, #aeWin, .ae-*, and the tool classes nr-, sp-, im-, eq-, lv-, fd-, em-, mt-, tool-grid), the PDF Editor (.pe-*, #pdfDlg), or the video panels (the settings panel, the timeline, the transport, the stage's strips and full-screen rows). The page's own stacking (html, body, and .app) is not a video panel: a box cannot ask about its own width.
 // Today's rules are listed in tests/audio-editor-stylesheet-allowed.txt, one per line. The list may only shrink: this check fails on a rule that is not listed, and on a listed rule that is gone (it names the line to delete).
 // Each tool's ticket deletes that tool's rules from style.css and their lines from the list.
 // Run:  node tests/audio-editor-stylesheet.js   (through tests/run-all.sh)
@@ -24,8 +24,10 @@ const paneIds = new Set(); {
 // the stylesheet as rules: { ctx: ['@media (max-width:700px)'], sels: [...], props: [...] }
 const { readRules, SPACING } = require('./lib/css-rules.js'), rules = readRules(css).map(r => ({ ctx: r.ctx, sels: r.sels, props: r.decls.map(d => d.prop) }));
 const TOOL_CLASS = /\.(ae-[\w-]+|(nr|sp|im|eq|lv|fd|em|mt)-[\w-]+|tool-grid|on-grid)\b/;
+// the PDF Editor's parts and the video panels' (the settings panel, the timeline, the transport, the stage's floating strips and the full-screen rows): they give way by their own width too
+const OTHER_CLASS = /\.(pe-[\w-]+|group|subhead|line-fold|fmt-btn|tl-[\w-]+|transport|stage-[\w-]+|fade-[\w-]+|cred[\w-]*|fs-[\w-]+|panel|sys-[\w-]+|timeline)\b|#pdfDlg|#pe[A-Z]\w*|#tl\b|\.app\.fs\b/;
 const idsOf = sel => [...sel.matchAll(/#([\w-]+)/g)].map(m => m[1]);
-const touchesTool = sel => idsOf(sel).some(id => paneIds.has(id) || id === 'audioDlg' || id === 'aeWin') || TOOL_CLASS.test(sel);
+const touchesTool = sel => idsOf(sel).some(id => paneIds.has(id) || id === 'audioDlg' || id === 'aeWin') || TOOL_CLASS.test(sel) || OTHER_CLASS.test(sel);
 const widthQuery = ctx => ctx.filter(c => /^@media\b/.test(c) && /(^|[^\w-])(min-|max-)?width\b/.test(c.replace(/@media/, '')));
 const found = [];
 for (const r of rules) for (const sel of r.sels) {

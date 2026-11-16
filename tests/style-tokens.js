@@ -41,14 +41,14 @@ for (const r of rules) {
     const kf = /^@keyframes\s+([\w-]+)/.exec(r.ctx[r.ctx.length - 1] || ''), area = kf ? animArea[kf[1]] : areaOf(sel); if (!area) continue;
     const ctx = (r.ctx.length ? r.ctx.join(' ') + ' ' : '');
     for (const { prop, value } of r.decls) {
-      const v = (area === 'audio' ? noVar : noVarFallback)(value), px = (v.match(PX) || []).filter(x => !zero(x));
+      const v = noVar(value), px = (v.match(PX) || []).filter(x => !zero(x));
       let kind = null;
       if (SPACING.test(prop) && px.length) kind = 'spacing';
       else if (prop === 'font-size' && px.length) kind = 'type';
       else if (prop === 'border-radius' && px.some(x => parseFloat(x) < 99)) kind = 'corner';
       else if ((prop === 'height' || prop === 'min-height') && px.length && CONTROL.test(lastPart(sel))) kind = 'height';
-      else if (area === 'audio' && /^(left|right|top|bottom)$/.test(prop) && px.length) kind = 'size';
-      else if (area === 'audio' && prop === 'width' && px.length && CONTROL.test(lastPart(sel))) kind = 'size';
+      else if (/^(left|right|top|bottom)$/.test(prop) && px.length) kind = 'size';
+      else if (prop === 'width' && px.length && CONTROL.test(lastPart(sel))) kind = 'size';
       else if (COLORP.test(prop) && COLOR.test(v)) kind = 'color';
       if (kind) found.push({ key: area + ' ' + kind + ' ' + ctx + sel + ' {' + prop + '}', line: r.line, value });
     }

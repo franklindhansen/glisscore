@@ -20,6 +20,9 @@
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px; --gap-group:18px;   /* the spacing scale (2, 4, 8, 12, 16, with --gap-group, 18, the space above and below a divider between the video panel's groups): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
+  --fs:32px; --fsm:10px; --fs-trh:50px; --hint-bridge:21px; --w-glass:28px; --combo-btn-w:28px; --div-w:7px;   /* the floating strips on the video picture: their height and their distance from the picture's edge (the script sets both per picture size), a button's width on a glass bar, the font box's list button, and the System divider's grab width */
+  --sub-indent:8px; --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px;   /* the one small indent of a setting that belongs to the one above it (First page alone, Ink color, the Shadows sliders) */
+  --black:#000; --on-turn:#1a1d26;   /* the full-screen picture's black, and the ink on an amber (--turn) fill: the same in light and dark */
   --x-size:26px;   /* the remove (x) button on a Spectra list row: a square */
   --tip-x:66px;   /* how far in from the Limiter row's left edge its warning note starts (after the word Limiter) */
   --corr-h:14px;   /* the Imager's correlation tick: it stands this tall, reaching above and below its bar */
@@ -125,7 +128,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 
 /* ----- App grid: header / work area / timeline ----- */
-.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0}
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:0;container:app/inline-size}          /* the page's own width: the stage, the timeline, and the settings panel stack by it (a container query), the screen's rules are left to the header */
 
 /* ==================== 3. HEADER BAR ==================== */
 /* ----- Header layout ----- */
@@ -170,7 +173,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 /* ==================== 5. WORK AREA (STAGE & TRANSPORT) ==================== */
 /* ----- Layout: stage column + side panel ----- */
 .work{display:grid;grid-template-columns:minmax(0,1fr) 322px;gap:0;min-height:0}
-.stage-col{display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;min-width:0;padding:14px 14px 10px 16px;gap:10px}
+.stage-col{container:stagecol/inline-size;display:grid;grid-template-rows:minmax(0,1fr) auto;min-height:0;min-width:0;padding:var(--gap-field) var(--gap-field) var(--gap-card) var(--gap-field);gap:var(--gap-card)}
 
 /* ----- Score preview stage ----- */
 .stage-wrap{position:relative;background:var(--stage);border-radius:var(--r-card);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0;border:1px solid var(--line)}
@@ -181,12 +184,12 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 #selCv{display:block;flex:none;touch-action:none}
 .sys-sel.zoomed{cursor:grab;touch-action:none}
 .sys-sel.pan-ready #selCv{cursor:grab!important}
-.sys-div{position:absolute;z-index:3;width:7px;background:var(--stage);cursor:col-resize;touch-action:none}
-.sys-div::before{content:"";position:absolute;left:3px;top:0;bottom:0;width:1px;background:var(--line);transition:background-color .2s var(--ease-color),box-shadow .2s var(--ease-color)}
+.sys-div{position:absolute;z-index:3;width:var(--div-w);background:var(--stage);cursor:col-resize;touch-action:none}
+.sys-div::before{content:"";position:absolute;left:calc((var(--div-w) - var(--hair)) / 2);top:0;bottom:0;width:var(--hair);background:var(--line);transition:background-color .2s var(--ease-color),box-shadow .2s var(--ease-color)}
 .sys-div:hover::before,.sys-div:focus-visible::before,.sys-div.drag::before{background:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .sys-div:focus-visible{outline:none}
-.stage-wrap.sys-stack .sys-div{width:auto;height:7px;cursor:row-resize}
-.stage-wrap.sys-stack .sys-div::before{left:0;right:0;top:3px;bottom:auto;width:auto;height:1px}
+.stage-wrap.sys-stack .sys-div{width:auto;height:var(--div-w);cursor:row-resize}
+.stage-wrap.sys-stack .sys-div::before{left:0;right:0;top:calc((var(--div-w) - var(--hair)) / 2);bottom:auto;width:auto;height:var(--hair)}
 
 /* ----- Intro / empty state text and buttons ----- */
 .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--stage)}
@@ -205,7 +208,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .empty .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 
 /* ----- Transport controls: play, time, tap button ----- */
-.transport{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.transport{display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap}
 .icon-btn{display:inline-grid;place-items:center;width:var(--h-l);height:var(--h-l);border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer}
 .icon-btn:hover{border-color:var(--muted)}
 .icon-btn svg{width:var(--icon-l);height:var(--icon-l);fill:currentColor}
@@ -213,7 +216,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .icon-btn.stroke svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .icon-btn.play{width:var(--h-l);height:var(--h-l);background:var(--accent);border-color:transparent;color:var(--accent-ink)}
 .icon-btn[disabled]{opacity:var(--inactive);cursor:not-allowed}
-.time{font-variant-numeric:tabular-nums;margin:0 8px 0 10px;min-width:140px}
+.time{font-variant-numeric:tabular-nums;margin:0 var(--gap-head) 0 var(--gap-card);min-width:140px}
 .time b{font-weight:600}
 .time span{color:var(--muted)}
 .spacer{flex:1}
@@ -225,22 +228,22 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .transport[data-info=mid] .si .p{display:none}          /* a narrow row drops "Spread ", then the rest but the pages */
 .transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
-.tapbtn{gap:8px}
+.tapbtn{gap:var(--gap-head)}
 .hist-wrap .hi{display:none}
 kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
 /* ----- Panel container and groups ----- */
-.panel{position:relative;border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:6px 16px 18px;min-height:0}
+.panel{position:relative;border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:var(--gap-tight) var(--gap-field) var(--gap-group);min-height:0}
 /* keep the panel's width steady when its scrollbar appears or disappears (e.g. when a group opens) */
-@media (min-width:961px){
+@container app (min-width:961px){
   .panel{overflow-x:hidden;overflow-y:scroll}
   @supports (scrollbar-gutter:stable){.panel{overflow-y:auto;scrollbar-gutter:stable}}
 }
-.group{padding:18px 0;border-bottom:1px solid var(--line)}
+.group{padding:var(--gap-group) 0;border-bottom:1px solid var(--line)}
 .group:last-child{border-bottom:0}
-.group h3{margin:0 0 10px;font-size:var(--type-value);font-weight:600}
-.group-head{position:relative;display:flex;align-items:center;gap:8px}
+.group h3{margin:0 0 var(--gap-card);font-size:var(--type-value);font-weight:600}
+.group-head{position:relative;display:flex;align-items:center;gap:var(--gap-head)}
 .group .group-head h3{margin:0}
 .group-toggle{display:flex;align-items:center;margin-left:auto;cursor:pointer}
 .group.off .group-head{margin-bottom:0}
@@ -251,7 +254,7 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;pad
 /* the settings panel: a label sits close to its control and a note sits right under the control it explains, while one setting stands clearly apart from the next */
 .field+.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a field that has its --gap-field below it still sits --gap-label under the control */
 .panel .field>.t-note:empty{display:none}
-.panel .adv,.panel .adv[open]{margin-bottom:10px}        /* the same 16px above Export video (with its 6px) whether Advanced is open or not */
+.panel .adv,.panel .adv[open]{margin-bottom:var(--gap-card)}        /* the same 16px above Export video (with its 6px) whether Advanced is open or not */
 #creditsAtField:has(~ #creditsEarlyField[hidden]){margin-bottom:0}        /* at Start the two rows after it are closed, so it ends the group */
 .field label,.field .lbl{display:flex;justify-content:space-between;gap:10px;font-size:var(--type-body);color:var(--muted)}
 .field output{color:var(--ink);font-variant-numeric:tabular-nums}
@@ -268,37 +271,37 @@ select,input[type=text],input[type=number],textarea.autogrow{border-radius:var(-
 select,input[type=text],textarea.autogrow{width:100%;padding:7px var(--field-pad-x)}
 select{-webkit-appearance:none;appearance:none;padding-right:calc(var(--chev-x) + var(--chev-s) + 8px);background-image:var(--chev);background-repeat:no-repeat;background-position:right var(--chev-x) center;background-size:var(--chev-s) auto}          /* every menu draws its own chevron, the same distance from the right edge (--chev-x) and the same size (--chev-s), in the muted color of the theme */
 input[type=number]{width:var(--num-w);height:var(--h-s);padding:0 var(--field-pad-x);box-sizing:border-box;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}          /* every number box: one width, one corner (the control corner, as a menu or a button has), one border; its height follows the row it sits in (--h-s by default, --h-l beside a --h-l control) */
-textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:34px}
+textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:var(--h-m)}
 input.bad{border-color:var(--danger)}
 /* style row under a credits line: optional font box, then Bold and Italic */
-.line-style{display:flex;align-items:center;gap:6px}
+.line-style{display:flex;align-items:center;gap:var(--gap-tight)}
 .line-style .combo{flex:1;min-width:0}
-.line-style .line-font{padding:5px 28px 5px 8px;font-size:var(--type-body)}
+.line-style .line-font{padding:var(--hint-py) var(--combo-btn-w) var(--hint-py) var(--gap-head);font-size:var(--type-body)}
 .fmt-btn{flex:none;display:grid;place-items:center;width:var(--h-s);height:var(--h-s);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;line-height:round(calc(var(--lh) * 1em),1px)}
 .fmt-btn:hover{border-color:var(--muted)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.line-row{display:flex;gap:6px;align-items:flex-start}
+.line-row{display:flex;gap:var(--gap-tight);align-items:flex-start}
 .line-row>input,.line-row>textarea{flex:1;min-width:0}
-.fmt-btn.aa{width:36px;height:auto;align-self:stretch;font-size:var(--type-body);font-weight:600}
-.line-row:has(textarea)>.aa{align-self:flex-start;height:36px}
+.fmt-btn.aa{width:var(--h-l);height:auto;align-self:stretch;font-size:var(--type-body);font-weight:600}
+.line-row:has(textarea)>.aa{align-self:flex-start;height:var(--h-l)}
 .fmt-btn.aa[data-own]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 .fmt-btn.aa[aria-expanded="true"]{border-color:var(--accent)}
-.line-fold{margin-top:-6px;transition:grid-template-rows .45s var(--ease-out),margin-top .45s var(--ease-out)}
+.line-fold{margin-top:calc(-1 * var(--gap-tight));transition:grid-template-rows .45s var(--ease-out),margin-top .45s var(--ease-out)}
 .line-fold.open{margin-top:0}
 /* a credits line: its label, box, and note stay together, and a closed font row takes no room at all, so the next setting is the usual 16px away */
 .panel .field:has(>.line-row){gap:0}
-.panel .field:has(>.line-row)>.line-row{margin-top:4px}
+.panel .field:has(>.line-row)>.line-row{margin-top:var(--gap-label)}
 .panel .field:has(>.line-row)>.t-note{margin-top:var(--gap-label)}
 .panel .field:has(>.line-row)>.line-fold{margin-top:0}
-.panel .field:has(>.line-row)>.line-fold.open{margin-top:4px}
+.panel .field:has(>.line-row)>.line-fold.open{margin-top:var(--gap-label)}
 .line-fold>.fa-in{transition:opacity .25s var(--ease-color),padding .45s var(--ease-out),overflow 0s allow-discrete}
 .line-fold.open>.fa-in{overflow:visible;transition:opacity .25s var(--ease-color),padding .45s var(--ease-out),overflow 0s .45s allow-discrete}        /* once the row has finished opening, its font list may drop below it; while it opens or closes the row is still clipped */
 .line-style .combo-list{width:max-content;min-width:100%;max-width:240px}
 .line-style .combo-list li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:reduce){.line-fold>.fa-in{transition:none}}
-.combo .ph{position:absolute;left:10px;right:34px;top:50%;transform:translateY(-50%);line-height:normal;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
+.combo .ph{position:absolute;left:calc(var(--field-pad-x) + var(--hair));right:calc(var(--combo-btn-w) + var(--gap-tight));top:50%;transform:translateY(-50%);line-height:normal;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--muted);pointer-events:none}
 .combo .ph b{font-weight:inherit;color:var(--ink)}
-.line-font~.ph{left:9px;font-size:var(--type-body)}
+.line-font~.ph{left:var(--field-pad-x);font-size:var(--type-body)}
 .combo input:not(:placeholder-shown)~.ph{display:none}
 
 /* ----- Segmented radio buttons ----- */
@@ -311,18 +314,18 @@ input.bad{border-color:var(--danger)}
 .seg label:has(input:checked){color:var(--ink)}
 .seg label.dim{opacity:var(--inactive)}
 .field label.check{min-height:20px;justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
-.colorrow{display:flex;gap:8px;align-items:center}
-.sub{margin-left:20px;padding-left:12px;border-left:2px solid var(--line)}
-.group[data-sum="shadows"] .sub,#firstAloneField,#inkField,.line-style.sub{margin-left:8px}        /* a setting that belongs to the one above it (First page alone, Ink color) and the Shadows sliders share one small indent, so the controls keep most of the panel's width */
-.field.sub{margin-top:-6px}
-.panel .field.sub{margin-top:-10px}
+.colorrow{display:flex;gap:var(--gap-head);align-items:center}
+.sub{margin-left:calc(var(--gap-field) + var(--gap-label));padding-left:var(--gap-set);border-left:2px solid var(--line)}
+.group[data-sum="shadows"] .sub,#firstAloneField,#inkField,.line-style.sub{margin-left:var(--sub-indent)}        /* a setting that belongs to the one above it (First page alone, Ink color) and the Shadows sliders share one small indent, so the controls keep most of the panel's width */
+.field.sub{margin-top:calc(-1 * var(--gap-tight))}
+.panel .field.sub{margin-top:calc(-1 * var(--gap-card))}
 /* the invert switch has no gap under it while its ink color row is hidden (the hidden row keeps no space) */
 .field:has(+ #inkField[hidden]){margin-bottom:0}
 
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .sub>.field:last-child{margin-bottom:0}
 /* small notes under a control: tucked to the right and quieter, so they stay out of the way of the labels */
-#shadowReset{margin-top:14px}
+#shadowReset{margin-top:var(--gap-field)}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
 /* a font lookup runs a thin bar along the box's bottom edge, end to end (it follows the box's rounded corners), so nothing around the box moves */
@@ -332,30 +335,30 @@ input.bad{border-color:var(--danger)}
 @keyframes bar-sweep{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
 @media (prefers-reduced-motion:reduce){.sweeping::after{animation:none;transform:none;width:100%;opacity:.5}}
 /* the hover preview of the frame Save current frame would save */
-.thumb-peek{position:fixed;z-index:60;width:230px;padding:3px;border-radius:var(--r-ctl);background:var(--ink);box-shadow:var(--shadow);line-height:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
+.thumb-peek{position:fixed;z-index:60;width:230px;padding:var(--gap-snug);border-radius:var(--r-ctl);background:var(--ink);box-shadow:var(--shadow);line-height:0;pointer-events:none;visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
 .thumb-peek.show{visibility:visible;opacity:1;transform:none;transition-delay:0s}
-.thumb-peek canvas{display:block;width:100%;height:auto;border-radius:calc(var(--r-ctl) - 3px)}
+.thumb-peek canvas{display:block;width:100%;height:auto;border-radius:calc(var(--r-ctl) - var(--gap-snug))}
 @media (prefers-reduced-motion:reduce){.thumb-peek{transition:none}}
-.combo input[type=text]{padding-right:28px}
-.combo-btn{position:absolute;right:1px;top:1px;bottom:1px;width:28px;display:grid;place-items:center;padding:0;border:0;border-radius:0 7px 7px 0;background:none;color:var(--muted);cursor:pointer}
+.combo input[type=text]{padding-right:var(--combo-btn-w)}
+.combo-btn{position:absolute;right:var(--hair);top:var(--hair);bottom:var(--hair);width:var(--combo-btn-w);display:grid;place-items:center;padding:0;border:0;border-radius:0 var(--r-sm) var(--r-sm) 0;background:none;color:var(--muted);cursor:pointer}
 .combo-btn:hover{color:var(--ink)}
-.combo-list{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;max-height:210px;overflow:auto;margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-ctl);box-shadow:var(--shadow)}
-.combo-list li{padding:6px 8px;border-radius:var(--r-sm);font-size:var(--type-body);cursor:pointer}
+.combo-list{position:absolute;left:0;right:0;top:calc(100% + var(--gap-label));z-index:40;max-height:210px;overflow:auto;margin:0;padding:var(--gap-label);list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-ctl);box-shadow:var(--shadow)}
+.combo-list li{padding:var(--gap-tight) var(--gap-head);border-radius:var(--r-sm);font-size:var(--type-body);cursor:pointer}
 .combo-list li+li{border-top:1px solid var(--line)}
 .combo-list li:hover,.combo-list li.act{background:var(--accent-soft)}
 .combo-list li[aria-selected="true"]{font-weight:600;color:var(--accent)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
-.subhead{margin:16px 0 8px;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.subhead{margin:var(--gap-field) 0 var(--gap-head);font-size:var(--type-small);font-weight:600;letter-spacing:.02em;color:var(--muted)}
 
-.group-head+#turnShadowBlock>#centerFold>.subhead,#centerFold[hidden]+.subhead{margin-top:4px}
+.group-head+#turnShadowBlock>#centerFold>.subhead,#centerFold[hidden]+.subhead{margin-top:var(--gap-label)}
 /* Video: Advanced */
-.adv{margin:0 0 14px}
-.adv summary{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:var(--type-body);color:var(--muted);cursor:pointer;list-style:none}
+.adv{margin:0 0 var(--gap-card)}
+.adv summary{display:flex;align-items:center;gap:var(--gap-tight);padding:var(--gap-sub) 0;font-size:var(--type-body);color:var(--muted);cursor:pointer;list-style:none}
 .adv summary::-webkit-details-marker{display:none}
-.adv summary::before{content:'';width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .15s var(--ease-ui)}
+.adv summary::before{content:'';width:var(--gap-tight);height:var(--gap-tight);border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .15s var(--ease-ui)}
 .adv[open] summary::before{transform:rotate(45deg)}
 .adv summary:hover{color:var(--ink)}
-.adv[open] summary{margin-bottom:10px}
+.adv[open] summary{margin-bottom:var(--gap-card)}
 @media (prefers-reduced-motion:reduce){.adv summary::before{transition:none}}
 
 /* ----- Checkboxes, info (i) buttons and tooltips ----- */
@@ -387,21 +390,21 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .term:hover,.term:focus-visible{background:var(--accent-soft);outline:none}
 
 /* ----- Glow highlight, color picker, hints ----- */
-#turnField{padding:6px 8px;margin:-6px -8px 10px;border-radius:var(--r-ctl);transition:box-shadow .15s var(--ease-color),background .15s var(--ease-color)}
+#turnField{padding:var(--gap-tight) var(--gap-head);margin:calc(-1 * var(--gap-tight)) calc(-1 * var(--gap-head)) var(--gap-card);border-radius:var(--r-ctl);transition:box-shadow .15s var(--ease-color),background .15s var(--ease-color)}
 #turnField.glow-ring{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent),0 0 18px 4px var(--accent)}
 .colorrow[hidden]{display:none}
-.colorrow input[type=color]{width:42px;height:34px;padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
-.panel .btn.primary{width:100%;padding:10px 14px;margin-top:6px}
+.colorrow input[type=color]{width:var(--swatch-w);height:var(--h-m);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
+.panel .btn.primary{width:100%;padding:var(--gap-card) var(--gap-field);margin-top:var(--gap-tight)}
 
 /* ==================== 7. TIMELINE ==================== */
 /* ----- Timeline layout and toolbar ----- */
-.timeline{border-top:1px solid var(--line);background:var(--panel);display:grid;grid-template-rows:auto 1fr;height:var(--tl-h);min-height:0}
-.tl-bar{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:6px 16px;flex-wrap:wrap}
+.timeline{container:tl/inline-size;border-top:1px solid var(--line);background:var(--panel);display:grid;grid-template-rows:auto 1fr;height:var(--tl-h);min-height:0}
+.tl-bar{position:relative;display:flex;align-items:center;justify-content:flex-end;gap:var(--gap-card);padding:var(--gap-tight) var(--gap-field);flex-wrap:wrap}
 .tl-bar h2{margin:0;font-size:var(--type-value);font-weight:600}
 /* the timeline help text lives in an (i) button, like the other info buttons, on every screen size */
 .tl-info{display:block;margin-right:auto}
-.tl-bar .hint{position:absolute;left:16px;top:calc(100% + 2px);width:max-content;max-width:min(560px,calc(100% - 32px));z-index:30;flex:none;min-width:0;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);--lh:1.4;box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
-.tl-bar .hint::before{content:'';position:absolute;left:0;right:0;top:-21px;height:21px}
+.tl-bar .hint{position:absolute;left:var(--gap-field);top:calc(100% + var(--gap-sub));width:max-content;max-width:min(560px,calc(100% - 2 * var(--gap-field)));z-index:30;flex:none;min-width:0;padding:var(--gap-head) var(--gap-set);border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);--lh:1.4;box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
+.tl-bar .hint::before{content:'';position:absolute;left:0;right:0;top:calc(-1 * var(--hint-bridge));height:var(--hint-bridge)}
 .tl-bar .hint.warn::before{display:none}
 .tl-info .info-i:hover+.hint,.tl-info .info-i:focus-visible+.hint,.tl-bar .hint.open,.tl-bar .hint:hover{visibility:visible;opacity:1;transform:none;transition-delay:0s}
 /* warnings stay visible inline, since they need action */
@@ -409,8 +412,8 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tl-info:has(.hint.warn) .info-i{display:none}
 .tl-bar .hint.warn{display:block;visibility:visible;opacity:1;transform:none;position:static;width:auto;max-width:none;flex:1;min-width:200px;padding:0;background:none;box-shadow:none;border-radius:0;color:var(--turn);font-size:var(--type-small)}
 .vsep{align-self:center;width:1px;height:20px;margin:0 4px;background:var(--line)}
-.zoom{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:var(--type-body)}
-.zoom input{width:110px}
+.zoom{display:flex;align-items:center;gap:var(--gap-tight);color:var(--muted);font-size:var(--type-body)}
+.zoom input{width:var(--zoom-w)}
 .tl-scroll{overflow-x:auto;overflow-y:hidden;position:relative;min-height:0;margin:0 0 0 0}
 .tl-inner{position:relative;height:100%}
 #tl{position:sticky;left:0;top:0;display:block;touch-action:pan-x}
@@ -477,41 +480,41 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 
 /* ==================== 10. FULL-SCREEN MODE ==================== */
 /* ----- Full-screen button ----- */
-.stage-strip,.sys-zoom,.sys-bar,.sys-nav{position:absolute;right:var(--fsm,10px);bottom:var(--fsm,10px);z-index:6;display:flex;align-items:center;gap:2px;height:var(--fs,32px);padding:3px;box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
+.stage-strip,.sys-zoom,.sys-bar,.sys-nav{position:absolute;right:var(--fsm);bottom:var(--fsm);z-index:6;display:flex;align-items:center;gap:var(--gap-sub);height:var(--fs);padding:var(--gap-snug);box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring)}
 .stage-strip[hidden],.sys-zoom[hidden],.sys-bar[hidden],.sys-nav[hidden]{display:none}
-.stage-strip button,.sys-zoom button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:28px;height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.stage-strip button,.sys-zoom button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:var(--w-glass);height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active,.sys-bar button:not(:disabled):active,.sys-nav button:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active{transform:none}}
-.stage-strip button.txt,.sys-zoom button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 10px;font-size:var(--type-small);font-weight:600}
+.stage-strip button.txt,.sys-zoom button.txt,.sys-bar button.txt,.sys-nav button.txt{width:auto;padding:0 var(--gap-card);font-size:var(--type-small);font-weight:600}
 .stage-strip button:not(:disabled):hover,.sys-zoom button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-zoom button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
 .stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:var(--inactive);cursor:default}
 .stage-strip svg,.sys-zoom svg,.sys-bar svg,.sys-nav svg{width:var(--icon-s);height:var(--icon-s)}
 .sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
 /* the preset strip: one vertical glass strip at the top right (the current preset, a divider, Detect this page again); hovering or tapping the preset icon unfolds the four presets sideways from it */
-.sys-tools{position:absolute;top:var(--fsm,10px);right:var(--fsm,10px);z-index:6}
+.sys-tools{position:absolute;top:var(--fsm);right:var(--fsm);z-index:6}
 .sys-tools[hidden]{display:none}
 .sys-tools .sp-col{position:static;flex-direction:column;height:auto;width:auto}
-.sys-tools .sp-col button{height:calc(var(--fs,32px) - 6px)}
-.sys-tools .sys-bar button{flex:none;width:32px}
-.sys-tools .sys-bar svg{width:16px;height:16px}
-.sys-tools .sp-col .stage-div{width:14px;height:1px;margin:3px 0}
-.sys-tools .sp-fly{position:absolute;top:0;right:calc(100% + 6px);bottom:auto;overflow:hidden;max-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:max-width .18s var(--ease-out),opacity .18s var(--ease-out),visibility 0s .18s}
+.sys-tools .sp-col button{height:calc(var(--fs) - 2 * var(--gap-snug))}
+.sys-tools .sys-bar button{flex:none;width:calc(var(--w-glass) + 2 * var(--gap-sub))}
+.sys-tools .sys-bar svg{width:var(--icon-m);height:var(--icon-m)}
+.sys-tools .sp-col .stage-div{width:var(--icon-s);height:var(--hair);margin:var(--gap-snug) 0}
+.sys-tools .sp-fly{position:absolute;top:0;right:calc(100% + var(--gap-tight));bottom:auto;overflow:hidden;max-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:max-width .18s var(--ease-out),opacity .18s var(--ease-out),visibility 0s .18s}
 .sys-tools.open .sp-fly{max-width:160px;opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.sys-tools .sp-fly{transition:none}}
-.sys-nav{right:auto;left:var(--fsm,10px)}
-.sys-sel.tight .sys-nav .sys-pg{padding:0 3px}
-.sys-sel.tight .sys-nav .seg label{padding:0 6px}
-.sys-sel.tight .sys-zoom button.txt{padding:0 6px}
-.sys-sel.tight .sys-nav,.sys-sel.tight .sys-zoom{gap:1px}          /* both strips shrink together when the selector is narrow, so they always share one row */
+.sys-nav{right:auto;left:var(--fsm)}
+.sys-sel.tight .sys-nav .sys-pg{padding:0 var(--gap-snug)}
+.sys-sel.tight .sys-nav .seg label{padding:0 var(--gap-tight)}
+.sys-sel.tight .sys-zoom button.txt{padding:0 var(--gap-tight)}
+.sys-sel.tight .sys-nav,.sys-sel.tight .sys-zoom{gap:var(--hair)}          /* both strips shrink together when the selector is narrow, so they always share one row */
 .sys-bar[hidden],.sys-nav[hidden]{display:none}
-.sys-nav{max-width:calc(100% - 2 * var(--fsm,10px))}
-.sys-nav .seg{flex:none;height:calc(var(--fs,32px) - 6px)}
-.sys-nav .seg label{display:grid;place-items:center;padding:0 9px}
+.sys-nav{max-width:calc(100% - 2 * var(--fsm))}
+.sys-nav .seg{flex:none;height:calc(var(--fs) - 2 * var(--gap-snug))}
+.sys-nav .seg label{display:grid;place-items:center;padding:0 var(--field-pad-x)}
 .sys-nav .seg label span{display:grid;place-items:center}
 .sys-nav button,.sys-nav .seg{flex:none}
-.sys-nav .sys-pg{display:grid;align-items:center;height:100%;padding:0 6px;box-sizing:border-box;--lh:1;font-size:12px;font-weight:600;white-space:nowrap;color:var(--ink)}          /* the label fills the strip's height and centers its figures between the edges, like the buttons beside it */
-.stage-div{flex:none;width:1px;height:14px;margin:0 3px;background:var(--line)}
+.sys-nav .sys-pg{display:grid;align-items:center;height:100%;padding:0 var(--gap-tight);box-sizing:border-box;--lh:1;font-size:var(--type-small);font-weight:600;white-space:nowrap;color:var(--ink)}          /* the label fills the strip's height and centers its figures between the edges, like the buttons beside it */
+.stage-div{flex:none;width:var(--hair);height:var(--icon-s);margin:0 var(--gap-snug);background:var(--line)}
 .stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
 .stage-wrap.zoomed{touch-action:none}
 @media (prefers-reduced-transparency:reduce){.stage-strip,.sys-zoom,.sys-bar,.sys-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
@@ -520,38 +523,37 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 html.fs-lock,html.fs-lock body{overflow:hidden}
 
 /* ----- Full-screen layout and overlay controls ----- */
-.app.fs{position:fixed;inset:0;z-index:90;display:block;height:100vh;height:100dvh;background:#000}
+.app.fs{position:fixed;inset:0;z-index:90;display:block;height:100vh;height:100dvh;background:var(--black)}
 .app.fs .top,.app.fs .panel{display:none!important}
 .app.fs .work{display:block;height:100%}
 .app.fs .stage-col{display:block;padding:0;height:100%}
-.app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:#000}
+.app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:var(--black)}
 /* the header and settings, copied where they were so they can fade as full screen begins (see fsGhosts) */
 .fs-ghost,.fs-ghost *{animation:none!important;transition:none!important}
-.app.fs{--fs-gap:12px;--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}
+.app.fs{--fs-gap:var(--gap-set);--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}
 .app.fs .transport{position:absolute;z-index:20}
 .app.fs .fs-only{display:inline-flex!important}
 .app.fs #btnShowEditor,.app.fs.fs-min #btnHideEditor{display:none!important}
 .app.fs.fs-min #btnShowEditor{display:inline-flex!important}
 .app.fs.fs-min #bTap,.app.fs.fs-min .info{display:none}
-.fs-only svg{width:15px;height:15px}
+.fs-only svg{width:var(--icon-s);height:var(--icon-s)}
 /* the full screen dock button, one look in both editors (the video editor's Hide editor and Show editor, the Audio Editor's Hide tools and Show tools): the action it names and then a chevron, the chevron --icon-s wide and turned over when what it hides is hidden */
-.fs-dock{display:inline-flex;flex-direction:row-reverse;align-items:center;gap:6px}          /* the chevron comes after the words, as on every drop-down */
+.fs-dock{display:inline-flex;flex-direction:row-reverse;align-items:center;gap:var(--gap-tight)}          /* the chevron comes after the words, as on every drop-down */
 .fs-dock svg{width:var(--icon-s);height:var(--icon-s);flex:none;transition:transform .3s var(--spring-hover)}
 .fs-dock[aria-expanded=false] svg{transform:rotate(180deg)}
 .app.fs .timeline{position:absolute;left:var(--fs-gap);right:var(--fs-gap);bottom:var(--fs-edge);z-index:20;overflow:hidden;border:1px solid var(--glass-edge);border-radius:var(--r-win);
   background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
 .app.fs .transport,.app.fs .timeline{opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),bottom .55s var(--ease-out),visibility 0s}
-.app.fs.fs-min .timeline{transform:translateY(calc(100% + var(--fs-edge) + 8px));visibility:hidden;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),visibility 0s .55s}
+.app.fs.fs-min .timeline{transform:translateY(calc(100% + var(--fs-edge) + var(--gap-head)));visibility:hidden;transition:opacity .25s var(--ease-ui),transform .55s var(--ease-out),visibility 0s .55s}
 .app.fs.fs-active .transport,.app.fs.fs-active .timeline{opacity:1;pointer-events:auto}
 /* the zoom and full screen strip hovers just above the play bar, and follows it when the timeline grows, shrinks, or is hidden (--fs-trh is the play bar's height, set by script) */
-.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + 10px + var(--fs-trh,50px) + 8px);opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),bottom .55s var(--ease-out)}
+.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card) + var(--fs-trh) + var(--gap-head));opacity:0;pointer-events:none;transition:opacity .25s var(--ease-ui),bottom .55s var(--ease-out)}
 .app.fs.fs-active .stage-strip{opacity:1;pointer-events:auto}
-.app.fs.fs-min .stage-strip{bottom:calc(var(--fs-edge) + var(--fs-trh,50px) + 8px)}
+.app.fs.fs-min .stage-strip{bottom:calc(var(--fs-edge) + var(--fs-trh) + var(--gap-head))}
 @media (prefers-reduced-motion:reduce){.app.fs .stage-strip{transition:none}}
 .app.fs:not(.fs-active),.app.fs:not(.fs-active) *{cursor:none!important}
-.app.fs .transport .btn,.app.fs .transport .icon-btn{background:rgba(18,20,28,.82);border-color:rgba(255,255,255,.28);color:#fff}
 .app.fs .transport .icon-btn.play{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
-.app.fs .transport .tapbtn.on{background:var(--turn);border-color:transparent;color:#1a1d26}
+.app.fs .transport .tapbtn.on{background:var(--turn);border-color:transparent;color:var(--on-turn)}
 @media (prefers-reduced-motion:reduce){.app.fs .transport,.app.fs .timeline{transition:none!important}}
 
 /* ==================== 11. RESPONSIVE (TABLET & PHONE) ==================== */
@@ -562,16 +564,18 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .chips{margin-right:0;max-width:100%}   /* on a phone the title and the two chips drop to a second row (the chips stay side by side) so nothing pushes the page sideways */
 }
 @media (max-width:960px){
-  .vsep{display:none}
   html,body{height:auto;min-height:100%}
   .app{height:auto;min-height:100%;display:flex;flex-direction:column}
+}          /* the page itself: a box cannot ask about its own width, so its stacking stays on the screen's */
+@container app (max-width:960px){
+  .app.fs>*{--fs-gap:var(--gap-head);--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}          /* the full-screen edge, for everything inside the page */
+  .vsep{display:none}
   .app>*,.stage-col,.panel{flex:none}
   .work{display:contents}
   .stage-col{order:1}
   .timeline{order:2}
   .panel{order:3}
   .app.fs .transport .info{display:none}
-  .app.fs{--fs-gap:8px}
   .app.fs .timeline{border-radius:var(--r-lg)}
   .stage-wrap{height:min(62vw,420px)}
   .stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 125px,320px))}      /* System has the selector and the preview, so the stage gets more height, but never so much that the Play button drops below a short window (125px is the header above the stage and the transport below it) */
@@ -579,11 +583,11 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .stage-wrap:has(>.empty:not([hidden]))>#stage{display:none}
   .stage-wrap>.empty:not([hidden]){position:relative;inset:auto;flex:none;width:100%}
   .stage-col{grid-template-rows:auto auto}
-  .stage-col{padding:14px 16px 10px}
-  .panel{border-left:0;border-top:1px solid var(--line);padding:6px clamp(16px,5vw,40px) 24px}
+  .stage-col{padding:var(--gap-field) var(--gap-field) var(--gap-card)}
+  .panel{border-left:0;border-top:1px solid var(--line);padding:var(--gap-tight) clamp(var(--gap-field),5vw,var(--panel-side-max)) calc(var(--gap-group) + var(--gap-tight))}
   .panel .group,.panel .status{max-width:560px;margin-left:auto;margin-right:auto}
 }
-@media (max-width:760px){.stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
+@container app (max-width:760px){.stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
 
 /* ----- Reduced-motion preferences ----- */
 @media (prefers-reduced-motion:reduce){.toast,.bar i{transition:none}}
@@ -605,10 +609,10 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .status .done{color:var(--ink)}
 #exportHint:empty{display:none}
 /* group headings fold their contents away */
-.group-sum{display:none;margin:0;padding-left:13px;font-size:var(--type-small);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group-sum{display:none;margin:0;padding-left:var(--gap-set);font-size:var(--type-small);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .group.collapsed>.group-sum{display:block}
-.group.collapsed>h3{margin-bottom:4px}
-.group.collapsed .group-head{margin-bottom:4px}
+.group.collapsed>h3{margin-bottom:var(--gap-label)}
+.group.collapsed .group-head{margin-bottom:var(--gap-label)}
 .group.off>.group-sum{display:none}
 
 /* ==================== 13. MOTION ==================== */
@@ -750,7 +754,7 @@ input[type=range]:disabled{opacity:var(--inactive);cursor:not-allowed}
 input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .zoom:has(input:disabled){opacity:var(--inactive)}
 
-.panel .btn.wide{width:100%;margin-top:10px}
+.panel .btn.wide{width:100%;margin-top:var(--gap-card)}
 
 /* ==================== 15. EDITORS (Audio Editor, PDF Editor) ==================== */
 .dlg.editor{width:min(900px,94vw);gap:16px}      /* wide enough for five pages per row beside the tools */
@@ -877,8 +881,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .top-main{display:contents}
 }
 .tl-bar #bFit{height:var(--h-xs);min-height:0}
-.tl-bar{min-height:38px;padding-top:0;padding-bottom:0;box-sizing:border-box}
-.adv[open]{margin-bottom:18px}
+.tl-bar{min-height:calc(var(--h-xs) + var(--gap-head));padding-top:0;padding-bottom:0;box-sizing:border-box}
 
 /* the page never grows a scrollbar while the entrance animations run (the timeline rises from 14px below) */
 .app{overflow:clip}
@@ -913,8 +916,10 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .top{align-items:center;row-gap:10px;padding:10px 16px 12px}
   .title-pill,.title-pill:focus-within{flex:1 1 100%;order:5}
   .chips{flex:1 1 100%;order:6}
-  /* timeline bar: a clean two-row grid instead of buttons wrapping wherever they land */
-  .tl-bar{display:grid;grid-template-columns:auto auto 1fr auto;grid-template-areas:"ttl inf . his" "trn trn trn trn" "zm zm zm zm";align-items:center;gap:8px;padding:8px 16px 10px;min-height:0}
+}
+/* timeline bar: by the timeline's own width. A clean two-row grid instead of buttons wrapping wherever they land */
+@container tl (max-width:720px){
+  .tl-bar{display:grid;grid-template-columns:auto auto 1fr auto;grid-template-areas:"ttl inf . his" "trn trn trn zm";align-items:center;gap:var(--gap-head);padding:var(--gap-head) var(--gap-field);min-height:0}
   .tl-bar h2{grid-area:ttl}
   .tl-bar .tl-info{grid-area:inf;margin:0}
   .tl-bar .hist-wrap{grid-area:his}
@@ -922,36 +927,52 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .zoom{grid-area:zm;justify-self:end}
   .tl-bar .hint.warn{grid-column:1/-1}
 }
-/* phones: one transport row, and the timeline bar in two rows (turn tools left, history icons right) */
-@media (max-width:520px){
-  .tl-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . zm" "trn trn trn his";align-items:center;gap:8px;padding:8px 16px 10px;min-height:0}
+/* phones: the timeline bar in two rows (turn tools left, history icons right), and one transport row */
+@container tl (max-width:426px){
+  .tl-bar{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . zm" "trn trn trn his";align-items:center;gap:var(--gap-head);padding:var(--gap-head) var(--gap-field);min-height:0}
   .tl-bar h2{grid-area:ttl}
   .tl-bar .tl-info{grid-area:inf;margin:0}
   .tl-bar .hist-wrap{grid-area:his;justify-self:end}
   .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end;min-width:0}
-  .tl-bar .zoom input{width:clamp(56px,calc(100vw - 300px),110px)}
+  .tl-bar .zoom input{width:clamp(var(--zoom-min),calc(100vw - var(--zoom-off)),var(--zoom-w))}
   .tl-bar .hint.warn{grid-column:1/-1}
   .tl-bar .hist.up{left:auto;right:0}
   .tl-bar .hist-wrap .hw{display:none}
-  .tl-bar .hist-wrap .hi{display:block;width:16px;height:16px}
-  .tl-bar .hist-wrap>.btn{padding:0 7px}
-  .tl-bar .tl-turns>.btn{padding:0 5px}
+  .tl-bar .hist-wrap .hi{display:block;width:var(--icon-m);height:var(--icon-m)}
+  .tl-bar .hist-wrap>.btn{padding:0 var(--gap-tight)}
+  .tl-bar .tl-turns>.btn{padding:0 var(--gap-label)}
+}
+@container stagecol (max-width:478px){
   #spreadInfo{display:none}
   .transport{flex-wrap:nowrap}
-  .transport .time{min-width:0;margin:0 4px 0 8px;white-space:nowrap}
+  .transport .time{min-width:0;margin:0 var(--gap-label) 0 var(--gap-head);white-space:nowrap}
   .transport .spacer{display:none}
   #bTap{margin-left:auto}
   #bTap kbd{display:none}
 }
-@media (max-width:360px){
-  #bTap{padding:0;min-width:var(--h-l);min-height:var(--h-l)}
-  #bTap .tw{display:none}
+@container stagecol (max-width:612px){          /* full screen: the row also carries the Hide editor button, so it gives way sooner than the page's own */
+  .app.fs #spreadInfo{display:none}
+  .app.fs .transport{flex-wrap:nowrap}
+  .app.fs .transport .time{min-width:0;margin:0 var(--gap-label) 0 var(--gap-head);white-space:nowrap}
+  .app.fs .transport .spacer{display:none}
+  .app.fs #bTap{margin-left:auto}
+  .app.fs #bTap kbd{display:none}
+}
+@container stagecol (max-width:396px){          /* and in full screen Add page turn is only its icon sooner */
+  .app.fs #bTap{padding:0;min-width:var(--h-l);min-height:var(--h-l)}
+  .app.fs #bTap .tw{display:none}
+}
+@container tl (max-width:360px){
   .tl-bar{grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . his" "trn trn trn trn" "zm zm zm zm"}          /* three rows: the title and history icons, the turn tools, the zoom. One row for all of them overlapped the title and its (i) at 300px */
-  .tl-bar .zoom input{width:clamp(56px,calc(100vw - 300px),110px)}
-  .tl-bar .hist-wrap>.btn{padding:0 6px}
+  .tl-bar .zoom input{width:clamp(var(--zoom-min),calc(100vw - var(--zoom-off)),var(--zoom-w))}
+  .tl-bar .hist-wrap>.btn{padding:0 var(--gap-tight)}
   .tl-bar .tl-turns{justify-self:stretch;display:flex}
   .tl-bar .tl-turns>.btn{flex:1 1 auto}
+}
+@container stagecol (max-width:340px){
+  #bTap{padding:0;min-width:var(--h-l);min-height:var(--h-l)}
+  #bTap .tw{display:none}
 }
 /* touch screens: 16px text in fields stops iPhones zooming the page in when you tap one */
 @media (hover:none) and (pointer:coarse){
@@ -1349,7 +1370,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-pane.sliding{position:absolute;left:0;right:0;top:0}
 
 /* main-panel Fades: in and out share a row */
-.fade-pair{display:flex;justify-content:space-between;gap:12px}
+.fade-pair{display:flex;justify-content:space-between;gap:var(--gap-set)}
 
 /* ----- Noise reduction, on the tool grid (.tool-grid): the pane lays itself out by its own width. Narrow, it is one column in the order the graph, Noise sample, Removal. From 520px the graph spans the top and the two cards sit side by side under it;
    before any noise is found, Noise sample takes the graph's place (the graph is hidden) and Removal spans the row under it, and when a noise is learned they slide into their places. ----- */
@@ -1459,7 +1480,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ed-head,#audioDlg.afull .ae-bar,#audioDlg.afull .ae-main{position:relative;isolation:isolate;border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);
   box-shadow:var(--glass-shadow),var(--shadow-float)}
 /* the sheen: every glass bar of the Audio Editor and the video picture's floating strips carries the same highlight (--glass-sheen), in one place */
-#audioDlg .ae-bar::before,#audioDlg.afull .ed-head::before,#audioDlg.afull .ae-main::before,.stage-strip::before,.sys-zoom::before,.sys-bar::before,.sys-nav::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:var(--glass-sheen);opacity:var(--glass-sheen-o)}
+#audioDlg .ae-bar::before,#audioDlg.afull .ed-head::before,#audioDlg.afull .ae-main::before,.stage-strip::before,.sys-zoom::before,.sys-bar::before,.sys-nav::before,.app.fs .transport::before,.app.fs .timeline::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:var(--glass-sheen);opacity:var(--glass-sheen-o)}
 .stage-strip,.sys-zoom,.sys-bar,.sys-nav{isolation:isolate}
 /* one hover for every button on a glass bar or head: soft fill, accent ink, no lift or shadow */
 #audioDlg :is(.ae-bar,.ed-head) :is(.btn,.icon-btn):not(.primary,.play):not(:disabled):hover{transform:none;box-shadow:none;background:var(--hover-fill);color:var(--hover-ink);border-color:transparent}
@@ -1534,23 +1555,19 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ed-head .btn,.app.fs .transport .btn:not(.primary),.app.fs .transport .icon-btn:not(.play){background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);border:1px solid var(--glass-edge);color:var(--ink);box-shadow:var(--glass-shadow)}
 #audioDlg.afull .ed-head .btn:disabled{opacity:var(--inactive)}
 /* the score player's controls: one glass row above the timeline, the same recipe as the Audio Editor's */
-.app.fs .transport{left:var(--fs-gap);right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + 10px);padding:8px 14px;gap:8px;border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow),0 24px 48px -28px rgba(10,14,30,.6);color:var(--ink);text-shadow:none;isolation:isolate}
-.app.fs .transport::before{content:'';position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 140% at 8% -40%,rgba(255,255,255,.55),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 45%);opacity:.7}
-.app.fs .timeline::before{content:'';position:absolute;inset:0;z-index:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 60% at 8% -20%,rgba(255,255,255,.4),rgba(255,255,255,0) 52%);opacity:.6}
+.app.fs .transport{left:var(--fs-gap);right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card));padding:var(--gap-head) var(--gap-field);gap:var(--gap-head);border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow),var(--shadow-float);color:var(--ink);text-shadow:none;isolation:isolate}
 .app.fs .transport .info,.app.fs .transport .time span{color:var(--muted)}
 .app.fs .transport .icon-btn,.app.fs .transport .btn{box-shadow:none}
 .app.fs .transport .icon-btn:not(.play),.app.fs .transport .btn:not(.primary){background:var(--panel2);border-color:var(--line);-webkit-backdrop-filter:none;backdrop-filter:none}
 .app.fs .transport kbd{background:var(--panel2);border-color:var(--line);color:var(--muted)}
 .app.fs.fs-min .transport{bottom:var(--fs-edge)}
-@media (max-width:760px){.app.fs .transport{padding:6px 10px;border-radius:var(--r-lg);bottom:calc(var(--tl-h) + var(--fs-edge) + 8px)}}
-:root[data-theme="dark"] .app.fs .transport::before{opacity:.25}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .app.fs .transport::before{opacity:.25}}
+@container stagecol (max-width:760px){.app.fs .transport{padding:var(--gap-tight) var(--gap-card);border-radius:var(--r-lg);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-head))}}
 /* the export window floats over the editor, which stays faintly visible behind it */
 #aeExpDlg{background:color-mix(in srgb,var(--bg) 52%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);place-items:center}
 
 /* a little more room: under every group's last row (before the divider), and between a group's heading and its first row of toggles */
-.panel .group{padding-bottom:18px}
-.group-body>.field.fade-pair{margin-top:10px}
+.panel .group{padding-bottom:var(--gap-group)}
+.group-body>.field.fade-pair{margin-top:var(--gap-card)}
 /* Bypass dims every lit module (Level and Fades too); a module that is already off stays as quiet as it was */
 .ae-proc.bp.off .ae-tn{opacity:var(--inactive)}
 
@@ -2001,7 +2018,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe .page-card.na{cursor:default}
 .pe .page-card.na canvas{opacity:var(--inactive);filter:grayscale(1)}
 /* the tick: a check in a circle on the page's corner, always showing in Arrange and in every tick tool. A left-out page is dimmed and carries a crossed-eye badge */
-.pe .page-card .tick{top:8px;right:8px;width:22px;height:22px;border:1.5px solid var(--paper);background:var(--accent);color:var(--on-dark);box-shadow:var(--chip-shadow);transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
+.pe .page-card .tick{top:var(--gap-head);right:var(--gap-head);width:22px;height:22px;border:1.5px solid var(--paper);background:var(--accent);color:var(--on-dark);box-shadow:var(--chip-shadow);transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
 .pe .page-card .tick svg{width:12px;height:12px}
 .pe .page-card.off .tick{background:var(--chip-bg);color:transparent;border-color:var(--chip-edge)}
 .pe .pe-grid:not(.ticks) .tick,.pe .page-card.na .tick{opacity:0;transform:scale(.6)}
@@ -2020,15 +2037,15 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}
 .pe-pos .pe-cell + .pe-cell{box-shadow:inset 1px 0 0 color-mix(in srgb,var(--ink) 22%,transparent)}          /* a hairline where the two digits meet, like the edge of a tile; it crosses the pill only while the digits move */
 /* rotate and repeat float on the page while you point at it, in a small frosted bar */
-.pe-tools{position:absolute;left:50%;bottom:8px;display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
+.pe-tools{position:absolute;left:50%;bottom:var(--gap-head);display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .pe .pe-grid.arrange .page-card:hover .pe-tools,.pe .pe-grid.arrange .page-card:focus-within .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 @media (hover:none){.pe .pe-grid.arrange .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}}
 /* in Re-kilter and Crop the bar holds one button, on the page's other top corner from the tick: it opens the page large */
 .pe-grid.arrange .pe-tools [data-act=open],.pe-grid.opens .pe-tools button:not([data-act=open]){display:none}
-.pe .pe-grid.opens .pe-tools{left:8px;top:8px;bottom:auto;transform:translateY(-4px)}
+.pe .pe-grid.opens .pe-tools{left:var(--gap-head);top:var(--gap-head);bottom:auto;transform:translateY(-4px)}
 .pe .pe-grid.opens .page-card:not(.off):not(.na):hover .pe-tools,.pe .pe-grid.opens .page-card:not(.off):not(.na):focus-within .pe-tools{opacity:1;transform:none;pointer-events:auto}
 @media (hover:none){.pe .pe-grid.opens .page-card:not(.off):not(.na) .pe-tools{opacity:1;transform:none;pointer-events:auto}}
-.pe-tools button{display:grid;place-items:center;width:28px;height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-tools button{display:grid;place-items:center;width:var(--w-glass);height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tools button svg{width:14px;height:14px}
 .pe-tools button:hover{background:var(--accent-soft);color:var(--accent)}
 .pe-tools button:not(:disabled):active{transform:scale(.97)}
@@ -2058,8 +2075,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-pg.loading::after{content:'';position:absolute;top:0;bottom:0;left:0;width:55%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 9%,transparent) 50%,transparent);will-change:transform;animation:peSweepPg 2.6s linear infinite}
 @keyframes peSweepPg{from{transform:translateX(-100%)}to{transform:translateX(182%)}}          /* the large view's sweep: one band crossing the page, on the compositor (transform only) */
 /* a card that waits for its picture: one wash, and one bright band that sweeps across the whole grid. Every card's band is the same band: --s0 and --s1 place it by where the card sits in the grid, and --sd puts every card on the same clock, so the cards light up in step. Only transform and opacity move */
-.pe-sheen{position:absolute;inset:0;border-radius:var(--r-paper);overflow:hidden;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg,#fff))}
-.pe-sheen::before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--sb,160px);background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent);transform:translateX(var(--s0,-100%));will-change:transform}
+.pe-sheen{position:absolute;inset:0;border-radius:var(--r-paper);overflow:hidden;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
+.pe-sheen::before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--sb);background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent);transform:translateX(var(--s0,-100%));will-change:transform}
 .pe .page-card.loading .pe-sheen,.pe .page-card.sheen-out .pe-sheen{opacity:1}
 .pe .page-card.loading .pe-sheen::before,.pe .page-card.sheen-out .pe-sheen::before{animation:peSweep 2.6s linear infinite;animation-delay:var(--sd,0s)}
 .pe .page-card.sheen-out:not(.loading) .pe-sheen{opacity:0}
@@ -2069,11 +2086,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.pe-crop-pg.loading::after{animation:none;opacity:0}}
 /* the back arrow and the zoom buttons float over the stage like the page's own corner button */
 .pe-glass{position:absolute;z-index:4;display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring)}
-.pe-back{left:12px;top:12px}.pe-zoom,.pe-pgzoom{right:12px;bottom:12px}
+.pe-back{left:var(--gap-set);top:var(--gap-set)}.pe-zoom,.pe-pgzoom{right:var(--gap-set);bottom:var(--gap-set)}
 .pe-glass{align-items:center}
 .pe-pgzoom input{width:calc(var(--h-s) * 3.4);margin-inline:var(--gap-label)}          /* the page size: the slider between its minus and plus on one floating strip, as the crop preview's zoom floats */
 .pe-win.one .pe-pgzoom{display:none}
-.pe-glass button{display:grid;place-items:center;width:28px;height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-glass button{display:grid;place-items:center;width:var(--w-glass);height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-glass button svg{width:14px;height:14px}
 .pe-glass button:not(:disabled):hover{background:var(--accent-soft);color:var(--accent)}
 .pe-glass button:not(:disabled):active{transform:scale(.97)}
@@ -2097,7 +2114,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-side.on{opacity:1}
 .pe-stage:has(.pe-crop-pg.loading) .pe-side,.pe-stage:has(.pe-crop-pg.loading) .pe-hint{opacity:0}
 /* what the page needs before its large view says anything: a quiet line at the top, so it is plain why the page looks unchanged */
-.pe-hint{position:absolute;z-index:3;left:50%;top:14px;max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:var(--hint-py) var(--gap-set);border-radius:999px;background:var(--hint-bg);color:var(--on-dark);font-size:var(--type-small);font-weight:600;--lh:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.pe-hint{position:absolute;z-index:3;left:50%;top:calc(var(--gap-head) + var(--gap-tight));max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:var(--hint-py) var(--gap-set);border-radius:999px;background:var(--hint-bg);color:var(--on-dark);font-size:var(--type-small);font-weight:600;--lh:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
 .pe-hint.on{opacity:1;transform:translate(-50%,0)}
 .pe-glass button.txt{width:auto;padding:0 var(--gap-card);font-size:var(--type-small);font-weight:600}
 /* a change on the open page: the old picture dims at once, and the new one sweeps in from the left behind a bright edge */
@@ -2115,10 +2132,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-box .h{--t:3.5px;width:22px;height:22px;border:0 solid var(--accent);opacity:0;transform:scale(.6);transition:opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
 .pe-win.hand .pe-crop-box .h{opacity:1;transform:none}
 .pe-crop-box .h::after{content:'';position:absolute;inset:-10px}
-.pe-crop-box .nw{left:-1.5px;top:-1.5px;border-width:var(--t) 0 0 var(--t);cursor:nwse-resize;transform-origin:0 0}.pe-crop-box .ne{right:-1.5px;top:-1.5px;border-width:var(--t) var(--t) 0 0;cursor:nesw-resize;transform-origin:100% 0}
-.pe-crop-box .se{right:-1.5px;bottom:-1.5px;border-width:0 var(--t) var(--t) 0;cursor:nwse-resize;transform-origin:100% 100%}.pe-crop-box .sw{left:-1.5px;bottom:-1.5px;border-width:0 0 var(--t) var(--t);cursor:nesw-resize;transform-origin:0 100%}
-.pe-crop-box .n,.pe-crop-box .s{left:50%;width:var(--crop-grip);height:0;margin-left:calc(-1 * var(--crop-grip) / 2);border-top-width:var(--t);cursor:ns-resize}.pe-crop-box .n{top:-1.5px}.pe-crop-box .s{bottom:-1.5px}
-.pe-crop-box .e,.pe-crop-box .w{top:50%;width:0;height:var(--crop-grip);margin-top:calc(-1 * var(--crop-grip) / 2);border-left-width:var(--t);cursor:ew-resize}.pe-crop-box .w{left:-1.5px}.pe-crop-box .e{right:-1.5px}
+.pe-crop-box .nw{left:calc(-1 * var(--crop-edge));top:calc(-1 * var(--crop-edge));border-width:var(--t) 0 0 var(--t);cursor:nwse-resize;transform-origin:0 0}.pe-crop-box .ne{right:calc(-1 * var(--crop-edge));top:calc(-1 * var(--crop-edge));border-width:var(--t) var(--t) 0 0;cursor:nesw-resize;transform-origin:100% 0}
+.pe-crop-box .se{right:calc(-1 * var(--crop-edge));bottom:calc(-1 * var(--crop-edge));border-width:0 var(--t) var(--t) 0;cursor:nwse-resize;transform-origin:100% 100%}.pe-crop-box .sw{left:calc(-1 * var(--crop-edge));bottom:calc(-1 * var(--crop-edge));border-width:0 0 var(--t) var(--t);cursor:nesw-resize;transform-origin:0 100%}
+.pe-crop-box .n,.pe-crop-box .s{left:50%;width:var(--crop-grip);height:0;margin-left:calc(-1 * var(--crop-grip) / 2);border-top-width:var(--t);cursor:ns-resize}.pe-crop-box .n{top:calc(-1 * var(--crop-edge))}.pe-crop-box .s{bottom:calc(-1 * var(--crop-edge))}
+.pe-crop-box .e,.pe-crop-box .w{top:50%;width:0;height:var(--crop-grip);margin-top:calc(-1 * var(--crop-grip) / 2);border-left-width:var(--t);cursor:ew-resize}.pe-crop-box .w{left:calc(-1 * var(--crop-edge))}.pe-crop-box .e{right:calc(-1 * var(--crop-edge))}
 .pe-nav{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:var(--gap-card);min-height:44px;padding:var(--gap-tight) var(--gap-set);border-top:1px solid var(--line);font-size:var(--type-body);font-variant-numeric:tabular-nums}
 .pe-nav #peCropName{min-width:104px;text-align:center}
 .pe-nav-a{display:flex;justify-content:flex-start}.pe-nav-b{display:flex;justify-content:flex-end}
@@ -2214,7 +2231,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
 
-.pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:var(--gap-sub) var(--tab-py);border-radius:999px;background:var(--accent);color:var(--on-dark);font-size:var(--scale-fs);font-weight:600;--lh:1.4;box-shadow:var(--chip-shadow);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
+.pe-lvl{position:absolute;left:var(--gap-tight);bottom:var(--gap-tight);max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:var(--gap-sub) var(--tab-py);border-radius:999px;background:var(--accent);color:var(--on-dark);font-size:var(--scale-fs);font-weight:600;--lh:1.4;box-shadow:var(--chip-shadow);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
 .pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
@@ -2343,8 +2360,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* PDF Editor controls: one height (--h-s) for every button, choice and menu in a tool's head, so what sits side by side always matches */
 
 /* History in the PDF Editor and the main view: the same list as the Audio Editor's, a little smaller (no ticks to keep changes) */
-.hist-wrap{position:relative;display:inline-flex;align-items:center;gap:8px}
-.hist.up{top:auto;bottom:calc(100% + 8px);right:auto;left:0}
+.hist-wrap{position:relative;display:inline-flex;align-items:center;gap:var(--gap-head)}
+.hist.up{top:auto;bottom:calc(100% + var(--gap-head));right:auto;left:0}
 .hist-wrap .hist{z-index:60}
 .pe .ed-head{position:relative}
 
@@ -2375,8 +2392,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .sys-find{opacity:0;visibility:hidden;transition:opacity .26s var(--ease-ui,ease),visibility 0s .26s}
 .sys-find.on{opacity:1;visibility:visible;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.sys-find,.wait-bar b{transition-duration:.08s}}
-.sys-why{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px}
-.sys-note>*+*{margin-top:8px}
+.sys-why{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-label) var(--gap-card)}
+.sys-note>*+*{margin-top:var(--gap-head)}
 .hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;--lh:1.35;white-space:nowrap;vertical-align:baseline}
 .hb.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
@@ -2387,10 +2404,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* video Fades: the shape picture fits the settings column */
 .fade-shape canvas{display:block;width:100%;height:84px}
 #fadeSide{margin-bottom:0}
-.fade-shape{margin-top:2px}
+
 .field output .ov-dim{color:var(--muted)}
 /* the slider's end labels sit under their real notches: Off at the left end, Auto at the length it works out to, Longer at the right end */
-#fadeLenField .fade-ends{position:relative;display:block;height:20px}
+#fadeLenField .fade-ends{position:relative;display:block;height:var(--slider-h)}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin-inline:0}
 #fadeLenField .fade-ends .sl-end[data-v="0"]{left:calc(-1 * var(--gap-label))}
 #fadeLenField .fade-ends .sl-end.auto{left:calc(var(--gap-head) + (100% - 2 * var(--gap-head)) * var(--apos,.333));transform:translateX(-50%)}
@@ -2417,11 +2434,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-win[data-mode="dim"] #peCropBox{display:none}
 .pe-dimbox{pointer-events:auto;box-shadow:none;background:var(--dim-fill);--hs:16px}
 .pe-dimbox .h.nw,.pe-dimbox .h.ne,.pe-dimbox .h.se,.pe-dimbox .h.sw{width:var(--hs);height:var(--hs)}
-.pe-dimbox .h.n,.pe-dimbox .h.s{width:var(--hl,28px);margin-left:calc(var(--hl,28px)/-2)}
-.pe-dimbox .h.e,.pe-dimbox .h.w{height:var(--hl,28px);margin-top:calc(var(--hl,28px)/-2)}
+.pe-dimbox .h.n,.pe-dimbox .h.s{width:var(--hl);margin-left:calc(var(--hl)/-2)}
+.pe-dimbox .h.e,.pe-dimbox .h.w{height:var(--hl);margin-top:calc(var(--hl)/-2)}
 .pe-dimbox.sel .h{opacity:1;transform:none}
 .pe-crop-pg .pe-dimbox{border-width:calc(1.5px/var(--z,1))}
-.pe-dimx{position:absolute;left:50%;top:50%;width:var(--dz,22px);height:var(--dz,22px);margin:calc(var(--dz,22px)/-2) 0 0 calc(var(--dz,22px)/-2);padding:0;border:0;border-radius:50%;background:var(--accent);color:var(--on-dark);display:grid;place-items:center;cursor:pointer;box-shadow:var(--chip-shadow);scale:calc(1/var(--z,1));transition:transform .25s var(--spring-press)}
+.pe-dimx{position:absolute;left:50%;top:50%;width:var(--dz);height:var(--dz);margin:calc(var(--dz)/-2) 0 0 calc(var(--dz)/-2);padding:0;border:0;border-radius:50%;background:var(--accent);color:var(--on-dark);display:grid;place-items:center;cursor:pointer;box-shadow:var(--chip-shadow);scale:calc(1/var(--z,1));transition:transform .25s var(--spring-press)}
 .pe-dimx svg{width:62%;height:62%}
 @media (hover:hover){.pe-dimx:hover{transform:scale(1.1)}}
 .pe-dimx:focus-visible{outline:2px solid var(--paper);outline-offset:1px}

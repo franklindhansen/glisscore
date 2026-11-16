@@ -355,14 +355,18 @@ function paintFadeShape() {
   const cs = getComputedStyle(document.documentElement), line = cs.getPropertyValue('--line').trim(), acc = cs.getPropertyValue('--accent').trim(), mut = cs.getPropertyValue('--muted').trim();
   let ws = 0; for (const n in FSH.w) ws += Math.max(0, FSH.w[n]);
   const g = x => { let v = 0; for (const n in FSH.w) v += Math.max(0, FSH.w[n]) * AE_SHAPES[n](x); return ws > 0 ? v / ws : x; };
-  const span = 3, top = 8, bot = H - 20, y = v => top + (1 - v) * (bot - top);
+  const span = 3, top = 8, bot = H - 22, y = v => top + (1 - v) * (bot - top), a0 = 8, a1 = W * 0.42, b0 = W * 0.58, b1 = W - 8, note = aeFont('note'), axis = aeFont('axis', '600');
   c.strokeStyle = line; c.lineWidth = 1; c.beginPath(); c.moveTo(0, top + 0.5); c.lineTo(W, top + 0.5); c.moveTo(0, bot + 0.5); c.lineTo(W, bot + 0.5); c.stroke();
-  const zone = (x0, x1, L, dir, al, name) => {
+  /* the same picture as the Audio Editor's Shape: time runs left to right in both, the first rises into the music, the second falls away from it, each with a caption and the length where it finishes (in) or starts (out) */
+  const zone = (x0, x1, L, dir, on, name) => {
+    const al = on * (0.35 + 0.65 * Math.min(1, L / 0.25));
     c.beginPath(); for (let px = 0; px <= x1 - x0; px++) { const t = (dir > 0 ? px : (x1 - x0) - px) / (x1 - x0) * span, yy = y(L < 0.001 ? 1 : g(clamp(t / L, 0, 1))); px ? c.lineTo(x0 + px, yy) : c.moveTo(x0 + px, yy); }
     c.lineJoin = c.lineCap = 'round'; c.lineWidth = 2.4; c.strokeStyle = acc; c.globalAlpha = al; c.stroke(); c.lineTo(x1, bot); c.lineTo(x0, bot); c.closePath(); c.globalAlpha = 0.12 * al; c.fillStyle = acc; c.fill();
-    c.globalAlpha = 0.45 + 0.45 * ((al - 0.35) / 0.65); c.fillStyle = mut; c.font = '600 10.5px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top'; c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(name, dir > 0 ? x0 : x1, bot + 5); c.globalAlpha = 1;
+    if (L > 0.02) { const k = Math.max(3, Math.round(L / span * (x1 - x0))), tx = dir > 0 ? x0 + k : x1 - k; c.globalAlpha = Math.min(1, L / 0.15) * (on > 0.9 ? 1 : 0.5); c.fillStyle = mut; c.font = note; c.textBaseline = 'top'; c.fillRect(Math.round(tx), bot - 3, 1, 7); c.textAlign = dir > 0 ? 'left' : 'right'; c.fillText(L.toFixed(1) + 's', tx + (dir > 0 ? -3 : 3), bot + 7); }
+    c.globalAlpha = on > 0.9 ? 0.9 : 0.45; c.fillStyle = mut; c.font = axis; c.textBaseline = 'bottom'; c.textAlign = dir > 0 ? 'right' : 'left'; c.fillText(name, dir > 0 ? x1 - 6 : x0 + 6, bot - 6); c.globalAlpha = 1;
   };
-  zone(6, W * 0.46, FSH.li, 1, FSH.ai, 'IN'); zone(W * 0.54, W - 6, FSH.lo, -1, FSH.ao, 'OUT');
+  zone(a0, a1, FSH.li, 1, FSH.ai, 'IN'); zone(b0, b1, FSH.lo, -1, FSH.ao, 'OUT');
+  c.save(); c.setLineDash([2, 5]); c.strokeStyle = mut; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(a1 + 4, y(1)); c.lineTo(b0 - 4, y(1)); c.stroke(); c.restore();          // the music carries on in between
 }
 /* The switches in the Shadows and depth and Fades headers: off hides the rest of the group but keeps its values */
 /* the credits text boxes: each line's Aa button opens that line's own row (font box, B, I); Aa is lit when the line has any setting of its own. Which rows are open is only on screen, never saved. A line uses its own font, else the shared Font, else the default. */
