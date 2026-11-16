@@ -120,7 +120,7 @@ function peChrome() {
   if (m === 'pages') peAddFill();
   document.querySelectorAll('#peRail .pe-tab').forEach(b => { const on = b.dataset.tool === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
   const cur = document.querySelector('#peRail .pe-tab.on span'); if (cur) $('#peRailName').textContent = cur.textContent; peRailOpen(false);
-  peRailSel(PE.chromed); PE.chromed = true;
+  peRailSel(PE.chromed); PE.chromed = true; peBtnPlace();
   if (m === 'split') peSplitNote();
   peActs();
 }
@@ -172,6 +172,7 @@ function peBodySlide(snap, dir) {
 /* each tool's band is as tall as its own heading and settings; moving between tools glides the band's height and the pages follow */
 function peTopFit(tool) {
   const band = $('#peBand'); if (!band || $('#pdfDlg').hidden) return;
+  peBtnPlace();          // the tool's button is where it will be (the bar or the head) before the band is measured
   const t = tool || PE.view || PE.mode, v = band.querySelector('.pe-tv[data-tool="' + t + '"]'); if (!v) return;
   const was = v.hidden, hid = Array.from(v.querySelectorAll('.pe-notice[hidden]')); v.hidden = false; hid.forEach(n => { n.hidden = false; }); v.classList.add('measure'); const h = v.offsetHeight; v.classList.remove('measure'); hid.forEach(n => { n.hidden = true; }); v.hidden = was;          // measured on its own, with a note that may appear counted
   PE.bandH = h; band.style.height = h && h <= Math.max(200, $('#peWin').offsetHeight * 0.42) ? h + 'px' : '';
@@ -185,13 +186,14 @@ function peSplitNote() {          // what Split found is said once, as a toast o
 }
 /* a greyed main button says why on its tool's status line; the line goes when the button is enabled (a message the tool set itself is left alone) */
 /* a reason goes on the status line only when the user can fix it and nothing else on screen says it; these belong on the greyed button's tooltip, whichever call sends them */
-const PE_WHY_TIP = new Set(['pe.why.cleaned', 'pe.why.cropped', 'pe.why.spread', 'pe.why.level', 'pe.why.resize', 'pe.why.revert']);
+const PE_WHY_TIP = new Set(['pe.why.page', 'pe.why.choose', 'pe.why.apply', 'pe.why.draw', 'pe.why.cleaned', 'pe.why.cropped', 'pe.why.spread', 'pe.why.level', 'pe.why.resize']);
+const peOf = (a, b) => a + ' / ' + b;          // a position or a count, said one way everywhere: "1 / 3" (the bar's "3 / 3 selected" and the large view's page)
 function peTip(sel, key) {          // a greyed button's tooltip: set from a reason, cleared when the reason goes
   const b = typeof sel === 'string' ? $(sel) : sel; if (!b) return;
   if (key) { b.title = tx(key); b.dataset.tipWhy = '1'; } else if (b.dataset.tipWhy) { b.title = ''; delete b.dataset.tipWhy; }
 }
 function peWhy(sel, key, tipKey) {
-  const el = $(sel); if (!el || PE.busy) return; const btn = el.parentElement.querySelector('.btn.primary'), tk = tipKey || (PE_WHY_TIP.has(key) ? key : '');
+  const el = $(sel); if (!el || PE.busy) return; const btn = el.closest('.pe-tv').querySelector('.pe-acts>.btn.primary') || $('.pe-rail-bar>.btn.primary'), tk = tipKey || (PE_WHY_TIP.has(key) ? key : '');
   if (btn) peTip(btn, tk);
   if (PE_WHY_TIP.has(key)) key = '';
   const w = PE.why || (PE.why = {}), t = key ? tx(key) : '';
@@ -215,10 +217,20 @@ function peActs() {
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') { const off = !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())); set('#peRzGo', off); peTip('#peRzGo', off ? 'pe.why.resize' : ''); }
   else if (PE.mode === 'wm') { const on = !!d.wm.on; peApplyBtn('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id)), on); }
-  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', hand ? (apply ? '' : src == null ? 'pe.why.draw' : 'pe.why.apply') : none ? 'pe.why.page' : '', ''); }
+  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peTip('#peCropApply', hand && !apply ? (src == null ? 'pe.why.draw' : 'pe.why.apply') : ''); peWhy('#peCropStatus', hand ? (src == null ? 'pe.why.draw' : '') : none ? 'pe.why.page' : '', ''); }
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
+/* in the narrow layout the tool's main button sits in the tool bar beside its name, as the Audio Editor's Bypass and Match gain do; wider, it stays in the tool's head */
+function peBtnPlace() {
+  const bar = $('.pe-rail-bar'), narrow = getComputedStyle($('#peWin')).getPropertyValue('--pe-narrow').trim() === '1';
+  document.querySelectorAll('#peWin .pe-acts>.btn.primary, .pe-rail-bar>.btn.primary').forEach(b => {
+    if (!b._home) b._home = b.closest('.pe-acts'); const mine = b._home.closest('.pe-tv').dataset.tool === PE.mode, had = document.activeElement === b;
+    if (narrow && mine && b.parentNode !== bar) bar.insertBefore(b, bar.querySelector('.pe-rail-cur').nextSibling);
+    else if (!(narrow && mine) && b.parentNode === bar) b._home.appendChild(b);
+    if (had && document.activeElement !== b) b.focus({ preventScroll: true });          // moving a button in the page drops its keyboard focus, so it is given back
+  });
+}
 function peRailOpen(on) { const r = $('#peRail'); r.classList.toggle('open', !!on); $('#peRailCur').setAttribute('aria-expanded', !!on); }
 function peRailSel(animate) {
   const sel = $('#peRailSel'), root = $('#peRailIn'), btn = document.querySelector('#peRail .pe-tab.on'); if (!sel || !btn || !btn.offsetWidth) { if (sel) sel.style.opacity = '0'; return; }
@@ -580,7 +592,7 @@ function peOneRefresh() {
   if (!on) { dimLarge(); win.classList.remove('wipe'); peSweepEnd(); PE.oneSig = ''; PE.zmFor = null; PE.shownKey = null; if (PE.zm && PE.zm.z !== 1) peZoomReset(false); return; }
   if (PE.zmFor !== PE.one) { PE.zmFor = PE.one; if (PE.zm.z !== 1) peZoomReset(false); }
   const sl = d.slots[PE.one], pos = ids.indexOf(PE.one) + 1, tilt = peTilted(sl), cmp = $('#peOneCmp');
-  $('#peCropName').textContent = 'Page ' + pos + ' of ' + ids.length; $('#peCropPrev').disabled = pos <= 1; $('#peCropNext').disabled = pos >= ids.length;
+  $('#peCropName').textContent = peOf(pos, ids.length); $('#peCropName').setAttribute('aria-label', 'Page ' + pos + ' of ' + ids.length); $('#peCropPrev').disabled = pos <= 1; $('#peCropNext').disabled = pos >= ids.length;
   const cl = PE.mode === 'clean', can = cl ? !!(PE.cl.bg || PE.cl.sp) : tilt;
   cmp.disabled = !can; cmp.setAttribute('aria-pressed', String(can && PE.orig)); cmp.title = can ? '' : cl ? 'Nothing is chosen to clean' : 'This page has not been leveled';
   const showCmp = (PE.mode === 'skew' && tilt || cl && can), crop = PE.mode === 'crop';
@@ -693,7 +705,7 @@ function peCleanGo() {
 }
 function peCleanClear() {
   const d = PE.d, ids = peTargets().filter(id => peCleaned(d.slots[id])); if (!ids.length) return;
-  pePush(); ids.forEach(id => { d.slots[id].bg = 0; d.slots[id].sp = 0; }); PE.rustle = true; peRender(true); peSay('#peCleanStatus', tx('pe.clean.revert'));
+  pePush(); ids.forEach(id => { d.slots[id].bg = 0; d.slots[id].sp = 0; }); PE.rustle = true; peRender(true); peSay('#peCleanStatus', '');
 }
 function peCleanBind() {
   [['peClBg', 'bg'], ['peClSp', 'sp']].forEach(([name, key]) => document.querySelectorAll('input[name=' + name + ']').forEach(r => {
@@ -724,7 +736,7 @@ async function peSkewGo() {
 async function peSkewClear() {
   const d = PE.d, ids = peTargets().filter(id => peTilted(d.slots[id])), flat = { skew: 0, vskew: 0, warp: 0 }, res = new Map(); if (!ids.length) return;
   if (ids.some(id => d.slots[id].crop && !d.slots[id].half) && !await peEach(ids, '#peSkewClear', async id => { res.set(id, await peFollow(d.slots[id], flat)); })) return;
-  pePush(); ids.forEach(id => { const sl = d.slots[id]; Object.assign(sl, flat); if (res.get(id)) sl.crop = res.get(id); }); PE.rustle = true; peRender(true); peSay('#peSkewStatus', tx('pe.skew.revert'));
+  pePush(); ids.forEach(id => { const sl = d.slots[id]; Object.assign(sl, flat); if (res.get(id)) sl.crop = res.get(id); }); PE.rustle = true; peRender(true); peSay('#peSkewStatus', '');
 }
 /* Watermark: tick the pages that get it, then press Watermark. Once it is on, the ticks and the settings change the pages at once. Changing a setting before it is added adds it to the ticked pages */
 function peWmSet(on) {
@@ -903,7 +915,7 @@ function peState() {
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
-  else { const ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? d.order.filter(id => dimKey(d.slots[id])).length + ' / ' + d.order.filter(id => !d.slots[id].x).length + ' pages dimmed' : ph ? on + ' / ' + pool : m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true); }          // a phone keeps just the numbers, to leave room for the Pages field
+  else { const ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? peOf(d.order.filter(id => dimKey(d.slots[id])).length, d.order.filter(id => !d.slots[id].x).length) + ' pages dimmed' : ph ? peOf(on, pool) : m === 'pages' ? peOf(on, pool) + ' pages active' : peOf(on, pool) + ' selected', true); }          // a phone keeps just the numbers, to leave room for the Pages field
   $('#peAll').hidden = $('#peNone').hidden = $('#peSelGrp').hidden = $('#pePages').hidden = m === 'dim'; $('#pePages').disabled = !!PE.busy; if (document.activeElement !== $('#pePages')) $('#pePages').value = pePagesText(); $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
@@ -1322,7 +1334,7 @@ function peBind() {
   { const f = $('#pePages'); f.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); peTypePages(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); f.value = pePagesText(); } else e.stopPropagation(); }); f.addEventListener('blur', () => { f.value = pePagesText(); }); }
   $('#peAll').addEventListener('click', () => peSelAll(true)); $('#peNone').addEventListener('click', () => peSelAll(false));
   const wmPush = () => { if (!PE.wmQuiet) pePush(); PE.wmQuiet = true; clearTimeout(PE.wmT); PE.wmT = setTimeout(() => { PE.wmQuiet = false; }, 900); };       // one undo step per burst of typing or dragging
-  peCropBind(); $('#peRailCur').addEventListener('click', () => peRailOpen(!$('#peRail').classList.contains('open'))); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
+  peCropBind(); peBtnPlace(); new ResizeObserver(peBtnPlace).observe($('#pdfDlg')); $('#peRailCur').addEventListener('click', () => peRailOpen(!$('#peRail').classList.contains('open'))); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
   const rzOpt = b => { const k = b.dataset.k;
     if (k === 'orig') { PE.rzCustom = false; rzPick(null); }
     else if (k === 'custom') { PE.rzCustom = true; if (PE.rzMem) rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); else rzRefresh(); cuOpen(b, true, true); }          // the size typed last comes back; the first time the blanks are empty and nothing is picked until both are typed

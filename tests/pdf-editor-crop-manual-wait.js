@@ -1,6 +1,7 @@
 // PDF Editor: Manual in Crop while the pages are still being read. The frame and its handles are there to drag, each page keeps its own frame when you step with the arrows,
 // Apply to selected copies the open page's frame to the ticked pages, and Crop applies the frames you drew at once, without waiting for the read.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-crop-manual-wait.js
+// the large view's position reads "2 / 4" (old: "Page 2 of 4")
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= e);
@@ -27,17 +28,17 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
 
   // 1. Each page has its own frame, kept when stepping with the button and the arrow keys
   { const p = await fresh(); await hand(p);
-    const a0 = await frame(p); ok('Own frames: page 1 shows a frame to drag', !!a0 && (await page(p)) === 'Page 1 of 4', JSON.stringify(a0));
+    const a0 = await frame(p); ok('Own frames: page 1 shows a frame to drag', !!a0 && (await page(p)) === '1 / 4', JSON.stringify(a0));
     await drag(p, -70, -90); const a1 = await frame(p); ok('Own frames: dragging page 1 changes its frame', a1 && a0 && a1[2] < a0[2] - 0.1, JSON.stringify({ a0, a1 }));
     await p.click('#peCropNext'); await p.waitForTimeout(500); const b0 = await frame(p);
-    ok('Own frames: stepping to page 2 with the button shows page 2 and a frame of its own (not page 1\'s)', (await page(p)) === 'Page 2 of 4' && b0 && !near(b0, a1, 0.05), JSON.stringify({ b0, a1 }));
+    ok('Own frames: stepping to page 2 with the button shows page 2 and a frame of its own (not page 1\'s)', (await page(p)) === '2 / 4' && b0 && !near(b0, a1, 0.05), JSON.stringify({ b0, a1 }));
     await drag(p, 60, 60, 'nw'); const b1 = await frame(p); ok('Own frames: page 2 can be dragged on its own', b1 && b1[0] > b0[0] + 0.05, JSON.stringify({ b0, b1 }));
     await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(500); const a2 = await frame(p);
-    ok('Own frames: ArrowLeft goes back to page 1 and its dragged frame is still there', (await page(p)) === 'Page 1 of 4' && near(a2, a1, 0.02), JSON.stringify({ a2, a1 }));
+    ok('Own frames: ArrowLeft goes back to page 1 and its dragged frame is still there', (await page(p)) === '1 / 4' && near(a2, a1, 0.02), JSON.stringify({ a2, a1 }));
     await p.keyboard.press('ArrowRight'); await p.waitForTimeout(500); const b2 = await frame(p);
-    ok('Own frames: ArrowRight returns to page 2 and its frame is still there', (await page(p)) === 'Page 2 of 4' && near(b2, b1, 0.02), JSON.stringify({ b2, b1 }));
+    ok('Own frames: ArrowRight returns to page 2 and its frame is still there', (await page(p)) === '2 / 4' && near(b2, b1, 0.02), JSON.stringify({ b2, b1 }));
     await p.click('#peCropNext'); await p.click('#peCropNext'); await p.waitForTimeout(400); const end = await p.evaluate(() => ({ next: $('#peCropNext').disabled, name: $('#peCropName').textContent }));
-    ok('Own frames: the arrow buttons stop at the last page', end.next && end.name === 'Page 4 of 4', JSON.stringify(end));
+    ok('Own frames: the arrow buttons stop at the last page', end.next && end.name === '4 / 4', JSON.stringify(end));
     const go = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent, pad: $('#peCropPad').disabled })); ok('Own frames: Crop stays free while stepping during the read', !go.off && go.text === 'Apply', JSON.stringify(go));
     await settle(p); const cr = await crops(p);
     ok('Own frames: pages 1 and 2 keep their dragged frames after the read ends (Crop not pressed yet)', cr.every(c => c === null), JSON.stringify(cr));
@@ -51,7 +52,7 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
     const off = await p.evaluate(() => $('#peCropApply').disabled); await p.evaluate(() => { PE.skip.delete(PE.d.order[1]); PE.skip.delete(PE.d.order[2]); peState(); peActs(); }); await p.waitForTimeout(300);
     const on = await p.evaluate(() => $('#peCropApply').disabled); await p.click('#peCropApply'); await p.waitForTimeout(900); const cr = await crops(p);
     ok('Apply to selected: greyed out until a page is ticked, then crops the open page and the ticked pages with its frame, and no other', off && !on && near(cr[0], a1, 0.03) && near(cr[1], a1, 0.03) && near(cr[2], a1, 0.03) && cr[3] === null, JSON.stringify({ off, on, cr, a1 }));
-    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Apply to selected: page 2 shows the copied frame', (await page(p)) === 'Page 2 of 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
+    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Apply to selected: page 2 shows the copied frame', (await page(p)) === '2 / 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
     // old: Crop in Manual then cropped the open page too; new: the open page already has the copied frame, so the button reads Applied and pressing it takes that crop off
     const pr = await p.evaluate(() => $('#peCropAuto').getAttribute('aria-pressed') === 'true'); await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr2 = await crops(p);
     ok('Manual: with the open page already cropped the button reads Applied, and pressing it takes the crops off', pr && cr2.every(c => c === null), JSON.stringify({ pr, cr2, a1 })); await p.close(); }

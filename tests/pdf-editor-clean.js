@@ -28,7 +28,7 @@ async function makePdf() {
   ok('White: the shaded left and the far corner of the paper both come out white', near(r.paperL, [255, 255, 255], 4) && near(r.paperR, [255, 255, 255], 4), JSON.stringify([r.paperL, r.paperR]));
   ok('Page color: the shaded side is brought up to the paper tone, and it is not white', near(r.pcL, r.pcR, 10) && r.pcR[2] < 235 && r.pcR[0] > 220, JSON.stringify([r.pcL, r.pcR]));
   ok('Strong takes out a dust speck and leaves a staff line, a note head and a dot of its own', !dark(r.dustW) && r.dustOrig[0] < 90 && dark(r.line) && dark(r.note) && dark(r.dot), JSON.stringify({ dust: r.dustW, line: r.line, note: r.note, dot: r.dot }));
-  ok('Nothing chosen leaves the page as it was; Specks alone leave the paper alone', near(r.same, r.dustOrig, 0) && near(r.paperOnly, r.paperOrig, 2) && dark(r.dotOrig) && !dark(r.dustLight), JSON.stringify({ same: r.same, paperOnly: r.paperOnly, paperOrig: r.paperOrig, dustLight: r.dustLight, dotOrig: r.dotOrig }));
+  ok('Nothing chosen leaves the page as it was; Strength alone leaves the paper alone', near(r.same, r.dustOrig, 0) && near(r.paperOnly, r.paperOrig, 2) && dark(r.dotOrig) && !dark(r.dustLight), JSON.stringify({ same: r.same, paperOnly: r.paperOnly, paperOrig: r.paperOrig, dustLight: r.dustLight, dotOrig: r.dotOrig }));
   // the tool
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   const order = await p.evaluate(() => peOrder());
@@ -38,7 +38,7 @@ async function makePdf() {
   ok('Clean opens with White and Light chosen and Apply ready', a.mode === 'clean' && a.ticks && a.go && !a.clear && a.bg === 1 && a.sp === 1 && a.labels === 'White|Page color|Light|Strong', JSON.stringify(a));
   await p.click('label:has(input[name=peClSp][value="1"])'); await p.waitForTimeout(100);
   const t = await p.evaluate(() => ({ sp: PE.cl.sp, checked: !!document.querySelector('input[name=peClSp]:checked') }));
-  ok('Pressing the chosen Specks choice again takes the choice away', t.sp === 0 && !t.checked, JSON.stringify(t));
+  ok('Pressing the chosen Strength choice again takes the choice away', t.sp === 0 && !t.checked, JSON.stringify(t));
   await p.click('label:has(input[name=peClSp][value="2"])'); await p.click('#peCleanGo'); await p.waitForTimeout(900);
   const c = await p.evaluate(() => ({ slots: PE.d.order.map(id => [PE.d.slots[id].bg, PE.d.slots[id].sp].join()).join('|'), go: !document.querySelector('#peCleanGo').disabled, clear: document.querySelector('#peCleanGo').getAttribute('aria-pressed') === 'true', word: document.querySelector('#peCleanGo').textContent, tag: document.querySelector('.page-card .pe-lvl').textContent, shown: getComputedStyle(document.querySelector('.page-card .pe-lvl')).opacity, list: JSON.stringify(recipeToList(PE.d)) }));
   ok('Clean writes the choices onto every ticked page, reads Applied (pressed), and the pages say Cleaned', c.slots === '1,2|1,2|1,2' && c.go && c.clear && c.word === 'Applied' && c.tag === 'Cleaned' && c.shown === '1', JSON.stringify(c));

@@ -7,7 +7,7 @@ const { chromium } = require('playwright-core'), { PDFDocument } = require('../v
 const { install } = require('./lib/measure.js'), { lines } = require('./lib/layout-lines.js'), { fitMeasure } = require('./lib/fit-measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 const EXPECTED = path.join(__dirname, 'pdf-editor-layout-expected.txt');
-const SEL = { pane: '.pe-tv:not([hidden])', card: '.ae-card', head: '.pe-phead', body: '.pe-top', line: '.pe-tv:not([hidden]) .pe-phead' };
+const SEL = { pane: '.pe-tv:not([hidden])', card: '.ae-card', head: '.pe-phead', body: '.pe-top', line: '.pe-tv:not([hidden]) .pe-phead, .pe-tv:not([hidden]) .pe-row, .pe-tv:not([hidden]) .pe-cards'  /* the line is the head's; with the head gone (nothing to say, in the narrow layout), the first row's, or the cards' own box */ };
 const SIZES = [[1440, 900], [1040, 760], [900, 760], [761, 800], [700, 800], [600, 800], [521, 800], [390, 800], [360, 800]];
 const TOOLS = { pages: [['insert', null]], clean: [['choices', null]], skew: [['lone', null]], crop: [['auto', null], ['manual', () => { const r = document.querySelector('input[name=peCropMode][value=hand]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }]], dim: [['plain', null]], split: [['lone', null]], resize: [['sizes', null], ['custom', () => document.querySelector('#peRzGrid .rz-opt[data-k=custom]').click()]], wm: [['cards', null], ['custom', () => document.querySelector('input[name=peWmAngle][value=custom]').click()]] };
 const data = f => { try { return fs.readFileSync(f, 'utf8').split('\n'); } catch (e) { return []; } };

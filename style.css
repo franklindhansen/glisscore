@@ -800,6 +800,13 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 #aeGain:disabled::-webkit-slider-runnable-track{background:linear-gradient(to right,color-mix(in srgb,var(--ink) 33%,transparent) 0,color-mix(in srgb,var(--ink) 33%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 55%,transparent) var(--lo,50%),color-mix(in srgb,var(--accent) 55%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 33%,transparent) var(--hi,50%),color-mix(in srgb,var(--ink) 33%,transparent) 100%)}
 .ed-head{flex-wrap:wrap}
 .ed-head h2{white-space:nowrap}
+.ed-head h2{--hc:.715;--ha:.74;--hd:.26;          /* the title's own font (Newsreader): cap height, ascent, and descent as fractions of its size, so it can be trimmed to its letters like the labels */
+  --hm-t:calc(-1 * (round(down, calc((1lh - round(var(--ha) * 1em, 1px) - round(var(--hd) * 1em, 1px)) / 2), 1px) + round(var(--ha) * 1em, 1px) - round(var(--hc) * 1em, 1px)));
+  --hm-b:calc(-1 * (1lh - round(down, calc((1lh - round(var(--ha) * 1em, 1px) - round(var(--hd) * 1em, 1px)) / 2), 1px) - round(var(--ha) * 1em, 1px)));
+  --hm-h:auto}
+@supports (text-box:trim-both cap alphabetic){.ed-head h2{--hm-t:0px;--hm-b:0px;--hm-h:round(var(--hc) * 1em, 1px)}}
+@container pedlg (max-width:488px){#pdfDlg .ed-head h2{text-box:trim-both cap alphabetic;margin-block:var(--hm-t) var(--hm-b);height:var(--hm-h)}}          /* with its line gone, the title stands alone across from Undo, Redo, History, and Reset, so it is centered by its letters, as in the Audio Editor */
+@container aedlg (max-width:488px){#audioDlg .ed-head h2{text-box:trim-both cap alphabetic;margin-block:var(--hm-t) var(--hm-b);height:var(--hm-h)}}
 .line-style.sub{display:flex}
 .adv *{box-sizing:border-box}
 details.adv::details-content{box-sizing:border-box}        /* two rules, since a browser that does not know ::details-content would drop a combined one */
@@ -1941,7 +1948,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-field);padding:var(--gap-set) var(--ae-side)}
 .pe-row{display:flex;align-items:flex-end;flex-wrap:wrap;column-gap:calc(var(--gap-field) + var(--gap-set));row-gap:var(--gap-set);padding:var(--gap-set) var(--ae-side)}
 .pe-row+.pe-row{padding-top:0}
-.pe-row.spread{justify-content:space-between;column-gap:var(--gap-field)}          /* a row of a few short controls (Crop's) spreads to both edges with equal space between them, so it fills the row instead of bunching at the left */
+.pe-row.spread>:last-child{margin-left:auto}          /* a row of a few short controls (Crop's): the controls keep the row's normal space between them, and the last one sits at the right edge */
 .pe-g{display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-head);min-width:0}          /* a name is trimmed to its letters (in a card or a settings row), so the control under it sits --gap-head below them: the same space you see under a name in the video panel, where the line's own room under the letters makes up the rest */
 .pe-g>.t-lbl{font-size:var(--type-body);color:var(--muted);line-height:var(--line-s)}          /* a setting's name: the same look as a slider's name (.field label), as in the video panel; small capitals are only for a card's title */
 .pe-row .seg,.pe-cards .seg{height:var(--h-s)}
@@ -2126,7 +2133,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the status bar: how many pages, and Select all / Deselect all as plain text buttons */
 .pe-bar{flex:none;display:flex;align-items:center;gap:var(--gap-sub);min-height:44px;padding:var(--tab-py) var(--gap-set) var(--gap-tight) var(--pe-edge);border-top:1px solid var(--line)}
 .pe-count{min-width:5ch;margin-right:auto;font-size:var(--type-body);color:var(--muted);font-variant-numeric:tabular-nums}
-.pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:136px;min-width:0;height:var(--h-s);margin:0 var(--gap-tight) 0 var(--gap-head);padding:0 var(--field-pad-x);border-radius:var(--r-sm);font-size:var(--type-body);font-variant-numeric:tabular-nums}
+.pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:100px;min-width:0;height:var(--h-s);margin:0 var(--gap-tight) 0 var(--gap-head);padding:0 var(--field-pad-x);border-radius:var(--r-sm);font-size:var(--type-body);font-variant-numeric:tabular-nums}
 .pe-bar .pe-pages:disabled{opacity:var(--inactive);cursor:not-allowed}
 .pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn:disabled{color:var(--muted);opacity:var(--inactive)}
@@ -2155,7 +2162,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-row input[type=text]:focus-visible,.pe-row input[type=number]:focus-visible{outline:none;border-color:var(--accent)}          /* a field you type in shows its edge in the accent, not a ring */
 @container rzcards (min-width:644px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}
 @container rzcards (max-width:643px){.pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@container rzcards (max-width:311px){.pe-rz .pe-card-sizes .rz-grid{grid-template-columns:minmax(0,1fr)}.pe-rz .rz-opt:nth-child(n){grid-row:auto}}          /* one to a row once two no longer fit side by side with their sizes */          /* four sizes to a row while they and Page shape fit side by side (measured: the sizes need 490px and Page shape 137px, with 10px between); narrower, they flow two to a row */
+@container rzcards (max-width:257px){.pe-rz .rz-opt{height:var(--h-l);min-height:var(--h-l);padding-block:0}.pe-rz .rz-opt:not(.cu){flex-direction:column;align-items:flex-start;justify-content:center;gap:0}}          /* too narrow even for that (the sizes' box under 258px): the numbers sit under the name */
+@container rzcards (max-width:282px){.pe-rz .rz-opt{padding-inline:var(--gap-label)}.pe-rz .rz-opt small{font-size:var(--type-axis)}}          /* once a size and its numbers no longer fit side by side in half the box, the numbers stay beside the name, a little smaller and with a little less padding */
           /* four cards to a row while the cards sit beside Page shape; narrower, they flow two to a row */
 .pe-win.waiting .pe-grid{opacity:var(--inactive)}
 .pe-win.waiting .pe-grid .page-card{pointer-events:none}
@@ -2164,12 +2172,19 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-toast.show{transform:translate(-50%,-50%)}
 #pdfDlg{container:pedlg/inline-size}
 @container pedlg (max-width:744px){
-  .pe-main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--gap-set)}
+  .pe-main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:0}          /* the tool bar is the top of the tool window, divided from it by a hairline, as in the Audio Editor */
+  .pe-rail{border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom-color:var(--hairline)}
+  .pe-win{border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg)}
   .pe-rail{padding:0}          /* the tool list becomes a drop-down, as the Audio Editor's does: the same bar, chevron, and glide */
   .pe-rail-cur{display:flex;align-items:center;gap:var(--gap-card);width:100%;padding:var(--gap-set);border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
   .pe-rail-cur span{color:var(--muted);font-size:var(--type-small);text-transform:uppercase;letter-spacing:.05em}
   .pe-rail-cur b{font-weight:600}
   .pe-rail-cur svg{width:var(--icon-l);height:var(--icon-l);flex:none;margin-left:auto;color:var(--muted);transition:transform var(--ae-move) var(--spring-hover)}
+  #peWin{--pe-narrow:1}          /* the script reads this to know the tool bar holds the tool's button (one place for the width) */
+  .pe-rail-bar{display:flex;align-items:center;position:relative;padding-right:calc(var(--gap-set) * 2 + var(--icon-l))}          /* the tool bar is the tool's heading, with its button on its line, as the Audio Editor's */
+  .pe-rail-cur{flex:1 1 0;min-width:0;width:auto;position:static;align-items:baseline}          /* the small "Tool" and the tool's name share one baseline, as the Audio Editor's bar */
+  .pe-rail-bar>.btn{flex:none;margin-left:var(--gap-head)}
+  .pe-rail-cur svg{position:absolute;right:var(--gap-set);top:50%;margin:calc(var(--icon-l) / -2) 0 0}
   .pe-rail.open .pe-rail-cur svg{transform:rotate(180deg)}
   .pe-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .pe-rail.open .pe-rail-body{grid-template-rows:1fr}
@@ -2184,7 +2199,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-phead{flex-wrap:wrap;gap:var(--gap-head)}
   .pe-acts{flex-wrap:wrap;flex:0 1 auto;min-width:0}
   .pe-status{white-space:normal;text-align:right}
-  .pe-row{padding-inline:var(--gap-set)}
+  .pe-row{padding-inline:var(--gap-set);column-gap:var(--gap-set)}          /* controls share a line at the one spacing between settings */
   .pe-grid-wrap{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
   .pe-grid{gap:var(--gap-field) var(--gap-head)}
   .pe-stage{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
@@ -2192,6 +2207,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-bar .pe-pages{width:calc(var(--h-s) * 3.2);margin:0 var(--gap-sub) 0 var(--gap-label)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
 }
+@container pedlg (max-width:488px){#pdfDlg #peViewClean .pe-row .pe-g{flex:1 1 auto}  #pdfDlg #peViewClean .pe-row .pe-g>.seg{align-self:stretch}  /* Paper and Strength share a line when they fit, and otherwise each fills the window's width, as Watermark's Direction and Layout do */
+  #pdfDlg .pe-row.spread{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center}  #pdfDlg .pe-row.spread .pe-inl{min-width:0}  #pdfDlg .pe-row.spread .pe-inl input[type=range]{flex:1 1 0;width:auto;min-width:0}  #pdfDlg .pe-row.spread>:last-child{grid-column:1 / -1;justify-self:end;margin-left:0}  /* Crop's Auto | Manual and Margin share a line, Keep frame under them, at the right edge with its switch beside it, as wide */
+  #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead,#pdfDlg .pe-rail-cur span{display:none}  #pdfDlg .pe-rail-cur{padding-right:var(--gap-head)}
+  #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
 

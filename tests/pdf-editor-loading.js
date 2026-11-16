@@ -20,7 +20,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   ok('Crop read: the Crop button and the margin slider are greyed, and the status line adds no bar', rd.off && rd.pad && !rd.bar && !/Processing/.test(rd.line), JSON.stringify(rd));
   // Manual does not wait: the Crop button is free and plain, and the reading comes back on the button in Auto
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=hand]').click(); }); await p.waitForTimeout(500);
-  const hd = await go(); ok('Manual during the read: the Crop button is plain, and greyed only because no frame is drawn yet', hd.text === 'Apply' && !hd.loading && !hd.pill && hd.off && /draw a frame/i.test(hd.line), JSON.stringify(hd));
+  const hd = await go(); ok('Manual during the read: the Crop button is plain, and greyed only because no frame is drawn yet', hd.text === 'Apply' && !hd.loading && !hd.pill && hd.off && /draw a frame/i.test(hd.tip) && hd.line === '', JSON.stringify(hd));
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=auto]').click(); }); await p.waitForTimeout(500);
   const bk = await go(); ok('Back in Auto during the read: the button shows the work again', /^Processing/.test(bk.pill) && bk.text === 'Apply' && bk.off && bk.pad, JSON.stringify(bk));
   // Manual during the read: the frame and its handles are there to drag at once, a drag is kept, and Crop applies it without waiting for the pages to be read
