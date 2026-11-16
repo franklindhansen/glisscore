@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.20
+
+On small screens the PDF Editor's tools open from a drop-down, and the page size slider floats over the pages and returns to the middle on a double-click. Select all and Deselect all sit in one pill, and the tool descriptions are shorter.
+
 ## 1.2.19
 
 Re-size shows its page sizes and Page shape in two cards, and the Custom blanks now fit what you type. The PDF Editor's settings have even space above and below.
