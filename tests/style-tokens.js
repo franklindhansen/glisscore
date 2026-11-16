@@ -9,8 +9,8 @@
 //   color      #hex, rgb(), rgba(), hsl() in color, background, border, outline, fill, stroke, or box-shadow, outside :root; a fallback inside var() counts too
 // A @keyframes block is read like any rule (its area is the one of the rule that runs it).
 // A value written with var() and calc() over tokens is allowed: it is how a derived distance is written.
-// The areas are listed once, below. Today's offenders are in tests/style-tokens-allowed.txt, one per line, as "area ctx selector {property}" (the value is not part of the key, so changing a number on a listed line does not fix it: use a token).
-// The list may only shrink: this check fails on an offender that is not listed, and on a listed one that is gone (it names the line to delete). The Audio Editor's part is empty; the PDF Editor's and the video panels' parts end empty with their tickets.
+// The areas are listed once, below. A rule that is in none of them is the shared rules' (buttons, fields, switches, tips, menus, chips, the header, dialogs, toasts, page cards, the history window, the intro, and the page windows): area "shared". Today's offenders are in tests/style-tokens-allowed.txt, one per line, as "area ctx selector {property}" (the value is not part of the key, so changing a number on a listed line does not fix it: use a token).
+// The list may only shrink: this check fails on an offender that is not listed, and on a listed one that is gone (it names the line to delete). Every part is empty, and the list may only stay that way.
 // Run:  zsh tests/run-all.sh style-tokens
 const fs = require('fs'), path = require('path');
 const { readRules, SPACING } = require('./lib/css-rules.js');
@@ -31,7 +31,7 @@ const noVar = v => v.replace(/var\(\s*--[\w-]+\s*/g, '(');          // a var() i
 const noVarFallback = v => { let o = '', d = 0; for (let i = 0; i < v.length; i++) { if (v.startsWith('var(', i) && !d) { d = 1; i += 3; continue; } if (d) { if (v[i] === '(') d++; else if (v[i] === ')') d--; continue; } o += v[i]; } return o; };          // the PDF Editor and the video panels still skip a fallback and an offset: their tickets turn it on
 const COLORP = /^(color|background(-color|-image)?|border(-[a-z]+)?(-color)?|outline(-color)?|fill|stroke|box-shadow|text-shadow)$/;
 const MIN_RULES = 500, found = [];
-const areaOf = sel => /\.sys-/.test(sel) ? 'video' : Object.keys(AREAS).find(a => AREAS[a].test(sel));
+const areaOf = sel => /\.sys-/.test(sel) ? 'video' : (Object.keys(AREAS).find(a => AREAS[a].test(sel)) || 'shared');
 const animArea = {};          // a @keyframes block belongs to the area of the rule that runs it
 for (const r of rules) for (const d of r.decls) if (/^animation(-name)?$/.test(d.prop)) for (const sel of r.sels) { const a = areaOf(sel); if (a) for (const n of d.value.match(/[a-zA-Z][\w-]*/g) || []) animArea[n] = animArea[n] || a; }          // fewer rules than this means the style sheet was read wrong
 
@@ -65,6 +65,7 @@ if (process.env.TOKENS_LIST) { for (const f of found) console.log('PASS ' + f.li
 const by = {}; for (const f of found) by[f.key.split(' ')[0]] = (by[f.key.split(' ')[0]] || 0) + 1;
 ok('the stylesheet read: ' + rules.length + ' rules; offenders by area ' + JSON.stringify(by), rules.length > MIN_RULES);
 ok('the Audio Editor has no raw spacing, type size, corner, control height, or color', !found.some(f => f.key.startsWith('audio ')), (by.audio || 0) + ' left');
+ok('the shared rules (buttons, fields, switches, tips, menus, chips, the header, dialogs, toasts, page cards, the history window, the intro, and the page windows) have no raw spacing, type size, corner, or color', !found.some(f => f.key.startsWith('shared ')), (by.shared || 0) + ' left');
 ok('no token is defined as itself', selfRef.length === 0, selfRef.join(', '));
 ok('no new raw value in any editor', fresh.length === 0, fresh.length + ' new');
 for (const f of fresh) ok('new raw value at style.css:' + f.line + ' (' + f.value.slice(0, 60) + '): ' + f.key, false, 'use a token from :root, or a calc() over tokens');

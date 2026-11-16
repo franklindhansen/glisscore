@@ -5,7 +5,7 @@
 //   label      a label sits --gap-label above its control
 //   settings   one setting stands --gap-field from the next
 //   note       a note sits --gap-label under the control it explains
-//   side       every control stands on the panel's one left line and one right line (a sub-setting is indented by --sub-indent, and its right line is the same)
+//   side       every control stands on the panel's one left line and one right line (a setting that belongs to the one above it stands on the same lines, with no indent or rule line, as the Audio Editor's dependent controls)
 //   fades      the Fades group: Apply to, Length (the label with its value, the slider with its end words), Curve (the label, the picture, the choice pinned under the picture, as the Audio Editor's Shape), Fade to
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-panel-lines.js
 const { chromium } = require('playwright-core');
@@ -14,7 +14,7 @@ const URL = 'http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk
 const SIZES = [[1440, 900], [1100, 800], [820, 900], [600, 900], [390, 844]];
 const lines = () => {
   const px = n => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n)), R = e => e.getBoundingClientRect();
-  const T = { group: px('--gap-group'), card: px('--gap-card'), label: px('--gap-label'), field: px('--gap-field'), indent: px('--sub-indent'), head: px('--gap-head') };
+  const T = { group: px('--gap-group'), card: px('--gap-card'), label: px('--gap-label'), field: px('--gap-field'), head: px('--gap-head') };
   const shown = e => { for (let n = e; n && n !== document.body; n = n.parentElement) { const cs = getComputedStyle(n); if (n.hidden || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity < 0.05) return false; if (n.matches('.fa:not(.open)>.fa-in, .line-fold:not(.open)>.fa-in')) return false; } const r = R(e); return r.width > 0 && r.height > 0; };
   const panel = document.querySelector('.panel');
   const bad = [], near = (a, b) => Math.abs(a - b) <= 0.6, name = e => e.id || (e.className && String(e.className).split(' ')[0]) || e.tagName, put = (m, e) => bad.push(m + ' (' + name(e) + ')');
@@ -29,7 +29,7 @@ const lines = () => {
   }
   // a label above its control, and a setting from the next
   for (const f of panel.querySelectorAll('.field')) {
-    if (!shown(f) || f.closest('.sub') && false) continue;
+    if (!shown(f)) continue;
     const kids = [...f.children].filter(shown), lbl = kids.find(k => k.matches('.lbl, label:not(.check)')), ctl = lbl && kids[kids.indexOf(lbl) + 1];
     if (lbl && ctl && ctl.matches('.seg, input[type=range], select, input[type=text], textarea, .combo, .line-row, .btn, .lv-big, .fade-shape') && !f.matches(':has(>.line-row)')) {
       const d = R(ctl).top - R(lbl).bottom; if (!near(d, T.label) && !ctl.matches('.lv-big')) put('label to control ' + d.toFixed(1) + ' not ' + T.label, f);
@@ -37,7 +37,7 @@ const lines = () => {
   }
   const body = [...panel.querySelectorAll('.group-body, #fadeBody, .group')].filter(shown);
   for (const b of body) {
-    const fs = [...b.children].filter(c => shown(c) && c.matches(':scope > .field:not(.sub):not(.fade-pair), :scope > .field.fade-pair'));
+    const fs = [...b.children].filter(c => shown(c) && c.matches(':scope > .field:not(.fade-pair), :scope > .field.fade-pair'));
     for (let i = 0; i + 1 < fs.length; i++) {
       const a = fs[i], n = fs[i + 1]; if (a.nextElementSibling !== n) continue;
       const d = R(n).top - R(a).bottom; if (!near(d, T.field) && !near(d, 0) && !(n.matches('.fade-pair') && near(d, T.card))) put('setting to setting ' + d.toFixed(1) + ' not ' + T.field, n);
@@ -49,11 +49,15 @@ const lines = () => {
     const d = R(n).top - R(c).bottom; if (!near(d, T.label)) put('note under control ' + d.toFixed(1) + ' not ' + T.label, n);
   }
   // one left line and one right line
-  for (const e of panel.querySelectorAll('.group .seg, .group input[type=range], .group select, .group .btn.wide, .group .fade-shape, .group .combo, .group textarea, .group input[type=text]')) {
-    if (!shown(e)) continue; const r = R(e), sub = e.closest('.sub, #firstAloneField, #inkField'), gr = R(e.closest('.group'));          // a group's box is the panel's content lines (centered at most 560px wide where the panel is under the picture)
-    if (!sub && !near(r.left, gr.left)) put('left line ' + (r.left - gr.left).toFixed(1), e);
+  for (const e of panel.querySelectorAll('.group .seg, .group input[type=range], .group select, .group .btn.wide, .group .fade-shape, .group .combo, .group textarea, .group input[type=text], .group .line-row, .group .line-style, .group .colorrow')) {
+    if (!shown(e) || e.closest('.line-row, .line-style, .colorrow') && !e.matches('.line-row, .line-style, .colorrow')) continue;
+    // a credits line's box stands on the lines; what sits beside its Aa, Bold, and Italic buttons or a swatch does not
+    const r = R(e), gr = R(e.closest('.group'));          // a group's box is the panel's content lines (centered at most 560px wide where the panel is under the picture)
+    if (!near(r.left, gr.left)) put('left line ' + (r.left - gr.left).toFixed(1), e);
     if (!near(r.right, gr.right) && r.width > 40) put('right line ' + (r.right - gr.right).toFixed(1), e);
   }
+  // a setting that belongs to the one above it has no indent, rule line, or frame of its own
+  for (const e of panel.querySelectorAll('.sub, #firstAloneField, #inkField, .line-style')) { const cs = getComputedStyle(e); if (!shown(e)) continue; if (parseFloat(cs.marginLeft) !== 0 || parseFloat(cs.paddingLeft) !== 0 || parseFloat(cs.borderLeftWidth) !== 0) put('a dependent setting is indented or ruled (margin ' + cs.marginLeft + ', padding ' + cs.paddingLeft + ', border ' + cs.borderLeftWidth + ')', e); }
   // the Fades group
   const fb = document.querySelector('#fadeBody');
   if (fb && shown(fb)) {
@@ -68,6 +72,16 @@ const lines = () => {
   }
   return { bad, groups: groups.length, w: innerWidth, h: innerHeight };
 };
+const openDependents = () => {
+  const set = (id, v) => { const e = document.getElementById(id); if (!e) return; if (e.type === 'checkbox') e.checked = v; else e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); };
+  set('invert', true); set('bgPreset', 'custom'); set('inkPreset', 'custom'); set('creditsOn', true);
+  for (const b of document.querySelectorAll('.fmt-btn.aa')) if (b.getAttribute('aria-expanded') !== 'true') b.click();
+};
+const closeDependents = () => {
+  const set = (id, v) => { const e = document.getElementById(id); if (!e) return; if (e.type === 'checkbox') e.checked = v; else e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); };
+  for (const b of document.querySelectorAll('.fmt-btn.aa')) if (b.getAttribute('aria-expanded') === 'true') b.click();
+  set('invert', false); set('bgPreset', '#000000'); set('creditsOn', false);
+};
 (async () => {
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1440, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto(URL); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf && S.pdf.n > 0); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
@@ -77,6 +91,10 @@ const lines = () => {
       await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(300);
       const r = await p.evaluate(lines);
       ok((dark ? 'dark ' : 'light ') + w + 'x' + h + ': the panel keeps its lines (' + r.groups + ' groups)', r.bad.length === 0, [...new Set(r.bad)].slice(0, 8).join(' | '));
+      await p.evaluate(openDependents); await p.waitForTimeout(700);          // the dependent settings all showing: Invert colors with its Ink color, both custom color rows, and each credits line's Aa row
+      const q = await p.evaluate(lines);
+      ok((dark ? 'dark ' : 'light ') + w + 'x' + h + ': the panel keeps its lines with every dependent setting showing (' + q.groups + ' groups)', q.bad.length === 0, [...new Set(q.bad)].slice(0, 8).join(' | '));
+      await p.evaluate(closeDependents); await p.waitForTimeout(500);
     }
   }
   ok('no page errors', errs.length === 0, errs.slice(0, 2).join(' | '));

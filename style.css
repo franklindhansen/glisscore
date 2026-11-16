@@ -21,7 +21,7 @@
 :root{
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px; --gap-group:18px;   /* the spacing scale (2, 4, 8, 12, 16, with --gap-group, 18, the space above and below a divider between the video panel's groups): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --fs:32px; --fsm:10px; --fs-trh:50px; --hint-bridge:21px; --w-glass:28px; --combo-btn-w:28px; --div-w:7px;   /* the floating strips on the video picture: their height and their distance from the picture's edge (the script sets both per picture size), a button's width on a glass bar, the font box's list button, and the System divider's grab width */
-  --sub-indent:8px; --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px;   /* the one small indent of a setting that belongs to the one above it (First page alone, Ink color, the Shadows sliders) */
+  --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px;
   --black:#000; --on-turn:#1a1d26;   /* the full-screen picture's black, and the ink on an amber (--turn) fill: the same in light and dark */
   --x-size:26px;   /* the remove (x) button on a Spectra list row: a square */
   --tip-x:66px;   /* how far in from the Limiter row's left edge its warning note starts (after the word Limiter) */
@@ -37,6 +37,10 @@
   --h-glass:26px; --hid-k:30px; --wipe-k:26px; --crop-grip:28px;   /* a button on a glass bar, the mark on a page left out, the handle on the before-and-after line, and a crop frame's grip */
   --r-paper:4px;   /* the corner of a page's picture and of the sheen over it */
   --paper:#fff; --on-dark:#fff;   /* a sheet of paper (a page's picture, a mark's edge) and text on a dark or accent fill: white in light and dark */
+  --ctl-py:7px; --ctl-px:13px; --gap-room:20px; --gap-room-x:22px; --gap-hero:24px;   /* the shared rules' own sizes: a button's and a field's top and bottom padding, a button's side padding, a window's top and bottom padding and its side padding, and the big room round a start card or a window's empty state */
+  --type-caption:12px; --type-heading:16px; --type-touch:16px;   /* a note's and a caption's size, a tool's heading, and the size a field has on a touch screen (a phone zooms in on anything smaller) */
+  --tip-bridge:7px; --hs-indent:22px; --hs-dot:12px; --hs-arrow-x:5px; --brand-nudge-y:-.1px; --brand-nudge-x:1.33px;   /* a tip's bridge to its (i), the history list's left room, its dot, and its arrow's left edge, and the header logo's small optical shifts */
+  --shadow-start:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 10px 30px -14px rgba(20,30,70,.28); --shadow-start-hover:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 18px 38px -16px color-mix(in srgb,var(--accent) 55%,transparent); --led-rim:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(0,0,0,.12); --led-lit-bg:radial-gradient(circle at 34% 28%,#ecfff3 0,#7defa6 30%,var(--ok) 70%,#17894c 100%); --led-lit-glow:0 0 0 .5px rgba(23,137,76,.5),0 0 8px 1px rgba(47,184,114,.6),0 0 16px 3px rgba(47,184,114,.22),inset 0 1px 1px rgba(255,255,255,.8); --led-target-ring:0 0 0 3px var(--accent-soft),0 0 0 4.5px var(--accent),inset 0 1px 1px rgba(255,255,255,.55); --wire-back:rgba(20,30,60,.14); --wire-hi:rgba(255,255,255,.55); --wire-dot:rgba(23,137,76,.55); --hover-soft:rgba(127,127,127,.08); --shadow-pop:0 1px 2px rgba(16,20,40,.06),0 12px 32px rgba(16,20,40,.16); --hover-grey:rgba(127,127,127,.1); --on-dark-faint:rgba(255,255,255,.2); --shadow-thumb:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08); --shadow-knob:0 1px 3px rgba(0,0,0,.35); --veil:rgba(20,24,40,.62); --paper-edge:rgba(0,0,0,.25); --shadow-primary:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(20,24,40,.16); --shadow-primary-hover:inset 0 1px 0 rgba(255,255,255,.28),0 4px 12px rgba(30,40,110,.22); --shadow-primary-press:inset 0 1px 2px rgba(0,0,0,.18); --shadow-chip-hover:0 3px 10px rgba(20,24,40,.08); --shadow-dlg:0 1px 2px rgba(16,20,40,.06),0 8px 24px rgba(16,20,40,.1),0 28px 70px rgba(16,20,40,.14);   /* the shared rules' shadows, lights, hover tints, and white-on-dark: the start cards, the lights and cable, a slider's thumb, a switch's knob, the primary button, a chip's hover, the dropped-file veil, the paper's edge, the history window, and the dialog */
   --page-shadow:0 0 0 .5px rgba(16,20,40,.16),0 2px 8px rgba(16,20,40,.10); --page-shadow-hover:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16); --page-shadow-lift:0 0 0 .5px rgba(16,20,40,.16),0 6px 20px rgba(16,20,40,.16); --ghost-shadow:0 14px 32px rgba(10,14,30,.3);   /* a page at rest, lifted by the pointer, the large view's sheet, and a page being dragged */
   --chip-shadow:0 1px 4px rgba(0,0,0,.28); --wipe-shadow:0 1px 5px rgba(0,0,0,.3); --glass-ring:rgba(16,20,40,.14);   /* the small shadow under a mark on a page, the handle's, and the hairline round a glass bar */
   --chip-bg:rgba(255,255,255,.88); --chip-ink:rgba(16,20,40,.7); --chip-edge:rgba(16,20,40,.32); --dim-fill:rgba(255,255,255,.62);   /* a light mark on a page (left out, unticked) and the Dim frame's fill */
@@ -132,25 +136,25 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 
 /* ==================== 3. HEADER BAR ==================== */
 /* ----- Header layout ----- */
-.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.top{display:flex;align-items:center;gap:var(--gap-set);padding:var(--gap-card) var(--gap-field);border-bottom:1px solid var(--line);background:var(--panel)}
 
 /* ----- Logo / site name ----- */
-.brand{display:flex;align-items:center;gap:10px;margin-right:6px}
+.brand{display:flex;align-items:center;gap:var(--gap-card);margin-right:var(--gap-tight)}
 .brand h1{font:500 22px 'Newsreader',Georgia,serif;line-height:round(1em,1px);--lh:1;font-style:italic;letter-spacing:.2px}
 
 /* ----- File chips (loaded PDF / audio names) ----- */
-.chips{display:flex;gap:8px;flex:0 1 auto;min-width:0;flex-wrap:nowrap;padding-right:4px}
+.chips{display:flex;gap:var(--gap-head);flex:0 1 auto;min-width:0;flex-wrap:nowrap;padding-right:var(--gap-label)}
 .chips .chip{min-width:0;flex:0 1 auto}
 .chips{margin-right:auto}
 .brand h1 .home{color:inherit;text-decoration:none}
 .title-pill{flex:0 1 var(--tw,136px);min-width:90px;max-width:300px;display:block;transition:flex-basis .2s var(--ease-out)}          /* --tw is the width of the text (never less than the placeholder), set by titleFit */
-.title-pill input{width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);height:var(--h-m);font:500 15px inherit;line-height:round(1.2em,1px);--lh:1.2;font-family:inherit;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color)}
+.title-pill input{width:100%;box-sizing:border-box;padding:var(--gap-tight) var(--gap-card);border:1px solid transparent;border-radius:var(--r-ctl);background:none;color:var(--ink);height:var(--h-m);font:500 15px inherit;line-height:round(1.2em,1px);--lh:1.2;font-family:inherit;transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color)}
 .title-pill input:hover{border-color:var(--line)}
 .title-pill input:focus{border-color:var(--accent);background:var(--panel2)}
 .title-pill input::placeholder{color:var(--muted)}
 .top .btn{flex:none}
-@media (max-width:1280px){.top #btnPdf span,.top #btnAudio span{display:none}.top #btnPdf,.top #btnAudio{padding-left:10px;padding-right:10px}}
-.chip{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:var(--type-body)}
+@media (max-width:1280px){.top #btnPdf span,.top #btnAudio span{display:none}.top #btnPdf,.top #btnAudio{padding-left:var(--gap-card);padding-right:var(--gap-card)}}
+.chip{display:inline-flex;align-items:center;gap:var(--gap-head);padding:var(--gap-tight) var(--gap-card);border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:var(--type-body)}
 .chip svg{width:15px;height:15px;flex:none;color:var(--muted)}
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip small{color:var(--muted);white-space:nowrap}
@@ -158,7 +162,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 
 /* ==================== 4. BUTTONS ==================== */
 /* ----- Standard button: size, padding, colors ----- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:7px 13px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;--lh:1.2}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--gap-head);padding:var(--ctl-py) var(--ctl-px);border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer;white-space:nowrap;--lh:1.2}
 .btn:not(.small){min-height:var(--h-m)}          /* a full-size button is one --h-m tall whatever its text; .btn.small sizes itself */
 .btn:hover{border-color:var(--muted)}
 .btn:focus-visible,.icon-btn:focus-visible,input:focus-visible,select:focus-visible,.seg label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
@@ -168,7 +172,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .btn.primary:hover{filter:brightness(1.06)}
 .btn[disabled]{opacity:var(--inactive);cursor:not-allowed}
-.btn.small{padding:4px 9px;min-height:var(--h-s);font-size:var(--type-body)}
+.btn.small{padding:var(--gap-label) var(--field-pad-x);min-height:var(--h-s);font-size:var(--type-body)}
 
 /* ==================== 5. WORK AREA (STAGE & TRANSPORT) ==================== */
 /* ----- Layout: stage column + side panel ----- */
@@ -192,7 +196,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .stage-wrap.sys-stack .sys-div::before{left:0;right:0;top:calc((var(--div-w) - var(--hair)) / 2);bottom:auto;width:auto;height:var(--hair)}
 
 /* ----- Intro / empty state text and buttons ----- */
-.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:var(--stage)}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:var(--gap-hero);background:var(--stage)}
 .empty[hidden]{display:none}
 .empty h1{font:500 clamp(24px,3.2vw,38px) 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1;margin:0;white-space:nowrap}
 .empty h2{font:500 clamp(24px,3.2vw,38px) 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1;margin:0;white-space:nowrap}
@@ -202,17 +206,17 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .empty .empty-intro{--lh:1.6}
 .empty .empty-intro .drop{display:block}
 @media (max-width:700px){.empty .empty-intro{white-space:normal}.empty .empty-intro span{display:block}}
-.empty ol{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:8px;text-align:left;counter-reset:s}
-.empty li{counter-increment:s;display:flex;gap:10px;align-items:baseline;color:var(--muted)}
-.empty li::before{content:counter(s);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);font-size:12px;color:var(--ink);flex:none}
-.empty .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.empty ol{margin:var(--gap-label) 0 0;padding:0;list-style:none;display:grid;gap:var(--gap-head);text-align:left;counter-reset:s}
+.empty li{counter-increment:s;display:flex;gap:var(--gap-card);align-items:baseline;color:var(--muted)}
+.empty li::before{content:counter(s);display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);font-size:var(--type-caption);color:var(--ink);flex:none}
+.empty .row{display:flex;gap:var(--gap-card);flex-wrap:wrap;justify-content:center}
 
 /* ----- Transport controls: play, time, tap button ----- */
 .transport{display:flex;align-items:center;gap:var(--gap-tight);flex-wrap:wrap}
 .icon-btn{display:inline-grid;place-items:center;width:var(--h-l);height:var(--h-l);border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2);cursor:pointer}
 .icon-btn:hover{border-color:var(--muted)}
 .icon-btn svg{width:var(--icon-l);height:var(--icon-l);fill:currentColor}
-.icon-btn.play svg{width:var(--icon-m);height:var(--icon-m)}          /* Play is the same square as every other icon button (--h-l), blue; its triangle is --icon-m */
+.icon-btn.play svg,.transport .icon-btn svg{width:var(--icon-m);height:var(--icon-m)}          /* Back to start and Play are the same square (--h-l) with the same glyph size (--icon-m); Play is blue */
 .icon-btn.stroke svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .icon-btn.play{width:var(--h-l);height:var(--h-l);background:var(--accent);border-color:transparent;color:var(--accent-ink)}
 .icon-btn[disabled]{opacity:var(--inactive);cursor:not-allowed}
@@ -230,7 +234,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:var(--gap-head)}
 .hist-wrap .hi{display:none}
-kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;padding:1px 5px;border-radius:4px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-note);padding:var(--hair) var(--gap-tight);border-radius:var(--r-paper);border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
 /* ----- Panel container and groups ----- */
@@ -250,26 +254,26 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:11px;pad
 
 /* ----- Form fields: labels, sliders, selects ----- */
 .field{display:grid;gap:var(--gap-label);margin-bottom:var(--gap-field)}          /* a label sits --gap-label above its control, and one setting stands --gap-field from the next; an editor card sets its own --gap-set */
-.field:last-child{margin-bottom:0}
+.field:last-child,.field:not(:has(~ :not([hidden]))){margin-bottom:0}          /* the last setting shown has no room under it, also when what follows it is hidden (Letterbox under Page margin) */
 /* the settings panel: a label sits close to its control and a note sits right under the control it explains, while one setting stands clearly apart from the next */
 .field+.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a field that has its --gap-field below it still sits --gap-label under the control */
 .panel .field>.t-note:empty{display:none}
 .panel .adv,.panel .adv[open]{margin-bottom:var(--gap-card)}        /* the same 16px above Export video (with its 6px) whether Advanced is open or not */
 #creditsAtField:has(~ #creditsEarlyField[hidden]){margin-bottom:0}        /* at Start the two rows after it are closed, so it ends the group */
-.field label,.field .lbl{display:flex;justify-content:space-between;gap:10px;font-size:var(--type-body);color:var(--muted)}
+.field label,.field .lbl{display:flex;justify-content:space-between;gap:var(--gap-card);font-size:var(--type-body);color:var(--muted)}
 .field output{color:var(--ink);font-variant-numeric:tabular-nums}
 /* Sliders are drawn by the site instead of the browser, so they look the same whether or not the window is active
    (browsers gray out their own sliders after full screen, or when the window loses focus). --pct is the filled part. */
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:var(--slider-h);margin:0;padding:0;background:transparent;cursor:pointer;--pct:50%}
 input[type=range]::-webkit-slider-runnable-track{height:var(--track);border-radius:99px;background:linear-gradient(to right,var(--accent) 0,var(--accent) var(--pct),var(--line) var(--pct),var(--line) 100%)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:var(--thumb-w);height:var(--thumb);margin-top:calc((var(--track) - var(--thumb)) / 2);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:var(--thumb-w);height:var(--thumb);margin-top:calc((var(--track) - var(--thumb)) / 2);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:var(--shadow-thumb)}
 input[type=range]::-moz-range-track{height:var(--track);border-radius:99px;background:var(--line)}
 input[type=range]::-moz-range-progress{height:var(--track);border-radius:99px;background:var(--accent)}
-input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:0 0 0 .5px var(--thumb-edge),0 1px 3px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.08)}
-input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+input[type=range]::-moz-range-thumb{box-sizing:border-box;width:var(--thumb-w);height:var(--thumb);border-radius:calc(var(--thumb) / 2);border:0;background:var(--thumb-bg);box-shadow:var(--shadow-thumb)}
+input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:var(--r-sm)}
 select,input[type=text],input[type=number],textarea.autogrow{border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--panel2)}          /* every field you type in or pick from (a menu, a text box, a number box): one corner, one border, one fill, one hover, and one focus ring (below) */
-select,input[type=text],textarea.autogrow{width:100%;padding:7px var(--field-pad-x)}
-select{-webkit-appearance:none;appearance:none;padding-right:calc(var(--chev-x) + var(--chev-s) + 8px);background-image:var(--chev);background-repeat:no-repeat;background-position:right var(--chev-x) center;background-size:var(--chev-s) auto}          /* every menu draws its own chevron, the same distance from the right edge (--chev-x) and the same size (--chev-s), in the muted color of the theme */
+select,input[type=text],textarea.autogrow{width:100%;padding:var(--ctl-py) var(--field-pad-x)}
+select{-webkit-appearance:none;appearance:none;padding-right:calc(var(--chev-x) + var(--chev-s) + var(--gap-head));background-image:var(--chev);background-repeat:no-repeat;background-position:right var(--chev-x) center;background-size:var(--chev-s) auto}          /* every menu draws its own chevron, the same distance from the right edge (--chev-x) and the same size (--chev-s), in the muted color of the theme */
 input[type=number]{width:var(--num-w);height:var(--h-s);padding:0 var(--field-pad-x);box-sizing:border-box;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}          /* every number box: one width, one corner (the control corner, as a menu or a button has), one border; its height follows the row it sits in (--h-s by default, --h-l beside a --h-l control) */
 textarea.autogrow{display:block;resize:none;overflow:hidden;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);--lh:1.35;min-height:var(--h-m)}
 input.bad{border-color:var(--danger)}
@@ -305,20 +309,16 @@ input.bad{border-color:var(--danger)}
 .combo input:not(:placeholder-shown)~.ph{display:none}
 
 /* ----- Segmented radio buttons ----- */
-.seg{position:relative;box-sizing:border-box;height:var(--h-m);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border:1px solid var(--line);border-radius:calc(var(--r-sm) + 2px);overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
+.seg{position:relative;box-sizing:border-box;height:var(--h-m);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:var(--gap-sub);border:1px solid var(--line);border-radius:calc(var(--r-sm) + var(--gap-sub));overflow:hidden;background:var(--panel2)}          /* the button group's shape: a 2px inset, the pill's corner (--r-sm) plus the inset */
 .pe .seg{height:var(--h-s)}          /* the PDF Editor's choices are the small control height */
-.seg label{position:relative;z-index:1;display:block;text-align:center;padding:6px 4px;border-radius:var(--r-sm);cursor:pointer;font-size:var(--type-body);color:var(--muted)}
+.seg label{position:relative;z-index:1;display:block;text-align:center;padding:var(--gap-tight) var(--gap-label);border-radius:var(--r-sm);cursor:pointer;font-size:var(--type-body);color:var(--muted)}
 .seg input{position:absolute;opacity:0;pointer-events:none}
 .seg label:focus-within{outline-offset:0}          /* the focus ring sits in the 2px inset, so the control's edge does not clip it */
 .seg input:checked+span{color:var(--ink)}
 .seg label:has(input:checked){color:var(--ink)}
 .seg label.dim{opacity:var(--inactive)}
-.field label.check{min-height:20px;justify-content:flex-start;align-items:center;gap:8px;color:var(--ink);cursor:pointer}
+.field label.check{min-height:20px;justify-content:flex-start;align-items:center;gap:var(--gap-head);color:var(--ink);cursor:pointer}
 .colorrow{display:flex;gap:var(--gap-head);align-items:center}
-.sub{margin-left:calc(var(--gap-field) + var(--gap-label));padding-left:var(--gap-set);border-left:2px solid var(--line)}
-.group[data-sum="shadows"] .sub,#firstAloneField,#inkField,.line-style.sub{margin-left:var(--sub-indent)}        /* a setting that belongs to the one above it (First page alone, Ink color) and the Shadows sliders share one small indent, so the controls keep most of the panel's width */
-.field.sub{margin-top:calc(-1 * var(--gap-tight))}
-.panel .field.sub{margin-top:calc(-1 * var(--gap-card))}
 /* the invert switch has no gap under it while its ink color row is hidden (the hidden row keeps no space) */
 .field:has(+ #inkField[hidden]){margin-bottom:0}
 
@@ -362,13 +362,13 @@ input.bad{border-color:var(--danger)}
 @media (prefers-reduced-motion:reduce){.adv summary::before{transition:none}}
 
 /* ----- Checkboxes, info (i) buttons and tooltips ----- */
-.check-row{position:relative;display:flex;align-items:center;gap:8px}
+.check-row{position:relative;display:flex;align-items:center;gap:var(--gap-head)}
 .check-row .switch{margin-left:auto}
 .field label.check:has(>.switch){flex-direction:row-reverse;justify-content:space-between}
 
 /* ----- On / off switch (used for every toggle on the site) ----- */
 input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:38px;height:22px;margin:0;border:0;border-radius:999px;background:var(--line);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--neutral) 22%,transparent);cursor:pointer;transition:background-color .2s var(--ease-color)}
-input.switch::before{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+input.switch::before{content:'';position:absolute;top:var(--gap-sub);left:var(--gap-sub);width:18px;height:18px;border-radius:50%;background:var(--on-dark);box-shadow:var(--shadow-knob)}
 input.switch:checked{background:var(--accent);box-shadow:none}
 input.switch:checked::before{transform:translateX(16px)}
 input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -382,11 +382,11 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .info-i:hover,.info-i:focus-visible,.info-i[aria-expanded="true"]{color:var(--accent);background:var(--accent-soft);transform:scale(1.1)}
 .info-i:not(:disabled):active{transform:scale(.92);transition-duration:.14s;transition-timing-function:var(--ease-out)}
 @media (prefers-reduced-motion:reduce){.info-i:not(:disabled):active{transform:none}}
-.tip{position:absolute;left:0;top:calc(100% + 6px);width:max-content;max-width:100%;z-index:30;padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);--lh:1.4;box-shadow:var(--shadow);
+.tip{position:absolute;left:0;top:calc(100% + var(--gap-tight));width:max-content;max-width:100%;z-index:30;padding:var(--gap-head) var(--gap-set);border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);--lh:1.4;box-shadow:var(--shadow);
   visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity .22s var(--ease-ui),transform .28s var(--ease-ui),visibility 0s .22s}
-.tip::before{content:'';position:absolute;left:0;right:0;top:-7px;height:7px}      /* a bridge, so the pointer can cross the gap from the (i) */
+.tip::before{content:'';position:absolute;left:0;right:0;top:calc(-1 * var(--tip-bridge));height:var(--tip-bridge)}      /* a bridge, so the pointer can cross the gap from the (i) */
 .info-i:hover+.tip,.info-i:focus-visible+.tip,.tip.open,.tip:hover{visibility:visible;opacity:1;transform:none;transition-delay:0s}
-.term{cursor:help;border-bottom:1px dotted currentColor;border-radius:3px}
+.term{cursor:help;border-bottom:1px dotted currentColor;border-radius:var(--r-paper)}
 .term:hover,.term:focus-visible{background:var(--accent-soft);outline:none}
 
 /* ----- Glow highlight, color picker, hints ----- */
@@ -411,7 +411,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tl-info:has(.hint.warn){display:contents}
 .tl-info:has(.hint.warn) .info-i{display:none}
 .tl-bar .hint.warn{display:block;visibility:visible;opacity:1;transform:none;position:static;width:auto;max-width:none;flex:1;min-width:200px;padding:0;background:none;box-shadow:none;border-radius:0;color:var(--turn);font-size:var(--type-small)}
-.vsep{align-self:center;width:1px;height:20px;margin:0 4px;background:var(--line)}
+.vsep{align-self:center;width:1px;height:20px;margin:0 var(--gap-label);background:var(--line)}
 .zoom{display:flex;align-items:center;gap:var(--gap-tight);color:var(--muted);font-size:var(--type-body)}
 .zoom input{width:var(--zoom-w)}
 .tl-scroll{overflow-x:auto;overflow-y:hidden;position:relative;min-height:0;margin:0 0 0 0}
@@ -420,36 +420,36 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ==================== 8. OVERLAYS, DIALOGS & MESSAGES ==================== */
 /* ----- Toast message and drag-and-drop veil ----- */
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);z-index:50;opacity:0;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:calc(var(--gap-hero) + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:var(--gap-card) var(--gap-field);border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);z-index:50;opacity:0;pointer-events:none}
 .toast.show{opacity:1}
-.dropveil{position:fixed;inset:0;z-index:40;background:rgba(20,24,40,.62);display:flex;align-items:center;justify-content:center;color:#fff;font:italic 500 32px 'Newsreader',Georgia,serif;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .2s var(--ease-ui),visibility 0s .2s}
+.dropveil{position:fixed;inset:0;z-index:40;background:var(--veil);display:flex;align-items:center;justify-content:center;color:var(--on-dark);font:italic 500 32px 'Newsreader',Georgia,serif;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .2s var(--ease-ui),visibility 0s .2s}
 body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(--ease-ui),visibility 0s}
 @media (prefers-reduced-motion:reduce){.dropveil{transition:none}}
 
 /* ----- Dialog overlay ----- */
-.exp-overlay{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:start center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow:auto}
+.exp-overlay{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:start center;padding:max(var(--gap-field),env(safe-area-inset-top,0px)) max(var(--gap-field),env(safe-area-inset-right,0px)) max(var(--gap-field),env(safe-area-inset-bottom,0px)) max(var(--gap-field),env(safe-area-inset-left,0px));overflow:auto}
 .exp-overlay>.dlg{margin:auto;max-width:100%}      /* auto margins centre a short window and let a tall one start at the top and scroll, so nothing is ever cut off */
 .exp-overlay[hidden]{display:none}
 .dlg.wide{width:min(780px,94vw)}
-#diagLog{width:100%;height:min(46vh,380px);font:12px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:round(1.45em,1px);--lh:1.45;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px;resize:none}
+#diagLog{width:100%;height:min(46vh,380px);font:12px ui-monospace,SFMono-Regular,Menlo,monospace;line-height:round(1.45em,1px);--lh:1.45;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-ctl);padding:var(--gap-card);resize:none}
 
 /* ----- Dialog box, buttons row, progress bar ----- */
 .dlg .row{flex-wrap:wrap}
-.dlg{width:min(480px,92vw);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:20px 22px;display:grid;gap:var(--gap-field)}
+.dlg{width:min(480px,92vw);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);color:var(--ink);padding:var(--gap-room) var(--gap-room-x);display:grid;gap:var(--gap-field)}
 .dlg h2{margin:0;font:500 24px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
 .dlg p{margin:0;color:var(--muted)}
 .bar{height:10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--accent)}
-.dlg .row{display:flex;gap:10px;justify-content:flex-end}
+.dlg .row{display:flex;gap:var(--gap-card);justify-content:flex-end}
 .dlg .row .push-left{margin-right:auto}
 
 /* ----- Choose pages dialog ----- */
-.page-card{position:relative;display:grid;gap:6px;justify-items:center;padding:8px 8px 6px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--panel2);color:var(--ink);cursor:pointer}
+.page-card{position:relative;display:grid;gap:var(--gap-tight);justify-items:center;padding:var(--gap-head) var(--gap-head) var(--gap-tight);border:1px solid var(--line);border-radius:var(--r-card);background:var(--panel2);color:var(--ink);cursor:pointer}
 .page-card:hover{border-color:var(--muted)}
 .page-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.page-card canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid rgba(0,0,0,.25);border-radius:3px}
-.page-card .num{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.page-card .tick{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.page-card canvas{display:block;width:100%;height:auto;background:var(--on-dark);border:var(--hair) solid var(--paper-edge);border-radius:var(--r-paper)}
+.page-card .num{font-size:var(--type-caption);color:var(--muted);font-variant-numeric:tabular-nums}
+.page-card .tick{position:absolute;top:var(--gap-set);right:var(--gap-set);display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow-knob)}
 .page-card .tick svg{width:12px;height:12px}
 .page-card[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .page-card[aria-pressed="false"] canvas{opacity:.4}
@@ -463,18 +463,18 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity .2s var(
 .chip .chip-icon .ic{display:grid;place-items:center}
 .chip .chip-icon .ic svg{display:block}
 .chip .chip-icon .x{position:absolute;inset:0;display:none;place-items:center;border-radius:50%;background:var(--danger)}
-.chip .chip-icon .x svg{width:10px;height:10px;color:#fff}
+.chip .chip-icon .x svg{width:10px;height:10px;color:var(--on-dark)}
 .chip .chip-icon:hover .ic,.chip .chip-icon:focus-visible .ic{opacity:0}
 .chip .chip-icon:hover .x,.chip .chip-icon:focus-visible .x{display:grid}
 /* the score chip's name opens the page picker */
-.chip-main{display:inline-flex;align-items:center;gap:8px;min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
+.chip-main{display:inline-flex;align-items:center;gap:var(--gap-head);min-width:0;padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
 .chip:has(.chip-main:hover){border-color:var(--muted)}
-.chip-main:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.chip-main:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
 
 /* ----- Settings dropdown menu ----- */
 .menu-wrap{position:relative}
-.menu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow);padding:6px;z-index:80}
-.menu-item{display:block;width:100%;text-align:left;padding:9px 11px;border:0;background:none;border-radius:var(--r-ctl);cursor:pointer;color:var(--ink)}
+.menu{position:absolute;right:0;top:calc(100% + var(--gap-head));min-width:230px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow);padding:var(--gap-tight);z-index:80}
+.menu-item{display:block;width:100%;text-align:left;padding:var(--field-pad-x) var(--gap-set);border:0;background:none;border-radius:var(--r-ctl);cursor:pointer;color:var(--ink)}
 .menu-item:hover,.menu-item:focus-visible{background:var(--accent-soft)}
 .menu-item.confirm{color:var(--danger);font-weight:600}
 
@@ -598,14 +598,14 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .exp-overlay.z-audio{z-index:71}
 .exp-overlay.z-io{z-index:73}
 .exp-overlay.z-warn{z-index:75}
-.exp-preview{width:100%;border-radius:var(--r-ctl);background:#000;max-height:240px}
+.exp-preview{width:100%;border-radius:var(--r-ctl);background:var(--black);max-height:240px}
 .exp-preview:not([hidden]){animation:fade .3s var(--ease-ui)}
 @media (prefers-reduced-motion:reduce){.exp-preview:not([hidden]){animation:none}}
 
 /* ==================== 12b. FIRST-RUN STATES & FOLDING GROUPS ==================== */
 /* before a score is loaded the settings stay visible but dimmed and unusable */
 .panel.locked .group{opacity:.45}
-.status{flex-wrap:wrap;padding:10px 0 12px;font-size:var(--type-body);color:var(--muted)}
+.status{flex-wrap:wrap;padding:var(--gap-card) 0 var(--gap-set);font-size:var(--type-body);color:var(--muted)}
 .status .done{color:var(--ink)}
 #exportHint:empty{display:none}
 /* group headings fold their contents away */
@@ -690,20 +690,20 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 
 /* ==================== 14. HEADINGS, STATUS & SMOOTH STATES ==================== */
 /* group headings are real buttons (so the keyboard can reach them); a switched-off group cannot be folded */
-.fold-btn{display:flex;align-items:center;gap:7px;padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer;text-align:left}
+.fold-btn{display:flex;align-items:center;gap:var(--gap-head);padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer;text-align:left}
 .fold-btn::before{content:'';flex:none;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg) translate(-1px,-1px);transition:transform .3s var(--spring-hover),opacity .25s var(--ease-color),border-color .2s var(--ease-color)}
 .group.collapsed .fold-btn::before{transform:rotate(-45deg)}
 .fold-btn:hover::before{border-color:var(--ink)}
-.fold-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+.fold-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-paper)}
 .group.off .fold-btn{cursor:default}
 .group.off .fold-btn::before{opacity:0}
 /* the parts of a group keep their margins inside, so opening and closing never shifts anything at the start or the end */
-.group-body,.sub,#turnShadowBlock,details.adv{display:flow-root}
+.group-body,.sub:not(.field):not(.colorrow):not(.line-style),#turnShadowBlock,details.adv{display:flow-root}
 .group-body>:first-child,.group-body>#turnShadowBlock>.subhead:first-child{margin-top:0}
 .group-body>#turnShadowBlock>#centerFold:first-child>.subhead,.group-body>#turnShadowBlock>#centerFold[hidden]+.subhead{margin-top:0}
 .group>.group-head,.group>h3{transition:margin-bottom .45s cubic-bezier(.32,.72,0,1)}
 /* the loading status */
-.st{display:inline-flex;align-items:center;gap:7px;transition:color .3s var(--ease-color)}
+.st{display:inline-flex;align-items:center;gap:var(--gap-head);transition:color .3s var(--ease-color)}
 .st-ic{width:15px;height:15px;flex:none;overflow:visible}
 .st-c{fill:transparent;stroke:currentColor;stroke-width:2.2;transition:fill .3s var(--ease-color),stroke .3s var(--ease-color)}
 .st-k{fill:none;stroke:var(--accent-ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:12;stroke-dashoffset:12;transition:stroke-dashoffset .45s var(--ease-out) .12s}
@@ -721,14 +721,14 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 #stage.in{animation:fade .8s var(--ease-ui)}
 .top .btn:not([hidden]){animation:rise .55s var(--ease-out) backwards;--rise:6px}
 /* settings menu: keyboard shortcuts */
-.keys{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;padding:10px 12px;border-radius:var(--r-card);font-size:var(--type-small);align-items:center}
+.keys{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--gap-tight) var(--gap-field);padding:var(--gap-card) var(--gap-set);border-radius:var(--r-card);font-size:var(--type-small);align-items:center}
 .keys[hidden]{display:none}
 .keys dt{min-width:0}          /* a long action wraps; the keys beside it never do */
 .keys dd{margin:0;color:var(--muted);white-space:nowrap;justify-self:end;text-align:right}
-.keys kbd{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--panel2);font:600 var(--type-note) inherit;line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}
+.keys kbd{display:inline-block;min-width:20px;padding:var(--hair) var(--gap-tight);border:1px solid var(--line);border-bottom-width:2px;border-radius:var(--r-paper);background:var(--panel2);font:600 var(--type-note) inherit;line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}
 
 /* the segmented control's glider */
-.seg-pill{position:absolute;top:2px;bottom:2px;left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
+.seg-pill{position:absolute;top:var(--gap-sub);bottom:var(--gap-sub);left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
 /* a choice that has a value to type (Watermark's Custom direction, Re-size's Custom size): opt-in with .cu on the option. Its word and its blank share one cell; as the pill arrives the word rises out and the blank rises in, on the pill's own timing, and the cell never changes width */
 .cu{overflow:hidden}
 .cu-in{display:grid;place-items:center;min-width:0}
@@ -757,10 +757,10 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 .panel .btn.wide{width:100%;margin-top:var(--gap-card)}
 
 /* ==================== 15. EDITORS (Audio Editor, PDF Editor) ==================== */
-.dlg.editor{width:min(900px,94vw);gap:16px}      /* wide enough for five pages per row beside the tools */
-.ed-head{display:flex;align-items:center;gap:10px}
+.dlg.editor{width:min(900px,94vw);gap:var(--gap-field)}      /* wide enough for five pages per row beside the tools */
+.ed-head{display:flex;align-items:center;gap:var(--gap-card)}
 .ed-head .t-block{flex:1;min-width:min-content}          /* never narrower than its title, so on a phone the buttons wrap below it instead of covering it */
-.ed-tools{display:flex;gap:6px;margin-left:auto}          /* when the buttons wrap under the title they sit at the right, in both editors */
+.ed-tools{display:flex;gap:var(--gap-tight);margin-left:auto}          /* when the buttons wrap under the title they sit at the right, in both editors */
 .ae-wave{position:relative}
 .ae-wave canvas{display:block;width:100%;height:100%;touch-action:none}
 .ae-bar{display:flex;align-items:center;gap:var(--gap-set)}
@@ -811,7 +811,6 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 @supports (text-box:trim-both cap alphabetic){.ed-head h2{--hm-t:0px;--hm-b:0px;--hm-h:round(var(--hc) * 1em, 1px)}}
 @container pedlg (max-width:488px){#pdfDlg .ed-head h2{text-box:trim-both cap alphabetic;margin-block:var(--hm-t) var(--hm-b);height:var(--hm-h)}}          /* with its line gone, the title stands alone across from Undo, Redo, History, and Reset, so it is centered by its letters, as in the Audio Editor */
 @container aedlg (max-width:488px){#audioDlg .ed-head h2{text-box:trim-both cap alphabetic;margin-block:var(--hm-t) var(--hm-b);height:var(--hm-h)}}
-.line-style.sub{display:flex}
 .adv *{box-sizing:border-box}
 details.adv::details-content{box-sizing:border-box}        /* two rules, since a browser that does not know ::details-content would drop a combined one */
 
@@ -829,7 +828,7 @@ details.adv::details-content{box-sizing:border-box}        /* two rules, since a
 .exp-overlay.closing .dlg{transform:translateY(10px) scale(.985);transition:transform .24s var(--ease-ui)}
 .norm-to{display:inline-block;opacity:0;transform:translateX(-10px);transition:opacity .45s var(--ease-out) .08s,transform .55s var(--ease-out) .08s}
 .norm-to.on{opacity:1;transform:none}
-.norm-arrow{vertical-align:-3.5px;color:var(--ink);margin:0 5px;flex:none}
+.norm-arrow{vertical-align:-3.5px;color:var(--ink);margin:0 var(--gap-tight);flex:none}
 .norm-arrow path{fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .6s var(--ease-out) .12s}
 .norm-to.on .norm-arrow path{stroke-dashoffset:0}
 .norm-to b{color:var(--ink);font-weight:600}
@@ -852,18 +851,18 @@ input.switch::before{transition:transform .45s var(--spring-press),width .25s va
 input.switch:not(:disabled):active::before{width:23px}
 input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 /* the main buttons catch a little light along their top edge and sink when pressed */
-.btn.primary{box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 1px 2px rgba(20,24,40,.16)}
-.btn.primary:not(:disabled):hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 12px rgba(30,40,110,.22)}
-.btn.primary:not(:disabled):active{box-shadow:inset 0 1px 2px rgba(0,0,0,.18)}
+.btn.primary{box-shadow:var(--shadow-primary)}
+.btn.primary:not(:disabled):hover{box-shadow:var(--shadow-primary-hover)}
+.btn.primary:not(:disabled):active{box-shadow:var(--shadow-primary-press)}
 .btn.primary:disabled{box-shadow:none}
 /* chips and cards lift a hair on hover */
 @media (hover:hover){.chip:not(.busy):hover{transform:translateY(-1px)}}
 .chip{transition:border-color .2s var(--ease-color),background-color .2s var(--ease-color),transform .35s var(--spring-hover),box-shadow .3s var(--ease-ui)}
-.chip:not(.busy):hover{box-shadow:0 3px 10px rgba(20,24,40,.08)}
+.chip:not(.busy):hover{box-shadow:var(--shadow-chip-hover)}
 .info-i{transition:color .2s var(--ease-color),transform .35s var(--spring-hover)}
 @media (hover:hover){.info-i:hover{transform:scale(1.15)}}
 /* dialogs sit on layered shadows, so they feel like they float */
-.dlg{box-shadow:0 1px 2px rgba(16,20,40,.06),0 8px 24px rgba(16,20,40,.1),0 28px 70px rgba(16,20,40,.14)}
+.dlg{box-shadow:var(--shadow-dlg)}
 /* thin, quiet scrollbars: on every scrolling area (windows, lists, the panel, the timeline), so none shows the browser's thick default */
 *{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--muted) 45%,transparent) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
@@ -874,8 +873,8 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 /* ----- Header: the file controls stop where the settings panel begins; whole-pixel heights keep the canvases from shifting on hover ----- */
 @media (min-width:961px){
   .top{display:grid;grid-template-columns:minmax(0,1fr) 322px;gap:0;padding:0;box-sizing:border-box;height:57px;flex-wrap:nowrap}
-  .top-main{display:flex;align-items:center;gap:12px;padding:0 16px;min-width:0}
-  .top>.menu-wrap{display:flex;align-items:center;justify-content:flex-end;padding:0 16px;border-left:1px solid var(--line);margin-left:0}
+  .top-main{display:flex;align-items:center;gap:var(--gap-set);padding:0 var(--gap-field);min-width:0}
+  .top>.menu-wrap{display:flex;align-items:center;justify-content:flex-end;padding:0 var(--gap-field);border-left:1px solid var(--line);margin-left:0}
 }
 @media (max-width:960px){
   .top-main{display:contents}
@@ -887,7 +886,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 .app{overflow:clip}
 
 /* the wordmark's ink lines up with the video preview's edge and sits centered in the bar */
-@media (min-width:961px){.brand h1{position:relative;top:-.1px}}
+@media (min-width:961px){.brand h1{position:relative;top:var(--brand-nudge-y)}}
 
 /* ----- PDF Editor side views: Pages and Tools, Watermark and Resize glide over one another ----- */
 
@@ -902,9 +901,9 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 /* ----- How it works, and a steady scrollbar ----- */
 .dlg.how{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:hidden;grid-template-rows:auto minmax(0,1fr) auto}
 .how-lead{font-size:var(--type-value);color:var(--ink)}
-.how-body{display:grid;gap:14px;align-content:start;overflow:auto;scrollbar-gutter:stable;padding-right:6px;min-height:0}
-.how-body h3{margin:0 0 3px;font-size:13.5px;font-weight:600}
-.how-body p{font-size:13.5px;--lh:1.5}
+.how-body{display:grid;gap:var(--gap-field);align-content:start;overflow:auto;scrollbar-gutter:stable;padding-right:var(--gap-tight);min-height:0}
+.how-body h3{margin:0 0 var(--gap-snug);font-size:var(--type-body);font-weight:600}
+.how-body p{font-size:var(--type-body);--lh:1.5}
 
 /* ----- Phones and small tablets only (the desktop layout above is untouched) ----- */
 @media (max-width:960px){
@@ -913,7 +912,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 }
 @media (max-width:760px){
   /* header: the name on the left and the buttons on the right, then the title on a row of its own, then the file chips */
-  .top{align-items:center;row-gap:10px;padding:10px 16px 12px}
+  .top{align-items:center;row-gap:var(--gap-card);padding:var(--gap-card) var(--gap-field) var(--gap-set)}
   .title-pill,.title-pill:focus-within{flex:1 1 100%;order:5}
   .chips{flex:1 1 100%;order:6}
 }
@@ -976,16 +975,16 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 }
 /* touch screens: 16px text in fields stops iPhones zooming the page in when you tap one */
 @media (hover:none) and (pointer:coarse){
-  input[type=text],input[type=number],select,textarea,.title-pill input,.line-font{font-size:16px}
+  input[type=text],input[type=number],select,textarea,.title-pill input,.line-font{font-size:var(--type-touch)}
 }
 
 /* phones: the editor's side panel shows only the view in use (the others would leave a tall empty gap) */
 
 /* ----- Logo (SVG wordmark; takes the text color so it flips with light/dark) ----- */
 .logo{display:block;height:100%;width:auto;fill:currentColor;overflow:visible}
-.brand h1{height:22px;margin:0 0 0 1.33px;font-size:0;line-height:0;align-self:center;position:static;top:auto}
+.brand h1{height:22px;margin:0 0 0 var(--brand-nudge-x);font-size:0;line-height:0;align-self:center;position:static;top:auto}
 .brand h1 .home{display:block;height:100%}
-.empty h1.empty-logo{align-self:center;height:clamp(36px,5vw,56px);margin:0 0 4px;font-size:0;line-height:0;white-space:normal}
+.empty h1.empty-logo{align-self:center;height:clamp(36px,5vw,56px);margin:0 0 var(--gap-label);font-size:0;line-height:0;white-space:normal}
 @media (max-width:520px){.brand h1{height:19px}}
 /* the timeline title and its info button dim along with the rest until there is a score */
 .tl-bar h2,.tl-info{transition:opacity .5s var(--ease-ui)}
@@ -999,7 +998,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 
 /* PDF Editor drag: the lifted page is composited on its own layer so it follows the pointer smoothly */
 /* a small sliders glyph at the end of each file chip: it says "there is more to do here" without a word, and glows twice when the file first loads */
-.chip-edit{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;margin-right:-4px;border-radius:50%;color:var(--muted);transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
+.chip-edit{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;margin-right:calc(-1 * var(--gap-label));border-radius:50%;color:var(--muted);transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
 .chip-edit svg{width:13px;height:13px}
 .chip-main:hover .chip-edit,.chip-main:focus-visible .chip-edit{color:var(--ink);background:color-mix(in srgb,var(--ink) 9%,transparent);transform:rotate(90deg)}
 .chip.enter .chip-edit,.chip.settle .chip-edit{animation:chip-nudge 1.5s var(--ease-out) 1.2s 2}
@@ -1012,7 +1011,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 @keyframes pp-label{0%,62%{opacity:1;transform:none}80%,100%{opacity:0;transform:translateY(6px)}}
 @keyframes pp-meta{0%,62%{opacity:0;transform:translateY(-6px)}80%,100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.chip.enter .pp,.chip.settle .pp,.chip.enter .pp-go,.chip.settle .pp-go{animation:none}}
-@media (max-width:520px){.dlg{padding:16px 16px}}
+@media (max-width:520px){.dlg{padding:var(--gap-field) var(--gap-field)}}
 
 /* PDF Editor drag: the held page follows the pointer with no easing at all (the card's usual transform transition is what made it lag).
    A plain accent bar, the same as the timeline's brackets, marks the gap where it will land; it sits under the held page. */
@@ -1035,13 +1034,13 @@ html.leaving body{opacity:0;transition-duration:.18s}
 /* the Keyboard shortcuts window is only as wide as its longest line, so nothing wraps */
 .about a{white-space:nowrap;color:var(--accent);text-underline-offset:2px}
 .about a:hover{text-decoration-thickness:2px}
-.about .row{margin-top:10px;align-items:flex-end}
+.about .row{margin-top:var(--gap-card);align-items:flex-end}
 /* the version: a quiet round outline with no fill, no hover and the plain cursor, so it reads as a label and not a button */
-.about .ver{position:relative;z-index:1;width:fit-content;margin:0;padding:2px 10px;border:1px solid var(--line);border-radius:999px;font-size:var(--type-note);--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
+.about .ver{position:relative;z-index:1;width:fit-content;margin:0;padding:var(--gap-sub) var(--gap-card);border:1px solid var(--line);border-radius:999px;font-size:var(--type-note);--lh:1.5;letter-spacing:.02em;color:var(--muted);cursor:default;user-select:none}
 .about .ver[hidden]{display:none}
 /* in the page window the spare height goes above the version, so it stays with the links beneath it; the usual paragraph gap sits above it */
-.dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:-24px}
-@media (max-width:374px){.dlg.page.about>.ver:not([hidden]){margin-bottom:-9px}}      /* the links wrap above Close here, so they start at the top of their row */
+.dlg.page.about>.ver:not([hidden]){margin-top:auto;margin-bottom:calc(-1 * var(--gap-hero))}
+@media (max-width:374px){.dlg.page.about>.ver:not([hidden]){margin-bottom:calc(-1 * var(--field-pad-x))}}      /* the links wrap above Close here, so they start at the top of their row */
 .dlg.page.about>.ver:not([hidden])+.row:last-child{margin-top:0}
 .about .fine{margin:0 auto 0 0;font-size:var(--type-small)}
 .about .fine a{color:inherit}
@@ -1052,7 +1051,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 #diagDlg .dlg.page{width:min(720px,92vw)}      /* About, How it works, Import/Export, Keyboard shortcuts and Diagnostics share one size */
 #keysDlg .dlg.page{width:min(900px,92vw)}      /* the reading window and the two-column shortcuts get the editors' width */
 .dlg.page.how{width:min(720px,92vw);height:min(830px,calc(100dvh - 32px))}      /* one frame: opening a dropdown scrolls the text inside, it never resizes the window */
-.keys-groups{display:grid;grid-template-columns:1fr 1fr;column-gap:20px;align-items:start}      /* the groups fill two columns of whole-pixel height; one group never splits */
+.keys-groups{display:grid;grid-template-columns:1fr 1fr;column-gap:var(--gap-room);align-items:start}      /* the groups fill two columns of whole-pixel height; one group never splits */
 .keys-col section{margin-bottom:var(--gap-field)}
 .keys-col section:last-child{margin-bottom:0}
 .keys-groups h3{font-size:var(--type-note);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -1063,7 +1062,7 @@ html.leaving body{opacity:0;transition-duration:.18s}
 /* Resize: the glass card sits a comfortable distance below the size line */
 
 /* ==================== EMPTY STATE: two ways in ==================== */
-.empty{overflow:hidden;gap:14px;isolation:isolate}
+.empty{overflow:hidden;gap:var(--gap-field);isolation:isolate}
 /* the glow is a soft gradient, not a blurred disc: a 70px blur on a large layer is costly to paint, and this looks the same */
 .empty::before,.empty::after{content:'';position:absolute;z-index:-1;width:78%;aspect-ratio:1;border-radius:50%;opacity:.5;pointer-events:none}
 .empty::before{left:-8%;top:-22%;margin:-16% 0 0 -16%;background:radial-gradient(closest-side,var(--accent-soft),transparent);animation:orb-a 16s ease-in-out infinite alternate}
@@ -1074,45 +1073,45 @@ html.leaving body{opacity:0;transition-duration:.18s}
 /* nothing in the intro is ever cut off and it never scrolls: it sits in the middle at full size when it fits, and the site scales it down (--is, set in introFit) when it does not */
 .empty{justify-content:flex-start;overflow:hidden}
 .empty{justify-content:center}
-.empty-fit{flex:none;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;transform:scale(var(--is,1));transform-origin:center}
+.empty-fit{flex:none;display:flex;flex-direction:column;align-items:center;gap:var(--gap-field);width:100%;transform:scale(var(--is,1));transform-origin:center}
 .empty-fit>*{flex:none}
-@media (max-height:760px) and (min-width:701px){.empty h1.empty-logo{display:none}.start-card p{display:none}.sc-ic{width:36px;height:36px}.empty-fit{gap:10px}.empty .empty-intro{--lh:1.4}}
+@media (max-height:760px) and (min-width:701px){.empty h1.empty-logo{display:none}.start-card p{display:none}.sc-ic{width:36px;height:36px}.empty-fit{gap:var(--gap-card)}.empty .empty-intro{--lh:1.4}}
 .empty-fit>h2{animation-delay:.12s}
 .empty-fit>.starts{animation:none}
 .empty-fit>.empty-intro{animation-delay:.6s}
-.starts{display:grid;grid-template-columns:repeat(2,minmax(0,300px));gap:14px;width:min(640px,100%);margin-top:6px}
-.start-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 18px 18px;border:1px solid var(--line);border-radius:var(--r-lg);text-align:center;cursor:pointer;
+.starts{display:grid;grid-template-columns:repeat(2,minmax(0,300px));gap:var(--gap-field);width:min(640px,100%);margin-top:var(--gap-tight)}
+.start-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:var(--gap-tight);padding:var(--gap-room) var(--gap-group) var(--gap-group);border:1px solid var(--line);border-radius:var(--r-lg);text-align:center;cursor:pointer;
   background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 97%,transparent),color-mix(in srgb,var(--panel) 86%,transparent));-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);
-  box-shadow:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 10px 30px -14px rgba(20,30,70,.28);
+  box-shadow:var(--shadow-start);
   animation:empty-in .8s var(--ease-out) backwards;transition:transform .45s var(--spring-hover),box-shadow .35s var(--ease-ui),border-color .25s var(--ease-color)}
 .start-card:nth-child(1){animation-delay:.28s}.start-card:nth-child(2){animation-delay:.4s}
-@media (hover:hover) and (pointer:fine){.start-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 1px 0 color-mix(in srgb,#fff 70%,transparent) inset,0 18px 38px -16px color-mix(in srgb,var(--accent) 55%,transparent)}}
+@media (hover:hover) and (pointer:fine){.start-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:var(--shadow-start-hover)}}
 .start-card:active{transform:translateY(-1px) scale(.99)}
 body.dragging .start-card:first-child{border-color:var(--accent);transform:translateY(-4px) scale(1.02)}
-.sc-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--r-lg);background:var(--accent-soft);color:var(--accent);margin-bottom:4px;transition:transform .5s var(--spring-hover)}
+.sc-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:var(--r-lg);background:var(--accent-soft);color:var(--accent);margin-bottom:var(--gap-label);transition:transform .5s var(--spring-hover)}
 .sc-ic svg{width:25px;height:25px}
 @media (hover:hover) and (pointer:fine){.start-card:hover .sc-ic{transform:scale(1.1) rotate(-4deg)}}
 .start-card h3{margin:0;max-width:100%;font:600 16px 'Hanken Grotesk',system-ui,sans-serif;line-height:round(1.2em,1px);--lh:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.start-card p{margin:0 0 8px;font-size:var(--type-body);--lh:1.45;color:var(--muted);text-wrap:balance}
+.start-card p{margin:0 0 var(--gap-head);font-size:var(--type-body);--lh:1.45;color:var(--muted);text-wrap:balance}
 .start-card .row{margin-top:auto}
 .empty .empty-intro{font-size:var(--type-body);margin-bottom:0}
 @keyframes empty-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @media (max-width:700px){
-  .empty{padding:14px}.empty-fit{gap:10px}
-  .starts{grid-template-columns:1fr 1fr;gap:10px}
-  .start-card{padding:12px 10px}
+  .empty{padding:var(--gap-field)}.empty-fit{gap:var(--gap-card)}
+  .starts{grid-template-columns:1fr 1fr;gap:var(--gap-card)}
+  .start-card{padding:var(--gap-set) var(--gap-card)}
   .start-card p,.empty .empty-intro .drop{display:none}
   .sc-ic{width:34px;height:34px;border-radius:var(--r-card)}.sc-ic svg{width:19px;height:19px}
-  .start-card h3{font-size:var(--type-value)}.start-card .row{gap:6px}
+  .start-card h3{font-size:var(--type-value)}.start-card .row{gap:var(--gap-tight)}
 }
 @media (max-height:620px) and (min-width:701px){.start-card p{display:none}.sc-ic{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.empty::before,.empty::after,.empty-fit>*,.start-card{animation:none}.start-card,.sc-ic{transition:none}}
 /* the file checks at the top of the settings read as small pills */
 .status .st{border:1px solid var(--line);border-radius:999px;background:var(--panel2);transition:color .3s var(--ease-color),border-color .3s var(--ease-color),background-color .3s var(--ease-color)}
 .status .st.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
-.status{border-bottom:0;padding-bottom:6px}.status .st{padding:3px 9px 3px 7px;font-size:var(--type-small)}
+.status{border-bottom:0;padding-bottom:var(--gap-tight)}.status .st{padding:var(--gap-snug) var(--field-pad-x) var(--gap-snug) var(--gap-head);font-size:var(--type-small)}
 /* the two file checks share the row evenly */
-.status{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-head)}
 .status .st{justify-content:center;white-space:nowrap}
 
 /* ==================== 17. AUDIO EDITOR: tool list, tools and tool window ==================== */
@@ -1242,8 +1241,8 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-times{gap:var(--gap-label) var(--gap-field)}
 .ae-bar{flex-wrap:wrap}
 /* the green light on an Output tool that is doing something: a small glass bead */
-.led{position:relative;display:block;border-radius:50%;background:var(--hairline);box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -1px 1px rgba(0,0,0,.12)}
-.led::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ecfff3 0,#7defa6 30%,var(--ok) 70%,#17894c 100%);box-shadow:0 0 0 .5px rgba(23,137,76,.5),0 0 8px 1px rgba(47,184,114,.6),0 0 16px 3px rgba(47,184,114,.22),inset 0 1px 1px rgba(255,255,255,.8);opacity:0;transform:scale(.55);transition:opacity .4s var(--ease-out),transform .55s var(--spring-press)}
+.led{position:relative;display:block;border-radius:50%;background:var(--hairline);box-shadow:var(--led-rim)}
+.led::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--led-lit-bg);box-shadow:var(--led-lit-glow);opacity:0;transform:scale(.55);transition:opacity .4s var(--ease-out),transform .55s var(--spring-press)}
 .led.on::after{opacity:1;transform:none}
 /* slider labels that are also buttons */
 .sl-ends{margin-top:0}          /* the end labels sit directly under their slider (the field's own gap is the space between them) */
@@ -1309,15 +1308,15 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .ae-jack.fixed,.ae-jack.lockd{cursor:default}
 .ae-jack.pulling{cursor:grabbing}
 .led{width:10px;height:10px}
-.led.tgt{box-shadow:0 0 0 3px var(--accent-soft),0 0 0 4.5px var(--accent),inset 0 1px 1px rgba(255,255,255,.55)}
+.led.tgt{box-shadow:var(--led-target-ring)}
 .led.shake{animation:ledshake .4s var(--ease-out)}
 @keyframes ledshake{20%{transform:translateX(-3px)}45%{transform:translateX(3px)}70%{transform:translateX(-2px)}100%{transform:none}}
 .ae-proc.off .ae-tn{opacity:var(--inactive)}
 .ae-proc.bp .ae-tn{opacity:var(--inactive);text-decoration:line-through}
 .ae-wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
-.w-back{fill:none;stroke:rgba(20,30,60,.14);stroke-width:5.5;stroke-linecap:round}
+.w-back{fill:none;stroke:var(--wire-back);stroke-width:5.5;stroke-linecap:round}
 .w-front{fill:none;stroke:var(--accent);stroke-width:2.6;stroke-linecap:round}
-.w-hi{fill:none;stroke:rgba(255,255,255,.55);stroke-width:.9;stroke-linecap:round;transform:translate(-.7px,-.7px)}
+.w-hi{fill:none;stroke:var(--wire-hi);stroke-width:.9;stroke-linecap:round;transform:translate(-.7px,-.7px)}
 .w-plug{fill:none;stroke:var(--accent);stroke-width:1.7;opacity:.85}
 .w-plug.drag{fill:var(--accent);opacity:1}
 .w-front.drag{stroke-dasharray:none;opacity:.9}
@@ -1401,13 +1400,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* the cables run in front of lights that are off; a lit light is drawn again on top of them */
 .ae-wires{z-index:2}
-.w-dot{fill:url(#wDot);stroke:rgba(23,137,76,.55);stroke-width:.5}
+.w-dot{fill:url(#wDot);stroke:var(--wire-dot);stroke-width:.5}
 
 /* Imager: width overall or by frequency, balance, listen */
 .im-head .seg{width:auto;font-size:var(--type-small)}
 .im-view{grid-area:1/1;transition:opacity var(--ae-ms) var(--ease-ui) calc(var(--ae-ms) * .15),transform var(--ae-ms) var(--ease-out) calc(var(--ae-ms) * .15)}
 .im-view.off{opacity:0;transform:translateY(calc(var(--ae-lift) * -1));pointer-events:none;visibility:hidden;transition:opacity calc(var(--ae-ms) * .55) var(--ease-ui),transform calc(var(--ae-ms) * .55) var(--ease-out),visibility 0s var(--ae-ms)}.im-view .field:last-child{margin-bottom:0}#aeWvBands.off{transform:translateY(var(--ae-lift))}
-.hz{font-style:normal;color:var(--muted);font-size:var(--type-note);margin-left:4px}
+.hz{font-style:normal;color:var(--muted);font-size:var(--type-note);margin-left:var(--gap-label)}
 .im-low{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 .im-low .check{white-space:nowrap}
 .im-lowf{display:flex;align-items:center;gap:var(--gap-head);flex:1;min-width:0;max-width:210px;transition:opacity var(--ae-ms) var(--ease-ui)}
@@ -1505,7 +1504,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .band-pill{display:inline-flex;align-items:center;height:32px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);overflow:hidden}
 .band-pill .bp-ic{display:grid;place-items:center;width:34px;height:100%;color:var(--muted)}
 .band-pill svg{width:16px;height:16px}
-.band-pill .bp-sep{align-self:stretch;width:1px;background:var(--line);margin:6px 0}
+.band-pill .bp-sep{align-self:stretch;width:1px;background:var(--line);margin:var(--gap-tight) 0}
 .band-pill .bp-b{display:grid;place-items:center;width:34px;height:100%;padding:0;border:0;background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .3s var(--spring-hover)}
 .band-pill .bp-b+.bp-b{border-left:1px solid var(--line)}
 .band-pill .bp-b:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
@@ -1578,22 +1577,22 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .fa-in{overflow:hidden;min-height:0;opacity:0;transition:opacity var(--ae-ms) var(--ease-ui)}
 .fa.open>.fa-in{opacity:1}
 .fa.open>.fa-in{padding:var(--gap-label) var(--gap-label) calc(var(--gap-label) + var(--hair));margin:0 calc(-1 * var(--gap-label))}
-.tag-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px 10px;padding:6px 4px 4px;margin:0 -4px}
-.tag-grid.inner{padding:5px 0 0;margin:0}
-.tag-grid input{padding-top:4px;padding-bottom:4px;font-size:13.5px}
-.tag-grid .check{padding:2px 0}
+.tag-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--gap-tight) var(--gap-card);padding:var(--gap-tight) var(--gap-label) var(--gap-label);margin:0 calc(-1 * var(--gap-label))}
+.tag-grid.inner{padding:var(--gap-tight) 0 0;margin:0}
+.tag-grid input{padding-top:var(--gap-label);padding-bottom:var(--gap-label);font-size:var(--type-body)}
+.tag-grid .check{padding:var(--gap-sub) 0}
 .tag-sub{display:grid}
 .tag-grid .c2{grid-column:span 2}.tag-grid .c3{grid-column:span 3}.tag-grid .c4{grid-column:span 4}.tag-grid .c6{grid-column:1/-1}
 .tag-grid .field{min-width:0;margin:0}
 .tag-grid .field label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tag-grid .check{display:flex;align-items:center;gap:8px;font-size:var(--type-small);color:var(--ink);cursor:pointer;min-width:0;--lh:1.25}
+.tag-grid .check{display:flex;align-items:center;gap:var(--gap-head);font-size:var(--type-small);color:var(--ink);cursor:pointer;min-width:0;--lh:1.25}
 @media (max-width:420px){.tag-grid .c3{grid-column:1/-1}}
 @media (prefers-reduced-motion:reduce){.fa,.fa-in{transition:none}}
 /* ----- Imager balance: say what the sound is like now, and mark on the slider where it becomes even ----- */
 
 /* ----- a button that is greyed out but still tells you why (hover, focus or click) ----- */
 .btn.soft{position:relative;cursor:default;color:color-mix(in srgb,currentColor calc(var(--inactive) * 100%),transparent);background:color-mix(in srgb,var(--panel2) calc(var(--inactive) * 100%),transparent);border-color:color-mix(in srgb,var(--line) calc(var(--inactive) * 100%),transparent)}
-.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + 8px);width:max-content;max-width:min(260px,70vw);padding:8px 11px;border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);font-weight:400;--lh:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
+.btn.soft::after{content:attr(data-why);position:absolute;right:0;top:calc(100% + var(--gap-head));width:max-content;max-width:min(260px,70vw);padding:var(--gap-head) var(--gap-set);border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);font-weight:400;--lh:1.4;text-align:left;box-shadow:var(--shadow);opacity:0;transform:translateY(-4px);pointer-events:none;z-index:40;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .btn.soft:hover::after,.btn.soft:focus-visible::after,.btn.soft.say::after{opacity:1;transform:none}
 .btn.soft:not([data-why])::after,.btn.soft[data-why=""]::after{display:none}
 @media (prefers-reduced-motion:reduce){.btn.soft::after{transition:none}}
@@ -1725,7 +1724,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .sl-in>.sl-end.tick{grid-column:2;grid-row:2;justify-self:center;align-self:start;display:flex;align-items:flex-start;width:1px;height:var(--tick-h);margin:var(--gap-sub) 0 0;padding:0;border:0;border-radius:0;background:none}          /* the tick sits in its own row under the track at the middle, so it takes real room: the slider's body (thumb to tick) is what the card centers */
 #audioDlg .im-view .sl-in>.sl-end.tick{height:calc(round(up, calc(var(--gap-sub) + var(--tick-h)), 2px) - var(--gap-sub))}          /* views that share one slot are each centered in it: a view's height is a whole number of pairs of pixels, so its centered top is a whole pixel (the tick is drawn the same; only the room under it grows by a pixel) */
 .sl-in>.sl-end.tick>i{display:block;width:1px;height:var(--tick-h);background:var(--muted);opacity:.6}
-.field.row3{margin-bottom:2px}
+.field.row3{margin-bottom:var(--gap-sub)}
 .im-view.row3-set{row-gap:var(--gap-sub);margin-block:calc(var(--gap-sub) * -1)}          /* Imager's three rows sit a little further apart; the extra comes out of the space above and below them, so the card keeps its height */
 .head-note{color:var(--muted);font-size:var(--type-small);font-variant-numeric:tabular-nums;white-space:nowrap}          /* a readout beside a heading's text (Balance's shift), shown only when it has something to say */
 .head-note:empty{display:none}
@@ -1840,37 +1839,37 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pg-dlg{overflow:hidden;padding:0}
 .pg-wrap{position:relative;overflow:hidden;transition:height .45s var(--ease-out)}
 .pg-wrap.moving{transition:none}
-.pg{display:grid;gap:var(--gap-field);padding:20px 22px;box-sizing:border-box;position:absolute;left:0;top:0;width:100%}
-.pg-sub{gap:10px;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow:auto;visibility:hidden}
+.pg{display:grid;gap:var(--gap-field);padding:var(--gap-room) var(--gap-room-x);box-sizing:border-box;position:absolute;left:0;top:0;width:100%}
+.pg-sub{gap:var(--gap-card);max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow:auto;visibility:hidden}
 .pg-main{visibility:visible}
-.pg-back{display:flex;align-items:center;gap:8px;justify-self:start;margin:0 0 0 -4px;padding:2px 8px 2px 2px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
+.pg-back{display:flex;align-items:center;gap:var(--gap-head);justify-self:start;margin:0 0 0 calc(-1 * var(--gap-label));padding:var(--gap-sub) var(--gap-head) var(--gap-sub) var(--gap-sub);border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer}
 .pg-back h2{margin:0;pointer-events:none}
-.pg-back i{width:10px;height:10px;margin-left:6px;border-left:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .3s var(--ease-out),border-color .2s var(--ease-color)}
+.pg-back i{width:10px;height:10px;margin-left:var(--gap-tight);border-left:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .3s var(--ease-out),border-color .2s var(--ease-color)}
 .pg-back:hover i{transform:rotate(45deg) translate(-2px,2px);border-color:var(--ink)}
 .pg-back:focus-visible,.go-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.go-row{display:flex;align-items:center;gap:8px;width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-card);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-value);text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
+.go-row{display:flex;align-items:center;gap:var(--gap-head);width:100%;padding:var(--gap-set) var(--gap-set);border:1px solid var(--line);border-radius:var(--r-card);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-value);text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 .go-row span{flex:1}
 .go-row em{font-style:normal;font-size:var(--type-body);color:var(--muted)}
 .go-row i{width:7px;height:7px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);transition:transform .3s var(--ease-out),border-color .2s var(--ease-color)}
-.go-row:hover{background:var(--hover,rgba(127,127,127,.08));border-color:var(--muted)}.go-row:hover i{transform:rotate(45deg) translate(2px,-2px);border-color:var(--ink)}
-.tag-sub .check-row{padding:2px 0}
+.go-row:hover{background:var(--hover-soft);border-color:var(--muted)}.go-row:hover i{transform:rotate(45deg) translate(2px,-2px);border-color:var(--ink)}
+.tag-sub .check-row{padding:var(--gap-sub) 0}
 @media (prefers-reduced-motion:reduce){.pg-wrap,.pg-back i,.go-row i{transition:none!important}}
-.pg .check-row{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;font-size:var(--type-body);color:var(--ink)}
+.pg .check-row{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set);cursor:pointer;font-size:var(--type-body);color:var(--ink)}
 
 /* history */
 .ed-head{position:relative}
-.hist{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(360px,92vw);display:grid;gap:8px;padding:14px 14px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);box-shadow:0 1px 2px rgba(16,20,40,.06),0 12px 32px rgba(16,20,40,.16)}
+.hist{position:absolute;right:0;top:calc(100% + var(--gap-head));z-index:30;width:min(360px,92vw);display:grid;gap:var(--gap-head);padding:var(--gap-field) var(--gap-field) var(--gap-set);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel);box-shadow:var(--shadow-pop)}
 .hist[hidden]{display:none}
 .hist-top{min-width:0}
 .hist-top h3{margin:0;font:500 18px 'Newsreader',Georgia,serif;line-height:round(1.1em,1px);--lh:1.1}
 .hist-list{position:relative;list-style:none;margin:0;padding:0;max-height:min(46vh,380px);overflow:auto;display:block}
-.hs-row{position:relative;padding-left:22px}
-.hs-row::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--line)}
-.hs-row:first-child::before{top:17px}.hs-row:last-of-type::before{bottom:calc(100% - 17px)}
-.hs-main{position:relative;display:flex;align-items:center;gap:8px;min-height:34px}
-.hs-dot{position:absolute;left:-21px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--panel);border:2px solid var(--muted);box-sizing:border-box;transition:background-color .25s var(--ease-color),border-color .25s var(--ease-color),transform .3s var(--ease-out)}
-.hs-btn{flex:1;min-width:0;display:block;padding:6px 8px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-body);text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),color .25s var(--ease-color)}
-.hs-btn:hover{background:var(--hover,rgba(127,127,127,.1))}
+.hs-row{position:relative;padding-left:var(--hs-indent)}
+.hs-row::before{content:'';position:absolute;left:var(--gap-tight);top:0;bottom:0;width:2px;background:var(--line)}
+.hs-row:first-child::before{top:calc(var(--h-m) / 2)}.hs-row:last-of-type::before{bottom:calc(100% - var(--h-m) / 2)}
+.hs-main{position:relative;display:flex;align-items:center;gap:var(--gap-head);min-height:34px}
+.hs-dot{position:absolute;left:calc(var(--hair) - var(--hs-indent));top:50%;width:var(--hs-dot);height:var(--hs-dot);margin-top:calc(var(--hs-dot) / -2);border-radius:50%;background:var(--panel);border:2px solid var(--muted);box-sizing:border-box;transition:background-color .25s var(--ease-color),border-color .25s var(--ease-color),transform .3s var(--ease-out)}
+.hs-btn{flex:1;min-width:0;display:block;padding:var(--gap-tight) var(--gap-head);border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-body);text-align:left;cursor:pointer;transition:background-color .2s var(--ease-color),color .25s var(--ease-color)}
+.hs-btn:hover{background:var(--hover-grey)}
 .hs-btn:focus-visible,.hs-more:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .hs-n{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .25s var(--ease-color)}
 .hs-row em{font-style:normal;font-size:var(--type-note);color:var(--muted)}
@@ -1881,35 +1880,35 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .hs-row.drop>.hs-main .hs-n{opacity:.45;text-decoration:line-through}
 .hs-row.kept>.hs-main .hs-dot{background:var(--accent);border-color:var(--accent)}
 .hs-more{flex:none;width:22px;height:22px;display:grid;place-items:center;border:0;border-radius:var(--r-sm);background:none;cursor:pointer;color:var(--muted)}
-.hs-more:hover{background:var(--hover,rgba(127,127,127,.1));color:var(--ink)}
+.hs-more:hover{background:var(--hover-grey);color:var(--ink)}
 .hs-more i{width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(-45deg);transition:transform .35s var(--ease-out)}
 .hs-row.open .hs-more i{transform:rotate(45deg)}
 .hs-sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--ease-out)}
 .hs-row.open .hs-sub{grid-template-rows:1fr}
-.hs-sub ul{min-height:0;overflow:hidden;margin:0;padding:0 0 0 8px;list-style:none;opacity:0;transition:opacity .3s var(--ease-color)}
+.hs-sub ul{min-height:0;overflow:hidden;margin:0;padding:0 0 0 var(--gap-head);list-style:none;opacity:0;transition:opacity .3s var(--ease-color)}
 .hs-row.open .hs-sub ul{opacity:1}
-.hs-ch{display:flex;align-items:center;gap:8px;min-height:28px;padding:0 0 0 8px;font-size:var(--type-small);color:var(--muted);border-left:2px solid var(--line)}
+.hs-ch{display:flex;align-items:center;gap:var(--gap-head);min-height:28px;padding:0 0 0 var(--gap-head);font-size:var(--type-small);color:var(--muted);border-left:2px solid var(--line)}
 .hs-ch span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:opacity .25s var(--ease-color)}
 .hs-ch.drop span{opacity:.5;text-decoration:line-through}
-.hs-cb{appearance:none;-webkit-appearance:none;flex:none;width:17px;height:17px;margin:0 2px 0 0;border:1.6px solid var(--muted);border-radius:5px;background:var(--panel) center/12px no-repeat;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
+.hs-cb{appearance:none;-webkit-appearance:none;flex:none;width:17px;height:17px;margin:0 var(--gap-sub) 0 0;border:1.6px solid var(--muted);border-radius:var(--r-paper);background:var(--panel) center/12px no-repeat;cursor:pointer;transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color)}
 .hs-cb:hover{border-color:var(--ink)}
 .hs-cb:checked{background-color:var(--accent);border-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7'/%3E%3C/svg%3E")}
 .hs-cb:indeterminate{background-color:var(--accent);border-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M6 12h12'/%3E%3C/svg%3E")}
 .hs-cb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.hs-arrow{position:absolute;left:5px;width:4px;border-radius:2px;background:var(--accent);transition:top .4s var(--ease-out),height .4s var(--ease-out);pointer-events:none}
-.hs-arrow::after{content:'';position:absolute;left:50%;bottom:-1px;width:9px;height:9px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:translateX(-50%) rotate(45deg) translateY(-2px)}
-.hist-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:4px;font-size:var(--type-small);color:var(--muted)}
-.hist-foot div{display:flex;gap:6px}
+.hs-arrow{position:absolute;left:var(--hs-arrow-x);width:4px;border-radius:var(--r-mark);background:var(--accent);transition:top .4s var(--ease-out),height .4s var(--ease-out);pointer-events:none}
+.hs-arrow::after{content:'';position:absolute;left:50%;bottom:calc(-1 * var(--hair));width:9px;height:9px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:translateX(-50%) rotate(45deg) translateY(-2px)}
+.hist-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-card);padding-top:var(--gap-label);font-size:var(--type-small);color:var(--muted)}
+.hist-foot div{display:flex;gap:var(--gap-tight)}
 @media (prefers-reduced-motion:reduce){.hs-arrow,.hs-dot,.hs-btn,.hs-n,.hs-sub,.hs-sub ul,.hs-more i{transition:none}}
 
 /* the pages make room for the one you hold */
 
 .pw-line{position:relative;display:flex}
-.pw-line input{flex:1;min-width:0;padding-right:38px}
-.pw-eye{position:absolute;right:4px;top:50%;width:30px;height:30px;margin-top:-15px;display:grid;place-items:center;border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color)}
-.pw-eye svg{width:17px;height:17px}.pw-eye:hover{color:var(--ink);background:var(--hover,rgba(127,127,127,.1))}.pw-eye[aria-pressed="true"]{color:var(--accent)}
-.pw-file{margin:-6px 0 0;font-size:var(--type-body);word-break:break-all}
-.t-note.err{color:var(--bad,#d1453b)}
+.pw-line input{flex:1;min-width:0;padding-right:calc(var(--h-s) + var(--gap-head))}
+.pw-eye{position:absolute;right:var(--gap-label);top:50%;width:30px;height:30px;margin-top:calc(var(--h-s) / -2);display:grid;place-items:center;border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color)}
+.pw-eye svg{width:17px;height:17px}.pw-eye:hover{color:var(--ink);background:var(--hover-grey)}.pw-eye[aria-pressed="true"]{color:var(--accent)}
+.pw-file{margin:calc(-1 * var(--gap-tight)) 0 0;font-size:var(--type-body);word-break:break-all}
+.t-note.err{color:var(--bad)}
 
 /* ==================== PDF Editor ====================
    The Audio Editor's shape: a tool list on the left, one window on the right. The window has a head (title, what the tool does,
@@ -2267,11 +2266,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){#aeExport.exporting::before,#peExport.exporting::before{transition:none}}
 
 /* the audio export window while it runs: a progress page in the same window, with the stage, a bar and the choice to keep editing */
-.pg-run{display:grid;gap:14px;padding:20px 22px;box-sizing:border-box}
+.pg-run{display:grid;gap:var(--gap-field);padding:var(--gap-room) var(--gap-room-x);box-sizing:border-box}
 .pg-run[hidden],.pg-wrap[hidden]{display:none}
 .pg-run h2{margin:0}
 .pg-run p{margin:0}
-.pg-run .row{display:flex;justify-content:flex-end;gap:8px}
+.pg-run .row{display:flex;justify-content:flex-end;gap:var(--gap-head)}
 
 /* ---- the Audio Editor's controls bar and its buttons share one recipe (the Undo group is a .btn-group, see the end of this file): a soft glass edge, buttons the same height and corner,
    and a group corner that is the button corner plus the gap around it (7px + 4px = 11px), so the curves nest ---- */
@@ -2286,9 +2285,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* the finished audio chip: the start of the file's name, then the format over the length in small grey type, so it stays narrow */
 .chip-main .pp-box.stack{position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;height:18px}
-.chip-main .pp-box.stack small{font-size:10px;line-height:9px;color:var(--muted);text-decoration:none}
+.chip-main .pp-box.stack small{font-size:var(--type-axis);line-height:9px;color:var(--muted);text-decoration:none}
 .chip-main .pp-box.stack .pp:first-child{font-weight:600;letter-spacing:.04em}
-.chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:12px;--lh:1}
+.chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:var(--type-caption);--lh:1}
 .chip[data-k=audio] .chip-name{max-width:9em}
 /* the Open audio button while the sound is read: it fills as it goes and says how far */
 .btn.loading{font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;overflow:hidden;isolation:isolate;color:var(--accent-ink);cursor:progress;opacity:1;background:color-mix(in srgb,var(--accent) 48%,var(--panel2))}
@@ -2366,10 +2365,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe .ed-head{position:relative}
 
 /* How it works: the long explanations fold away under a plain line, so the page is short until you ask for more */
-.how-body h4{margin:12px 0 2px;font-size:var(--type-body);font-weight:600}
+.how-body h4{margin:var(--gap-set) 0 var(--gap-sub);font-size:var(--type-body);font-weight:600}
 .how-body h4:first-child{margin-top:0}
-.how-d{margin-top:8px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2)}
-.how-d>summary{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:var(--type-body);font-weight:500;color:var(--ink);cursor:pointer;list-style:none;border-radius:inherit}
+.how-d{margin-top:var(--gap-head);border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2)}
+.how-d>summary{display:flex;align-items:center;gap:var(--gap-head);padding:var(--gap-head) var(--gap-set);font-size:var(--type-body);font-weight:500;color:var(--ink);cursor:pointer;list-style:none;border-radius:inherit}
 .how-d>summary::-webkit-details-marker{display:none}
 .how-d>summary::before{content:'';flex:none;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(-45deg);transition:transform .3s var(--ease-ui),border-color .2s var(--ease-color)}
 .how-d[open]>summary::before{transform:rotate(45deg)}
@@ -2377,7 +2376,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .how-d>summary:hover{background:var(--accent-soft)}
 .how-d>summary:hover::before{border-color:var(--ink)}
 .how-d>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.how-in{box-sizing:border-box;padding:10px 14px 14px;border-top:1px solid var(--line)}
+.how-in{box-sizing:border-box;padding:var(--gap-card) var(--gap-field) var(--gap-field);border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.how-d>summary::before{transition:none}}
 .pe-count,.chip small,.toast,#peCropName,.pe-pos{font-variant-numeric:tabular-nums}
 
@@ -2394,9 +2393,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.sys-find,.wait-bar b{transition-duration:.08s}}
 .sys-why{display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-label) var(--gap-card)}
 .sys-note>*+*{margin-top:var(--gap-head)}
-.hb{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;margin:0 1px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;--lh:1.35;white-space:nowrap;vertical-align:baseline}
+.hb{display:inline-flex;align-items:center;gap:var(--gap-tight);padding:var(--hair) var(--field-pad-x);margin:0 var(--hair);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--panel2);color:var(--ink);font-size:.88em;font-weight:400;--lh:1.35;white-space:nowrap;vertical-align:baseline}
 .hb.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-.hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,#fff 2.5px,transparent 2.7px),var(--accent)}
+.hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,var(--on-dark) 2.5px,transparent 2.7px),var(--accent)}
 .hb.sw{padding:0;border-color:transparent;background:none;font-weight:600}
 .pe .page-card.loading .tick{z-index:1}
 .pe .page-card.loading canvas{opacity:0}
@@ -2416,11 +2415,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* ---- Button group: the one pill for buttons that belong together (the Undo group in the video, Audio and PDF editors; the video's turn tools).
    One outline round the group, flat buttons inside it, a thin divider between them. The group corner is the button corner plus the gap (7px + 2px = 9px), so the curves nest.
    Mark up a group as <span class="btn-group"> with .btn buttons and <span class="vsep"> dividers; a lone button, a slider or a toggle that stands apart is not in one. ---- */
-.btn-group{display:inline-flex;align-items:center;gap:0;padding:2px;border-radius:calc(var(--r-sm) + 2px);border:1px solid var(--line);background:var(--panel2)}
-.btn-group>.btn{box-sizing:border-box;height:calc(var(--h-xs) - 6px);min-height:0;padding:0 10px;border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:var(--type-body)}
+.btn-group{display:inline-flex;align-items:center;gap:0;padding:var(--gap-sub);border-radius:calc(var(--r-sm) + var(--gap-sub));border:1px solid var(--line);background:var(--panel2)}
+.btn-group>.btn{box-sizing:border-box;height:calc(var(--h-xs) - var(--gap-tight));min-height:0;padding:0 var(--gap-card);border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none;font-size:var(--type-body)}
 .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
 .btn-group>.btn[aria-pressed=true]{background:var(--accent-soft)}
-.btn-group .vsep{display:block;width:1px;height:16px;margin:0 3px;background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
+.btn-group .vsep{display:block;width:1px;height:16px;margin:0 var(--gap-snug);background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
 .btn-group.hist-wrap{gap:0}
 /* full screen: the group floats over the wave, so it is glass with a shadow; its buttons stay flat inside it */
 #audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:blur(22px) saturate(1.5);backdrop-filter:blur(22px) saturate(1.5);box-shadow:var(--glass-shadow)}
@@ -2450,8 +2449,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* ----- Info windows (About, How it works, Import/Export, Keyboard shortcuts, Diagnostics): one voice for the subtitle, one for the section labels ----- */
 .dlg.page p{text-wrap:pretty}
 /* About: three short groups (who made it, how to help, how to reach out): close inside a group, more room between groups */
-.about-g{display:grid;gap:12px}
-.about-g+.about-g{margin-top:12px}
+.about-g{display:grid;gap:var(--gap-set)}
+.about-g+.about-g{margin-top:var(--gap-set)}
 .about-g p{--lh:1.55}
 /* small delights, none of them an icon: the answers settle in one after another when the window opens, a dropdown's lines follow it down as it opens, and its arrow leans toward where it will go */
 @keyframes howIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -2495,10 +2494,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pg-wait{position:absolute;display:flex;align-items:center;justify-content:center;transition:opacity .26s var(--ease-ui,ease)}          /* centered by layout, never by a transform, so the text stays crisp; the pill may pass a narrow page's edges */
 .pg-wait.out{opacity:0}
 /* the one wait pill: dark, nearly solid, with white text (the same in light and dark, and over any picture) and a bar along its foot (a fill once a share is known, the shared sweep while it is not) */
-.wait-pill{position:relative;display:inline-flex;align-items:center;flex:none;overflow:hidden;padding:4px 10px;border-radius:99px;background:var(--pill-bg);color:#fff;font:600 var(--type-small) "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
-.wait-pill .wait-bar{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:rgba(255,255,255,.2)}
-.wait-bar b{display:block;height:100%;background:color-mix(in srgb,var(--accent) 55%,#fff);transform-origin:0 50%;transform:scaleX(0);transition:transform .45s var(--ease-out);will-change:transform}          /* a scaled layer, so the fill glides on the compositor even while the page is busy drawing */
-.wait-bar.sweeping::after{background:color-mix(in srgb,var(--accent) 55%,#fff)}          /* the sweep in the fill's own color */
+.wait-pill{position:relative;display:inline-flex;align-items:center;flex:none;overflow:hidden;padding:var(--gap-label) var(--gap-card);border-radius:99px;background:var(--pill-bg);color:var(--on-dark);font:600 var(--type-small) "Hanken Grotesk",system-ui,sans-serif;line-height:round(1.3em,1px);--lh:1.3;white-space:nowrap}
+.wait-pill .wait-bar{position:absolute;left:0;right:0;bottom:0;height:3px;overflow:hidden;background:var(--on-dark-faint)}
+.wait-bar b{display:block;height:100%;background:color-mix(in srgb,var(--accent) 55%,var(--on-dark));transform-origin:0 50%;transform:scaleX(0);transition:transform .45s var(--ease-out);will-change:transform}          /* a scaled layer, so the fill glides on the compositor even while the page is busy drawing */
+.wait-bar.sweeping::after{background:color-mix(in srgb,var(--accent) 55%,var(--on-dark))}          /* the sweep in the fill's own color */
 .pg-wait-t{display:inline-block;text-align:center}
 .pg-wait-l{opacity:0;transition:opacity .2s var(--ease-ui,ease)}
 .pg-wait.show .pg-wait-l{opacity:1}
@@ -2544,7 +2543,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .ae-card .eq-lbl>*{line-height:var(--line-s)}
 #audioDlg .ae-tool .ae-tn{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a tool's name in the list is its letters, so the row can be centered by what you see */
 /* a tag after a name: its own element, a pill with the same space on each side of its word */
-.beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:var(--type-note);font-weight:600;--lh:1;white-space:nowrap}
+.beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 var(--gap-head);border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:var(--type-note);font-weight:600;--lh:1;white-space:nowrap}
 .beta-chip[hidden]{display:none}
 .ae-proc .beta-chip{margin:0 var(--gap-sub) 0 0}          /* in the list the chip is the row's last part, on the readouts' right line; the Amount sits before it */
 :is(#audioDlg,#pdfDlg) .ae-card input[type=range]{margin-block:calc(var(--hair) * -1)}          /* a slider's box is its thumb and ring (the input is 20px tall around an 18px thumb) */
@@ -2613,10 +2612,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .t-block{display:grid;gap:var(--gap-sub);min-width:0}
 .t-block>h2,.t-block>h3{margin:0}
 .t-block.tool{align-content:center}
-.t-block.tool h3{margin:0;font-size:16px;font-weight:600;line-height:20px}
+.t-block.tool h3{margin:0;font-size:var(--type-heading);font-weight:600;line-height:20px}
 .t-sub{display:block;margin:0;font-size:var(--type-body);font-weight:400;font-style:normal;line-height:16px;color:var(--muted);text-wrap:pretty}
 .t-lbl{font-size:var(--type-body);line-height:16px}
-.t-note{margin:var(--gap-label) 0 0;font-size:12px;font-weight:400;line-height:16px;color:var(--muted);text-align:left;text-wrap:pretty}
+.t-note{margin:var(--gap-label) 0 0;font-size:var(--type-caption);font-weight:400;line-height:16px;color:var(--muted);text-align:left;text-wrap:pretty}
 .field>.t-note,.t-note.inline{margin:0}
 .t-head{margin:0 0 var(--gap-head)}
 .dlg>.t-note{margin-top:calc(var(--gap-label) - var(--gap-field))}          /* a note under a control in a window sits --gap-label under it, not a whole window gap */
