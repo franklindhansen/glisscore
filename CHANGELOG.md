@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.22
+
+The PDF Editor's small layout now matches the Audio Editor: tools open from one attached bar with Apply beside the name. Clean's Specks is now Strength, and the page position reads 1 / 3.
+
 ## 1.2.21
 
 The PDF Editor fits cleanly at every window width, and its status lines are shorter.
