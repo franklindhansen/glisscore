@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.23
+
+The video editor's panel, timeline, and full-screen controls now use the same spacing and sizes as the other editors. The Fades curve choice sits under its picture, and the timeline bar fits in two rows on small screens.
+
 ## 1.2.22
 
 The PDF Editor's small layout now matches the Audio Editor: tools open from one attached bar with Apply beside the name. Clean's Specks is now Strength, and the page position reads 1 / 3.
