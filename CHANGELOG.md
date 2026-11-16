@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.24
+
+Buttons, fields, menus, tips, and windows now share one set of spacing and sizes, with small shifts of a pixel or two. In the video editor, settings that belong to another sit plainly under it, and the back-to-start button matches Play.
+
 ## 1.2.23
 
 The video editor's panel, timeline, and full-screen controls now use the same spacing and sizes as the other editors. The Fades curve choice sits under its picture, and the timeline bar fits in two rows on small screens.
