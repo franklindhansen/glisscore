@@ -813,8 +813,8 @@ function drawRuler(c) {
   const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1200];
   let step = steps.find(s => s * S.pxPerSec >= 80) || 1200;
   const base = S.vStart, t0 = Math.max(0, x2t(0) - base), t1 = Math.min(duration(), x2t(vw) - base);   // the ruler counts video time
-  c.font = '11px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.strokeStyle = C.muted;
-  const minor = step / 5;
+  c.font = rulerFont(); c.textBaseline = 'alphabetic'; c.fillStyle = C.muted; c.strokeStyle = C.muted;
+  const minor = step / 5, labelY = rulerLabelY(c, rulerH);
   c.globalAlpha = .45; c.beginPath();
   for (let t = Math.floor(t0 / minor) * minor; t <= t1 + 1e-6; t += minor) { if (t < 0) continue; const x = Math.round(t2x(base + t)) + .5; c.moveTo(x, rulerH - 5); c.lineTo(x, rulerH); }
   c.stroke(); c.globalAlpha = 1;
@@ -822,7 +822,7 @@ function drawRuler(c) {
     if (t < 0) continue;
     const x = Math.round(t2x(base + t)) + .5;
     c.beginPath(); c.moveTo(x, rulerH - 10); c.lineTo(x, rulerH); c.stroke();
-    if (t > 0) c.fillText(fmt(t, step < 1 ? 1 : 0).replace(/\.0$/, ''), x + 4, 11);          // the 0:00 under the start grip is drawn with the grip (drawTrimHandles), so it moves with it
+    if (t > 0) c.fillText(fmt(t, step < 1 ? 1 : 0).replace(/\.0$/, ''), x + 4, labelY);          // the 0:00 under the start grip is drawn with the grip (drawTrimHandles), so it moves with it
   }
 }
 function roundRect(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -1161,7 +1161,7 @@ function drawTrimHandles(c) {
     c.save(); c.fillStyle = C.accent; if (hot) { c.shadowColor = 'rgba(63,85,230,.45)'; c.shadowBlur = 8 * sc; }
     c.fillRect(px - 1, 0, 2, bottom);          // the line runs from the ruler to the bottom of the track
     roundRect(c, dir > 0 ? px + 2 : px - 2 - tw, (rulerH - th) / 2, tw, th, 3 * sc); c.fill();          // the grip tab sits in the ruler
-    if (dir > 0) { c.font = '11px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'middle'; c.fillStyle = C.muted; c.fillText('0:00', px + tw + 6, 11); }          // the 0:00 sits just after the grip tab, so the tab never covers it; it slides with the tab
+    if (dir > 0) { c.font = rulerFont(); c.textBaseline = 'alphabetic'; c.fillStyle = C.muted; c.fillText('0:00', px + tw + 6, rulerLabelY(c, rulerH)); }          // the 0:00 sits just after the grip tab, so the tab never covers it; it slides with the tab
     c.restore();
   });
 }

@@ -29,6 +29,10 @@ function dbg(msg) {
 function refreshLog() { const t = document.getElementById('diagLog'); t.value = LOG.lines.join('\n'); t.scrollTop = t.scrollHeight; }
 window.addEventListener('error', e => dbg('PAGE ERROR: ' + (e.message || e) + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : '')));
 window.addEventListener('unhandledrejection', e => dbg('UNHANDLED PROMISE ERROR: ' + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason)));
+/* the ruler's time labels, shared by the video timeline and the Audio Editor so they match: the type is the page's axis size, and the baseline puts the digits in the middle of the ruler band (its height less the 1px floor line) */
+let rulerFontCache = '';
+const rulerFont = () => rulerFontCache || (rulerFontCache = (getComputedStyle(document.documentElement).getPropertyValue('--type-axis').trim() || '10.5px') + ' "Hanken Grotesk",system-ui,sans-serif');
+const rulerLabelY = (c, h) => (h - 1) / 2 + c.measureText('0').actualBoundingBoxAscent / 2;
 function fmt(t, dec = 1) {
   if (!isFinite(t) || t < 0) t = 0;
   const m = Math.floor(t / 60), s = t - m * 60;

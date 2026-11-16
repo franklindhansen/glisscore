@@ -570,14 +570,14 @@ function aeTicks(lo, hi, px) { const span = hi - lo, want = span / Math.max(1, p
 /* the ruler across the top of the picture, the same in the wave and the spectrogram: its floor, a tall tick and a time at every step, and small ticks between (as in the video timeline) */
 function aeRuler(c, W, C, lo, hi, grid, Hc) {
   const x0 = AE_PAD, x1 = W - AE_PAD, st = aeTicks(lo, hi, x1 - x0), k = (x1 - x0) / (hi - lo), first = Math.ceil(lo / st) * st, minor = st / 5;
-  c.save(); c.font = aeFont('axis'); c.textBaseline = 'alphabetic'; c.textAlign = 'left';
+  c.save(); c.font = rulerFont(); c.textBaseline = 'alphabetic'; c.textAlign = 'left'; const labelY = rulerLabelY(c, AE_RULER);
   c.globalAlpha = 0.5; c.fillStyle = C.line; c.fillRect(0, AE_RULER - 1, W, 1);          // the ruler's floor
   c.globalAlpha = 0.55; c.fillStyle = C.muted; for (let t = Math.ceil(lo / minor) * minor, n = 0; t <= hi && n < 400; t += minor, n++) { const x = Math.round(x0 + (t - lo) * k) + 0.5; if (x < x0 - 1 || x > x1 + 1) continue; c.fillRect(x - 0.5, AE_RULER - 5, 1, 4); }          // the small ticks
   for (let t = first, n = 0; t <= hi && n < 80; t += st, n++) {
     const x = Math.round(x0 + (t - lo) * k) + 0.5;
     if (grid) { c.globalAlpha = 0.5; c.fillStyle = C.line; c.fillRect(x, AE_RULER, 1, Hc - AE_RULER); }
     c.globalAlpha = 0.8; c.fillStyle = C.muted; c.fillRect(x - 0.5, AE_RULER - 9, 1, 8);          // the tall tick
-    if (x < x0 + 22 || x > x1 - 34) continue; c.globalAlpha = 0.85; const m = Math.floor(t / 60), sec = t - m * 60; c.fillText(st < 1 ? m + ':' + sec.toFixed(1).padStart(4, '0') : m + ':' + String(Math.round(sec)).padStart(2, '0'), x + 4, 15);
+    if (x < x0 + 22 || x > x1 - 34) continue; c.globalAlpha = 0.85; const m = Math.floor(t / 60), sec = t - m * 60; c.fillText(st < 1 ? m + ':' + sec.toFixed(1).padStart(4, '0') : m + ':' + String(Math.round(sec)).padStart(2, '0'), x + 4, labelY);
   }
   c.restore();
 }
