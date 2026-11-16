@@ -45,7 +45,7 @@ function staffPage(doc, n, o = {}) {
   await load();
   await p.evaluate(() => { SYS.lanes = () => 1; });
   await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 }); await p.waitForTimeout(100);
-  const rv = await p.evaluate(() => ({ rv: !!(TL.rv && TL.rv.blocks), pill: document.querySelector('#sysFind').classList.contains('on'), toast: document.querySelector('.toast, #toast') ? document.querySelector('.toast, #toast').textContent : '' }));
+  const rv = await p.evaluate(() => ({ rv: !!(TL.rv && TL.rv.blocks), pill: document.querySelector('#sysFind').classList.contains('on'), toast: document.querySelector('#toast') ? document.querySelector('#toast').textContent : '' }));
   ok('when finding ends the blocks come in once with the shared reveal, and the pill goes', rv.rv && !rv.pill, JSON.stringify(rv));
   ok('"4 pages loaded." shows once finding is done', /4 pages loaded\./.test(rv.toast), rv.toast);
   await p.emulateMedia({ reducedMotion: 'reduce' }); await load(); await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 });

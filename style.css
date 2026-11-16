@@ -29,7 +29,16 @@
   --pill-bg:rgba(14,17,40,.92);   /* the dark pill: the wait pill and the hints drawn on the waveform, the same in light and dark */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
-  --cu-w:3.6ch; --cu-w-in:4.6ch;          /* the blank in a Custom choice: degrees hold a sign and three digits ("-180"), inches four digits and a point ("11.69") */
+  --pe-edge:20px; --pe-edge-b:28px; --pe-col-gap:14px;   /* the PDF Editor's outer room: the page grid's and the large view's sides, the gap between the tool list and the tool, and the grid's bottom; the gap between page columns */
+  --gap-tight:6px; --gap-snug:3px; --tab-py:7px; --hint-py:5px;   /* the small gaps between the scale's steps: a page card's padding, the page number's row, a glass bar's padding, a tool tab's and a bar's top and bottom room, a hint's top and bottom */
+  --h-glass:26px; --hid-k:30px; --wipe-k:26px; --crop-grip:28px;   /* a button on a glass bar, the mark on a page left out, the handle on the before-and-after line, and a crop frame's grip */
+  --r-paper:4px;   /* the corner of a page's picture and of the sheen over it */
+  --paper:#fff; --on-dark:#fff;   /* a sheet of paper (a page's picture, a mark's edge) and text on a dark or accent fill: white in light and dark */
+  --page-shadow:0 0 0 .5px rgba(16,20,40,.16),0 2px 8px rgba(16,20,40,.10); --page-shadow-hover:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16); --page-shadow-lift:0 0 0 .5px rgba(16,20,40,.16),0 6px 20px rgba(16,20,40,.16); --ghost-shadow:0 14px 32px rgba(10,14,30,.3);   /* a page at rest, lifted by the pointer, the large view's sheet, and a page being dragged */
+  --chip-shadow:0 1px 4px rgba(0,0,0,.28); --wipe-shadow:0 1px 5px rgba(0,0,0,.3); --glass-ring:rgba(16,20,40,.14);   /* the small shadow under a mark on a page, the handle's, and the hairline round a glass bar */
+  --chip-bg:rgba(255,255,255,.88); --chip-ink:rgba(16,20,40,.7); --chip-edge:rgba(16,20,40,.32); --dim-fill:rgba(255,255,255,.62);   /* a light mark on a page (left out, unticked) and the Dim frame's fill */
+  --side-bg:rgba(10,14,30,.66); --hint-bg:rgba(10,14,30,.72); --crop-scrim:rgba(10,14,30,.42);   /* the before and after words, the hint, and the shade outside the crop frame */
+  --cu-w:3.6ch; --cu-w-min:2ch;          /* the blank in a Custom choice: degrees hold a sign and three digits ("-180"), inches two digits, a point, and one decimal ("11.7"), so both fit the same width */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
   --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
@@ -723,7 +732,8 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 .cu-field{display:inline-flex;align-items:baseline;gap:var(--gap-sub);color:var(--ink);opacity:0;transform:translateY(60%);pointer-events:none}
 .cu.open .cu-word{opacity:0;transform:translateY(-60%)}
 .cu.open .cu-field{opacity:1;transform:none;pointer-events:auto}
-.cu-field input{position:static;opacity:1;pointer-events:auto;box-sizing:content-box;width:var(--cu-w);height:auto;min-height:0;margin:0;padding:0;border:0;border-bottom:var(--hair) solid var(--muted);border-radius:0;background:transparent;box-shadow:none;outline:none;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}
+.cu-field input{position:static;opacity:1;pointer-events:auto;box-sizing:content-box;width:var(--cu-w);height:auto;min-height:0;margin:0;padding:0;border:0;border-bottom:var(--hair) solid var(--muted);border-radius:0;background:transparent;box-shadow:none;outline:none;text-align:end;color:inherit;font:inherit;line-height:round(1em,1px);font-variant-numeric:tabular-nums}
+@supports (field-sizing:content){.cu-field input{field-sizing:content;width:auto;min-width:var(--cu-w-min)}}          /* the blank is as wide as what is typed in it, never less than two digits, where the browser can size a field to its text; elsewhere it holds the most a value needs */
 .cu-field input:focus,.cu-field input:focus-visible{outline:none;border-color:var(--line);border-bottom-color:var(--accent)}          /* where you type: the hairline under the digits turns to the accent, no box and no ring */
 .cu-unit{color:var(--muted)}
 .cu:has(.cu-field input:focus){outline:none}          /* typing shows the accent hairline instead of the option's focus ring */
@@ -1589,7 +1599,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* ==================== 18. AUDIO EDITOR: picture, tool window and tools (the current design; it refines everything above) ==================== */
 :root{--ae-margin:32px;--ae-floor:362px;--ae-chrome:226px;--ae-wave:170px;--ae-body:calc(round(down,max(182px,min(var(--ae-floor),calc(100dvh - var(--ae-margin) - var(--ae-chrome) - var(--ae-wave)))) - 2px,4px) + 2px);--ae-pad:clamp(6px,calc((var(--ae-body) - var(--ae-floor) + 24px) / 2),12px)}          /* the tool window's height (always 2px over a multiple of 4px, so that two cards stacked with --gap-card between them each get a whole, even share), set here once, and the picture's: both are fixed sizes, whatever the screen. --ae-floor is the height the tallest tool needs (Level, with its Meter, and Imager are the tallest, 362px). --ae-chrome is everything in the dialog that is not the picture or the tool body (padding, head, bar, footer, status bar). On a screen too short for both, the tool body is what gets shorter: the tool keeps its full size and scrolls inside it. */
-.dlg.editor.ae,.dlg.editor.pe{padding:16px 18px;gap:10px}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
+.dlg.editor.ae,.dlg.editor.pe{padding:var(--gap-field) var(--gap-group);gap:var(--gap-card)}          /* the Audio Editor and the PDF Editor share one frame: the same padding, the same gap, the subtitle tight under the title */
 /* In and Out: where the sound comes in and goes out. The cable always runs between them, through whatever is lit. */
 .ae-end{display:flex;align-items:center;gap:var(--gap-head);height:22px;margin:var(--gap-sub) 0;font-size:var(--type-note);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
 .ae-end i{flex:none;width:16px;height:16px;margin-left:calc(var(--gap-sub) + var(--hair));border:2px solid var(--accent);border-radius:50%;background:var(--panel2);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -1881,14 +1891,14 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
    The Audio Editor's shape: a tool list on the left, one window on the right. The window has a head (title, what the tool does,
    its buttons), the tool's options, then the pages, then a status bar. Pages look like paper: no card frame, just a soft shadow. */
 .dlg.editor.pe{width:min(1040px,96vw);height:min(88vh,880px);max-height:calc(100dvh - 32px);grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto}
-.pe-main{display:grid;grid-template-columns:196px minmax(0,1fr);gap:20px;min-height:0}
+.pe-main{display:grid;grid-template-columns:196px minmax(0,1fr);gap:var(--pe-edge);min-height:0}
 
 /* the tool list: grouped, with the same gliding pill as the Audio Editor */
-.pe-rail{align-self:stretch;min-width:0;padding:8px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
-.pe-rail-in{position:relative;display:flex;flex-direction:column;gap:2px}
-.pe-rail-h{margin:12px 0 4px 10px;font-size:var(--type-note);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-.pe-sel+.pe-rail-h{margin-top:4px}
-.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:10px;width:100%;min-height:var(--h-l);padding:7px 10px;border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-rail{align-self:stretch;min-width:0;padding:var(--gap-head);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2)}
+.pe-rail-in{position:relative;display:flex;flex-direction:column;gap:var(--gap-sub)}
+.pe-rail-h{margin:var(--gap-set) 0 var(--gap-label) var(--gap-card);font-size:var(--type-note);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.pe-sel+.pe-rail-h{margin-top:var(--gap-label)}
+.pe-tab{position:relative;z-index:1;display:flex;align-items:center;gap:var(--gap-card);width:100%;min-height:var(--h-l);padding:var(--tab-py) var(--gap-card);border:0;border-radius:var(--r-ctl);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-weight:500;text-align:left;white-space:nowrap;cursor:pointer;transition:color .2s var(--ease-color),background-color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tab svg{flex:none;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--muted);transition:color .2s var(--ease-color)}
 @media (hover:hover){.pe-tab:not(.on):hover{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}}
 .pe-tab.on,.pe-tab.on svg{color:var(--accent)}
@@ -1919,7 +1929,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* options: one tidy row under the head */
 
 /* Add pages: three numbered steps in a row, the same numbers as the Audio Editor's noise steps */
-#peCropNote{margin-top:12px}
+#peCropNote{margin-top:var(--gap-set)}
 /* a plain line that says what a tool found or how it works */
 
 /* Page size: the sizes as one row of tiles; the readout sits in the head */
@@ -1935,7 +1945,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-zoomsl .fmt-btn svg{width:var(--icon-m);height:var(--icon-m)}
 .pe-row{display:flex;align-items:flex-end;flex-wrap:wrap;column-gap:calc(var(--gap-field) + var(--gap-set));row-gap:var(--gap-set);padding:var(--gap-set) var(--ae-side)}
 .pe-row+.pe-row{padding-top:0}
-.pe-g{display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-label);min-width:0}
+.pe-g{display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-head);min-width:0}          /* a name is trimmed to its letters (in a card or a settings row), so the control under it sits --gap-head below them: the same space you see under a name in the video panel, where the line's own room under the letters makes up the rest */
 .pe-g>.t-lbl{font-size:var(--type-body);color:var(--muted);line-height:var(--line-s)}          /* a setting's name: the same look as a slider's name (.field label), as in the video panel; small capitals are only for a card's title */
 .pe-row .seg,.pe-cards .seg{height:var(--h-s)}
 .pe-row .seg label,.pe .pe-row .seg label,.pe-cards .seg label{display:flex;align-items:center;justify-content:center;padding:0 var(--gap-head)}
@@ -1956,50 +1966,48 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-dir{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .btn.primary.pe-apply[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 /* Re-size: two rows of four size cards, then Orientation and Apply on the right */
-.pe-rzrow{align-items:flex-start;justify-content:space-between}
-.pe-row .seg label{white-space:nowrap}
-.pe-rz .rz-grid{display:grid;grid-template-columns:repeat(4,max-content);gap:var(--gap-head);align-content:start}
+.pe-row .seg label,.pe-rzcards .seg label{white-space:nowrap}
+.pe-rz .rz-grid{display:grid;grid-template-columns:repeat(4,minmax(max-content,1fr));gap:calc(var(--gap-set) + var(--hair)) var(--gap-set);align-content:start;width:100%}          /* the rows are a pixel further apart than the columns, so the card's height leaves Page shape's card an even room to center its one setting in, on whole pixels; the sizes spread across their card: equal columns where there is room, as wide as their words where there is not */
 .pe-rz .rz-opt{display:flex;align-items:center;justify-content:flex-start;gap:var(--gap-label);padding:0 var(--gap-head);min-height:var(--h-s)}
+.pe-rz .rz-opt b{font-weight:400}          /* a size's name is regular like every other label; the chosen one is told by its fill and ink */
 .pe-rz .rz-opt small{min-height:0;white-space:nowrap;color:var(--muted)}
 .pe-rz .rz-opt.cu .cu-in{place-items:center start}
-.pe-rz .rz-opt.cu .cu-field input{width:var(--cu-w-in)}          /* the word and the blanks start where the other cards' names start */
-.pe-rzr{display:flex;align-items:flex-end;gap:var(--gap-field);margin-left:auto}
-.pe-rzr .pe-acts{margin-left:0}
+.pe-rz .rz-opt.cu .cu-field input{text-align:center}          /* the word and the blanks start where the other cards' names start */
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
-.pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:20px 20px 28px;overscroll-behavior:contain}
-.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--pe-th,116px),1fr));gap:18px 14px;align-content:start}
-.pe .page-card{display:flex;flex-direction:column;gap:8px;padding:6px;border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
+.pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:var(--pe-edge) var(--pe-edge) var(--pe-edge-b);overscroll-behavior:contain}
+.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--pe-th,116px),1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start}
+.pe .page-card{display:flex;flex-direction:column;gap:var(--gap-head);padding:var(--gap-tight);border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
 .pe .page-card[aria-pressed]{border:0;background:none}
 .pe .pe-grid.arrange .page-card{cursor:grab}
 .pe .pe-grid.arrange .page-card:active{cursor:grabbing}
 .pe .page-card:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 .pe-thumb{position:relative;display:flex;flex:1 1 auto;flex-direction:column;justify-content:center;min-height:0}          /* the thumb is the card's fixed room above the number: a turned page is centered inside it, so the room, the tools and the tick never move when the page turns */
-.pe .page-card canvas{display:block;width:100%;height:auto;margin:auto 0;border:0;border-radius:4px;background:#fff;pointer-events:none;box-shadow:0 0 0 .5px rgba(16,20,40,.16),0 2px 8px rgba(16,20,40,.10);transition:opacity .3s var(--ease-color),transform .35s var(--spring-hover)}
+.pe .page-card canvas{display:block;width:100%;height:auto;margin:auto 0;border:0;border-radius:var(--r-paper);background:var(--paper);pointer-events:none;box-shadow:var(--page-shadow);transition:opacity .3s var(--ease-color),transform .35s var(--spring-hover)}
 @media (hover:hover){
   .pe .page-card:not(.na):not(.pe-hole):hover{background:color-mix(in srgb,var(--ink) 4%,transparent);transform:none}
   .pe .page-card:not(.na):not(.pe-hole):hover canvas{transform:translateY(-2px)}          /* the page lifts; the bar and the tick under it stay still */
-  .pe .page-card:not(.na):not(.pe-hole):hover canvas{box-shadow:0 0 0 .5px rgba(16,20,40,.18),0 10px 22px rgba(16,20,40,.16)}
+  .pe .page-card:not(.na):not(.pe-hole):hover canvas{box-shadow:var(--page-shadow-hover)}
 }
 .pe .page-card:not(.na):not(.pe-hole):active:not(:has(.pe-tools:active)){transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}          /* pressing a card's own bar (Rotate, Repeat) does not shrink the card: the page must not move beneath the turn */
 .pe .page-card.off canvas{opacity:var(--inactive);filter:grayscale(1)}
-.pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,255,255,.88);color:rgba(16,20,40,.7);box-shadow:0 1px 4px rgba(0,0,0,.28);pointer-events:none}
+.pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:var(--hid-k);height:var(--hid-k);margin:calc(-1 * var(--hid-k) / 2) 0 0 calc(-1 * var(--hid-k) / 2);border-radius:50%;background:var(--chip-bg);color:var(--chip-ink);box-shadow:var(--chip-shadow);pointer-events:none}
 .pe .page-card .pe-hid svg{width:17px;height:17px}
 .pe .page-card.hid .pe-hid{display:grid}
 .pe .page-card.na{cursor:default}
 .pe .page-card.na canvas{opacity:var(--inactive);filter:grayscale(1)}
 /* the tick: a check in a circle on the page's corner, always showing in Arrange and in every tick tool. A left-out page is dimmed and carries a crossed-eye badge */
-.pe .page-card .tick{top:8px;right:8px;width:22px;height:22px;border:1.5px solid #fff;background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
+.pe .page-card .tick{top:8px;right:8px;width:22px;height:22px;border:1.5px solid var(--paper);background:var(--accent);color:var(--on-dark);box-shadow:var(--chip-shadow);transition:background-color .2s var(--ease-color),border-color .2s var(--ease-color),opacity .25s var(--ease-ui),transform .4s var(--spring-press)}
 .pe .page-card .tick svg{width:12px;height:12px}
-.pe .page-card.off .tick{background:rgba(255,255,255,.88);color:transparent;border-color:rgba(16,20,40,.32)}
+.pe .page-card.off .tick{background:var(--chip-bg);color:transparent;border-color:var(--chip-edge)}
 .pe .pe-grid:not(.ticks) .tick,.pe .page-card.na .tick{opacity:0;transform:scale(.6)}
 /* under each page its place in the video, and the page of the PDF when that differs */
-.pe-foot{display:flex;align-items:center;justify-content:center;gap:6px;min-height:20px;min-width:0}
-.pe-pos{display:grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);font-size:var(--type-note);font-weight:600;font-variant-numeric:tabular-nums}
+.pe-foot{display:flex;align-items:center;justify-content:center;gap:var(--gap-tight);min-height:20px;min-width:0}
+.pe-pos{display:grid;place-items:center;min-width:20px;height:20px;padding:0 var(--gap-tight);border-radius:99px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);font-size:var(--type-note);font-weight:600;font-variant-numeric:tabular-nums}
 .pe-pos:empty{display:none}
 .pe-foot .num{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--type-note);color:var(--muted)}
 .pe-foot .num{max-width:80px}
-.pe-foot .num.same{max-width:0;opacity:0;margin-left:-6px}
+.pe-foot .num.same{max-width:0;opacity:0;margin-left:calc(-1 * var(--gap-tight))}
 .pe-pos i{font-style:normal}
 /* sliding number: the two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends while the digits move */
 .pe-pos.slide{display:block;position:relative;width:var(--slide-w);padding:0;overflow:hidden;color:var(--ink)}
@@ -2008,7 +2016,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}
 .pe-pos .pe-cell + .pe-cell{box-shadow:inset 1px 0 0 color-mix(in srgb,var(--ink) 22%,transparent)}          /* a hairline where the two digits meet, like the edge of a tile; it crosses the pill only while the digits move */
 /* rotate and repeat float on the page while you point at it, in a small frosted bar */
-.pe-tools{position:absolute;left:50%;bottom:8px;display:flex;gap:2px;padding:3px;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
+.pe-tools{position:absolute;left:50%;bottom:8px;display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity .2s var(--ease-ui),transform .35s var(--spring-hover)}
 .pe .pe-grid.arrange .page-card:hover .pe-tools,.pe .pe-grid.arrange .page-card:focus-within .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 @media (hover:none){.pe .pe-grid.arrange .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}}
 /* in Re-kilter and Crop the bar holds one button, on the page's other top corner from the tick: it opens the page large */
@@ -2016,7 +2024,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe .pe-grid.opens .pe-tools{left:8px;top:8px;bottom:auto;transform:translateY(-4px)}
 .pe .pe-grid.opens .page-card:not(.off):not(.na):hover .pe-tools,.pe .pe-grid.opens .page-card:not(.off):not(.na):focus-within .pe-tools{opacity:1;transform:none;pointer-events:auto}
 @media (hover:none){.pe .pe-grid.opens .page-card:not(.off):not(.na) .pe-tools{opacity:1;transform:none;pointer-events:auto}}
-.pe-tools button{display:grid;place-items:center;width:28px;height:26px;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-tools button{display:grid;place-items:center;width:28px;height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-tools button svg{width:14px;height:14px}
 .pe-tools button:hover{background:var(--accent-soft);color:var(--accent)}
 .pe-tools button:not(:disabled):active{transform:scale(.97)}
@@ -2024,21 +2032,21 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
 /* dragging: only the held page moves; a thin line shows where it will land */
 .page-card.pe-ghost{position:fixed;z-index:200;margin:0;pointer-events:none;background:none;transition:none;will-change:transform;transform-origin:50% 50%;cursor:grabbing}
-.page-card.pe-ghost canvas{box-shadow:0 14px 32px rgba(10,14,30,.3)}
+.page-card.pe-ghost canvas{box-shadow:var(--ghost-shadow)}
 .page-card.pe-ghost .tick,.page-card.pe-ghost .pe-tools{display:none}
 .pe .page-card.pe-hole{background:color-mix(in srgb,var(--accent) 8%,transparent);outline:1.5px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-1px}
 .pe .page-card.pe-hole>*{visibility:hidden}
 .pe-grid.pe-dragging .page-card{pointer-events:none;transition:none!important}
-.pe-drop{position:absolute;left:0;top:0;width:3px;border-radius:2px;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 0 10px var(--accent);opacity:0;pointer-events:none;will-change:transform;transition:opacity .12s linear}
+.pe-drop{position:absolute;left:0;top:0;width:3px;border-radius:var(--r-mark);background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 0 10px var(--accent);opacity:0;pointer-events:none;will-change:transform;transition:opacity .12s linear}
 
 /* Crop and Adjust by hand: one page on a soft backdrop, page arrows under it */
 .pe-crop{display:none;flex:1 1 0;min-height:0;flex-direction:column}
 .pe-win.one .pe-crop{display:flex}
 .pe-win.one .pe-grid-wrap{display:none}
-.pe-stage{flex:1 1 0;min-height:0;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,var(--ink) 4%,var(--panel2));overflow:hidden}
+.pe-stage{flex:1 1 0;min-height:0;display:grid;place-items:center;padding:var(--pe-edge);background:color-mix(in srgb,var(--ink) 4%,var(--panel2));overflow:hidden}
 .pe-stage{position:relative;touch-action:none}
 .pe-stage.zoomed{cursor:grab}.pe-stage.zoomed.panning{cursor:grabbing}
-.pe-crop-pg{position:relative;overflow:hidden;background:#fff;border-radius:2px;box-shadow:0 0 0 .5px rgba(16,20,40,.16),0 6px 20px rgba(16,20,40,.16);--z:1;will-change:transform}
+.pe-crop-pg{position:relative;overflow:hidden;background:var(--paper);border-radius:var(--r-mark);box-shadow:var(--page-shadow-lift);--z:1;will-change:transform}
 .pe-crop-pg canvas{transition:opacity .3s var(--ease-ui)}
 .pe-crop-pg.loading canvas{opacity:0}
 .pe-crop-pg .pe-wipe,.pe-crop-pg .pe-side{transition:opacity .3s var(--ease-ui)}
@@ -2046,7 +2054,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-pg.loading::after{content:'';position:absolute;top:0;bottom:0;left:0;width:55%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 9%,transparent) 50%,transparent);will-change:transform;animation:peSweepPg 2.6s linear infinite}
 @keyframes peSweepPg{from{transform:translateX(-100%)}to{transform:translateX(182%)}}          /* the large view's sweep: one band crossing the page, on the compositor (transform only) */
 /* a card that waits for its picture: one wash, and one bright band that sweeps across the whole grid. Every card's band is the same band: --s0 and --s1 place it by where the card sits in the grid, and --sd puts every card on the same clock, so the cards light up in step. Only transform and opacity move */
-.pe-sheen{position:absolute;inset:0;border-radius:4px;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg,#fff))}
+.pe-sheen{position:absolute;inset:0;border-radius:var(--r-paper);overflow:hidden;pointer-events:none;opacity:0;transition:opacity .4s var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg,#fff))}
 .pe-sheen::before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--sb,160px);background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent);transform:translateX(var(--s0,-100%));will-change:transform}
 .pe .page-card.loading .pe-sheen,.pe .page-card.sheen-out .pe-sheen{opacity:1}
 .pe .page-card.loading .pe-sheen::before,.pe .page-card.sheen-out .pe-sheen::before{animation:peSweep 2.6s linear infinite;animation-delay:var(--sd,0s)}
@@ -2056,9 +2064,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.pe .page-card.loading .pe-thumb::after{animation:none}}
 @media (prefers-reduced-motion:reduce){.pe-crop-pg.loading::after{animation:none;opacity:0}}
 /* the back arrow and the zoom buttons float over the stage like the page's own corner button */
-.pe-glass{position:absolute;z-index:4;display:flex;gap:2px;padding:3px;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px rgba(16,20,40,.14)}
+.pe-glass{position:absolute;z-index:4;display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(1.4);backdrop-filter:blur(14px) saturate(1.4);box-shadow:var(--glass-shadow),0 0 0 .5px var(--glass-ring)}
 .pe-back{left:12px;top:12px}.pe-zoom{right:12px;bottom:12px}
-.pe-glass button{display:grid;place-items:center;width:28px;height:26px;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
+.pe-glass button{display:grid;place-items:center;width:28px;height:var(--h-glass);padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color .2s var(--ease-color),color .2s var(--ease-color),transform .14s var(--ease-out)}
 .pe-glass button svg{width:14px;height:14px}
 .pe-glass button:not(:disabled):hover{background:var(--accent-soft);color:var(--accent)}
 .pe-glass button:not(:disabled):active{transform:scale(.97)}
@@ -2070,21 +2078,21 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-pg{--wp:.5}
 #peOneOrig,.pe-wipe{display:none}
 .pe-win.wipe #peOneOrig{display:block;position:absolute;inset:0;clip-path:inset(0 calc(100% - var(--wp)*100%) 0 0)}
-.pe-win.wipe .pe-wipe{display:block;position:absolute;top:0;bottom:0;left:calc(var(--wp)*100%);width:2px;margin-left:-1px;background:var(--accent);cursor:ew-resize;touch-action:none}
+.pe-win.wipe .pe-wipe{display:block;position:absolute;top:0;bottom:0;left:calc(var(--wp)*100%);width:2px;margin-left:calc(-1 * var(--hair));background:var(--accent);cursor:ew-resize;touch-action:none}
 .pe-wipe::before{content:'';position:absolute;inset:0 calc(-14px/var(--z,1))}
-.pe-crop-pg .pe-wipe{width:calc(2px/var(--z,1))!important;margin-left:calc(-1px/var(--z,1))!important}
+.pe-crop-pg .pe-wipe{width:calc(2px/var(--z,1))!important;margin-left:calc(-1 * var(--hair) / var(--z,1))!important}
 .pe-wipe::after{scale:calc(1/var(--z,1))}
 .pe-crop-pg .pe-crop-box{border-width:calc(1.5px/var(--z,1))}
 .pe-crop-box .h{scale:calc(1/var(--z,1))}
-.pe-wipe::after{content:'';position:absolute;left:50%;top:var(--ky,50%);transition:top var(--kt,0s) cubic-bezier(.22,1,.36,1);width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 7-5 5 5 5M15 7l5 5-5 5'/%3E%3C/svg%3E") center/16px no-repeat;box-shadow:0 1px 5px rgba(0,0,0,.3)}
-.pe-wipe:focus-visible{outline:none}.pe-wipe:focus-visible::after{outline:2px solid #fff;outline-offset:1px}
-.pe-side{position:absolute;z-index:3;left:0;top:0;padding:2px 9px;border-radius:999px;background:rgba(10,14,30,.66);color:#fff;font-size:var(--type-note);font-weight:600;--lh:1.5;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui);will-change:transform,opacity}
+.pe-wipe::after{content:'';position:absolute;left:50%;top:var(--ky,50%);transition:top var(--kt,0s) cubic-bezier(.22,1,.36,1);width:var(--wipe-k);height:var(--wipe-k);margin:calc(-1 * var(--wipe-k) / 2) 0 0 calc(-1 * var(--wipe-k) / 2);border-radius:50%;background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 7-5 5 5 5M15 7l5 5-5 5'/%3E%3C/svg%3E") center/16px no-repeat;box-shadow:var(--wipe-shadow)}
+.pe-wipe:focus-visible{outline:none}.pe-wipe:focus-visible::after{outline:2px solid var(--paper);outline-offset:1px}
+.pe-side{position:absolute;z-index:3;left:0;top:0;padding:var(--gap-sub) var(--field-pad-x);border-radius:999px;background:var(--side-bg);color:var(--on-dark);font-size:var(--type-note);font-weight:600;--lh:1.5;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui);will-change:transform,opacity}
 .pe-side.on{opacity:1}
 .pe-stage:has(.pe-crop-pg.loading) .pe-side,.pe-stage:has(.pe-crop-pg.loading) .pe-hint{opacity:0}
 /* what the page needs before its large view says anything: a quiet line at the top, so it is plain why the page looks unchanged */
-.pe-hint{position:absolute;z-index:3;left:50%;top:14px;max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:5px 12px;border-radius:999px;background:rgba(10,14,30,.72);color:#fff;font-size:var(--type-small);font-weight:600;--lh:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
+.pe-hint{position:absolute;z-index:3;left:50%;top:14px;max-width:calc(100% - 120px);transform:translate(-50%,-6px);padding:var(--hint-py) var(--gap-set);border-radius:999px;background:var(--hint-bg);color:var(--on-dark);font-size:var(--type-small);font-weight:600;--lh:1.4;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s var(--ease-ui),transform .4s var(--ease-out)}
 .pe-hint.on{opacity:1;transform:translate(-50%,0)}
-.pe-glass button.txt{width:auto;padding:0 10px;font-size:var(--type-small);font-weight:600}
+.pe-glass button.txt{width:auto;padding:0 var(--gap-card);font-size:var(--type-small);font-weight:600}
 /* a change on the open page: the old picture dims at once, and the new one sweeps in from the left behind a bright edge */
 .pe-crop-pg canvas{transition:opacity .3s var(--ease-ui)}
 .pe-crop-pg.busy canvas{opacity:.6;transition-duration:.14s}
@@ -2093,7 +2101,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.pe-hint{transition:opacity .2s linear}}
 .pe-win[data-mode="skew"] .pe-crop-box,.pe-win[data-mode="clean"] .pe-crop-box{display:none}
 /* the frame: the page outside it dims. In Auto it follows the margin slider; in Manually it grows corner brackets and edge bars you drag */
-.pe-crop-box{position:absolute;border:1.5px solid var(--accent);border-radius:2px;box-shadow:0 0 0 9999px rgba(10,14,30,.42);pointer-events:none;touch-action:none;transform-origin:0 0}
+.pe-crop-box{position:absolute;border:1.5px solid var(--accent);border-radius:var(--r-mark);box-shadow:0 0 0 9999px var(--crop-scrim);pointer-events:none;touch-action:none;transform-origin:0 0}
 .pe-win.hand .pe-crop-box{pointer-events:auto}
 .pe-crop-box>i{position:absolute}
 .pe-crop-box>i[data-h=move]{inset:0;cursor:move}
@@ -2102,9 +2110,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-box .h::after{content:'';position:absolute;inset:-10px}
 .pe-crop-box .nw{left:-1.5px;top:-1.5px;border-width:var(--t) 0 0 var(--t);cursor:nwse-resize;transform-origin:0 0}.pe-crop-box .ne{right:-1.5px;top:-1.5px;border-width:var(--t) var(--t) 0 0;cursor:nesw-resize;transform-origin:100% 0}
 .pe-crop-box .se{right:-1.5px;bottom:-1.5px;border-width:0 var(--t) var(--t) 0;cursor:nwse-resize;transform-origin:100% 100%}.pe-crop-box .sw{left:-1.5px;bottom:-1.5px;border-width:0 0 var(--t) var(--t);cursor:nesw-resize;transform-origin:0 100%}
-.pe-crop-box .n,.pe-crop-box .s{left:50%;width:28px;height:0;margin-left:-14px;border-top-width:var(--t);cursor:ns-resize}.pe-crop-box .n{top:-1.5px}.pe-crop-box .s{bottom:-1.5px}
-.pe-crop-box .e,.pe-crop-box .w{top:50%;width:0;height:28px;margin-top:-14px;border-left-width:var(--t);cursor:ew-resize}.pe-crop-box .w{left:-1.5px}.pe-crop-box .e{right:-1.5px}
-.pe-nav{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:10px;min-height:44px;padding:6px 12px;border-top:1px solid var(--line);font-size:var(--type-body);font-variant-numeric:tabular-nums}
+.pe-crop-box .n,.pe-crop-box .s{left:50%;width:var(--crop-grip);height:0;margin-left:calc(-1 * var(--crop-grip) / 2);border-top-width:var(--t);cursor:ns-resize}.pe-crop-box .n{top:-1.5px}.pe-crop-box .s{bottom:-1.5px}
+.pe-crop-box .e,.pe-crop-box .w{top:50%;width:0;height:var(--crop-grip);margin-top:calc(-1 * var(--crop-grip) / 2);border-left-width:var(--t);cursor:ew-resize}.pe-crop-box .w{left:-1.5px}.pe-crop-box .e{right:-1.5px}
+.pe-nav{flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);align-items:center;gap:var(--gap-card);min-height:44px;padding:var(--gap-tight) var(--gap-set);border-top:1px solid var(--line);font-size:var(--type-body);font-variant-numeric:tabular-nums}
 .pe-nav #peCropName{min-width:104px;text-align:center}
 .pe-nav-a{display:flex;justify-content:flex-start}.pe-nav-b{display:flex;justify-content:flex-end}
 .pe-nav .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
@@ -2116,9 +2124,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-nav .icon-btn svg{width:17px;height:17px}
 
 /* the status bar: how many pages, and Select all / Deselect all as plain text buttons */
-.pe-bar{flex:none;display:flex;align-items:center;gap:2px;min-height:44px;padding:7px 12px 6px 20px;border-top:1px solid var(--line)}
+.pe-bar{flex:none;display:flex;align-items:center;gap:var(--gap-sub);min-height:44px;padding:var(--tab-py) var(--gap-set) var(--gap-tight) var(--pe-edge);border-top:1px solid var(--line)}
 .pe-count{margin-right:auto;font-size:var(--type-body);color:var(--muted);font-variant-numeric:tabular-nums}
-.pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:136px;min-width:0;height:var(--h-s);margin:0 6px 0 8px;padding:0 9px;border-radius:var(--r-sm);font-size:var(--type-body);font-variant-numeric:tabular-nums}
+.pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:136px;min-width:0;height:var(--h-s);margin:0 var(--gap-tight) 0 var(--gap-head);padding:0 var(--field-pad-x);border-radius:var(--r-sm);font-size:var(--type-body);font-variant-numeric:tabular-nums}
 .pe-bar .pe-pages:disabled{opacity:var(--inactive);cursor:not-allowed}
 .pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn{border-color:transparent;background:none;color:var(--accent);box-shadow:none}
@@ -2141,7 +2149,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-cards .ae-card{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .pe-cards .pe-card-text,.pe-cards .pe-card-dir{flex-direction:column;align-items:stretch;justify-content:space-between;gap:var(--gap-set)}          /* two settings per card, each a name over its control: the first name sits on the card's top padding and the last control on its bottom, so both cards are balanced and their rows line up */
 .pe-cards .pe-g,.pe-card-dir .pe-dir{align-items:stretch}
-.pe-cards .pe-g{gap:var(--gap-head)}          /* in a card a name is trimmed to its letters, so a boxed control (text box, choice) sits --gap-head under it: the same space you see under a name in the video panel, where the line's own room under the letters makes up the rest */
+.pe-rzcards{grid-template-columns:minmax(0,1fr) max-content}          /* Re-size: the sizes in one card, a little the longer, and Page shape in another of the same height, its one setting centered */
+.pe-rzcards .ae-card{align-items:center}
+.pe-rzcards .pe-card-sizes{display:block}
 .pe-card-dir .pe-dir .seg{flex:1 1 0;min-width:0}
 .pe-row input[type=text]:focus-visible,.pe-row input[type=number]:focus-visible{outline:none;border-color:var(--accent)}          /* a field you type in shows its edge in the accent, not a ring */
 @container pedlg (min-width:729px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}          /* four cards to a row while the cards sit beside Page shape; narrower, they flow two to a row */
@@ -2173,12 +2183,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-bar{padding-left:var(--gap-field)}
   .pe-bar .pe-pages{width:calc(var(--h-s) * 3.2);margin:0 var(--gap-sub) 0 var(--gap-label)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
-    .pe-rzr{flex-wrap:wrap;margin-left:0}
 }
 @container pedlg (max-width:560px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:368px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}}
 
-.pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;--lh:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
+.pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:var(--gap-sub) var(--tab-py);border-radius:999px;background:var(--accent);color:var(--on-dark);font-size:var(--scale-fs);font-weight:600;--lh:1.4;box-shadow:var(--chip-shadow);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
 .pe-win[data-mode="crop"] .page-card.cropped .pe-lvl{opacity:1;transform:none}
 
@@ -2379,16 +2388,16 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-dim-layer[hidden]{display:none}
 .pe-win:not([data-mode="dim"]) .pe-dim-layer{display:none}
 .pe-win[data-mode="dim"] #peCropBox{display:none}
-.pe-dimbox{pointer-events:auto;box-shadow:none;background:rgba(255,255,255,.62);--hs:16px}
+.pe-dimbox{pointer-events:auto;box-shadow:none;background:var(--dim-fill);--hs:16px}
 .pe-dimbox .h.nw,.pe-dimbox .h.ne,.pe-dimbox .h.se,.pe-dimbox .h.sw{width:var(--hs);height:var(--hs)}
 .pe-dimbox .h.n,.pe-dimbox .h.s{width:var(--hl,28px);margin-left:calc(var(--hl,28px)/-2)}
 .pe-dimbox .h.e,.pe-dimbox .h.w{height:var(--hl,28px);margin-top:calc(var(--hl,28px)/-2)}
 .pe-dimbox.sel .h{opacity:1;transform:none}
 .pe-crop-pg .pe-dimbox{border-width:calc(1.5px/var(--z,1))}
-.pe-dimx{position:absolute;left:50%;top:50%;width:var(--dz,22px);height:var(--dz,22px);margin:calc(var(--dz,22px)/-2) 0 0 calc(var(--dz,22px)/-2);padding:0;border:0;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.28);scale:calc(1/var(--z,1));transition:transform .25s var(--spring-press)}
+.pe-dimx{position:absolute;left:50%;top:50%;width:var(--dz,22px);height:var(--dz,22px);margin:calc(var(--dz,22px)/-2) 0 0 calc(var(--dz,22px)/-2);padding:0;border:0;border-radius:50%;background:var(--accent);color:var(--on-dark);display:grid;place-items:center;cursor:pointer;box-shadow:var(--chip-shadow);scale:calc(1/var(--z,1));transition:transform .25s var(--spring-press)}
 .pe-dimx svg{width:62%;height:62%}
 @media (hover:hover){.pe-dimx:hover{transform:scale(1.1)}}
-.pe-dimx:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.pe-dimx:focus-visible{outline:2px solid var(--paper);outline-offset:1px}
 .pe-win[data-mode="dim"] .pe-tools{z-index:3}          /* the Open button stays above the drawing layer */
 
 /* the start and end glide: no scroll bar flickers in while the axis is wider than the window */
@@ -2484,7 +2493,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   --trim-t:var(--cut-t);--trim-b:var(--cut-b);          /* --cut is always the metrics' trim, for text the browser cannot trim (a label that is a flex box holds its text in a box of no name) */
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
-:is(#audioDlg,#pdfDlg) .ae-card :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+:is(#audioDlg,#pdfDlg) :is(.ae-card,.pe-row) :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 #audioDlg .ae-card .lv-big{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a big number is trimmed to its letters like any text */
 #audioDlg .ae-card>.lv-big{margin-block:auto 0;position:relative;top:calc((var(--trim-t) - var(--trim-b)) / 2)}          /* a big value that is a card's own part (Gain) is centered between the heading and the slider: the spare room is split evenly between its top and the slider's top (the card's last part already takes the rest), so there is equal room above and below its letters. Where the browser cannot trim text, the box has the font's spare room, which top gives back */
 #audioDlg .ae-card .eq-lbl{height:var(--line-s);line-height:var(--line-s);margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */

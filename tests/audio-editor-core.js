@@ -13,7 +13,7 @@ const ok = (name, pass, info = '') => { results.push((pass ? 'PASS ' : 'FAIL ') 
     await p.setInputFiles('#audioIn', file);
     await p.waitForFunction(() => typeof S !== 'undefined' && S.audio && S.audio.buffer, null, { timeout: 30000 });
     await p.waitForTimeout(400);
-    return p.evaluate(() => (document.querySelector('.toast') || { textContent: '' }).textContent);
+    return p.evaluate(() => (document.querySelector('#toast') || { textContent: '' }).textContent);
   };
   const MSG = 'Part of this file was clipped';
 

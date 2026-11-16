@@ -61,7 +61,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol * Math.max(1, Math.abs(a), Ma
 
   // 4: what is not on the store yet says so
   await d.evaluate(() => { aeToggleBypass(); }); await d.click('#aeView >> text=Spec'); await d.waitForTimeout(300);
-  const g1 = await d.evaluate(() => ({ view: AE.view, toast: (document.querySelector('.toast') || {}).textContent }));
+  const g1 = await d.evaluate(() => ({ view: AE.view, toast: (document.querySelector('#toast') || {}).textContent }));
   ok('the spectrogram opens for a stored recording (the full comparison is audio-editor-spec-disk.js)', g1.view === 'spec', g1.view);
   await d.evaluate(() => { window.saveFile = async (blob, name) => { window.__saved = { name, size: blob.size }; }; S.set.audioFormat = 'wav24'; aeExport(); }); await d.waitForFunction(() => window.__saved, null, { timeout: 20000 });
   ok('export writes a file from the store (the full comparison is audio-editor-export-disk.js)', await d.evaluate(() => /Audio\.wav$/.test(__saved.name) && __saved.size > 1e6), JSON.stringify(await d.evaluate(() => __saved)));

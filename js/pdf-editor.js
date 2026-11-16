@@ -61,7 +61,7 @@ function rzRefresh() {
   const sh = rzShown(), cur = sh ? sizeDims(sh, S.pdf.aspect0) : [S.pdf.pw / 72, S.pdf.ph / 72], orig = !sh;
   const sel = orig ? 'orig' : (RZ_PRESETS.find(q => Math.abs(Math.min(q.w, q.h) - Math.min(sh.w, sh.h)) < 0.005 && Math.abs(Math.max(q.w, q.h) - Math.max(sh.w, sh.h)) < 0.005) || { k: 'custom' }).k;
   if (!grid.children.length) {
-    const opt = (k, n, sub) => k === 'custom' ? '<div class="btn small rz-opt cu" data-k="custom" role="button" tabindex="0" aria-pressed="false"><span class="cu-in"><b class="cu-word">' + n + '</b><span class="cu-field" inert><input type="text" id="peRzW" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="5" aria-label="Width in inches"><span class="cu-unit" aria-hidden="true">×</span><input type="text" id="peRzH" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="5" aria-label="Height in inches"><span class="cu-unit">in</span></span></span></div>' : '<button type="button" class="btn small rz-opt" data-k="' + k + '" aria-pressed="false"><b>' + n + '</b><small>' + sub + '</small></button>';          // Custom is not a button: it holds the two blanks to type in
+    const opt = (k, n, sub) => k === 'custom' ? '<div class="btn small rz-opt cu" data-k="custom" role="button" tabindex="0" aria-pressed="false"><span class="cu-in"><b class="cu-word">' + n + '</b><span class="cu-field" inert><input type="text" id="peRzW" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="4" aria-label="Width in inches"><span class="cu-unit" aria-hidden="true">×</span><input type="text" id="peRzH" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="4" aria-label="Height in inches"><span class="cu-unit">in</span></span></span></div>' : '<button type="button" class="btn small rz-opt" data-k="' + k + '" aria-pressed="false"><b>' + n + '</b><small>' + sub + '</small></button>';          // Custom is not a button: it holds the two blanks to type in
     grid.innerHTML = opt('orig', 'Original', '') + RZ_PRESETS.map(q => opt(q.k, q.n, rzNum(q.w) + ' × ' + rzNum(q.h))).join('') + opt('custom', 'Custom', '');
   }
   const nat = rzNum(S.pdf.pw / 72) + ' × ' + rzNum(S.pdf.ph / 72); grid.querySelector('[data-k=orig] small').textContent = nat;
@@ -1334,9 +1334,9 @@ function peBind() {
     const cu = e.target.closest('.rz-opt.cu'); if (!cu || (e.relatedTarget && cu.contains(e.relatedTarget))) return;
     setTimeout(() => { if (!PE.d || cu.contains(document.activeElement)) return; PE.rzCustom = false; rzRefresh(); }, 0);
   });
-  const rzApply = e => { const t = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); if (t !== e.target.value) e.target.value = t;
+  const rzApply = e => { const t = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1').replace(/^(\d{2})\d+/, '$1').replace(/(\.\d).*/, '$1'); if (t !== e.target.value) e.target.value = t;
     const w = parseFloat($('#peRzW').value), h = parseFloat($('#peRzH').value);
-    if (w >= 2 && w <= 60 && h >= 2 && h <= 60) { PE.rzMem = { w: Math.round(w * 100) / 100, h: Math.round(h * 100) / 100 }; rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); } else { PE.rzPend = undefined; peActs(); } };
+    if (w >= 2 && w <= 60 && h >= 2 && h <= 60) { PE.rzMem = { w: Math.round(w * 10) / 10, h: Math.round(h * 10) / 10 }; rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); } else { PE.rzPend = undefined; peActs(); } };
   $('#peRzShape').addEventListener('change', e => { if (e.target.name === 'peRzOr') rzPickShape(e.target.value === 'each'); });
   $('#peRzGo').addEventListener('click', () => { if (!$('#peRzGo').disabled) peSetSize(rzShown(), rzEach()); });
   $('#peRzGrid').addEventListener('input', e => { if (e.target.closest('.cu-field')) rzApply(e); });          // the blanks are built with the size cards, so they are listened to through the grid

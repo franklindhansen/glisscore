@@ -11,7 +11,7 @@ const K = '__keyframes';
   await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', pdf);
   await p.waitForFunction(K => window[K].S.pdf && window[K].duration() > 2, K, { timeout: 60000 }); await p.waitForTimeout(500);
   const near = (a, b) => Math.abs(a - b) < 0.02;
-  const read = () => p.evaluate(K => { const k = window[K]; return { turns: k.S.turns.slice(), ph: k.S.ph.slice(), n: k.S.history.length, ve: k.vEnd(), ce: k.S.creditsEnd, dis: document.querySelector('#bToEnd').disabled, tip: document.querySelector('#bToEnd').title, hint: document.querySelector('#tlHint').textContent, toast: (document.querySelector('.toast, #toast') || {}).textContent || '' }; }, K);
+  const read = () => p.evaluate(K => { const k = window[K]; return { turns: k.S.turns.slice(), ph: k.S.ph.slice(), n: k.S.history.length, ve: k.vEnd(), ce: k.S.creditsEnd, dis: document.querySelector('#bToEnd').disabled, tip: document.querySelector('#bToEnd').title, hint: document.querySelector('#tlHint').textContent, toast: (document.querySelector('#toast') || {}).textContent || '' }; }, K);
   const setup = (turns, ph, time) => p.evaluate(([K, turns, ph, time]) => { const k = window[K]; k.S.turns = turns.slice(); k.S.ph = ph.slice(); k.S.history.length = 0; k.S.time = time; k.onTurnsChanged(); }, [K, turns, ph, time]);
   const press = async () => { await p.click('#bToEnd'); await p.waitForTimeout(150); };
   const r0 = await read(); const n = r0.turns.length, vs = await p.evaluate(K => window[K].S.vStart, K);
