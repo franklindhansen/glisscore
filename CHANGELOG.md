@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.19
+
+Re-size shows its page sizes and Page shape in two cards, and the Custom blanks now fit what you type. The PDF Editor's settings have even space above and below.
+
 ## 1.2.18
 
 Watermark is laid out like the Audio Editor, and Custom direction and Custom size now turn their word into a blank you type in.
