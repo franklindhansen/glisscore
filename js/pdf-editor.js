@@ -47,7 +47,7 @@ function openPdfEditor() {
   document.querySelectorAll('input[name=peCropMode]').forEach(r => { r.checked = r.value === 'auto'; });
   document.querySelectorAll('#peBand .pe-tv').forEach(v => { v.hidden = v.dataset.tool !== 'pages'; v.classList.remove('sliding'); });
   sheetShow($('#pdfDlg')); peRender(false); peTopFit(); $('#peDone').focus({ preventScroll: true });
-  if (!PE.fitBound) { PE.fitBound = true; let t = 0; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (PE.d) { peTopFit(); peRailSel(false); } }, 120); }); window.addEventListener('resize', () => { if (PE.d && PE.one != null) peOneFit(); }); }
+  if (!PE.fitBound) { PE.fitBound = true; let t = 0; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => { if (PE.d) { peTopFit(); peRailSel(false); peState(); } }, 120); }); window.addEventListener('resize', () => { if (PE.d && PE.one != null) peOneFit(); }); }  // peState: the bar's count is worded by the window's width (short on a phone), so it is worded again on resize
   edIntro('pe');
 }
 /* Resize is a tool too: pick a size and the whole document changes at once (pages are scaled up as far as they fit, never cut off). */
@@ -246,7 +246,7 @@ function peAddWhy(e, which) {
   return 'Could not add pages.';
 }
 async function peAdd(kind, file) {
-  const d = PE.d, L = await loadPdfLib().catch(() => null); if (!L) { peSay('#peAddStatus', 'Could not load the PDF tools. Reload the page and try again.', true); return; }
+  const d = PE.d, L = await loadPdfLib().catch(() => null); if (!L) { peSay('#peAddStatus', 'Couldn’t load the PDF tools. Reload and try again.', true); return; }
   peLock(true); peSay('#peAddStatus', kind === 'pdf' ? 'Adding pages…' : ''); PE.adding = kind === 'pdf'; peProg('#peAddGo', 0);
   try {
     const { PDFDocument } = L, base = await PDFDocument.load(new Uint8Array(await S.pdf.file.arrayBuffer()), { ignoreEncryption: true }), n0 = S.pdf.n; let added = 0; peProg('#peAddGo', 25);

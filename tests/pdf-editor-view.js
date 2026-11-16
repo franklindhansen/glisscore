@@ -75,7 +75,7 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); const e = document.querySelector('#peCropPad'); e.value = 4; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await p.waitForTimeout(400);
   const n3 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), text: document.querySelector('#peCropSub').textContent, box: peCropBox(PE.d.order[0]).box.map(v => +v.toFixed(3)) }));
-  ok('Music that fills the page: the note takes the subtitle line and says the margin has no room', !n3.hidden && /no room to add margin/i.test(n3.text) , JSON.stringify(n3));
+  ok('Music that fills the page: the note takes the subtitle line and says the margin has no room', !n3.hidden && /no margin to add/i.test(n3.text) , JSON.stringify(n3));
   // a big move: 60 pages, every order reversed, timed from the start of the render (the numbers and cards start together)
   await p.evaluate(() => closePdfEditor(false));
   const D = await makePdf('kf-view-d.pdf', 80, 530, 60);

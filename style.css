@@ -2148,19 +2148,22 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-cards .ae-card{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .pe-cards .pe-card-text,.pe-cards .pe-card-dir{flex-direction:column;align-items:stretch;justify-content:space-between;gap:var(--gap-set)}          /* two settings per card, each a name over its control: the first name sits on the card's top padding and the last control on its bottom, so both cards are balanced and their rows line up */
 .pe-cards .pe-g,.pe-card-dir .pe-dir{align-items:stretch}
-.pe-rzcards{grid-template-columns:minmax(0,1fr) max-content}          /* Re-size: the sizes in one card, a little the longer, and Page shape in another of the same height, its one setting centered */
+.pe-rzcards{container:rzcards/inline-size;grid-template-columns:minmax(0,1fr) max-content}          /* Re-size: the sizes in one card, a little the longer, and Page shape in another of the same height, its one setting centered */
 .pe-rzcards .ae-card{align-items:center}
 .pe-rzcards .pe-card-sizes{display:block}
 .pe-card-dir .pe-dir .seg{flex:1 1 0;min-width:0}
 .pe-row input[type=text]:focus-visible,.pe-row input[type=number]:focus-visible{outline:none;border-color:var(--accent)}          /* a field you type in shows its edge in the accent, not a ring */
-@container pedlg (min-width:729px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}          /* four cards to a row while the cards sit beside Page shape; narrower, they flow two to a row */
+@container rzcards (min-width:644px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}
+@container rzcards (max-width:643px){.pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container rzcards (max-width:311px){.pe-rz .pe-card-sizes .rz-grid{grid-template-columns:minmax(0,1fr)}.pe-rz .rz-opt:nth-child(n){grid-row:auto}}          /* one to a row once two no longer fit side by side with their sizes */          /* four sizes to a row while they and Page shape fit side by side (measured: the sizes need 490px and Page shape 137px, with 10px between); narrower, they flow two to a row */
+          /* four cards to a row while the cards sit beside Page shape; narrower, they flow two to a row */
 .pe-win.waiting .pe-grid{opacity:var(--inactive)}
 .pe-win.waiting .pe-grid .page-card{pointer-events:none}
 .pe-grid{transition:opacity .3s var(--ease-ui)}
 .pe-toast{position:absolute;left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);z-index:2;pointer-events:none;text-align:center}
 .pe-toast.show{transform:translate(-50%,-50%)}
 #pdfDlg{container:pedlg/inline-size}
-@container pedlg (max-width:868px){
+@container pedlg (max-width:744px){
   .pe-main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--gap-set)}
   .pe-rail{padding:0}          /* the tool list becomes a drop-down, as the Audio Editor's does: the same bar, chevron, and glide */
   .pe-rail-cur{display:flex;align-items:center;gap:var(--gap-card);width:100%;padding:var(--gap-set);border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
@@ -2189,8 +2192,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-bar .pe-pages{width:calc(var(--h-s) * 3.2);margin:0 var(--gap-sub) 0 var(--gap-label)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
 }
-@container pedlg (max-width:560px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
-@container pedlg (max-width:368px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
+@container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
+@container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
 
 .pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:var(--gap-sub) var(--tab-py);border-radius:999px;background:var(--accent);color:var(--on-dark);font-size:var(--scale-fs);font-weight:600;--lh:1.4;box-shadow:var(--chip-shadow);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
