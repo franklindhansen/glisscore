@@ -38,7 +38,7 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
     ok('Own frames: ArrowRight returns to page 2 and its frame is still there', (await page(p)) === 'Page 2 of 4' && near(b2, b1, 0.02), JSON.stringify({ b2, b1 }));
     await p.click('#peCropNext'); await p.click('#peCropNext'); await p.waitForTimeout(400); const end = await p.evaluate(() => ({ next: $('#peCropNext').disabled, name: $('#peCropName').textContent }));
     ok('Own frames: the arrow buttons stop at the last page', end.next && end.name === 'Page 4 of 4', JSON.stringify(end));
-    const go = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent, pad: $('#peCropPad').disabled })); ok('Own frames: Crop stays free while stepping during the read', !go.off && go.text === 'Crop', JSON.stringify(go));
+    const go = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent, pad: $('#peCropPad').disabled })); ok('Own frames: Crop stays free while stepping during the read', !go.off && go.text === 'Apply', JSON.stringify(go));
     await settle(p); const cr = await crops(p);
     ok('Own frames: pages 1 and 2 keep their dragged frames after the read ends (Crop not pressed yet)', cr.every(c => c === null), JSON.stringify(cr));
     await p.click('#peCropPrev'); await p.click('#peCropPrev'); await p.click('#peCropPrev'); await p.waitForTimeout(500); const a3 = await frame(p); ok('Own frames: after the read, page 1 still shows its dragged frame', near(a3, a1, 0.02), JSON.stringify({ a3, a1 }));
@@ -52,13 +52,14 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
     const on = await p.evaluate(() => $('#peCropApply').disabled); await p.click('#peCropApply'); await p.waitForTimeout(900); const cr = await crops(p);
     ok('Apply to selected: greyed out until a page is ticked, then crops the open page and the ticked pages with its frame, and no other', off && !on && near(cr[0], a1, 0.03) && near(cr[1], a1, 0.03) && near(cr[2], a1, 0.03) && cr[3] === null, JSON.stringify({ off, on, cr, a1 }));
     await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Apply to selected: page 2 shows the copied frame', (await page(p)) === 'Page 2 of 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
-    await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr2 = await crops(p);
-    ok('Crop in Manual crops the open page too and leaves the rest', near(cr2[1], a1, 0.03) && cr2[3] === null, JSON.stringify({ cr2, a1 })); await p.close(); }
+    // old: Crop in Manual then cropped the open page too; new: the open page already has the copied frame, so the button reads Applied and pressing it takes that crop off
+    const pr = await p.evaluate(() => $('#peCropAuto').getAttribute('aria-pressed') === 'true'); await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr2 = await crops(p);
+    ok('Manual: with the open page already cropped the button reads Applied, and pressing it takes the crops off', pr && cr2.every(c => c === null), JSON.stringify({ pr, cr2, a1 })); await p.close(); }
 
   // 3. Crop pressed in Manual while the read is still going and only page 1 was given a frame: it crops that page at once and no other
   { const p = await fresh(); await hand(p); await drag(p, -70, -90); const a1 = await frame(p);
     await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(700);
     const w = await p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading') })); const cr = await crops(p);
-    ok('Crop with one framed page, read still going: no waiting, and only that page is cropped', !w.loading && w.text === 'Crop' && near(cr[0], a1, 0.03) && cr.slice(1).every(c => c === null), JSON.stringify({ w, cr, a1 })); await p.close(); }
+    ok('Crop with one framed page, read still going: no waiting, and only that page is cropped', !w.loading && w.text === 'Applied' && near(cr[0], a1, 0.03) && cr.slice(1).every(c => c === null), JSON.stringify({ w, cr, a1 })); await p.close(); }
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

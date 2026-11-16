@@ -14,7 +14,7 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   // Clean
   await tool('clean');
   let s = await st('#peCleanStatus');
-  ok('Clean: Revert greyed out has a tooltip and no status line', await dis('#peCleanClear') && !await dis('#peCleanGo') && s.t === '' && !s.err && /nothing to revert/i.test(await p.evaluate(() => $('#peCleanClear').title)), JSON.stringify(s));
+  ok('Clean: nothing to say at first, no status line', !await dis('#peCleanGo') && s.t === '' && !s.err, JSON.stringify(s));
   await skipAll(true); s = await st('#peCleanStatus');
   ok('Clean: no page ticked says so', await dis('#peCleanGo') && /tick a page/i.test(s.t), JSON.stringify(s));
   await skipAll(false); s = await st('#peCleanStatus');
@@ -22,20 +22,20 @@ async function mk() { const d = await PDFDocument.create(); for (let i = 0; i < 
   await p.evaluate(() => { PE.cl.bg = 0; PE.cl.sp = 0; peActs(); }); s = await st('#peCleanStatus');
   ok('Clean: neither Paper nor Specks chosen says so', await dis('#peCleanGo') && /paper or specks/i.test(s.t), JSON.stringify(s));
   await p.evaluate(() => { PE.cl.bg = 1; PE.cl.sp = 1; PE.d.order.forEach(id => { PE.d.slots[id].bg = 1; PE.d.slots[id].sp = 1; }); peActs(); }); s = await st('#peCleanStatus');
-  ok('Clean: pages already cleaned this way says so in a tooltip, not on the status line', await dis('#peCleanGo') && s.t === '' && /already/i.test(await p.evaluate(() => $('#peCleanGo').title)), JSON.stringify(s));
+  ok('Clean: pages already cleaned this way show Applied, with no status line', !await dis('#peCleanGo') && s.t === '' && await p.evaluate(() => $('#peCleanGo').getAttribute('aria-pressed') === 'true' && $('#peCleanGo').textContent === 'Applied'), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].bg = 0; PE.d.slots[id].sp = 0; }); peActs(); });
   // Crop
   await tool('crop'); await skipAll(true); s = await st('#peCropStatus');
   ok('Crop: no page ticked says so', await dis('#peCropAuto') && /tick a page/i.test(s.t), JSON.stringify(s));
   await skipAll(false); await p.evaluate(() => { PE.d.order.forEach(id => PE.raw.set(peRawKey(PE.d.slots[id]), [0.2, 0.2, 0.8, 0.5])); peActs(); }); s = await st('#peCropStatus');
   ok('Crop: ticking a page takes the Crop reason away', !await dis('#peCropAuto') && !/tick a page/i.test(s.t), JSON.stringify(s));
-  ok('Crop: Revert greyed out has a tooltip and no status line', await dis('#peCropClear') && s.t === '' && /nothing to revert/i.test(await p.evaluate(() => $('#peCropClear').title)), JSON.stringify(s));
+  ok('Crop: no status line when the button is ready', s.t === '', JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = peRound(peCropBox(id).box); }); peActs(); }); s = await st('#peCropStatus');
-  ok('Crop: every ticked page already cropped says so in a tooltip, not on the status line', await dis('#peCropAuto') && s.t === '' && /already cropped/i.test(await p.evaluate(() => $('#peCropAuto').title)), JSON.stringify(s));
+  ok('Crop: every ticked page already cropped shows Applied, with no status line', s.t === '' && await p.evaluate(() => $('#peCropAuto').getAttribute('aria-pressed') === 'true'), JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => { PE.d.slots[id].crop = null; }); peActs(); });
   // Re-kilter and Re-size
   await tool('skew'); await skipAll(true); s = await st('#peSkewStatus');
-  ok('Re-kilter: no page ticked says "Tick a page first." on the status line, and a greyed Revert has its tooltip', await dis('#peSkewGo') && /tick a page/i.test(s.t) && await dis('#peSkewClear') && /nothing to revert/i.test(await p.evaluate(() => $('#peSkewClear').title)), JSON.stringify(s));
+  ok('Re-kilter: no page ticked says "Tick a page first." on the status line, ', await dis('#peSkewGo') && /tick a page/i.test(s.t), JSON.stringify(s));
   await skipAll(false); s = await st('#peSkewStatus'); ok('Re-kilter: ticking a page takes the reason away', !await dis('#peSkewGo') && s.t === '', JSON.stringify(s));
   await p.evaluate(() => { PE.d.order.forEach(id => PE.skewSeen.set(id, peSkewKey(PE.d.slots[id]))); peActs(); }); s = await st('#peSkewStatus');
   ok('Re-kilter: pages already tried say "Already level." in a tooltip, not on the status line', await dis('#peSkewGo') && s.t === '' && /already level/i.test(await p.evaluate(() => $('#peSkewGo').title)), JSON.stringify(s));

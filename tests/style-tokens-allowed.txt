@@ -42,24 +42,15 @@ pdf spacing .dlg.editor.pe {padding}
 pdf spacing .pe .page-card .pe-hid {margin}
 pdf spacing .pe .page-card {gap}
 pdf spacing .pe .page-card {padding}
-pdf spacing .pe .pe-notice svg {margin-top}
-pdf spacing .pe .pe-notice {gap}
-pdf spacing .pe .pe-notice {margin}
-pdf spacing .pe .pe-notice {padding}
-pdf spacing .pe-acts {gap}
 pdf spacing .pe-bar .pe-pages {margin}
 pdf spacing .pe-bar .pe-pages {padding}
 pdf spacing .pe-bar {gap}
 pdf spacing .pe-bar {padding}
-pdf spacing .pe-check {gap}
-pdf spacing .pe-cmode label {padding}
 pdf spacing .pe-crop-box .e {margin-top}
 pdf spacing .pe-crop-box .n {margin-left}
 pdf spacing .pe-crop-box .s {margin-left}
 pdf spacing .pe-crop-box .w {margin-top}
 pdf spacing .pe-crop-pg .pe-wipe {margin-left}
-pdf spacing .pe-deg {gap}
-pdf spacing .pe-dir {gap}
 pdf spacing .pe-foot .num.same {margin-left}
 pdf spacing .pe-foot {gap}
 pdf spacing .pe-glass button.txt {padding}
@@ -72,63 +63,20 @@ pdf spacing .pe-lvl {padding}
 pdf spacing .pe-main {gap}
 pdf spacing .pe-nav {gap}
 pdf spacing .pe-nav {padding}
-pdf spacing .pe-og {gap}
-pdf spacing .pe-opts {gap}
-pdf spacing .pe-opts {margin-top}
-pdf spacing .pe-phead {gap}
 pdf spacing .pe-pos {padding}
 pdf spacing .pe-rail {padding}
 pdf spacing .pe-rail-h {margin}
 pdf spacing .pe-rail-in {gap}
-pdf spacing .pe-range {gap}
-pdf spacing .pe-rz .rz-custom {gap}
-pdf spacing .pe-rz .rz-grid {gap}
-pdf spacing .pe-rz .rz-grid {margin-top}
-pdf spacing .pe-rz .rz-opt {gap}
-pdf spacing .pe-rz .rz-opt {padding}
-pdf spacing .pe-rz .rz-shapes {margin-top}
-pdf spacing .pe-rz .rz-tick {margin-top}
 pdf spacing .pe-sel+.pe-rail-h {margin-top}
 pdf spacing .pe-side {padding}
 pdf spacing .pe-stage {padding}
-pdf spacing .pe-step {gap}
-pdf spacing .pe-steps .seg label {padding}
-pdf spacing .pe-steps {gap}
-pdf spacing .pe-steps {margin-top}
 pdf spacing .pe-tab {gap}
 pdf spacing .pe-tab {padding}
 pdf spacing .pe-tools {gap}
 pdf spacing .pe-tools {padding}
-pdf spacing .pe-tv {padding}
 pdf spacing .pe-win.wipe .pe-wipe {margin-left}
 pdf spacing .pe-wipe::after {margin}
-pdf spacing .pe-wm-grid .line-style {gap}
-pdf spacing .pe-wm-grid .seg label {padding}
-pdf spacing .pe-wm-grid {gap}
-pdf spacing .pe-wm-grid {margin-top}
-pdf spacing @media (max-width:400px) .pe-bar .btn.small {padding-left}
-pdf spacing @media (max-width:400px) .pe-bar .btn.small {padding-right}
-pdf spacing @media (max-width:400px) .pe-bar .pe-pages {margin}
-pdf spacing @media (max-width:400px) .pe-bar .pe-pages {padding}
-pdf spacing @media (max-width:400px) .pe-bar {padding-right}
-pdf spacing @media (max-width:760px) .pe-bar .pe-pages {margin}
-pdf spacing @media (max-width:760px) .pe-bar {padding-left}
-pdf spacing @media (max-width:760px) .pe-cmode label {padding}
-pdf spacing @media (max-width:760px) .pe-grid {gap}
-pdf spacing @media (max-width:760px) .pe-grid-wrap {padding}
-pdf spacing @media (max-width:760px) .pe-opts {gap}
-pdf spacing @media (max-width:760px) .pe-phead {gap}
-pdf spacing @media (max-width:760px) .pe-stage {padding}
-pdf spacing @media (max-width:760px) .pe-steps {gap}
-pdf spacing @media (max-width:760px) .pe-tv {padding}
-pdf spacing @media (max-width:900px) .pe-main {gap}
-pdf spacing @media (max-width:900px) .pe-rail {padding}
-pdf spacing @media (max-width:900px) .pe-rail-in {gap}
-pdf spacing @media (max-width:900px) .pe-tab {gap}
-pdf spacing @media (max-width:900px) .pe-tab {padding}
 pdf type .pe-lvl {font-size}
-pdf type .pe-rz .rz-now {font-size}
-pdf type .pe-wm-grid .pe-fmt i {font-size}
 video color .app.fs .stage-wrap {background}
 video color .app.fs .timeline::before {background}
 video color .app.fs .transport .btn {background}

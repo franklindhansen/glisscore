@@ -128,7 +128,7 @@ exports.lines = function (ctx) {
   }
   // shared left and right lines: cards that stand in one row start on the window's left line and end on its right line
   if (cards.length) {
-    const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), ps = getComputedStyle(pane), pr = R(pane);
+    const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), lineEl = (SEL.line && document.querySelector(SEL.line)) || pane, ps = getComputedStyle(lineEl), pr = R(lineEl);          // the tool window's lines: the pane's content box, or (for an editor whose pane has no padding) the content box of the element named by ctx.sel.line
     const wl = pr.left + parseFloat(ps.borderLeftWidth) + parseFloat(ps.paddingLeft), wr = pr.right - parseFloat(ps.borderRightWidth) - parseFloat(ps.paddingRight);
     chk('left-line', name(pane), near(L, wl), 'the cards start at ' + f(L) + ', the tool window\'s left line is ' + f(wl));
     chk('right-line', name(pane), near(Rt, wr), 'the cards end at ' + f(Rt) + ', the tool window\'s right line is ' + f(wr));

@@ -1,5 +1,5 @@
 // Dim: a box drawn on a page fades the music under it. No ticks and no switch; the box updates live as it is drawn; each edge moves only its own side; a round X at the center deletes it;
-// Revert clears every page in one History step (greyed with a tooltip when there is nothing to revert); the count sits in the bar; a repeated page keeps its boxes, edited on its own;
+// Dim has no Revert button (Undo and History step back); the count sits in the bar; a repeated page keeps its boxes, edited on its own;
 // the boxes are in the recipe (History, settings list) and are drawn in the page pictures and the exported PDF, in any order with the other tools.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-dim.js
 const { chromium } = require('playwright-core');
@@ -13,17 +13,17 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   ok('Dim sits directly above Split spreads', order.indexOf('dim') > 0 && order[order.indexOf('dim') + 1] === 'split', order.join());
   await p.click('#peRail .pe-tab[data-tool=dim]'); await p.waitForTimeout(700);
   const st = () => p.evaluate(() => ({ n: PE.d.order.length, dims: PE.d.order.map(id => PE.d.slots[id].dim ? PE.d.slots[id].dim.length : 0), boxes: document.querySelectorAll('#peGrid .pe-dimbox').length, chips: document.querySelectorAll('#peGrid .page-card.lvl').length,
-    count: document.querySelector('#peCount').textContent, revert: document.querySelector('#peDimClear').disabled, tip: document.querySelector('#peDimClear').title, status: document.querySelector('#peDimStatus').textContent, undo: PE.undo.length,
+    count: document.querySelector('#peCount').textContent, status: document.querySelector('#peDimStatus').textContent, undo: PE.undo.length,
     all: getComputedStyle(document.querySelector('#peAll')).display, ticks: document.querySelectorAll('#peGrid.ticks').length, title: document.querySelector('#peViewDim h3').textContent, sub: document.querySelector('#peViewDim .pe-sub').textContent }));
   const s0 = await st();
-  ok('before any box: nothing is dimmed, no chip, Revert greyed with a tooltip and no status line, no ticks or Select all', s0.boxes === 0 && s0.chips === 0 && s0.revert && s0.tip === 'Nothing to revert.' && s0.status === '' && s0.all === 'none' && !s0.ticks && /pages dimmed/.test(s0.count) && s0.count.startsWith('0 /'), JSON.stringify(s0));
-  ok('the head says what Dim does', s0.title === 'Dim' && s0.sub === 'Visually soften music before or after a repeat.', s0.sub);
+  ok('before any box: nothing is dimmed, no chip, no status line, no ticks or Select all', s0.boxes === 0 && s0.chips === 0 && s0.status === '' && s0.all === 'none' && !s0.ticks && /pages dimmed/.test(s0.count) && s0.count.startsWith('0 /'), JSON.stringify(s0));
+  ok('the head says what Dim does', s0.title === 'Dim' && s0.sub === 'Soften the music before or after a repeat.', s0.sub);
   const rect = sel => p.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; }, sel);
   const c1 = await rect('#peGrid .page-card:nth-child(1) .pe-thumb');
   await p.mouse.move(c1.x + c1.w * .2, c1.y + c1.h * .25); await p.mouse.down(); await p.mouse.move(c1.x + c1.w * .6, c1.y + c1.h * .55, { steps: 6 });
   const live = await st(); ok('the box appears while the pointer is still down, and the page itself is not changed yet', live.boxes === 1 && live.dims[0] === 0 && live.undo === 0, JSON.stringify(live));
   await p.mouse.up(); await p.waitForTimeout(300); const s1 = await st();
-  ok('letting go makes one History step, dims the page, and updates the chip, the count, and Revert', s1.dims[0] === 1 && s1.undo === 1 && s1.chips === 1 && s1.count.startsWith('1 /') && !s1.revert && s1.tip === '', JSON.stringify(s1));
+  ok('letting go makes one History step, dims the page, and updates the chip and the count', s1.dims[0] === 1 && s1.undo === 1 && s1.chips === 1 && s1.count.startsWith('1 /'), JSON.stringify(s1));
   const bx = await rect('#peGrid .page-card:nth-child(1) .pe-dimbox'), xr = await rect('#peGrid .page-card:nth-child(1) .pe-dimx');
   ok('the X sits at the exact center of the box', Math.abs((xr.x + xr.w / 2) - (bx.x + bx.w / 2)) < 1.5 && Math.abs((xr.y + xr.h / 2) - (bx.y + bx.h / 2)) < 1.5, JSON.stringify([bx, xr]));
   // edges: select the box, then drag the west handle far past the east edge; it must stop at the minimum, not flip or collapse
@@ -34,13 +34,13 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const s2 = await st(); ok('the move was one more History step', s2.undo === 2, JSON.stringify(s2));
   // delete with the X
   const x2 = await rect('#peGrid .page-card:nth-child(1) .pe-dimx'); await p.mouse.click(x2.x + x2.w / 2, x2.y + x2.h / 2); await p.waitForTimeout(250); const s3 = await st();
-  ok('the X deletes the box and the page is no longer dimmed', s3.boxes === 0 && s3.dims[0] === 0 && s3.chips === 0 && s3.revert, JSON.stringify(s3));
+  ok('the X deletes the box and the page is no longer dimmed', s3.boxes === 0 && s3.dims[0] === 0 && s3.chips === 0, JSON.stringify(s3));
   await p.evaluate(() => peUndo()); await p.waitForTimeout(300); const s4 = await st();
   ok('Undo brings the box back', s4.dims[0] === 1 && s4.boxes === 1, JSON.stringify(s4));
   // a second page, then Revert
   const c2 = await rect('#peGrid .page-card:nth-child(2) .pe-thumb'); await p.mouse.move(c2.x + c2.w * .1, c2.y + c2.h * .6); await p.mouse.down(); await p.mouse.move(c2.x + c2.w * .8, c2.y + c2.h * .9, { steps: 5 }); await p.mouse.up(); await p.waitForTimeout(250);
-  const u0 = (await st()).undo; await p.click('#peDimClear'); await p.waitForTimeout(300); const s5 = await st();
-  ok('Revert clears every page in one History step', s5.dims.every(n => n === 0) && s5.undo === u0 + 1 && s5.revert && s5.chips === 0, JSON.stringify(s5));
+  const u0 = (await st()).undo; await p.evaluate(() => peDimClear()); await p.waitForTimeout(300); const s5 = await st();
+  ok('Revert clears every page in one History step', s5.dims.every(n => n === 0) && s5.undo === u0 + 1 && s5.chips === 0, JSON.stringify(s5));
   await p.evaluate(() => peUndo()); await p.waitForTimeout(300);
   // pictures: a box fades the ink under it, through turns and crops
   const px = await p.evaluate(async () => {

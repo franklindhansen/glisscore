@@ -11,18 +11,18 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
   // hold the work: the first page goes through, the rest wait until the gate opens
   await p.evaluate(() => { window.__gate = new Promise(r => { window.__open = r; }); const raw = peRawBox, scan = peScan; let a = 0, c = 0; peRawBox = async sl => { if (a++ >= 1) await window.__gate; return raw(sl); }; peScan = async (...x) => { if (c++ >= 1) await window.__gate; return scan(...x); }; });
-  const go = () => p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading'), fill: $('#peCropAuto').style.getPropertyValue('--p'), off: $('#peCropAuto').disabled, pad: $('#peCropPad').disabled, line: $('#peCropStatus').textContent, tip: $('#peCropAuto').title, bar: !!document.querySelector('#peBand .pe-status i') }));
-  // Crop's read, in Auto: the Crop button carries the work
+  const go = () => p.evaluate(() => ({ text: $('#peCropAuto').textContent, loading: $('#peCropAuto').classList.contains('loading'), fill: $('#peCropAuto').style.getPropertyValue('--p'), off: $('#peCropAuto').disabled, pad: $('#peCropPad').disabled, line: $('#peCropStatus').textContent, tip: $('#peCropAuto').title, pill: (document.querySelector('#pdfDlg .pe-body .wait-pill.on .nr-wait-t') || {}).textContent || '', bar: !!document.querySelector('#peBand .pe-status i') }));
+  // Crop's read, in Auto: the wait pill over the pages carries the work; the button keeps its size and word
   await p.evaluate(() => peTool('crop')); await p.waitForTimeout(900);
   const rd = await go();
-  ok('Crop read: the Crop button reads "Processing N%"', /^Processing \d+%$/.test(rd.text), JSON.stringify(rd));
-  ok('Crop read: the button fills to that percent, like every pressed button', rd.loading && rd.fill === rd.text.match(/\d+%/)[0], JSON.stringify(rd));
+  ok('Crop read: one wait pill over the pages reads "Processing" and the share done', /^Processing(\s?\d+%)?$/.test(rd.pill), JSON.stringify(rd));
+  ok('Crop read: the button keeps its word and shows no progress', rd.text === 'Apply' && !rd.loading && rd.fill === '', JSON.stringify(rd));
   ok('Crop read: the Crop button and the margin slider are greyed, and the status line adds no bar', rd.off && rd.pad && !rd.bar && !/Processing/.test(rd.line), JSON.stringify(rd));
   // Manual does not wait: the Crop button is free and plain, and the reading comes back on the button in Auto
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=hand]').click(); }); await p.waitForTimeout(500);
-  const hd = await go(); ok('Manual during the read: the Crop button is plain, and greyed only because no frame is drawn yet', hd.text === 'Crop' && !hd.loading && hd.off && /draw a frame/i.test(hd.line), JSON.stringify(hd));
+  const hd = await go(); ok('Manual during the read: the Crop button is plain, and greyed only because no frame is drawn yet', hd.text === 'Apply' && !hd.loading && !hd.pill && hd.off && /draw a frame/i.test(hd.line), JSON.stringify(hd));
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=auto]').click(); }); await p.waitForTimeout(500);
-  const bk = await go(); ok('Back in Auto during the read: the button shows the work again', /^Processing/.test(bk.text) && bk.off && bk.pad, JSON.stringify(bk));
+  const bk = await go(); ok('Back in Auto during the read: the button shows the work again', /^Processing/.test(bk.pill) && bk.text === 'Apply' && bk.off && bk.pad, JSON.stringify(bk));
   // Manual during the read: the frame and its handles are there to drag at once, a drag is kept, and Crop applies it without waiting for the pages to be read
   await p.evaluate(() => { document.querySelector('input[name=peCropMode][value=hand]').click(); }); await p.waitForTimeout(600);
   const fr = () => p.evaluate(() => { const e = $('#peCropBox'), r = e.getBoundingClientRect(), pg = $('#peCropPg').getBoundingClientRect(); return { shown: !e.hidden && r.width > 20 && r.height > 20, handles: e.querySelectorAll('[data-h]').length, x: r.x, y: r.y, w: r.width, h: r.height, pg: { x: pg.x, y: pg.y, w: pg.width, h: pg.height } }; });
@@ -30,17 +30,17 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const hSE = await p.evaluate(() => { const r = document.querySelector('#peCropBox [data-h="se"]').getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; });
   await p.mouse.move(hSE[0], hSE[1]); await p.mouse.down(); await p.mouse.move(hSE[0] - 70, hSE[1] - 90, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(300);
   const f1 = await fr(); ok('Manual during the read: dragging a handle resizes the frame', f1.w < f0.w - 40 && f1.h < f0.h - 40, JSON.stringify({ f0: [f0.w, f0.h], f1: [f1.w, f1.h] }));
-  const go1 = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent })); ok('Manual during the read: Crop is free to press', !go1.off && go1.text === 'Crop', JSON.stringify(go1));
+  const go1 = await p.evaluate(() => ({ off: $('#peCropAuto').disabled, text: $('#peCropAuto').textContent })); ok('Manual during the read: Crop is free to press', !go1.off && go1.text === 'Apply', JSON.stringify(go1));
   await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900);
   const mn = await p.evaluate(() => ({ crops: PE.d.slots.filter(x => x.crop).length, reading: PE.cropReading, c: PE.d.slots[PE.one] && PE.d.slots[PE.one].crop })); ok('Manual during the read: Crop applies the dragged frame at once, while the read is still going', mn.crops > 0 && mn.reading, JSON.stringify(mn));
   await p.evaluate(() => window.__open()); await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || PE.busy); i++) await sleep(25); await sleep(400); });
   const after = await go();
-  ok('Crop read done: the button is plain "Crop" again (greyed only because the pages are cropped, which its tooltip says) and the slider is free', after.text === 'Crop' && !after.loading && after.tip === 'Already cropped.' && !after.pad, JSON.stringify(after));
+  ok('Crop read done: the pill is gone and the button reads Applied (the pages are cropped) and the slider is free', after.text === 'Applied' && !after.loading && !after.pill && !after.pad, JSON.stringify(after));
   // Re-kilter's first moment
   await p.evaluate(() => { window.__gate = new Promise(r => { window.__open = r; }); const prev = peScan; peScan = async (...x) => { await window.__gate; return prev(...x); }; });
   await p.evaluate(() => peTool('skew')); await p.waitForTimeout(400); await p.evaluate(() => { peSkewGo(); }); await p.waitForTimeout(300);
-  const btn = await p.evaluate(() => ({ text: $('#peSkewGo').textContent, html: $('#peSkewGo').innerHTML }));
-  ok('Re-kilter first moment: the button reads "Processing…" in one piece', /^Processing(…|\.\.\.)$/.test(btn.text) && /^<span>Processing<span class="dots">/.test(btn.html), JSON.stringify(btn));
+  const btn = await p.evaluate(() => ({ text: $('#peSkewGo').textContent, pill: (document.querySelector('#pdfDlg .pe-body .wait-pill.on .nr-wait-t') || {}).textContent || '', off: $('#peSkewGo').disabled }));
+  ok('Re-kilter first moment: the button keeps "Apply" and is greyed while the pill says "Processing"', btn.text === 'Apply' && btn.off && /^Processing/.test(btn.pill), JSON.stringify(btn));
   ok('No "Preparing" or "Finding the music" anywhere in the tool band', await p.evaluate(() => !/Preparing|Finding the music/.test($('#peBand').textContent)));
   await p.evaluate(() => window.__open()); await p.waitForTimeout(500);
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();

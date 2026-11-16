@@ -23,16 +23,16 @@ const marks = () => [...document.querySelectorAll('#peGrid .page-card')].map(c =
   // Each page
   await p.evaluate(() => { const sw = document.querySelector('#peCropSame'); if (sw.checked) sw.click(); }); await p.waitForTimeout(300); await read();
   const before = await p.evaluate(marks); await press();
-  const after = await p.evaluate(marks), s = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').disabled }));
+  const after = await p.evaluate(marks), s = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').getAttribute('aria-pressed') === 'true' }));
   ok('before the press every card shows its frame and the dimmed margin', before.every(m => m.dim > 300 && m.blue > 100), JSON.stringify(before));
   ok('Each page: after the press every ticked card is the cropped page, with no dimming and no frame line', s.crops.every(Boolean) && after.every(m => m.dim === 0 && m.blue === 0), JSON.stringify({ after, crops: s.crops }));
-  ok('Each page: the Crop button is greyed out once every ticked page is cropped', s.go);
+  ok('Each page: the Apply button reads Applied once every ticked page is cropped', s.go);
 
   // Same size
   await p.evaluate(() => { peUndo(); peTool('crop'); const sw = document.querySelector('#peCropSame'); if (!sw.checked) sw.click(); }); await p.waitForTimeout(900); await read();
   const b2 = await p.evaluate(marks); await press();
-  const a2 = await p.evaluate(marks), s2 = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').disabled }));
-  ok('Same size: after the press every ticked card is the cropped page, with no dimming and no frame line, and the button is greyed out', b2.every(m => m.dim > 300) && s2.crops.every(Boolean) && a2.every(m => m.dim === 0 && m.blue === 0) && s2.go, JSON.stringify({ b2, a2, s2 }));
+  const a2 = await p.evaluate(marks), s2 = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').getAttribute('aria-pressed') === 'true' }));
+  ok('Same size: after the press every ticked card is the cropped page, with no dimming and no frame line, and the button reads Applied', b2.every(m => m.dim > 300) && s2.crops.every(Boolean) && a2.every(m => m.dim === 0 && m.blue === 0) && s2.go, JSON.stringify({ b2, a2, s2 }));
 
   // Manual
   await p.evaluate(() => { peUndo(); peTool('crop'); }); await p.waitForTimeout(900); await read();
@@ -44,8 +44,8 @@ const marks = () => [...document.querySelectorAll('#peGrid .page-card')].map(c =
   const g4 = await p.evaluate(() => ({ off: document.querySelector('#peCropAuto').disabled, box: peBoxNow && peBoxNow.slice() })); ok('Manual: with a page open and nothing drawn, Crop is greyed out and the frame is the whole page', g4.off && g4.box && g4.box.join() === '0,0,1,1', JSON.stringify(g4));
   await p.evaluate(() => { peHandSet(PE.one, [0.1, 0.1, 0.9, 0.9]); peCropPaint([0.1, 0.1, 0.9, 0.9]); peActs(); });
   await press();
-  const a3 = await p.evaluate(marks), s3 = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').disabled }));
-  ok('Manual: after the press the open page is the cropped page, with no dimming and no frame line, no other page is cropped, and the button is greyed out', s3.crops.filter(Boolean).length === 1 && a3[0].dim === 0 && a3[0].blue === 0 && s3.go, JSON.stringify({ a3, s3 }));
+  const a3 = await p.evaluate(marks), s3 = await p.evaluate(() => ({ crops: PE.d.slots.map(x => !!x.crop), go: document.querySelector('#peCropAuto').getAttribute('aria-pressed') === 'true' }));
+  ok('Manual: after the press the open page is the cropped page, with no dimming and no frame line, no other page is cropped, and the button reads Applied', s3.crops.filter(Boolean).length === 1 && a3[0].dim === 0 && a3[0].blue === 0 && s3.go, JSON.stringify({ a3, s3 }));
 
   ok('no page errors', !errs.length, errs.join(' | '));
   await b.close();

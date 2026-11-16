@@ -30,7 +30,7 @@ const K = '__keyframes';
     if (id === 'scoreSoft') await p.evaluate(() => { const a = document.querySelector('#scoreAmt'); a.value = 60; a.dispatchEvent(new Event('input', { bubbles: true })); });          // Softness only shows while Strength is on
     await p.evaluate(id => { const r = document.querySelector('#' + id); for (let e = r; e && e !== document.body; e = e.parentElement) { e.hidden = false; if (e.classList.contains('fa') || e.classList.contains('group')) e.classList.add('open'); if (e.tagName === 'DETAILS') e.open = true; } }, id); await p.waitForTimeout(700);
     const vis = await p.evaluate(id => { const r = document.querySelector('#' + id); return r.offsetWidth > 0 && !r.disabled; }, id); if (!vis) { ok(id + ' (real mouse): the slider is visible', false); continue; }
-    let bx = await box(id); await p.mouse.click(bx.x + bx.w * 0.2, bx.y); await p.waitForTimeout(250);
+    let bx = await box(id); await p.mouse.click(bx.x + bx.w * 0.1, bx.y); await p.waitForTimeout(250);
     const a = await val(id); await p.mouse.dblclick(bx.x + bx.w * 0.8, bx.y); await p.waitForTimeout(1000);
     const v1 = await val(id); await p.waitForTimeout(600); const v2 = await val(id);
     ok(id + ' (real mouse): a click, then a double-click somewhere else, ends on the default and stays there', a !== def && v1 === def && v2 === def, JSON.stringify({ a, v1, v2 }));

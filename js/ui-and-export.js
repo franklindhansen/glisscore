@@ -593,6 +593,12 @@ function initSegs() {
   });
 }
 const placeSegs = () => document.querySelectorAll('.seg').forEach(s => s._place && s._place(false));
+/* a choice with a value to type (.cu): open turns its word into the blank, closed turns it back; a closed blank cannot be reached with Tab */
+function cuOpen(host, open, focus) {
+  const f = host && host.querySelector('.cu-field'); if (!f) return;
+  host.classList.toggle('open', !!open); f.inert = !open;
+  if (open && focus) { const i = f.querySelector('input'); if (i) { i.focus({ preventScroll: true }); i.select(); } }
+}
 function initSmooth() {
   const panel = $('.panel'); let ready = false; setTimeout(() => { ready = true; }, 900);       // nothing animates while the page is still starting up
   const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)');

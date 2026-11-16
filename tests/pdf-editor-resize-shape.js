@@ -14,7 +14,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', { name: 'mixed.pdf', mimeType: 'application/pdf', buffer: pdf }); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
     await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800); await p.click('#peRail .pe-tab[data-tool=resize]'); await p.waitForTimeout(700);
     await p.click('.rz-opt[data-k=tabloid]'); await p.waitForTimeout(300);
-    if (shape) { await p.click('.rz-shape[data-k=' + shape + ']'); await p.waitForTimeout(300); }
+    if (shape) { await p.click('#peRzShape label:has(input[value=' + shape + '])'); await p.waitForTimeout(300); }
     await p.click('#peRzGo'); await p.waitForTimeout(1200);
     const seen = await p.evaluate(() => ({ sheets: [...document.querySelectorAll('dialog[open], .sheet:not([hidden])')].filter(e => e.offsetParent).map(e => e.id), toast: document.querySelector('#toast').textContent, status: [...document.querySelectorAll('#peViewResize .pe-status, #peViewResize [role=status]')].map(e => e.textContent).join('|') }));
     const bytes = await p.evaluate(async () => { let out = null; window.saveFile = async blob => { out = Array.from(new Uint8Array(await blob.arrayBuffer())); }; document.querySelector('#peExport').click(); for (let i = 0; i < 200 && !out; i++) await new Promise(r => setTimeout(r, 100)); return out || document.querySelector("#toast").textContent; });

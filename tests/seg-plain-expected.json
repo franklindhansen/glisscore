@@ -1,0 +1,293 @@
+[
+ {
+  "key": "selMode",
+  "html": "<label title=\"Systems\"><input type=\"radio\" name=\"selMode\" value=\"systems\" aria-label=\"Systems\" checked=\"\"><span><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M21 9H3\"></path><path d=\"M21 15H3\"></path></svg></span></label><label title=\"Full page\"><input type=\"radio\" name=\"selMode\" value=\"full\" aria-label=\"Full page\"><span><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"></path><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"></path></svg></span></label>",
+  "seg": "grid 26px 2px 9px 1px 1fr",
+  "labels": [
+   "grid 0px 9px 13px 400 rgb(26, 29, 38) center normal normal",
+   "grid 0px 9px 13px 400 rgb(95, 103, 120) center normal normal"
+  ]
+ },
+ {
+  "key": "transition",
+  "html": "\n            <label><input type=\"radio\" name=\"transition\" value=\"flip\" checked=\"\"><span>Turn</span></label>\n            <label><input type=\"radio\" name=\"transition\" value=\"slide\"><span>Slide</span></label>\n            <label><input type=\"radio\" name=\"transition\" value=\"cut\"><span>Cut</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "slideDir",
+  "html": "\n            <label><input type=\"radio\" name=\"slideDir\" value=\"in\" checked=\"\"><span>In</span></label>\n            <label><input type=\"radio\" name=\"slideDir\" value=\"out\"><span>Out</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "ref",
+  "html": "\n            <label><input type=\"radio\" name=\"ref\" value=\"start\"><span>Start</span></label>\n            <label><input type=\"radio\" name=\"ref\" value=\"middle\"><span>Middle</span></label>\n            <label><input type=\"radio\" name=\"ref\" value=\"end\" checked=\"\"><span>End</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between"
+  ]
+ },
+ {
+  "key": "pageLayout",
+  "html": "\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"spread\" checked=\"\"><span>Spread</span></label>\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"single\"><span>Single page</span></label>\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"system\"><span>System</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "fadeSide",
+  "html": "<label><input type=\"radio\" name=\"fadeSide\" value=\"both\" checked=\"\"><span>Both</span></label><label><input type=\"radio\" name=\"fadeSide\" value=\"in\"><span>In</span></label><label><input type=\"radio\" name=\"fadeSide\" value=\"out\"><span>Out</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "fadeShape",
+  "html": "<label><input type=\"radio\" name=\"fadeShape\" value=\"natural\" checked=\"\"><span>Gradual</span></label><label><input type=\"radio\" name=\"fadeShape\" value=\"standard\"><span>Straight</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "fadeStyle",
+  "html": "\n                <label title=\"The whole picture fades\"><input type=\"radio\" name=\"fadeStyle\" value=\"black\" checked=\"\"><span>Black</span></label>\n                <label title=\"Only the score and credits fade\"><input type=\"radio\" name=\"fadeStyle\" value=\"score\"><span>Background</span></label>\n              ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "creditsAt",
+  "html": "\n            <label><input type=\"radio\" name=\"creditsAt\" value=\"start\"><span>Start</span></label>\n            <label><input type=\"radio\" name=\"creditsAt\" value=\"end\" checked=\"\"><span>End</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between"
+  ]
+ },
+ {
+  "key": "credStart",
+  "html": "\n            <label><input type=\"radio\" name=\"credStart\" value=\"with\" checked=\"\"><span>With last page</span></label>\n            <label><input type=\"radio\" name=\"credStart\" value=\"after\"><span>After last page</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "credEnd",
+  "html": "\n            <label><input type=\"radio\" name=\"credEnd\" value=\"end\" checked=\"\"><span>With video</span></label>\n            <label><input type=\"radio\" name=\"credEnd\" value=\"early\"><span>Custom</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "vidQ",
+  "html": "\n            <label><input type=\"radio\" name=\"vidQ\" value=\"standard\" checked=\"\"><span>Standard</span></label>\n            <label><input type=\"radio\" name=\"vidQ\" value=\"high\"><span>High</span></label>\n            <label><input type=\"radio\" name=\"vidQ\" value=\"max\"><span>Max</span></label>\n          ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "ioKind",
+  "html": "\n        <label><input type=\"radio\" name=\"ioKind\" value=\"all\" checked=\"\"><span>Everything</span></label>\n        <label><input type=\"radio\" name=\"ioKind\" value=\"settings\"><span>Settings</span></label>\n        <label><input type=\"radio\" name=\"ioKind\" value=\"markings\"><span>Page markings</span></label>\n      ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
+   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+  ]
+ },
+ {
+  "key": "aeView",
+  "html": "<label><input type=\"radio\" name=\"aeView\" value=\"wave\" checked=\"\"><span>Wave</span></label><label><input type=\"radio\" name=\"aeView\" value=\"spec\"><span>Spec</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 12px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 12px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeNrMethod",
+  "html": "<label><input type=\"radio\" name=\"aeNrMethod\" value=\"auto\" checked=\"\"><span>Auto</span></label><label><input type=\"radio\" name=\"aeNrMethod\" value=\"manual\"><span>Manual</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeNrMode",
+  "html": "<label><input type=\"radio\" name=\"aeNrMode\" value=\"natural\" checked=\"\" disabled=\"\"><span>Natural</span></label><label><input type=\"radio\" name=\"aeNrMode\" value=\"classic\" disabled=\"\"><span>Classic</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "spShape",
+  "html": "\n                  <label title=\"Drag a box: a stretch of time and a range of pitch\"><input aria-label=\"Box\" type=\"radio\" name=\"spShape\" value=\"box\" checked=\"\"><span class=\"ae-ib\"><svg class=\"ae-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 3a2 2 0 0 0-2 2\"></path><path d=\"M19 3a2 2 0 0 1 2 2\"></path><path d=\"M21 19a2 2 0 0 1-2 2\"></path><path d=\"M5 21a2 2 0 0 1-2-2\"></path><path d=\"M9 3h1\"></path><path d=\"M9 21h1\"></path><path d=\"M14 3h1\"></path><path d=\"M14 21h1\"></path><path d=\"M3 9v1\"></path><path d=\"M21 9v1\"></path><path d=\"M3 14v1\"></path><path d=\"M21 14v1\"></path></svg><span class=\"ae-lb\">Box</span></span></label>\n                  <label title=\"A range of pitch for the whole sound, like a hum\"><input aria-label=\"Band\" type=\"radio\" name=\"spShape\" value=\"band\"><span class=\"ae-ib\"><svg class=\"ae-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><line x1=\"5\" x2=\"19\" y1=\"9\" y2=\"9\"></line><line x1=\"5\" x2=\"19\" y1=\"15\" y2=\"15\"></line></svg><span class=\"ae-lb\">Band</span></span></label>\n                  <label title=\"Every pitch for an instant, like a click or a cough\"><input aria-label=\"Moment\" type=\"radio\" name=\"spShape\" value=\"moment\"><span class=\"ae-ib\"><svg class=\"ae-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><g transform=\"rotate(90 12 12)\"><line x1=\"5\" x2=\"19\" y1=\"9\" y2=\"9\"></line><line x1=\"5\" x2=\"19\" y1=\"15\" y2=\"15\"></line></g></svg><span class=\"ae-lb\">Moment</span></span></label>\n                ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "spMode",
+  "html": "\n                  <label title=\"Fill it in from the sound around it\"><input aria-label=\"Heal\" type=\"radio\" name=\"spMode\" value=\"heal\" checked=\"\"><span class=\"ae-ib\"><svg class=\"ae-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M10 10.01h.01\"></path><path d=\"M10 14.01h.01\"></path><path d=\"M14 10.01h.01\"></path><path d=\"M14 14.01h.01\"></path><path d=\"M18 6v12\"></path><path d=\"M6 6v12\"></path><rect x=\"2\" y=\"6\" width=\"20\" height=\"12\" rx=\"2\"></rect></svg><span class=\"ae-lb\">Heal</span></span></label>\n                  <label title=\"Turn it down\"><input aria-label=\"Reduce\" type=\"radio\" name=\"spMode\" value=\"cut\"><span class=\"ae-ib\"><svg class=\"ae-ic\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14\"></path><path d=\"m19 12-7 7-7-7\"></path></svg><span class=\"ae-lb\">Reduce</span></span></label>\n                ",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeBandPlace",
+  "html": "<label><input type=\"radio\" name=\"aeBandPlace\" value=\"st\" checked=\"\"><span>Stereo</span></label><label><input type=\"radio\" name=\"aeBandPlace\" value=\"mid\"><span>Mid</span></label><label><input type=\"radio\" name=\"aeBandPlace\" value=\"side\"><span>Side</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 10px 12.5px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 10px 12.5px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 10px 12.5px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeBandSlope",
+  "html": "<label><input type=\"radio\" name=\"aeBandSlope\" value=\"12\" checked=\"\"><span>12</span></label><label><input type=\"radio\" name=\"aeBandSlope\" value=\"24\"><span>24</span></label><label><input type=\"radio\" name=\"aeBandSlope\" value=\"48\"><span>48</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeWidthMode",
+  "html": "<label><input type=\"radio\" name=\"aeWidthMode\" value=\"all\" checked=\"\"><span>Overall</span></label><label><input type=\"radio\" name=\"aeWidthMode\" value=\"bands\"><span>Frequency</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeListen",
+  "html": "<label><input type=\"radio\" name=\"aeListen\" value=\"\" checked=\"\"><span>Both</span></label><label><input type=\"radio\" name=\"aeListen\" value=\"mid\"><span>Middle</span></label><label><input type=\"radio\" name=\"aeListen\" value=\"side\"><span>Sides</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeNormMode",
+  "html": "<label><input type=\"radio\" name=\"aeNormMode\" value=\"off\" checked=\"\"><span>Off</span></label><label><input type=\"radio\" name=\"aeNormMode\" value=\"loud\"><span>Loudness</span></label><label><input type=\"radio\" name=\"aeNormMode\" value=\"peak\"><span>Peak</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeFadeSide",
+  "html": "<label><input type=\"radio\" name=\"aeFadeSide\" value=\"both\" checked=\"\"><span>Both</span></label><label><input type=\"radio\" name=\"aeFadeSide\" value=\"in\"><span>In</span></label><label><input type=\"radio\" name=\"aeFadeSide\" value=\"out\"><span>Out</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "aeFadeShape",
+  "html": "<label><input type=\"radio\" name=\"aeFadeShape\" value=\"natural\" checked=\"\"><span>Gradual</span></label><label><input type=\"radio\" name=\"aeFadeShape\" value=\"standard\"><span>Straight</span></label>",
+  "seg": "grid 34px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ },
+ {
+  "key": "peAddKind",
+  "html": "<label><input type=\"radio\" name=\"peAddKind\" value=\"blank\" checked=\"\"><span>Blank page</span></label><label><input type=\"radio\" name=\"peAddKind\" value=\"pdf\"><span>PDF</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center nowrap center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center nowrap center"
+  ]
+ },
+ {
+  "key": "peClBg",
+  "html": "<label><input type=\"radio\" name=\"peClBg\" value=\"1\" checked=\"\"><span>White</span></label><label><input type=\"radio\" name=\"peClBg\" value=\"2\"><span>Page color</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center nowrap center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center nowrap center"
+  ]
+ },
+ {
+  "key": "peClSp",
+  "html": "<label><input type=\"radio\" name=\"peClSp\" value=\"1\" checked=\"\"><span>Light</span></label><label><input type=\"radio\" name=\"peClSp\" value=\"2\"><span>Strong</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center nowrap center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center nowrap center"
+  ]
+ },
+ {
+  "key": "peCropMode",
+  "html": "<label><input type=\"radio\" name=\"peCropMode\" value=\"auto\" checked=\"\"><span>Auto</span></label><label><input type=\"radio\" name=\"peCropMode\" value=\"hand\"><span>Manual</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center nowrap center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center nowrap center"
+  ]
+ },
+ {
+  "key": "peRzOr",
+  "html": "<label title=\"Every page takes the document's shape\"><input type=\"radio\" name=\"peRzOr\" value=\"same\"><span>Same</span></label><label title=\"Each page keeps its own shape\"><input type=\"radio\" name=\"peRzOr\" value=\"each\"><span>Keep</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center nowrap center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center nowrap center"
+  ]
+ },
+ {
+  "key": "peWmMode",
+  "html": "<label><input type=\"radio\" name=\"peWmMode\" value=\"center\" checked=\"\"><span>Centered</span></label><label><input type=\"radio\" name=\"peWmMode\" value=\"tile\"><span>Tiled</span></label>",
+  "seg": "grid 30px 2px 9px 1px 1fr",
+  "labels": [
+   "flex 0px 8px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 8px 13px 400 rgb(95, 103, 120) center normal center"
+  ]
+ }
+]

@@ -42,7 +42,7 @@ function edLead(which, quip, once, hold) {
 function openPdfEditor() {
   if (!S.pdf) return;
   peClearStatus();
-  PE.d = recipeOf(); PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.manTicks = false; PE.manSkip = null; PE.autoSkip = null; PE.handLast = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
+  PE.d = recipeOf(); PE.splitSaid = ''; PE.waiting = false; PE.toastOn = false; PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.manTicks = false; PE.manSkip = null; PE.autoSkip = null; PE.handLast = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
   [['peClBg', 1], ['peClSp', 1]].forEach(([n, v]) => document.querySelectorAll('input[name=' + n + ']').forEach(r => { r.checked = +r.value === v; }));
   document.querySelectorAll('input[name=peCropMode]').forEach(r => { r.checked = r.value === 'auto'; });
   document.querySelectorAll('#peBand .pe-tv').forEach(v => { v.hidden = v.dataset.tool !== 'pages'; v.classList.remove('sliding'); });
@@ -59,20 +59,18 @@ const rzSame = (a, b) => (!a && !b) || !!(a && b && a.w === b.w && a.h === b.h);
 function rzRefresh() {
   const grid = $('#peRzGrid'); if (!grid || !PE.d) return;
   const sh = rzShown(), cur = sh ? sizeDims(sh, S.pdf.aspect0) : [S.pdf.pw / 72, S.pdf.ph / 72], orig = !sh;
-  const nat0 = rzNum(S.pdf.pw / 72) + ' × ' + rzNum(S.pdf.ph / 72);                  // the page as it came; an arrow then points to the size you have chosen
-  $('#peRzFrom').textContent = nat0; $('#peRzTo').classList.toggle('on', !orig); if (!orig) swapText($('#peRzNew'), rzNum(cur[0]) + ' × ' + rzNum(cur[1]), true);
   const sel = orig ? 'orig' : (RZ_PRESETS.find(q => Math.abs(Math.min(q.w, q.h) - Math.min(sh.w, sh.h)) < 0.005 && Math.abs(Math.max(q.w, q.h) - Math.max(sh.w, sh.h)) < 0.005) || { k: 'custom' }).k;
   if (!grid.children.length) {
-    const opt = (k, n, sub) => '<button type="button" class="rz-opt" data-k="' + k + '" aria-pressed="false"><span class="rz-tick" aria-hidden="true">' + checkIcon + '</span><b>' + n + '</b><small>' + sub + '</small></button>';
+    const opt = (k, n, sub) => k === 'custom' ? '<div class="btn small rz-opt cu" data-k="custom" role="button" tabindex="0" aria-pressed="false"><span class="cu-in"><b class="cu-word">' + n + '</b><span class="cu-field" inert><input type="text" id="peRzW" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="5" aria-label="Width in inches"><span class="cu-unit" aria-hidden="true">×</span><input type="text" id="peRzH" inputmode="decimal" autocomplete="off" spellcheck="false" maxlength="5" aria-label="Height in inches"><span class="cu-unit">in</span></span></span></div>' : '<button type="button" class="btn small rz-opt" data-k="' + k + '" aria-pressed="false"><b>' + n + '</b><small>' + sub + '</small></button>';          // Custom is not a button: it holds the two blanks to type in
     grid.innerHTML = opt('orig', 'Original', '') + RZ_PRESETS.map(q => opt(q.k, q.n, rzNum(q.w) + ' × ' + rzNum(q.h))).join('') + opt('custom', 'Custom', '');
   }
   const nat = rzNum(S.pdf.pw / 72) + ' × ' + rzNum(S.pdf.ph / 72); grid.querySelector('[data-k=orig] small').textContent = nat;
-  grid.querySelectorAll('.rz-opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === sel)));
+  const on = PE.rzCustom ? 'custom' : sel; grid.querySelectorAll('.rz-opt').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === on)));
   const shape = $('#peRzShape'), each = rzEach();
-  if (!shape.children.length) shape.innerHTML = [['same', 'Same shape on all'], ['each', "Keep each page's shape"]].map(([k, n]) => '<button type="button" class="rz-opt rz-shape" data-k="' + k + '" aria-pressed="false"><span class="rz-tick" aria-hidden="true">' + checkIcon + '</span><b>' + n + '</b></button>').join('');
-  shape.querySelectorAll('.rz-shape').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.k === 'each') === each)));
-  $('#peRzCustom').classList.toggle('shown', sel === 'custom' || PE.rzCustom);
-  if (sh && document.activeElement !== $('#peRzW') && document.activeElement !== $('#peRzH')) { $('#peRzW').value = rzNum(sh.w); $('#peRzH').value = rzNum(sh.h); }
+  shape.querySelectorAll('input').forEach(r => { r.checked = (r.value === 'each') === each; });
+  const cu = grid.querySelector('.cu'); cuOpen(cu, on === 'custom');
+  if (sel === 'custom') PE.rzMem = { w: sh.w, h: sh.h };          // a custom size the document has (or an undo brings back) is the one remembered
+  if (!cu.contains(document.activeElement)) { const m = PE.rzMem; $('#peRzW').value = m ? rzNum(m.w) : ''; $('#peRzH').value = m ? rzNum(m.h) : ''; }
 }
 function rzPick(size) { if (!PE.d || PE.busy) return; PE.rzPend = rzSame(size, PE.d.size) ? undefined : size; rzRefresh(); peActs(); }          // choosing only previews the choice; the Re-size button applies it
 function rzPickShape(each) { if (!PE.d || PE.busy) return; PE.rzShape = each === !!PE.d.each ? undefined : each; rzRefresh(); peActs(); }
@@ -98,16 +96,17 @@ const peN = (n, one, many) => n + ' ' + (n === 1 ? one || 'page' : many || 'page
 const peSpread = sl => { if (sl.half) return false; const a = PE.asp && PE.asp.get(sl.src); if (a == null) return null; const c = sl.crop, r = c ? (c[2] - c[0]) / (c[3] - c[1]) : 1, q = ((sl.rot || 0) % 180 ? 1 / a : a) * ((sl.rot || 0) % 180 ? 1 / r : r); return q > 1.15; };
 const peSplitIds = () => PE.d.order.filter(id => !PE.d.slots[id].x && !PE.d.slots[id].half && PE.splitSel && PE.splitSel.has(id));
 async function peSpreadScan() {
-  const d = PE.d;
+  const d = PE.d; if (!PE.splitSel) peProg('', 0);
   for (const id of d.order) { const sl = d.slots[id]; if (PE.asp && PE.asp.has(sl.src)) continue; try { await peAspectOf(sl); } catch (e) {} if (PE.d !== d) return; }
-  if (!PE.splitSel) PE.splitSel = new Set(d.order.filter(id => !d.slots[id].x && peSpread(d.slots[id])));          // the spreads it found start ticked
+  if (PE.d !== d) return; if (!PE.splitSel) PE.splitSel = new Set(d.order.filter(id => !d.slots[id].x && peSpread(d.slots[id])));          // the spreads it found start ticked
+  peProg('', null);
   if (PE.mode === 'split') peState();
 }
 function peTool(name) {
   if (name === PE.mode || PE.drag) return;
   const redraw = PE.mode === 'crop' || name === 'crop' || PE.mode === 'dim' || name === 'dim' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
   const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
-  peClearStatus();
+  peClearStatus(); peToast(''); PE.splitSaid = '';
   PE.mode = name; peCropTicks(); PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
   if (redraw) peRender(false); else peState();
   peBodySlide(snap, dir);
@@ -169,22 +168,19 @@ function peBodySlide(snap, dir) {
   body._slide = [a1];
   a1.onfinish = a1.oncancel = () => { snap.el.remove(); if (!body._slide || body._slide[0] === a1) body.classList.remove('sliding'); };          // a cancelled dissolve reports late, after the next one has begun: it must not take that one's clip away
 }
-/* the tools that fix and arrange share one short head; Re-size and Watermark, which hold more, share one taller head. Moving between the two glides the head's height and the pages follow */
-const PE_TALL = new Set(['resize', 'wm']);
+/* each tool's band is as tall as its own heading and settings; moving between tools glides the band's height and the pages follow */
 function peTopFit(tool) {
   const band = $('#peBand'); if (!band || $('#pdfDlg').hidden) return;
-  const hs = { low: 0, tall: 0 };
-  band.querySelectorAll('.pe-tv').forEach(v => { const was = v.hidden, hid = Array.from(v.querySelectorAll('.pe-notice[hidden]')); v.hidden = false; hid.forEach(n => { n.hidden = false; }); v.classList.add('measure'); const g = PE_TALL.has(v.dataset.tool) ? 'tall' : 'low'; hs[g] = Math.max(hs[g], v.offsetHeight); v.classList.remove('measure'); hid.forEach(n => { n.hidden = true; }); v.hidden = was; });          // a note that only shows sometimes still has its room
-  PE.bandH = hs; const h = hs[PE_TALL.has(tool || PE.view || PE.mode) ? 'tall' : 'low'];
-  band.style.height = h && h <= Math.max(200, $('#peWin').offsetHeight * 0.42) ? h + 'px' : '';
+  const t = tool || PE.view || PE.mode, v = band.querySelector('.pe-tv[data-tool="' + t + '"]'); if (!v) return;
+  const was = v.hidden, hid = Array.from(v.querySelectorAll('.pe-notice[hidden]')); v.hidden = false; hid.forEach(n => { n.hidden = false; }); v.classList.add('measure'); const h = v.offsetHeight; v.classList.remove('measure'); hid.forEach(n => { n.hidden = true; }); v.hidden = was;          // measured on its own, with a note that may appear counted
+  PE.bandH = h; band.style.height = h && h <= Math.max(200, $('#peWin').offsetHeight * 0.42) ? h + 'px' : '';
 }
 /* Split spreads says plainly what it found */
-function peSplitNote() {
-  const d = PE.d, n = $('#peSplitNote'), msg = $('#peSplitMsg'); if (!PE.splitSel) { n.className = 'pe-notice'; msg.textContent = 'Looking for spreads…'; return; }
+function peSplitNote() {          // what Split found is said once, as a toast over the pages (the scan itself is the wait pill)
+  const d = PE.d; if (!PE.splitSel) return;
   const found = d.order.filter(id => !d.slots[id].x && peSpread(d.slots[id])).length, halves = d.order.some(id => d.slots[id].half);
-  n.className = 'pe-notice' + (found || halves ? '' : ' warn');
   const t = found ? 'Found ' + peN(found, 'spread', 'spreads') + ' and ticked ' + (found === 1 ? 'it' : 'them') + '. Tick any other page to split it too.' : halves ? 'All spreads are split. Tick a page to split it too.' : 'No spreads found. Tick the pages you want to split.';
-  if (msg.textContent !== t) swapText(msg, t, true);
+  if (PE.splitSaid !== t) { PE.splitSaid = t; peToast(t); }
 }
 /* a greyed main button says why on its tool's status line; the line goes when the button is enabled (a message the tool set itself is left alone) */
 /* a reason goes on the status line only when the user can fix it and nothing else on screen says it; these belong on the greyed button's tooltip, whichever call sends them */
@@ -206,22 +202,20 @@ function peActs() {
   const tilted = id => { const s = d.slots[id]; return s.skew || s.vskew || s.warp; };
   if (PE.mode === 'clean') {
     const t = peTargets(), cl = PE.cl, none = !t.length, bare = !cl.bg && !cl.sp, same = t.every(id => (d.slots[id].bg || 0) === cl.bg && (d.slots[id].sp || 0) === cl.sp), nothing = !t.some(id => peCleaned(d.slots[id]));
-    set('#peCleanGo', none || bare || same); set('#peCleanClear', nothing);
-    peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : same ? 'pe.why.cleaned' : '');
+    peApplyBtn('#peCleanGo', none || bare, same);
+    peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : '');
   }
   else if (PE.mode === 'skew') {
     const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id])), line = $('#peSkewStatus');
-    set('#peSkewGo', !t.length || tried); set('#peSkewClear', !t.some(tilted));
-    peWhy('#peSkewStatus', !t.length ? 'pe.why.page' : '', tried ? 'pe.why.level' : '');
+    const fixed = tried && t.some(tilted); peApplyBtn('#peSkewGo', !t.length || (tried && !fixed), fixed);
+    peWhy('#peSkewStatus', !t.length ? 'pe.why.page' : '', tried && !fixed ? 'pe.why.level' : '');
     if (!busy && !tried && line.textContent === tx('pe.skew.none')) peSay('#peSkewStatus', '');          // the result line goes when the pages change
   }
-  else if (PE.mode === 'dim') { const nothing = !d.order.some(id => dimKey(d.slots[id])); set('#peDimClear', nothing); }
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') { const off = !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())); set('#peRzGo', off); peTip('#peRzGo', off ? 'pe.why.resize' : ''); }
-  else if (PE.mode === 'wm') { const on = !!d.wm.on; $('#peWmAdd').hidden = on; $('#peWmRemove').hidden = !on; set('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id))); set('#peWmRemove'); }
-  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, nothing = !ids.some(id => d.slots[id].crop && !d.slots[id].half), src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; set('#peCropAuto', none || done || PE.cropShown); set('#peCropClear', nothing); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', hand ? (apply ? '' : src == null ? 'pe.why.draw' : 'pe.why.apply') : none ? 'pe.why.page' : '', done && !none && !(hand && !mm.size) ? 'pe.why.cropped' : ''); }
+  else if (PE.mode === 'wm') { const on = !!d.wm.on; peApplyBtn('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id)), on); }
+  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', hand ? (apply ? '' : src == null ? 'pe.why.draw' : 'pe.why.apply') : none ? 'pe.why.page' : '', ''); }
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
-  document.querySelectorAll('.pe-acts [id^="pe"][id$="Clear"]').forEach(b => peTip(b, b.disabled ? 'pe.why.revert' : ''));          // every tool's greyed Revert says so in a tooltip (a plain state, not something to fix)
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
 function peRailSel(animate) {
@@ -280,12 +274,20 @@ let peRunId = 0;
 const peSay = (sel, t, err) => { const el = $(sel); if (el) { el.textContent = t; el.classList.toggle('err', !!(t && err)); } };
 function peClearStatus() { document.querySelectorAll('#peBand .pe-status').forEach(e => { e.textContent = ''; e.classList.remove('err'); }); }
 const peLock = on => { PE.busy = on; document.querySelectorAll('#peBand .btn, #peBar .btn, #peAddAt').forEach(b => { b.disabled = on; }); if (!on && PE.d) peState(); };
-/* a tool's own button shows the work: "Processing 42%" and fills as it goes, like the Audio Editor's buttons; it settles back to its name when done. The same look is used for Crop's reading of the pages, since nothing can be cropped before it ends */
-function peProg(sel, pc) {
-  const b = $(sel); if (!b) return;   if (pc == null) { if (!b.classList.contains('loading')) return; b.classList.remove('loading'); b.style.removeProperty('--p'); b.textContent = b.dataset.t; return; }
-  if (!b.classList.contains('loading')) { b.dataset.t = b.textContent; btnHold(b, [b.dataset.t, 'Processing…', 'Processing 100%']); b.classList.add('loading'); }
-  b.style.setProperty('--p', pc + '%'); if (pc === 0) b.innerHTML = dotsHTML('Processing…'); else b.textContent = 'Processing ' + pc + '%';          // before the first page is done there is no percent to say
+/* a job's progress is one wait pill over the page grid (or the crop preview), never in a button: the buttons keep their size and word and are greyed while it runs. Crop's reading of the pages uses the same pill, since nothing can be cropped before it ends */
+function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelector('#pdfDlg .pe-body'), pc == null ? null : pc / 100); peDimCards(); }
+/* while a job waits, or a result is said over the pages, the cards dim to the shared inactive look; they still scroll */
+function peDimCards() { $('#peWin').classList.toggle('waiting', !!(PE.waiting || PE.toastOn)); }
+function peToast(text, ms) {
+  const t = $('#peToast'); clearTimeout(t._t); if (!text) { t.classList.remove('show'); PE.toastOn = false; peDimCards(); return; }
+  t.textContent = text; t.classList.add('show'); PE.toastOn = true; peDimCards(); t._t = setTimeout(() => peToast(''), ms || TOAST_MS);
 }
+/* a tool's one Apply button: Apply starts the job, Applied (the shared pressed look) says it is done, and pressing it again undoes it */
+function peApplyBtn(sel, off, done) {
+  const b = $(sel); if (!b) return; const on = !!done && !off; b.disabled = !!PE.busy || !!off && !on; b.setAttribute('aria-pressed', String(on));
+  const t = on ? 'Applied' : 'Apply'; if (b.textContent !== t) b.textContent = t; btnHold(b, ['Apply', 'Applied']);
+}
+const peApplyClick = (sel, go, undo) => $(sel).addEventListener('click', () => { ($(sel).getAttribute('aria-pressed') === 'true' ? undo : go)(); });
 async function peEach(ids, btn, fn) {
   const me = ++peRunId; peLock(true); peProg(btn, 0);
   try { for (let i = 0; i < ids.length; i++) { if (me !== peRunId || !PE.d) return false; await fn(ids[i], i); peProg(btn, Math.round((i + 1) / ids.length * 100)); if (i % 2 === 1) await yieldNow(); } await new Promise(r => setTimeout(r, 260)); return me === peRunId && !!PE.d; }          // the bar stays full for a beat so it is seen even on a short run
@@ -644,8 +646,7 @@ function peCropBind() {
   });
   const end = () => { if (drag) peCropPaintAll(); drag = null; box.classList.remove('dragging'); peActs(); }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
   document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; peCropTicks(); if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading && PE.cropOn) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
-  $('#peDimClear').addEventListener('click', peDimClear);
-  $('#peCropAuto').addEventListener('click', peCropGo); $('#peCropClear').addEventListener('click', peCropClear);
+  peApplyClick('#peCropAuto', peCropGo, peCropClear);
   $('#peCropPad').addEventListener('input', e => { $('#peCropPadVal').textContent = e.target.value + '%'; paintRange(e.target); peCropPaintAll(); peOneFrame(); peActs(); });
   $('#peCropApply').addEventListener('click', peCropApply); $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
   $('#peOneBack').addEventListener('click', peOneClose); $('#peOneCmp').addEventListener('click', () => { PE.orig = !PE.orig; peOneRefresh(); });
@@ -659,7 +660,9 @@ function peCropBind() {
   document.querySelectorAll('input[name=peAddKind]').forEach(r => r.addEventListener('change', () => swapText($('#peAddGo'), kind() === 'pdf' ? 'Choose PDF…' : 'Add page', true)));
   $('#peAddGo').addEventListener('click', () => { if (kind() === 'pdf') $('#peAddIn').click(); else peAdd('blank'); });
   $('#peAddIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) peAdd('pdf', f); });
-  peCleanBind(); peZoomBind(); $('#peSplitGo').addEventListener('click', peSplitGo); $('#peSkewGo').addEventListener('click', peSkewGo); $('#peSkewClear').addEventListener('click', peSkewClear);
+  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, 0, 100); $('#peGrid').style.setProperty('--pe-th', 'calc(var(--h-s) * ' + (2.6 + zs.value * 0.05).toFixed(2) + ')'); $('#peZoomOut').disabled = +zs.value <= 0; $('#peZoomIn').disabled = +zs.value >= 100; };
+  zs.addEventListener('input', () => zsSet(+zs.value)); $('#peZoomOut').addEventListener('click', () => zsSet(+zs.value - 10)); $('#peZoomIn').addEventListener('click', () => zsSet(+zs.value + 10)); zsSet(+zs.value);          // the page-size slider, and its minus and plus, set the page cards' width
+  peCleanBind(); peZoomBind(); $('#peSplitGo').addEventListener('click', peSplitGo); peApplyClick('#peSkewGo', peSkewGo, peSkewClear);
 }
 /* which pages look like two pages side by side (wider than tall); a cropped page counts by the part that is kept */
 async function peAspectOf(sl) {
@@ -695,7 +698,7 @@ function peCleanBind() {
     r.addEventListener('click', () => { if (r._was) { r.checked = false; PE.cl[key] = 0; } else PE.cl[key] = +r.value; r._was = false; peActs(); if (PE.one != null) peOneRefresh(); });
     r.addEventListener('keydown', e => { if (e.key === ' ' && r.checked) { e.preventDefault(); r.checked = false; PE.cl[key] = 0; peActs(); if (PE.one != null) peOneRefresh(); } });
   }));
-  $('#peCleanGo').addEventListener('click', peCleanGo); $('#peCleanClear').addEventListener('click', peCleanClear);
+  peApplyClick('#peCleanGo', peCleanGo, peCleanClear);
 }
 /* ---- Re-kilter: levels the turn, the slant and the bend of each ticked page ---- */
 /* Re-kilter remembers the pages it has looked at (leveled, or found level) as they stand now, so its button greys out when there is nothing left for it to do */
@@ -902,9 +905,10 @@ function peState() {
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
   $('#peWmB').setAttribute('aria-pressed', String(w.b !== false)); $('#peWmI').setAttribute('aria-pressed', String(!!w.i));
-  const preset = w.angle === 45 ? '45' : w.angle === 0 ? '0' : 'custom';
+  const derived = w.angle === 45 ? '45' : w.angle === 0 ? '0' : 'custom', preset = PE.wmCustom ? 'custom' : derived;          // Custom stays chosen while it is open, even when the number typed is 45 or 0
+  if (derived === 'custom') PE.wmDeg = w.angle;
   document.querySelectorAll('input[name=peWmAngle]').forEach(r => { r.checked = r.value === preset; }); document.querySelectorAll('input[name=peWmMode]').forEach(r => { r.checked = r.value === w.mode; });
-  $('.pe-deg').classList.toggle('shown', preset === 'custom'); if (document.activeElement !== $('#peWmDeg')) $('#peWmDeg').value = w.angle;
+  { const deg = $('#peWmDeg'), host = deg.closest('.cu'); cuOpen(host, preset === 'custom'); if (document.activeElement !== deg) deg.value = PE.wmDeg == null ? '' : PE.wmDeg; const sg = host.closest('.seg'), pill = sg.querySelector('.seg-pill'); sg._place && sg._place(!!(pill && pill.style.opacity === '1' && pill.style.width)); }          // glide, so a click on Custom slides the pill as any choice does; the first placing as the tool opens does not
   $('#peWmOpacity').value = w.opacity; $('#peWmOpacityVal').textContent = w.opacity + '%'; paintRange($('#peWmOpacity'));
   { const eb = $('#peExport'); eb.disabled = !!pdfWhy(); eb.removeAttribute('title'); }
   $('#peUndo').disabled = !PE.undo.length; $('#peRedo').disabled = !PE.redo.length; $('#peReset').disabled = peIsIdentity(); PE_HIST.refresh();
@@ -1316,28 +1320,50 @@ function peBind() {
   $('#peAll').addEventListener('click', () => peSelAll(true)); $('#peNone').addEventListener('click', () => peSelAll(false));
   const wmPush = () => { if (!PE.wmQuiet) pePush(); PE.wmQuiet = true; clearTimeout(PE.wmT); PE.wmT = setTimeout(() => { PE.wmQuiet = false; }, 900); };       // one undo step per burst of typing or dragging
   peCropBind(); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
-  $('#peRzGrid').addEventListener('click', e => {
-    const b = e.target.closest('.rz-opt'); if (!b) return; const k = b.dataset.k;
+  const rzOpt = b => { const k = b.dataset.k;
     if (k === 'orig') { PE.rzCustom = false; rzPick(null); }
-    else if (k === 'custom') { PE.rzCustom = true; $('#peRzCustom').classList.add('shown'); if (!PE.d.size) { const c = rzCurrent(); $('#peRzW').value = rzNum(Math.min(c[0], c[1])); $('#peRzH').value = rzNum(Math.max(c[0], c[1])); } $('#peRzW').focus(); rzRefresh(); }
+    else if (k === 'custom') { PE.rzCustom = true; if (PE.rzMem) rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); else rzRefresh(); cuOpen(b, true, true); }          // the size typed last comes back; the first time the blanks are empty and nothing is picked until both are typed
     else { PE.rzCustom = false; const q = RZ_PRESETS.find(x => x.k === k); rzPick({ w: q.w, h: q.h }); }
+  };
+  $('#peRzGrid').addEventListener('click', e => { const b = e.target.closest('.rz-opt'); if (!b || e.target.closest('.cu-field')) return; if (b.dataset.k === 'custom' && b.classList.contains('open')) { $('#peRzW').focus(); return; } rzOpt(b); });
+  $('#peRzGrid').addEventListener('keydown', e => {
+    if (e.target.matches('.rz-opt.cu') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); rzOpt(e.target); }
+    else if (e.target.closest('.cu-field') && (e.key === 'Enter' || e.key === 'Escape')) { e.preventDefault(); e.stopPropagation(); e.target.blur(); }
   });
-  const rzApply = () => { const w = parseFloat($('#peRzW').value), h = parseFloat($('#peRzH').value); if (w >= 2 && w <= 60 && h >= 2 && h <= 60) rzPick({ w: Math.round(w * 100) / 100, h: Math.round(h * 100) / 100 }); else { PE.rzPend = undefined; peActs(); } };
-  $('#peRzShape').addEventListener('click', e => { const b = e.target.closest('.rz-shape'); if (b) rzPickShape(b.dataset.k === 'each'); });
+  $('#peRzGrid').addEventListener('focusout', e => {          // leaving the Custom card: from here the size picked says which card shows; empty blanks go back to the size before
+    const cu = e.target.closest('.rz-opt.cu'); if (!cu || (e.relatedTarget && cu.contains(e.relatedTarget))) return;
+    setTimeout(() => { if (!PE.d || cu.contains(document.activeElement)) return; PE.rzCustom = false; rzRefresh(); }, 0);
+  });
+  const rzApply = e => { const t = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); if (t !== e.target.value) e.target.value = t;
+    const w = parseFloat($('#peRzW').value), h = parseFloat($('#peRzH').value);
+    if (w >= 2 && w <= 60 && h >= 2 && h <= 60) { PE.rzMem = { w: Math.round(w * 100) / 100, h: Math.round(h * 100) / 100 }; rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); } else { PE.rzPend = undefined; peActs(); } };
+  $('#peRzShape').addEventListener('change', e => { if (e.target.name === 'peRzOr') rzPickShape(e.target.value === 'each'); });
   $('#peRzGo').addEventListener('click', () => { if (!$('#peRzGo').disabled) peSetSize(rzShown(), rzEach()); });
-  $('#peRzW').addEventListener('input', rzApply); $('#peRzH').addEventListener('input', rzApply);
-  $('#peWmAdd').addEventListener('click', () => { pePush(); peWmSet(true); peRender(false); edSay('pe', 'wm'); });
-  $('#peWmRemove').addEventListener('click', () => { pePush(); peWmSet(false); peRender(false); });
+  $('#peRzGrid').addEventListener('input', e => { if (e.target.closest('.cu-field')) rzApply(e); });          // the blanks are built with the size cards, so they are listened to through the grid
+  peApplyClick('#peWmAdd', () => { pePush(); peWmSet(true); peRender(false); edSay('pe', 'wm'); }, () => { pePush(); peWmSet(false); peRender(false); });
   $('#peWmText').addEventListener('input', e => { wmPush(); PE.d.wm.text = e.target.value; peWmTouch(); });
-  document.querySelectorAll('input[name=peWmAngle]').forEach(r => r.addEventListener('change', e => {
-    pePush(); if (e.target.value === 'custom') { if (PE.d.wm.angle === 45 || PE.d.wm.angle === 0) PE.d.wm.angle = 30; } else PE.d.wm.angle = +e.target.value;
-    peWmTouch(); if (e.target.value === 'custom') $('#peWmDeg').focus();
-  }));
-  $('#peWmDeg').addEventListener('input', e => {
-    const v = parseFloat(e.target.value); if (!Number.isFinite(v)) return;
-    wmPush(); PE.d.wm.angle = clamp(Math.round(v), -180, 180); peWmTouch();
-  });
-  $('#peWmDeg').addEventListener('blur', e => { if (PE.d) e.target.value = PE.d.wm.angle; });
+  { // Direction's Custom: the word turns into the degrees to type. The value typed is kept (PE.wmDeg) and comes back on the next click; a blank left empty returns to the choice before it
+    const deg = $('#peWmDeg'), cu = deg.closest('.cu'); let ptr = false;
+    cu.addEventListener('pointerdown', () => { ptr = true; setTimeout(() => { ptr = false; }, 400); });          // a click puts the cursor in the blank; arrow keys only open it, so they keep moving across the choices
+    document.querySelectorAll('input[name=peWmAngle]').forEach(r => r.addEventListener('change', e => {
+      const v = e.target.value;
+      let moved = true;
+      if (v === 'custom') { PE.wmCustom = true; if (PE.wmDeg != null && PE.d.wm.angle !== PE.wmDeg) { pePush(); PE.d.wm.angle = PE.wmDeg; } else moved = false; }          // an empty blank changes nothing until a number is typed
+      else { PE.wmCustom = false; pePush(); PE.d.wm.angle = +v; }
+      if (moved) peWmTouch(); peState(); const sg = e.target.closest('.seg'); sg._place && sg._place(true);
+      if (v === 'custom' && ptr) cuOpen(cu, true, true);
+    }));
+    deg.addEventListener('input', e => {
+      const t = e.target.value.replace(/[^0-9-]/g, '').replace(/(?!^)-/g, ''); if (t !== e.target.value) e.target.value = t;
+      const n = parseInt(t, 10); if (!Number.isFinite(n)) return;
+      wmPush(); PE.d.wm.angle = clamp(n, -180, 180); PE.wmDeg = PE.d.wm.angle; peWmTouch();
+    });
+    deg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); deg.blur(); } });
+    cu.addEventListener('focusout', e => {          // leaving the choice: an empty blank goes back to the choice before it; a number typed stays
+      if (e.relatedTarget && cu.contains(e.relatedTarget)) return;
+      setTimeout(() => { if (!PE.d || cu.contains(document.activeElement)) return; PE.wmCustom = false; peState(); }, 0);          // from here the angle itself says which choice shows
+    });
+  }
   [['peWmB', 'b'], ['peWmI', 'i']].forEach(([id, k]) => $('#' + id).addEventListener('click', () => { pePush(); PE.d.wm[k] = k === 'b' ? PE.d.wm.b === false : !PE.d.wm.i; peWmTouch(); }));
   document.querySelectorAll('input[name=peWmMode]').forEach(r => r.addEventListener('change', e => { pePush(); PE.d.wm.mode = e.target.value; peWmTouch(); }));
   $('#peWmOpacity').addEventListener('input', e => { wmPush(); PE.d.wm.opacity = +e.target.value; $('#peWmOpacityVal').textContent = PE.d.wm.opacity + '%'; paintRange(e.target); peWmTouch(); });

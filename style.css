@@ -29,6 +29,7 @@
   --pill-bg:rgba(14,17,40,.92);   /* the dark pill: the wait pill and the hints drawn on the waveform, the same in light and dark */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
+  --cu-w:3.6ch; --cu-w-in:4.6ch;          /* the blank in a Custom choice: degrees hold a sign and three digits ("-180"), inches four digits and a point ("11.69") */
   --thumb:18px; --thumb-w:28px; --track:6px;   /* a slider: its handle is a pill 28px wide and 18px tall (--thumb, the height every slider measure uses), on a 6px track */
   --inactive:.45;   /* a control, field, or card that does not apply right now (switched off, nothing to act on): one level everywhere, never stacked */
   --val-w:round(up,calc(3ch + .81em),2px);   /* the room a value beside a slider keeps for its longest reading (three digits and a percent sign), so the slider never moves when 99% becomes 100% */
@@ -715,6 +716,18 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 
 /* the segmented control's glider */
 .seg-pill{position:absolute;top:2px;bottom:2px;left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform .45s var(--spring-press),width .45s var(--spring-press),opacity .2s var(--ease-color)}
+/* a choice that has a value to type (Watermark's Custom direction, Re-size's Custom size): opt-in with .cu on the option. Its word and its blank share one cell; as the pill arrives the word rises out and the blank rises in, on the pill's own timing, and the cell never changes width */
+.cu{overflow:hidden}
+.cu-in{display:grid;place-items:center;min-width:0}
+.cu-word,.cu-field{grid-area:1/1;transition:transform .45s var(--spring-press),opacity .2s var(--ease-color)}
+.cu-field{display:inline-flex;align-items:baseline;gap:var(--gap-sub);color:var(--ink);opacity:0;transform:translateY(60%);pointer-events:none}
+.cu.open .cu-word{opacity:0;transform:translateY(-60%)}
+.cu.open .cu-field{opacity:1;transform:none;pointer-events:auto}
+.cu-field input{position:static;opacity:1;pointer-events:auto;box-sizing:content-box;width:var(--cu-w);height:auto;min-height:0;margin:0;padding:0;border:0;border-bottom:var(--hair) solid var(--muted);border-radius:0;background:transparent;box-shadow:none;outline:none;text-align:center;color:inherit;font:inherit;font-variant-numeric:tabular-nums}
+.cu-field input:focus,.cu-field input:focus-visible{outline:none;border-color:var(--line);border-bottom-color:var(--accent)}          /* where you type: the hairline under the digits turns to the accent, no box and no ring */
+.cu-unit{color:var(--muted)}
+.cu:has(.cu-field input:focus){outline:none}          /* typing shows the accent hairline instead of the option's focus ring */
+@media (prefers-reduced-motion:reduce){.cu-word,.cu-field,.cu.open .cu-word{transform:none}}
 /* full screen button: the corners swell for a moment, then settle a touch larger */
 /* one full screen glyph in both editors (the video picture's strip and the Audio Editor's bar): the same outline (no fill), stroke (--fs-stroke), and swell; the hover is the shared glass hover */
 :root{--fs-stroke:2.2}
@@ -858,29 +871,8 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 
 /* ----- PDF Editor side views: Pages and Tools, Watermark and Resize glide over one another ----- */
 
-.rz-now{font-weight:600;font-size:var(--type-value);color:var(--ink)}
-.rz-now b{font-variant-numeric:tabular-nums}
-.rz-now .norm-to{display:inline-flex;align-items:center;max-width:0;overflow:hidden;white-space:nowrap;transition:opacity .45s var(--ease-out) .08s,transform .55s var(--ease-out) .08s,max-width .5s var(--ease-out)}
-.rz-now .norm-to.on{max-width:14em}
-.rz-unit{color:var(--muted);font-weight:400}
-.rz-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.rz-opt{display:grid;gap:1px;justify-items:start;text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);transition:transform .3s var(--spring-hover),background-color .2s var(--ease-color),border-color .2s var(--ease-color),box-shadow .3s var(--ease-ui)}
-.rz-opt b{font-size:var(--type-body);font-weight:600}
-.rz-opt small{font-size:11px;color:var(--muted);min-height:1.2em}
-@media (hover:hover){.rz-opt:hover{border-color:var(--muted);transform:translateY(-1px)}}
-.rz-opt:active{transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}
-.rz-opt{position:relative}
-.rz-opt[aria-pressed="true"]{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 7%,var(--panel2));box-shadow:0 0 0 1px var(--ink) inset}
-.rz-tick{position:absolute;top:7px;right:7px;display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--ink);color:var(--bg);opacity:0;transform:scale(.5);transition:opacity .2s var(--ease-color),transform .45s var(--spring-press)}
-.rz-tick svg{width:10px;height:10px}
-.rz-opt[aria-pressed="true"] .rz-tick{opacity:1;transform:none}
-.rz-custom{display:none;align-items:center;gap:8px;margin-top:10px}
-.rz-custom.shown{display:flex}
-.rz-custom input{width:0;flex:1;min-width:0}
-.rz-custom span{color:var(--muted);font-size:var(--type-body)}
 .keys{margin:0;background:var(--panel2)}
 .dlg .keys{margin:0}
-.rz-now{display:flex;align-items:center;flex-wrap:wrap;column-gap:.3em;margin:4px 0 22px}
 
 .ae-export{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .ae-export select{width:auto;max-width:210px;font-size:var(--type-body)}
@@ -1911,89 +1903,72 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-top{position:relative;flex:none}
 .pe-rule{display:block;flex:none;height:1px;background:var(--line)}
 .pe-rule.pe-snap{position:absolute;left:0;right:0;pointer-events:none}
-.pe-tv{padding:16px 20px 16px}
 .pe-tv[hidden]{display:none}
 .pe-tv.sliding{position:absolute;left:0;right:0;top:0;pointer-events:none}
 .pe-tv.measure{position:absolute;left:0;right:0;top:0;visibility:hidden}
 .pe-snap{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden!important;background:var(--panel2)}
 .pe-grid-wrap.pe-snap{overflow:auto!important;background:none}
-.pe-phead{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px}
 .pe-pt{min-width:0}
 .pe-pt h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-sub.warn{color:var(--turn-ink)}
 .pe-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
 .pe-status{font-variant-numeric:tabular-nums;white-space:nowrap}
 .pe-status:empty{display:none}
 .pe-status.err{color:var(--bad);font-weight:600}
 
 /* options: one tidy row under the head */
-.pe-opts{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin-top:14px}
-.pe-opts select{width:auto;min-width:150px;height:var(--pe-h);padding-top:0;padding-bottom:0;border-radius:var(--r-sm);font-size:var(--type-body)}
-.pe-check{gap:12px;font-size:var(--type-body);cursor:pointer;min-height:28px}
-.pe-check .switch{margin-left:0}
-.pe-end{margin-left:auto}
-.pe-range{display:flex;align-items:center;gap:12px;font-size:var(--type-body)}
-.pe-range label{color:var(--ink)}
-.pe-range input{width:170px;transition:opacity .25s var(--ease-ui)}
-.pe-range output{min-width:var(--val-w);text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 
 /* Add pages: three numbered steps in a row, the same numbers as the Audio Editor's noise steps */
-.pe-steps{display:flex;align-items:center;flex-wrap:wrap;gap:12px 26px;margin-top:14px}
-.pe-step{display:flex;align-items:center;gap:9px;min-width:0}
-.pe-step .mt-n{margin:0}
-.pe-st{font-weight:600;color:var(--muted)}
-.pe-steps .seg{min-width:0;min-height:var(--pe-h)}
-.pe-steps .seg label{padding:5px 10px;font-size:var(--type-body)}
-.pe-steps select{width:auto;min-width:112px;height:var(--pe-h);padding-top:0;padding-bottom:0;border-radius:var(--r-ctl);font-size:var(--type-body)}
-.pe-steps .btn{min-height:var(--pe-h)}
-.pe-acts .btn.primary,.pe-steps .btn.primary{min-width:126px}          /* wide enough for "Processing 100%", so the button never changes size or pushes Revert */
 #peCropNote{margin-top:12px}
 /* a plain line that says what a tool found or how it works */
-.pe .pe-notice{display:flex;align-items:flex-start;gap:9px;margin:12px 0 0;transition:opacity .3s var(--ease-ui);padding:7px 12px;border-radius:var(--r-card);background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--ink);font-size:var(--type-body);--lh:1.4}
-.pe .pe-notice svg{flex:none;width:17px;height:17px;margin-top:.5px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.pe .pe-notice.off{opacity:0;pointer-events:none}
-.pe .pe-notice.warn{background:color-mix(in srgb,var(--turn) 14%,transparent)}
-.pe .pe-notice.warn svg{stroke:var(--turn)}
-#peCropPadF{transition:opacity .3s var(--ease-ui)}
-#peCropPadF.dim{opacity:var(--inactive);pointer-events:none}
-.pe-cmode{min-width:min(190px,100%)}
-.pe-og{display:flex;align-items:center;gap:10px}
-.pe-cmode label{padding:5px 12px;font-size:var(--type-body)}
 
 /* Page size: the sizes as one row of tiles; the readout sits in the head */
-.pe-rz .rz-now{display:flex;align-items:center;gap:.3em;margin:0;font-size:13.5px;white-space:nowrap}
-.pe-rz .rz-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
-.pe-rz .rz-opt{display:flex;align-items:baseline;gap:8px;min-height:34px;padding:7px 30px 7px 11px;border-radius:var(--r-ctl)}
-.pe-rz .rz-opt small{min-height:0;white-space:nowrap}
-.pe-rz .rz-tick{top:50%;margin-top:-8px;right:9px}
-.pe-rz .pe-acts:has(.rz-custom.shown) .rz-now{display:none}
-.pe-rz .rz-opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
-.pe-rz .rz-opt[aria-pressed="true"] b{color:var(--accent)}
-.pe-rz .rz-tick{background:var(--accent);color:var(--accent-ink)}
-.pe-rz .rz-shapes{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));margin-top:8px}
-.pe-rz .rz-shape b{white-space:nowrap}
-.pe-rz .rz-custom{margin-top:0;gap:6px;align-items:center}
-.pe-rz .rz-custom input{flex:none;width:76px;height:var(--pe-h)}
 
 /* Watermark: labels beside their controls, two rows */
-.pe-wm-grid{display:grid;grid-template-columns:auto minmax(0,1.2fr) auto minmax(0,1fr);align-items:center;gap:10px 14px;margin-top:14px;transition:opacity .3s var(--ease-ui)}
-.pe-wl{color:var(--muted);white-space:nowrap}
-.pe-wm-grid .line-style{display:flex;gap:6px;min-width:0}
-.pe-wm-grid .line-style input{flex:1;min-width:0;height:var(--h-s)}
-.pe-wm-grid .pe-fmt i{font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:600}
-.pe-wm-grid .seg label{padding:6px 2px;font-size:var(--type-small)}
-.pe-wm-grid .pe-range input{flex:1;width:auto;min-width:0}
-.pe-dir{display:flex;align-items:center;gap:8px;min-width:0}
-.pe-dir .seg{flex:1;min-width:0}
-.pe-deg{display:none;align-items:center;gap:3px;color:var(--muted)}
-.pe-deg.shown{display:flex}
-.pe-deg input{width:62px;height:var(--h-s)}
 
+/* The tool band: heading (title and subtitle left, the page-size slider right), a hairline, then one padded settings row with the tool's one Apply button at its right end. Every value is a token. */
+.pe-tv{padding:0}
+.pe-phead{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-field);padding:var(--gap-set) var(--ae-side)}
+.pe-zoomsl{display:flex;align-items:center;gap:var(--gap-head);flex:none;color:var(--ink)}
+.pe-zoomsl input{width:calc(var(--h-s) * 3.4)}
+.pe-zoomsl .fmt-btn:disabled{opacity:var(--inactive);cursor:not-allowed}
+.pe-zoomsl .fmt-btn svg{width:var(--icon-m);height:var(--icon-m)}
+.pe-row{display:flex;align-items:flex-end;flex-wrap:wrap;column-gap:calc(var(--gap-field) + var(--gap-set));row-gap:var(--gap-set);padding:var(--gap-set) var(--ae-side)}
+.pe-row+.pe-row{padding-top:0}
+.pe-g{display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-label);min-width:0}
+.pe-g>.t-lbl{font-size:var(--type-body);color:var(--muted);line-height:var(--line-s)}          /* a setting's name: the same look as a slider's name (.field label), as in the video panel; small capitals are only for a card's title */
+.pe-row .seg,.pe-cards .seg{height:var(--h-s)}
+.pe-row .seg label,.pe .pe-row .seg label,.pe-cards .seg label{display:flex;align-items:center;justify-content:center;padding:0 var(--gap-head)}
+.pe-row select{width:auto;height:var(--h-s);padding-block:0}
+.pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:var(--gap-head);flex:none;margin-left:auto}
+.pe-lone{justify-content:flex-end}
+.pe-row .btn.small,.pe-row .fmt-btn{min-height:var(--h-s)}
+.pe-inl{display:flex;align-items:center;gap:var(--gap-head);height:var(--h-s);font-size:var(--type-body);color:var(--muted)}
+.pe-inl input[type=range]{width:calc(var(--h-s) * 3.2);flex:none}
+.pe-inl output{min-width:var(--val-w);text-align:left;color:var(--ink);font-variant-numeric:tabular-nums}
+#peCropPadF{transition:opacity .3s var(--ease-ui)}
+#peCropPadF.dim{opacity:var(--inactive);pointer-events:none}
+.pe-sw{display:flex;align-items:center;gap:var(--gap-head);height:var(--h-s);color:var(--muted);font-size:var(--type-body)}
+.pe-text{display:flex;align-items:center;gap:var(--gap-head)}
+.pe-text input[type=text]{width:calc(var(--h-s) * 3);height:var(--h-s)}
+.pe-text :is(input[type=text],.fmt-btn){font-size:var(--type-body)}          /* the text and its Bold and Italic buttons are the same size as every name and choice around them */
+.pe-bi{display:inline-flex;gap:var(--gap-label)}
+.pe-dir{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
+.btn.primary.pe-apply[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+/* Re-size: two rows of four size cards, then Orientation and Apply on the right */
+.pe-rzrow{align-items:flex-start;justify-content:space-between}
+.pe-row .seg label{white-space:nowrap}
+.pe-rz .rz-grid{display:grid;grid-template-columns:repeat(4,max-content);gap:var(--gap-head);align-content:start}
+.pe-rz .rz-opt{display:flex;align-items:center;justify-content:flex-start;gap:var(--gap-label);padding:0 var(--gap-head);min-height:var(--h-s)}
+.pe-rz .rz-opt small{min-height:0;white-space:nowrap;color:var(--muted)}
+.pe-rz .rz-opt.cu .cu-in{place-items:center start}
+.pe-rz .rz-opt.cu .cu-field input{width:var(--cu-w-in)}          /* the word and the blanks start where the other cards' names start */
+.pe-rzr{display:flex;align-items:flex-end;gap:var(--gap-field);margin-left:auto}
+.pe-rzr .pe-acts{margin-left:0}
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
 .pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:20px 20px 28px;overscroll-behavior:contain}
-.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:18px 14px;align-content:start}
+.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--pe-th,116px),1fr));gap:18px 14px;align-content:start}
 .pe .page-card{display:flex;flex-direction:column;gap:8px;padding:6px;border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color .2s var(--ease-color),transform .35s var(--spring-hover)}
 .pe .page-card[aria-pressed]{border:0;background:none}
 .pe .pe-grid.arrange .page-card{cursor:grab}
@@ -2155,45 +2130,53 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 @media (prefers-reduced-motion:reduce){.pe-crop-box .h,.pe-sel,.pe-crop-box,.pe-tools,.pe-thumb,.pe .page-card .tick,.pe-check{transition:none}}
 
 /* narrower windows: the tool list moves above the window as a grid of buttons, so every tool stays in sight */
-@media (max-width:900px){
-  .pe-main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px}
-  .pe-rail{padding:5px}
-  .pe-rail-in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+
+
+/* very short windows (under 600px: a laptop with the browser cut down): the editor scrolls instead of squeezing the pages any further. Above that the pages give way and the dialog fits the screen. */
+
+
+/* Watermark: two windows side by side, as the Audio Editor's tools are laid out */
+.pe-card-text .pe-text input[type=text]{flex:1 1 0;width:auto;min-width:0}
+.pe-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-card);padding:var(--gap-set) var(--ae-side)}
+.pe-cards .ae-card{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
+.pe-cards .pe-card-text,.pe-cards .pe-card-dir{flex-direction:column;align-items:stretch;justify-content:space-between;gap:var(--gap-set)}          /* two settings per card, each a name over its control: the first name sits on the card's top padding and the last control on its bottom, so both cards are balanced and their rows line up */
+.pe-cards .pe-g,.pe-card-dir .pe-dir{align-items:stretch}
+.pe-cards .pe-g{gap:var(--gap-head)}          /* in a card a name is trimmed to its letters, so a boxed control (text box, choice) sits --gap-head under it: the same space you see under a name in the video panel, where the line's own room under the letters makes up the rest */
+.pe-card-dir .pe-dir .seg{flex:1 1 0;min-width:0}
+.pe-row input[type=text]:focus-visible,.pe-row input[type=number]:focus-visible{outline:none;border-color:var(--accent)}          /* a field you type in shows its edge in the accent, not a ring */
+@container pedlg (min-width:729px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}          /* four cards to a row while the cards sit beside Page shape; narrower, they flow two to a row */
+.pe-win.waiting .pe-grid{opacity:var(--inactive)}
+.pe-win.waiting .pe-grid .page-card{pointer-events:none}
+.pe-grid{transition:opacity .3s var(--ease-ui)}
+.pe-toast{position:absolute;left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);z-index:2;pointer-events:none;text-align:center}
+.pe-toast.show{transform:translate(-50%,-50%)}
+#pdfDlg{container:pedlg/inline-size}
+@container pedlg (max-width:868px){
+  .pe-main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:var(--gap-set)}
+  .pe-rail{padding:var(--gap-label)}
+  .pe-rail-in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--gap-label)}
   .pe-rail-h{display:none}
-  .pe-tab{flex-direction:column;justify-content:center;gap:4px;min-height:54px;padding:7px 4px;font-size:var(--type-small);text-align:center;white-space:normal;--lh:1.2}
-  .pe-tab svg{width:19px;height:19px}
+  .pe-tab{flex-direction:column;justify-content:center;gap:var(--gap-label);min-height:calc(var(--h-s) * 1.9);padding:var(--gap-head) var(--gap-label);font-size:var(--type-small);text-align:center;white-space:normal;--lh:1.2}
 }
-@media (max-width:760px){
+@container pedlg (max-width:728px){
   .dlg.editor.pe{height:auto;max-height:none;grid-template-rows:none}
   .pe-main{grid-template-rows:none}
   .pe-rail-in{grid-template-columns:repeat(3,minmax(0,1fr))}
   .pe-body,.pe-crop{flex:none}
-  .pe-tv{padding:14px}
-  .pe-phead{flex-wrap:wrap;gap:10px}
+  .pe-phead{flex-wrap:wrap;gap:var(--gap-head)}
   .pe-acts{flex-wrap:wrap;flex:0 1 auto;min-width:0}
-  .pe-status{white-space:normal;text-align:right}          /* a reason line may take two lines on a phone rather than push the band wider */
-  .pe-steps{gap:12px}
-  .pe-step{flex:1 1 100%}
-  .pe-step .seg,.pe-step select,.pe-step .btn{flex:1}
-  .pe-cmode{width:100%}
-  .pe-cmode label{padding:5px 2px}
-  .pe-wm-grid{grid-template-columns:auto minmax(0,1fr)}
-  .pe-opts{gap:12px}
-  .pe-range input{width:120px}
-  .pe-grid-wrap{flex:none;height:min(58vh,480px);padding:14px}
-  .pe-grid{grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:14px 8px}
-  .pe-stage{flex:none;height:min(58vh,480px);padding:14px}
-  .pe-bar{padding-left:14px}
-  .pe-bar .pe-pages{width:96px;margin:0 2px 0 6px}
+  .pe-status{white-space:normal;text-align:right}
+  .pe-row{padding-inline:var(--gap-set)}
+  .pe-grid-wrap{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
+  .pe-grid{gap:var(--gap-field) var(--gap-head)}
+  .pe-stage{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
+  .pe-bar{padding-left:var(--gap-field)}
+  .pe-bar .pe-pages{width:calc(var(--h-s) * 3.2);margin:0 var(--gap-sub) 0 var(--gap-label)}
+  .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+    .pe-rzr{flex-wrap:wrap;margin-left:0}
 }
-@media (max-width:400px){.pe-bar{padding-right:6px}.pe-bar .pe-pages{width:78px;margin:0 0 0 4px;padding:0 7px}.pe-bar .btn.small{padding-left:8px;padding-right:8px}}
-/* very short windows (under 600px: a laptop with the browser cut down): the editor scrolls instead of squeezing the pages any further. Above that the pages give way and the dialog fits the screen. */
-@media (min-width:761px) and (max-height:600px){
-  .dlg.editor.pe{height:auto;max-height:none;grid-template-rows:none}
-  .pe-main{grid-template-rows:none}
-  .pe-body,.pe-crop{flex:none}
-  .pe-grid-wrap,.pe-stage{flex:none;height:max(340px,calc(100dvh - 330px))}
-}
+@container pedlg (max-width:560px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
+@container pedlg (max-width:368px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}}
 
 .pe-lvl{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);box-sizing:border-box;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 7px;border-radius:999px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;--lh:1.4;box-shadow:0 1px 4px rgba(0,0,0,.28);opacity:0;transform:translateY(4px) scale(.9);transition:opacity .3s var(--ease-ui),transform .4s var(--spring-press);pointer-events:none}
 .pe-win[data-mode="dim"] .page-card.lvl .pe-lvl,.pe-win[data-mode="skew"] .page-card.lvl .pe-lvl,.pe-win[data-mode="clean"] .page-card.lvl .pe-lvl,.pe-win[data-mode="crop"] .page-card.shared:not(.off) .pe-lvl{opacity:1;transform:none}
@@ -2322,11 +2305,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 
 /* PDF Editor controls: one height (--h-s) for every button, choice and menu in a tool's head, so what sits side by side always matches */
-.pe{--pe-h:var(--h-s)}
-.pe .pe-tv .btn.small{min-height:var(--pe-h)}
-.pe .pe-tv .seg{min-height:var(--pe-h);box-sizing:border-box}
-.pe .pe-tv .seg label{display:flex;align-items:center;justify-content:center;padding-top:0;padding-bottom:0}
-.pe .pe-opts select{height:var(--pe-h)}
 
 /* History in the PDF Editor and the main view: the same list as the Audio Editor's, a little smaller (no ticks to keep changes) */
 .hist-wrap{position:relative;display:inline-flex;align-items:center;gap:8px}
@@ -2506,7 +2484,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   --trim-t:var(--cut-t);--trim-b:var(--cut-b);          /* --cut is always the metrics' trim, for text the browser cannot trim (a label that is a flex box holds its text in a box of no name) */
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
-#audioDlg .ae-card :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+:is(#audioDlg,#pdfDlg) .ae-card :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 #audioDlg .ae-card .lv-big{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a big number is trimmed to its letters like any text */
 #audioDlg .ae-card>.lv-big{margin-block:auto 0;position:relative;top:calc((var(--trim-t) - var(--trim-b)) / 2)}          /* a big value that is a card's own part (Gain) is centered between the heading and the slider: the spare room is split evenly between its top and the slider's top (the card's last part already takes the rest), so there is equal room above and below its letters. Where the browser cannot trim text, the box has the font's spare room, which top gives back */
 #audioDlg .ae-card .eq-lbl{height:var(--line-s);line-height:var(--line-s);margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */
@@ -2516,7 +2494,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .beta-chip{display:inline-flex;align-items:center;flex:none;height:20px;padding:0 8px;border:1px solid var(--line);border-radius:99px;background:var(--panel2);color:var(--muted);font-size:var(--type-note);font-weight:600;--lh:1;white-space:nowrap}
 .beta-chip[hidden]{display:none}
 .ae-proc .beta-chip{margin:0 var(--gap-sub) 0 0}          /* in the list the chip is the row's last part, on the readouts' right line; the Amount sits before it */
-#audioDlg .ae-card input[type=range]{margin-block:calc(var(--hair) * -1)}          /* a slider's box is its thumb and ring (the input is 20px tall around an 18px thumb) */
+:is(#audioDlg,#pdfDlg) .ae-card input[type=range]{margin-block:calc(var(--hair) * -1)}          /* a slider's box is its thumb and ring (the input is 20px tall around an 18px thumb) */
 /* every scale label, in any panel: */
 .sl-ends .sl-end,#audioDlg .ae-card .sl-end{text-box:trim-both cap alphabetic;box-sizing:content-box;height:var(--trim-h);padding:var(--gap-sub) var(--gap-label);margin:calc(var(--trim-t) - var(--gap-sub)) calc(-1 * var(--gap-label)) calc(var(--trim-b) - var(--gap-sub))}          /* a scale label's box is its letters; the 2px and 4px around them are its click area, taken back by the margin */
 

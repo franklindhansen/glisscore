@@ -8,10 +8,10 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(60000); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(1200);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800); await p.click('#peRail .pe-tab[data-tool=resize]'); await p.waitForTimeout(900);
-  const st = () => p.evaluate(() => ({ undo: PE.undo.length, size: PE.d.size ? [PE.d.size.w, PE.d.size.h] : null, go: !document.querySelector('#peRzGo').disabled, now: document.querySelector('#peRzNew').textContent, sel: Array.from(document.querySelectorAll('.rz-opt[aria-pressed=true]')).map(x => x.dataset.k) }));
+  const st = () => p.evaluate(() => ({ undo: PE.undo.length, size: PE.d.size ? [PE.d.size.w, PE.d.size.h] : null, go: !document.querySelector('#peRzGo').disabled, sel: Array.from(document.querySelectorAll('.rz-opt[aria-pressed=true]')).map(x => x.dataset.k) }));
   const s0 = await st(); ok('before a choice: no step, Re-size greyed out', s0.undo === 0 && !s0.go && s0.size === null, JSON.stringify(s0));
   await p.click('.rz-opt[data-k=tabloid]'); await p.waitForTimeout(500); const s1 = await st();
-  ok('choosing a size changes nothing yet and makes no step, but shows the choice and enables Re-size', s1.undo === 0 && s1.size === null && s1.go && s1.sel[0] === 'tabloid' && /11/.test(s1.now), JSON.stringify(s1));
+  ok('choosing a size changes nothing yet and makes no step, but shows the choice and enables Re-size', s1.undo === 0 && s1.size === null && s1.go && s1.sel[0] === 'tabloid', JSON.stringify(s1));
   await p.click('.rz-opt[data-k=a4]'); await p.waitForTimeout(300); await p.click('.rz-opt[data-k=letter]'); await p.waitForTimeout(300); const s2 = await st();
   ok('changing the choice again is still no step', s2.undo === 0 && s2.size === null && s2.sel[0] === 'letter', JSON.stringify(s2));
   await p.click('.rz-opt[data-k=orig]'); await p.waitForTimeout(300); const s3 = await st(); ok('going back to Original greys Re-size out again', !s3.go && s3.undo === 0, JSON.stringify(s3));

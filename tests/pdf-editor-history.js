@@ -12,7 +12,8 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(800);
   // the two band sizes
   const hs = {}; for (const t of ['pages', 'clean', 'skew', 'crop', 'split', 'resize', 'wm']) { await p.click('#peRail .pe-tab[data-tool=' + t + ']'); await p.waitForTimeout(900); hs[t] = await p.evaluate(() => Math.round(document.querySelector('#peBand').getBoundingClientRect().height)); }
-  ok('Arrange, Clean, Re-kilter, Crop and Split share one head size, Re-size and Watermark a taller one', new Set(['pages', 'clean', 'skew', 'crop', 'split'].map(t => hs[t])).size === 1 && hs.resize === hs.wm && hs.resize > hs.pages + 20, JSON.stringify(hs));
+  // old: Arrange, Clean, Re-kilter, Crop, and Split shared one head size and Re-size and Watermark a taller one; new: each tool's band is as tall as its own heading and rows
+  ok('each tool band is as tall as its own rows: one settings row alike, Watermark (two rows) tallest', hs.pages === hs.clean && hs.wm > hs.pages && hs.skew < hs.pages, JSON.stringify(hs));
   // Manual and Auto
   await p.click('#peRail .pe-tab[data-tool=crop]'); await p.waitForTimeout(1200);
   await p.click('input[name=peCropMode][value=hand]', { force: true }); await p.waitForTimeout(700); const one1 = await p.evaluate(() => PE.one != null);
@@ -26,7 +27,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.click('#peRail .pe-tab[data-tool=skew]'); await p.waitForTimeout(900);
   const before = await p.evaluate(() => ({ go: document.querySelector('#peSkewGo').disabled, steps: PE.undo.length })); await p.click('#peSkewGo'); await p.waitForTimeout(3000);
   const after = await p.evaluate(() => ({ go: document.querySelector('#peSkewGo').disabled, steps: PE.undo.length, label: document.querySelector('#peSkewGo').textContent }));
-  ok('Re-kilter on pages that are already level adds no step and greys the button out', !before.go && after.go && after.steps === before.steps && after.label === 'Re-kilter', JSON.stringify({ before, after }));
+  ok('Re-kilter on pages that are already level adds no step and greys the button out', !before.go && after.go && after.steps === before.steps && after.label === 'Apply', JSON.stringify({ before, after }));
   await p.click('#peRail .pe-tab[data-tool=crop]'); await p.waitForTimeout(800); await p.click('#peRail .pe-tab[data-tool=skew]'); await p.waitForTimeout(800);
   ok('and it stays grey when you come back to it', await p.evaluate(() => document.querySelector('#peSkewGo').disabled));
   // history
