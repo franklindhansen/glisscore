@@ -934,7 +934,7 @@ const pePop = card => { const tk = card && card.querySelector('.tick'); if (tk &
 const peBoxes = () => new Map(Array.from($('#peGrid').children).map(c => [c, c.getBoundingClientRect()]));
 /* the turn's ease, the same curve as the other page moves, sampled so the turn can be written as keyframes */
 const peBez = (x1, y1, x2, y2) => t => { const f = (a, b, s) => 3 * (1 - s) * (1 - s) * s * a + 3 * (1 - s) * s * s * b + s * s * s; let lo = 0, hi = 1, s = t; for (let i = 0; i < 24; i++) { if (f(x1, x2, s) < t) lo = s; else hi = s; s = (lo + hi) / 2; } return f(y1, y2, s); };
-const PE_TURN_EASE = peBez(.22, 1, .36, 1), PE_TURN_MS = 250, PE_TURN_N = 16;          // the ease-out of the tool moves: it lands firmly, so the page snaps rather than settles
+const PE_TURN_EASE = peBez(.22, 1, .36, 1), PE_TURN_MS = AE_TOOL_MS, PE_TURN_N = 16;          // the ease-out of the tool moves: it lands firmly, so the page snaps rather than settles
 /* a turned page swings upright inside its own room in 250ms: the room (the thumb) and the bar stay put, the cards that moved glide (FLIP) on the same clock, and the picture shrinks only as far as its corners need to stay in the room */
 function peGlide(was, cv, ow) {
   if (reducedMotion()) return;

@@ -243,7 +243,7 @@ function sheetHide(el) {
   clearTimeout(el._ct); if (el.hidden) return;
   if (reducedMotion()) { el.hidden = true; return; }
   el.classList.add('closing'); el.inert = true;
-  el._ct = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); el.inert = false; }, 240);
+  el._ct = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); el.inert = false; }, AE_TOOL_MS * 0.55);
 }
 function aeDropPreview(d) { const n = d ? d.fx.noise : S.set.fx.noise; if (NRJ.pv && S.audio && nrReady(n) && !(d && aeBp('noise')) && NRJ.pv.key === nrKey(n)) return; if (NRJ.pv) { NRJ.pv.run.cancel(); NRJ.pv = null; if (NRJ.onProg) NRJ.onProg(1); } }          // a run dropped with nothing to take its place ends its bar
 /* leaving while the audio is still being exported would throw the export away, so ask first */
@@ -2843,7 +2843,7 @@ function aeFsApply(on) {
   aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); aeAnim();
 }
 /* full screen is one gesture: the window travels to the other layout's rectangle on one ease and length, moved by transform alone (no layout at each size); the picture goes with it between its two real rectangles (unseen: it fades with the rest). The old parts fade out at once, the other layout takes over near the end (at the same place and size) and its parts fade in as the motion lands, like a video player's controls. The picture is one of the parts: it is never seen stretched or at a size it does not have */
-const AE_FS_LOW = 0.25, AE_FS_DIP = 0.45, AE_FS_EASE = EASE_GLIDE, AE_FS_MS = 400, AE_FS_SWAP = 0.17, AE_FS_OUT = 64, AE_FS_IN = 220;          // the hand-over is where the picture is about halfway (the ease is at .5), so it is never stretched far from either size
+const AE_FS_LOW = 0.25, AE_FS_DIP = 0.45, AE_FS_EASE = EASE_GLIDE, AE_FS_MS = AE_MOVE_MS, AE_FS_SWAP = 0.17, AE_FS_OUT = 64, AE_FS_IN = 220;          // the hand-over is where the picture is about halfway (the ease is at .5), so it is never stretched far from either size
 function aeFsGeo(box, wave) {          // the window's rectangle and the picture's gaps to the window's inner edges
   const r = box.getBoundingClientRect(), w = wave.getBoundingClientRect(), cs = getComputedStyle(box), px = v => parseFloat(v) || 0;
   return { l: r.left, t: r.top, w: r.width, h: r.height, rad: px(cs.borderTopLeftRadius), wl: w.left - r.left - px(cs.borderLeftWidth), wt: w.top - r.top - px(cs.borderTopWidth), wr: r.right - w.right - px(cs.borderRightWidth), wb: r.bottom - w.bottom - px(cs.borderBottomWidth) };

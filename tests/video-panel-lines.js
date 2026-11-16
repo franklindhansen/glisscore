@@ -32,7 +32,7 @@ const lines = () => {
     if (!shown(f)) continue;
     const kids = [...f.children].filter(shown), lbl = kids.find(k => k.matches('.lbl, label:not(.check)')), ctl = lbl && kids[kids.indexOf(lbl) + 1];
     if (lbl && ctl && ctl.matches('.seg, input[type=range], select, input[type=text], textarea, .combo, .line-row, .btn, .lv-big, .fade-shape') && !f.matches(':has(>.line-row)')) {
-      const d = R(ctl).top - R(lbl).bottom; if (!near(d, T.label) && !ctl.matches('.lv-big')) put('label to control ' + d.toFixed(1) + ' not ' + T.label, f);
+      const mb = Math.min(0, parseFloat(getComputedStyle(lbl).marginBottom) || 0), want = ctl.matches('.seg, select, .combo, .fade-shape') ? T.head : T.label, d = R(ctl).top - (R(lbl).bottom + mb); if (!near(d, want) && !ctl.matches('.lv-big')) put('label to control ' + d.toFixed(1) + ' not ' + want, f);          // the label is trimmed to its letters, so the gap is measured from them
     }
   }
   const body = [...panel.querySelectorAll('.group-body, #fadeBody, .group')].filter(shown);
@@ -66,7 +66,7 @@ const lines = () => {
     if (!(big.parentElement === document.querySelector('#fadeLenLbl') && lenL.bottom <= sl.top + 0.5)) bad.push('Length: the value is not in the label row above the slider');
     if (big.getBoundingClientRect().height > lenL.height + 0.5) bad.push('Length: the value is bigger than its label row');
     if (!(shapeL.bottom <= cv.top + 0.5 && cv.bottom <= cur.top + 0.5)) bad.push('Curve: the label, the picture, and the choice are not in that order');
-    if (!near(cur.top - cv.bottom, T.label)) bad.push('Curve: the choice is ' + (cur.top - cv.bottom).toFixed(1) + ' under the picture, not ' + T.label);
+    if (!near(cur.top - cv.bottom, T.head)) bad.push('Curve: the choice is ' + (cur.top - cv.bottom).toFixed(1) + ' under the picture, not ' + T.head);
     if (!near(cv.left, cur.left) || !near(cv.right, cur.right)) bad.push('Curve: the picture and the choice are not on the same lines');
     if (!(side.bottom < lenL.top && sl.bottom < shapeL.top && cur.bottom < to.top)) bad.push('Fades: the four parts are not stacked in order');
   }

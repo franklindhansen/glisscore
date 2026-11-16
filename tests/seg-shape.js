@@ -21,6 +21,9 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     }).filter(Boolean));
     const off = geo.filter(g => g.dl > 1 || g.dw > 1 || g.op !== '1' || g.inT < 2.5 || g.inB < 2.5);
     ok(label + ': the pill sits on the selected option, inside the inset (' + geo.length + ' visible)', geo.length >= 3 && !off.length, JSON.stringify(off.slice(0, 3)));
+    const mid = await p.evaluate(() => [...document.querySelectorAll('.seg')].filter(s => s.offsetWidth).flatMap(s => { const sr = s.getBoundingClientRect(); return [...s.querySelectorAll('label')].filter(l => l.textContent.trim() && !l.querySelector('input[type=text], input[type=number]')).map(l => { const r = document.createRange(); r.selectNodeContents(l); const t = r.getBoundingClientRect(); return { id: (s.id || s.className) + ' ' + l.textContent.trim().slice(0, 12), d: Math.abs((t.top + t.bottom) / 2 - (sr.top + sr.bottom) / 2) }; }); }));
+    const low = mid.filter(m => m.d > 0.5);
+    ok(label + ': the text in every choice is centered on the choice (' + mid.length + ' options)', mid.length > 20 && !low.length, JSON.stringify(low.slice(0, 3)));
     if (width > 760) {
       const hs = await p.evaluate(() => { const h = e => e && Math.round(e.getBoundingClientRect().height * 10) / 10, tok = n => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n)); return { view: h(document.querySelector('#aeView')), trim: h(document.querySelector('#aeSilence')), full: h(document.querySelector('#aeFull')), play: h(document.querySelector('#aePlay')), m: tok('--h-m'), l: tok('--h-l') }; });
       ok(label + ': the transport matches the video editor\'s: Wave | Spec is --h-m; Play, Trim silence, and Full screen are --h-l', hs.view === hs.m && hs.trim === hs.l && hs.full === hs.l && hs.play === hs.l, JSON.stringify(hs));

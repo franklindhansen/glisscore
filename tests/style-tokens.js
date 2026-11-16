@@ -71,3 +71,6 @@ ok('no new raw value in any editor', fresh.length === 0, fresh.length + ' new');
 for (const f of fresh) ok('new raw value at style.css:' + f.line + ' (' + f.value.slice(0, 60) + '): ' + f.key, false, 'use a token from :root, or a calc() over tokens');
 for (const [k, n] of gone) ok('listed offender is gone, delete line ' + n + ' of tests/style-tokens-allowed.txt: ' + k, false);
 ok('every line of tests/style-tokens-allowed.txt is still in style.css (delete a line when its rule is fixed)', gone.length === 0, gone.length ? gone.length + ' gone: delete their lines' : '');
+// one glass recipe: every backdrop-filter outside :root is the shared blur token (or none)
+const typedBlur = []; for (const r of rules) { if (r.sels.some(s => /^:root|^html\[data-theme|:root\[/.test(s))) continue; for (const d of r.decls) if (/backdrop-filter$/.test(d.prop) && !/^(none|var\(--glass-blur\))$/.test(d.value.trim())) typedBlur.push(d.value + ' at style.css:' + r.line); }
+ok('every glass element uses the one blur token', typedBlur.length === 0, typedBlur.join(', '));

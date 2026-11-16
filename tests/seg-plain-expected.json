@@ -4,8 +4,8 @@
   "html": "<label title=\"Systems\"><input type=\"radio\" name=\"selMode\" value=\"systems\" aria-label=\"Systems\" checked=\"\"><span><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M21 9H3\"></path><path d=\"M21 15H3\"></path></svg></span></label><label title=\"Full page\"><input type=\"radio\" name=\"selMode\" value=\"full\" aria-label=\"Full page\"><span><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"></path><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"></path></svg></span></label>",
   "seg": "grid 26px 2px 9px 1px 1fr",
   "labels": [
-   "grid 0px 9px 13px 400 rgb(26, 29, 38) center normal normal",
-   "grid 0px 9px 13px 400 rgb(95, 103, 120) center normal normal"
+   "grid 0px 9px 13px 400 rgb(26, 29, 38) center normal center",
+   "grid 0px 9px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -13,9 +13,9 @@
   "html": "\n            <label><input type=\"radio\" name=\"transition\" value=\"flip\" checked=\"\"><span>Turn</span></label>\n            <label><input type=\"radio\" name=\"transition\" value=\"slide\"><span>Slide</span></label>\n            <label><input type=\"radio\" name=\"transition\" value=\"cut\"><span>Cut</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -23,8 +23,8 @@
   "html": "\n            <label><input type=\"radio\" name=\"slideDir\" value=\"in\" checked=\"\"><span>In</span></label>\n            <label><input type=\"radio\" name=\"slideDir\" value=\"out\"><span>Out</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -32,9 +32,9 @@
   "html": "\n            <label><input type=\"radio\" name=\"ref\" value=\"start\"><span>Start</span></label>\n            <label><input type=\"radio\" name=\"ref\" value=\"middle\"><span>Middle</span></label>\n            <label><input type=\"radio\" name=\"ref\" value=\"end\" checked=\"\"><span>End</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center"
   ]
  },
  {
@@ -42,9 +42,9 @@
   "html": "\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"spread\" checked=\"\"><span>Spread</span></label>\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"single\"><span>Single page</span></label>\n            <label><input type=\"radio\" name=\"pageLayout\" value=\"system\"><span>System</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -52,9 +52,9 @@
   "html": "<label><input type=\"radio\" name=\"fadeSide\" value=\"both\" checked=\"\"><span>Both</span></label><label><input type=\"radio\" name=\"fadeSide\" value=\"in\"><span>In</span></label><label><input type=\"radio\" name=\"fadeSide\" value=\"out\"><span>Out</span></label>",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -62,8 +62,8 @@
   "html": "<label><input type=\"radio\" name=\"fadeShape\" value=\"natural\" checked=\"\"><span>Gradual</span></label><label><input type=\"radio\" name=\"fadeShape\" value=\"standard\"><span>Straight</span></label>",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -71,8 +71,8 @@
   "html": "\n                <label title=\"The whole picture fades\"><input type=\"radio\" name=\"fadeStyle\" value=\"black\" checked=\"\"><span>Black</span></label>\n                <label title=\"Only the score and credits fade\"><input type=\"radio\" name=\"fadeStyle\" value=\"score\"><span>Background</span></label>\n              ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -80,8 +80,8 @@
   "html": "\n            <label><input type=\"radio\" name=\"creditsAt\" value=\"start\"><span>Start</span></label>\n            <label><input type=\"radio\" name=\"creditsAt\" value=\"end\" checked=\"\"><span>End</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center"
   ]
  },
  {
@@ -89,8 +89,8 @@
   "html": "\n            <label><input type=\"radio\" name=\"credStart\" value=\"with\" checked=\"\"><span>With last page</span></label>\n            <label><input type=\"radio\" name=\"credStart\" value=\"after\"><span>After last page</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -98,8 +98,8 @@
   "html": "\n            <label><input type=\"radio\" name=\"credEnd\" value=\"end\" checked=\"\"><span>With video</span></label>\n            <label><input type=\"radio\" name=\"credEnd\" value=\"early\"><span>Custom</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -107,9 +107,9 @@
   "html": "\n            <label><input type=\"radio\" name=\"vidQ\" value=\"standard\" checked=\"\"><span>Standard</span></label>\n            <label><input type=\"radio\" name=\"vidQ\" value=\"high\"><span>High</span></label>\n            <label><input type=\"radio\" name=\"vidQ\" value=\"max\"><span>Max</span></label>\n          ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {
@@ -117,9 +117,9 @@
   "html": "\n        <label><input type=\"radio\" name=\"ioKind\" value=\"all\" checked=\"\"><span>Everything</span></label>\n        <label><input type=\"radio\" name=\"ioKind\" value=\"settings\"><span>Settings</span></label>\n        <label><input type=\"radio\" name=\"ioKind\" value=\"markings\"><span>Page markings</span></label>\n      ",
   "seg": "grid 34px 2px 9px 1px 1fr",
   "labels": [
-   "block 6px 4px 13px 400 rgb(26, 29, 38) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between",
-   "block 6px 4px 13px 400 rgb(95, 103, 120) center normal space-between"
+   "flex 0px 4px 13px 400 rgb(26, 29, 38) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center",
+   "flex 0px 4px 13px 400 rgb(95, 103, 120) center normal center"
   ]
  },
  {

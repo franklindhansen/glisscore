@@ -8,7 +8,7 @@ exports.textScan = function (where) {
   const prevEl = e => { let p = e.previousElementSibling; while (p && !shown(p)) p = p.previousElementSibling; return p; };
   const nextEl = e => { let p = e.nextElementSibling; while (p && !shown(p)) p = p.nextElementSibling; return p; };
   const below = (a, b) => b.top >= a.bottom - 0.5 && b.left < a.right && b.right > a.left;          // b sits under a
-  const mg = (e, k) => e.matches('input[type=range], .eq-lbl') ? Math.min(0, parseFloat(getComputedStyle(e)[k]) || 0) : 0;          // a slider and a label whose box is trimmed to what is drawn (by a negative margin) are measured to the edge of what is drawn: the box less its negative margin
+  const mg = (e, k) => e.matches('input[type=range], .eq-lbl, .panel .field>label:not(.check), .panel .field>.lbl') ? Math.min(0, parseFloat(getComputedStyle(e)[k]) || 0) : 0;          // a slider and a label whose box is trimmed to what is drawn (by a negative margin) are measured to the edge of what is drawn: the box less its negative margin
   const gap = (a, b, want, what, e, tol) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); if (!below(ra, rb)) return false; const g = (rb.top - mg(b, 'marginTop')) - (ra.bottom + mg(a, 'marginBottom')); if (!near(g, want, tol)) bad.push(where + ': ' + what + ' of ' + name(e) + ' is ' + g.toFixed(2) + 'px, not ' + want + 'px'); return true; };
   // title blocks
   document.querySelectorAll('.t-block').forEach(b => { if (!shown(b)) return; n.block++; const kids = [...b.children].filter(shown), title = kids[0], sub = kids.find(k => k.matches('.t-sub')), br = b.getBoundingClientRect();
@@ -29,7 +29,7 @@ exports.textScan = function (where) {
   // labels above their controls
   document.querySelectorAll('.field, .eq-cell, .mt-body').forEach(f => { if (!shown(f)) return; const l = [...f.children].find(c => shown(c) && c.matches('label, .lbl, .eq-lbl, .mt-title, .t-lbl')); if (!l || (l.tagName === 'LABEL' && l.matches('.check, .check-row'))) return; const k = nextEl(l); if (!k) return; n.label++;
     const s = getComputedStyle(l); if (parseFloat(s.fontSize) !== 13) bad.push(where + ': the label ' + name(l) + ' is ' + s.fontSize + ', not 13px');
-    if (gap(l, k, T.label, 'the gap from the label to its control', l, 0.6)) { const a = l.getBoundingClientRect(), b = k.getBoundingClientRect(); if (!near(a.left, b.left, 0.6)) bad.push(where + ': the label ' + name(l) + ' and its control do not share a left edge (' + a.left.toFixed(1) + ' vs ' + b.left.toFixed(1) + ')'); } });
+    if (gap(l, k, l.closest('.panel') && k.matches('.seg, select, .combo, .fade-shape') ? T.head : T.label, 'the gap from the label to its control', l, 0.6)) { const a = l.getBoundingClientRect(), b = k.getBoundingClientRect(); if (!near(a.left, b.left, 0.6)) bad.push(where + ': the label ' + name(l) + ' and its control do not share a left edge (' + a.left.toFixed(1) + ' vs ' + b.left.toFixed(1) + ')'); } });
   // headings of cards and groups
   // The heading to its content is --gap-head. A heading row directly inside an Audio Editor card is followed by the balanced body instead (the spec's "The balanced body": equal space above and below the body, measured from the heading row's lowest visible edge),
   // which tests/lib/layout-lines.js checks (body-balance), so the 8px rule does not apply there.

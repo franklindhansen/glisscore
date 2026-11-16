@@ -18,7 +18,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const slid = [...document.querySelectorAll('#peGrid .page-card')].filter(c => c.getAnimations().some(a => a.effect && a.effect.getKeyframes().some(k => /translate3d\(-?[\d.]+px/.test(k.transform || '')))).length;
     return { ghost: !!ghost, dur: gan[0] ? gan[0].effect.getTiming().duration : null, frames: gan[0] ? gan[0].effect.getKeyframes().length : 0, slid, slides: document.querySelectorAll('.pe-pos.slide').length };
   });
-  ok('the held page lands in one glide (two keyframes, 250ms)', just.ghost && just.dur === 250 && just.frames === 2, JSON.stringify(just));
+  ok('the held page lands in one glide (two keyframes, the shared fade time)', just.ghost && just.dur === 260 && just.frames === 2, JSON.stringify(just));
   ok('the pages it passed slide to their places on the same clock', just.slid >= 2, JSON.stringify(just));
   ok('their numbers slide with their pages', just.slides >= 2, String(just.slides));
   await p.waitForTimeout(1500);          // the numbers slide one at a time, so the last one lands after the page

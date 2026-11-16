@@ -603,7 +603,7 @@ class Renderer {
    Stage (preview)
    ==================================================================== */
 let previewR = null, stageDirty = true;
-const PAGE_WAIT_PAPER = '#d9d6cf', PAGE_FADE_MS = 260, PAGE_LABEL_MS = 350;          // dim paper for a page with no picture yet; the sharp picture's fade; how long a page waits before it says why
+const PAGE_WAIT_PAPER = '#d9d6cf', PAGE_FADE_MS = AE_TOOL_MS, PAGE_LABEL_MS = 350;          // dim paper for a page with no picture yet; the sharp picture's fade; how long a page waits before it says why
 const pageFadeMs = () => reducedMotion() ? 80 : PAGE_FADE_MS;
 /* a page's thumbnail, softened, on dim paper: what a page shows until its own picture is made. With `part` (System) it is one part of the page, at the size and place its sharp picture will have, on the page's own paper. */
 function softPage(thumb, w, h, part) {

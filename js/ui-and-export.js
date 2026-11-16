@@ -111,7 +111,7 @@ function pgWaitHost(host, cv) {
 }
 function pgWaitSet(host, items) {
   const have = host._pw || (host._pw = new Map()), ids = new Set(items.map(i => i.id));
-  have.forEach((el, id) => { if (ids.has(id)) return; have.delete(id); clearTimeout(el._lt); el.classList.add('out'); setTimeout(() => el.remove(), 260); });
+  have.forEach((el, id) => { if (ids.has(id)) return; have.delete(id); clearTimeout(el._lt); el.classList.add('out'); setTimeout(() => el.remove(), AE_TOOL_MS); });
   items.forEach(it => {
     let el = have.get(it.id);
     if (!el) {
