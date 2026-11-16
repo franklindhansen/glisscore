@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.21
+
+The PDF Editor fits cleanly at every window width, and its status lines are shorter.
+
 ## 1.2.20
 
 On small screens the PDF Editor's tools open from a drop-down, and the page size slider floats over the pages and returns to the middle on a double-click. Select all and Deselect all sit in one pill, and the tool descriptions are shorter.
