@@ -6,7 +6,7 @@ const { chromium } = require('playwright-core');
 const { install } = require('./lib/measure.js');
 const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' + x : ''));
 const SUBS = { noise: 'Banish hiss, hum, or room tone.', spec: 'Heal or turn down a blip, a hum, or a squeak you can see.', eq: 'Shape the tone, band by band.', imager: 'Widen, narrow, or re-center the sound.', fades: 'Ease the start and end.', level: 'Set the finished audio\'s volume.', emu: 'Borrow the sound of another recording.' };
-const PDF_SUBS = { Arrange: 'Drag to reorder. Click a page to leave it out.', Clean: 'Whiten the paper and clear the specks.', 'Re-kilter': 'Straighten tilted, slanted, and curved scans.', Crop: 'Trim the empty margins around the music.', Dim: 'Soften the music before or after a repeat.', 'Split spreads': 'Turn two-page spreads into single pages.', 'Re-size': 'Fit every page to one size.', Watermark: 'Print text across the pages you pick.' };
+const PDF_SUBS = { Arrange: 'Drag to reorder. Click to leave out.', Clean: 'Whiten paper and clear specks.', 'Re-kilter': 'Straighten tilted, slanted, and curved scans.', Crop: 'Trim empty margins around the music.', Dim: 'Soften music before or after a repeat.', 'Split spreads': 'Turn spreads into single pages.', 'Re-size': 'Fit every page to one size.', Watermark: 'Print text across chosen pages.' };
 const ORDER = ['in', 'noise', 'spec', 'eq', 'imager', 'fades', 'level', 'out', 'emu'];
 const SIZES = [[1440, 900], [1440, 1100], [1440, 760], [1040, 700], [390, 800], 'full'];
 const url = '/index.html?disk=0', base = () => 'http://localhost:' + (process.env.PORT || 8123) + url;

@@ -9,7 +9,7 @@ const URL = 'http://localhost:' + (process.env.PORT || 8123) + '/index.html';
 async function open(b, w, h, tool) {
   const p = await b.newPage({ viewport: { width: w, height: h } }); p.setDefaultTimeout(60000); p.errs = []; p.on('pageerror', e => p.errs.push(e.message));
   await p.goto(URL); await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(900);
-  await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(700); if (tool) { await p.click('#peRail .pe-tab[data-tool=' + tool + ']'); await p.waitForTimeout(600); }
+  await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(700); if (tool) { if (await p.isVisible('#peRailCur')) { await p.click('#peRailCur'); await p.waitForTimeout(500); } await p.click('#peRail .pe-tab[data-tool=' + tool + ']'); await p.waitForTimeout(600); }
   return p;
 }
 // every choice without a Custom option: its markup and the computed look of the control and its options

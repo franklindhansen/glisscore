@@ -119,6 +119,7 @@ function peChrome() {
   if (PE.view !== m) { peSlide(PE.view, m); PE.view = m; }
   if (m === 'pages') peAddFill();
   document.querySelectorAll('#peRail .pe-tab').forEach(b => { const on = b.dataset.tool === m; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  const cur = document.querySelector('#peRail .pe-tab.on span'); if (cur) $('#peRailName').textContent = cur.textContent; peRailOpen(false);
   peRailSel(PE.chromed); PE.chromed = true;
   if (m === 'split') peSplitNote();
   peActs();
@@ -218,6 +219,7 @@ function peActs() {
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
+function peRailOpen(on) { const r = $('#peRail'); r.classList.toggle('open', !!on); $('#peRailCur').setAttribute('aria-expanded', !!on); }
 function peRailSel(animate) {
   const sel = $('#peRailSel'), root = $('#peRailIn'), btn = document.querySelector('#peRail .pe-tab.on'); if (!sel || !btn || !btn.offsetWidth) { if (sel) sel.style.opacity = '0'; return; }
   let x = 0, y = 0, n = btn; while (n && n !== root) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
@@ -276,8 +278,9 @@ function peClearStatus() { document.querySelectorAll('#peBand .pe-status').forEa
 const peLock = on => { PE.busy = on; document.querySelectorAll('#peBand .btn, #peBar .btn, #peAddAt').forEach(b => { b.disabled = on; }); if (!on && PE.d) peState(); };
 /* a job's progress is one wait pill over the page grid (or the crop preview), never in a button: the buttons keep their size and word and are greyed while it runs. Crop's reading of the pages uses the same pill, since nothing can be cropped before it ends */
 function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelector('#pdfDlg .pe-body'), pc == null ? null : pc / 100); peDimCards(); }
-/* while a job waits, or a result is said over the pages, the cards dim to the shared inactive look; they still scroll */
-function peDimCards() { $('#peWin').classList.toggle('waiting', !!(PE.waiting || PE.toastOn)); }
+/* while a job waits the cards dim to the shared inactive look; they still scroll. A result said over the pages (Split's) never dims them: the pages stay live, and the note goes at the first tick or click on them */
+function peDimCards() { $('#peWin').classList.toggle('waiting', !!PE.waiting); }
+document.addEventListener('pointerdown', e => { if (PE.toastOn && e.target.closest('#peWin .pe-grid')) peToast(''); }, true);
 function peToast(text, ms) {
   const t = $('#peToast'); clearTimeout(t._t); if (!text) { t.classList.remove('show'); PE.toastOn = false; peDimCards(); return; }
   t.textContent = text; t.classList.add('show'); PE.toastOn = true; peDimCards(); t._t = setTimeout(() => peToast(''), ms || TOAST_MS);
@@ -660,7 +663,7 @@ function peCropBind() {
   document.querySelectorAll('input[name=peAddKind]').forEach(r => r.addEventListener('change', () => swapText($('#peAddGo'), kind() === 'pdf' ? 'Choose PDF…' : 'Add page', true)));
   $('#peAddGo').addEventListener('click', () => { if (kind() === 'pdf') $('#peAddIn').click(); else peAdd('blank'); });
   $('#peAddIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) peAdd('pdf', f); });
-  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, 0, 100); $('#peGrid').style.setProperty('--pe-th', 'calc(var(--h-s) * ' + (2.6 + zs.value * 0.05).toFixed(2) + ')'); $('#peZoomOut').disabled = +zs.value <= 0; $('#peZoomIn').disabled = +zs.value >= 100; };
+  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, -50, 50); paintRange(zs); $('#peGrid').style.setProperty('--pe-th', 'calc(var(--h-s) * ' + (zs.value <= 0 ? 3.9 + zs.value * 0.026 : 3.9 + zs.value * 0.074).toFixed(2) + ')'); $('#peZoomOut').disabled = +zs.value <= -50; $('#peZoomIn').disabled = +zs.value >= 50; };
   zs.addEventListener('input', () => zsSet(+zs.value)); $('#peZoomOut').addEventListener('click', () => zsSet(+zs.value - 10)); $('#peZoomIn').addEventListener('click', () => zsSet(+zs.value + 10)); zsSet(+zs.value);          // the page-size slider, and its minus and plus, set the page cards' width
   peCleanBind(); peZoomBind(); $('#peSplitGo').addEventListener('click', peSplitGo); peApplyClick('#peSkewGo', peSkewGo, peSkewClear);
 }
@@ -901,7 +904,7 @@ function peState() {
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
   else { const ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? d.order.filter(id => dimKey(d.slots[id])).length + ' / ' + d.order.filter(id => !d.slots[id].x).length + ' pages dimmed' : ph ? on + ' / ' + pool : m === 'pages' ? on + ' / ' + pool + ' pages active' : on + ' / ' + pool + ' selected', true); }          // a phone keeps just the numbers, to leave room for the Pages field
-  $('#peAll').hidden = $('#peNone').hidden = $('#pePages').hidden = m === 'dim'; $('#pePages').disabled = !!PE.busy; if (document.activeElement !== $('#pePages')) $('#pePages').value = pePagesText(); $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
+  $('#peAll').hidden = $('#peNone').hidden = $('#peSelGrp').hidden = $('#pePages').hidden = m === 'dim'; $('#pePages').disabled = !!PE.busy; if (document.activeElement !== $('#pePages')) $('#pePages').value = pePagesText(); $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
   $('#peWmB').setAttribute('aria-pressed', String(w.b !== false)); $('#peWmI').setAttribute('aria-pressed', String(!!w.i));
@@ -1319,7 +1322,7 @@ function peBind() {
   { const f = $('#pePages'); f.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); peTypePages(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); f.value = pePagesText(); } else e.stopPropagation(); }); f.addEventListener('blur', () => { f.value = pePagesText(); }); }
   $('#peAll').addEventListener('click', () => peSelAll(true)); $('#peNone').addEventListener('click', () => peSelAll(false));
   const wmPush = () => { if (!PE.wmQuiet) pePush(); PE.wmQuiet = true; clearTimeout(PE.wmT); PE.wmT = setTimeout(() => { PE.wmQuiet = false; }, 900); };       // one undo step per burst of typing or dragging
-  peCropBind(); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
+  peCropBind(); $('#peRailCur').addEventListener('click', () => peRailOpen(!$('#peRail').classList.contains('open'))); $('#peRail').addEventListener('click', e => { const b = e.target.closest('.pe-tab'); if (b) peTool(b.dataset.tool); });
   const rzOpt = b => { const k = b.dataset.k;
     if (k === 'orig') { PE.rzCustom = false; rzPick(null); }
     else if (k === 'custom') { PE.rzCustom = true; if (PE.rzMem) rzPick({ w: PE.rzMem.w, h: PE.rzMem.h }); else rzRefresh(); cuOpen(b, true, true); }          // the size typed last comes back; the first time the blanks are empty and nothing is picked until both are typed

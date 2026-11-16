@@ -647,7 +647,7 @@ function bindSettings() {
   document.querySelectorAll('.combo').forEach(initCombo);
   const dirty = () => { saveSettings(); stageDirty = true; TL.overlayDirty = true; };      // the timeline's fade lines follow the settings
   /* Reset to default: a double-click on a slider glides it back to its default, as in the Audio Editor; a drag in progress stops a glide. The Audio Editor and the Fade length slider have their own. */
-  ['flipDur', 'bend', 'margin', 'gutter', 'divider', 'turnShadow', 'turnSoft', 'scoreAmt', 'scoreSoft', 'peCropPad', 'peWmOpacity'].forEach(id => {
+  ['flipDur', 'bend', 'margin', 'gutter', 'divider', 'turnShadow', 'turnSoft', 'scoreAmt', 'scoreSoft', 'peCropPad', 'peWmOpacity', 'peZoom'].forEach(id => {
     const r = $('#' + id);
     r.addEventListener('pointerdown', () => { if (r._glide) { cancelAnimationFrame(r._glide.raf); r._glide = null; } });
     r.addEventListener('dblclick', () => aeGlideTo(r, id === 'flipDur' ? DEFAULTS[lenKey()] : id in DEFAULTS ? DEFAULTS[id] : r.dataset.default));
