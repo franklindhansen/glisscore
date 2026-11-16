@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.18
+
+Watermark is laid out like the Audio Editor, and Custom direction and Custom size now turn their word into a blank you type in.
+
 ## 1.2.17
 
 The Audio Editor looks the same from tool to tool. The Level warning note now reads better in dark mode, and the Imager's Both, Middle, and Sides choice is no longer cut off in narrow windows.
