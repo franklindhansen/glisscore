@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.25
+
+The video editor's settings now sit in tiles, with Shadows laid out in one-line rows and a Reset beside its switch. Background and Ink color are one field with a color picker, and the PDF Editor's Clean, Crop, and Arrange use cards. Glass bars share one look.
+
 ## 1.2.24
 
 Buttons, fields, menus, tips, and windows now share one set of spacing and sizes, with small shifts of a pixel or two. In the video editor, settings that belong to another sit plainly under it, and the back-to-start button matches Play.
