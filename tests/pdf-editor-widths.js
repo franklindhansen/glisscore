@@ -97,14 +97,14 @@ const look = () => {
   hold('tool list', r => r.rail); hold('Re-size sizes per row', r => r.rzPerRow); hold('Re-size Page shape beside the sizes', r => r.rzBeside); for (const r of rows.wm.slice(0, 1)) void r;
   { let was = null; const out = []; for (const r of rows.wm) if (r.wmCols !== was) { out.push(r.w + 'px: ' + r.wmCols + ' column(s)'); was = r.wmCols; } ok('arrangement: Watermark cards', true, out.join(' | ')); }
   if (process.env.SHOW) for (const t of TOOLS) for (const r of rows[t]) ok(t + ' ' + r.w + ' (dialog ' + r.dlg + ')', !r.bad.length, r.rail + ' cards ' + r.rzw + ' o4 ' + r.o4 + ' shape ' + r.sh + ' ' + r.bad.join('; '));
-  // the subtitles give way at the Audio Editor's narrow width (the dialog 488px and under), and show above it; Crop's Margin sits beside Auto | Manual with the normal gap, Keep frame at the right edge
-  { const sub = () => p.evaluate(() => { const v = e => !!e && getComputedStyle(e).display !== 'none'; peTool('crop'); const g = document.querySelector('#pdfDlg .pe-cmode').getBoundingClientRect(), m = document.querySelector('#peCropPadF').getBoundingClientRect(), k = document.querySelector('#peCropSameF').getBoundingClientRect(), r = document.querySelector('#peViewCrop .pe-row').getBoundingClientRect();
-      return { lead: v(document.querySelector('#peLead')), sub: v(document.querySelector('#peViewCrop .pe-sub')), gap: Math.round(m.left - g.right), keepRight: Math.round(r.right - k.right), ct: Math.round(document.querySelector('#pdfDlg .dlg').getBoundingClientRect().width) }; });
+  // the subtitles give way at the Audio Editor's narrow width (the dialog 488px and under), and show above it; Crop's second card holds Margin at its left and Keep frame at its right edge
+  { const sub = () => p.evaluate(() => { const v = e => !!e && getComputedStyle(e).display !== 'none'; peTool('crop'); const g = document.querySelector('#pdfDlg .pe-cmode').getBoundingClientRect(), m = document.querySelector('#peCropPadF').getBoundingClientRect(), k = document.querySelector('#peCropSameF').getBoundingClientRect(), r = document.querySelector('#peViewCrop .pe-card-crop').getBoundingClientRect();
+      return { lead: v(document.querySelector('#peLead')), sub: v(document.querySelector('#peViewCrop .pe-sub')), gap: Math.round(m.left - r.left), keepRight: Math.round(r.right - k.right), ct: Math.round(document.querySelector('#pdfDlg .dlg').getBoundingClientRect().width) }; });
     await p.setViewportSize({ width: 1000, height: 900 }); await p.waitForTimeout(400); const wide = await sub();
     await p.setViewportSize({ width: 440, height: 900 }); await p.waitForTimeout(400); const narrow = await sub();
     ok('wide: the window subtitle and the tool line show', wide.lead && wide.sub, JSON.stringify(wide));
     ok('narrow: both subtitles are hidden, as in the Audio Editor', !narrow.lead && !narrow.sub, JSON.stringify(narrow));
-    ok('Crop: Margin sits within 40px of Auto | Manual (the normal gap), and Keep frame is at the right edge', wide.gap > 0 && wide.gap <= 40 && wide.keepRight <= 24, JSON.stringify(wide)); }
+    ok('Crop: Margin sits at the left of its card and Keep frame is at the right edge', wide.gap > 0 && wide.gap <= 40 && wide.keepRight <= 24, JSON.stringify(wide)); }
   ok('no page errors', !errs.length, errs.join(' | ').slice(0, 200));
   await b.close();
 })();

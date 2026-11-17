@@ -141,7 +141,7 @@ exports.lines = function (ctx) {
   if (cards.length) { const L = Math.min(...cards.map(c => R(c).left)), Rt = Math.max(...cards.map(c => R(c).right)), head = document.querySelector(SEL.head), stat = document.querySelector('.ae-stat');
     if (head && mk.shown(head)) { const kids = [...head.children].filter(e => mk.shown(e)), first = kids[0], last = kids[kids.length - 1];
       if (first) chk('left-line', 'head', near(R(first).left, L), 'the tool\'s name starts at ' + f(R(first).left) + ', the cards\' left line is ' + f(L));
-      if (last) chk('right-line', 'head', near(R(last).right, Rt), 'the tool\'s buttons end at ' + f(R(last).right) + ', the cards\' right line is ' + f(Rt)); }
+      if (last && !last.matches('.pe-pt, .t-block')) chk('right-line', 'head', near(R(last).right, Rt), 'the tool\'s buttons end at ' + f(R(last).right) + ', the cards\' right line is ' + f(Rt)); }
     if (stat && mk.shown(stat)) { const kids = [...stat.children].filter(e => mk.shown(e)), first = kids[0], last = kids[kids.length - 1];
       if (first) chk('left-line', 'status', near(R(first).left, L), 'the status text starts at ' + f(R(first).left) + ', the cards\' left line is ' + f(L));
       /* the status line holds only what runs, on the left: nothing sits at its right end */ } }

@@ -186,8 +186,7 @@
       <div class="group" data-sum="transition">
         <h3>Page transition</h3>
         <div class="field">
-          <span class="lbl" id="transLbl">Style</span>
-          <div class="seg" role="radiogroup" aria-labelledby="transLbl">
+          <div class="seg" role="radiogroup" aria-label="Page transition style">
             <label><input type="radio" name="transition" value="flip" checked><span>Turn</span></label>
             <label><input type="radio" name="transition" value="slide"><span>Slide</span></label>
             <label><input type="radio" name="transition" value="cut"><span>Cut</span></label>
@@ -239,7 +238,7 @@
           </div>
         </div>
         <div class="field">
-          <label for="margin">Page margin <output id="marginOut">3%</output></label>
+          <label for="margin">Margin <output id="marginOut">3%</output></label>
           <input type="range" id="margin" min="0" max="10" step="0.5" value="3">
         </div>
         <div class="field" id="letterboxField" hidden>
@@ -254,21 +253,18 @@
       <div class="group" data-sum="colors">
         <h3>Page colors</h3>
         <div class="field">
-          <label for="bgPreset">Background</label>
-          <select id="bgPreset">
-            <option value="#000000">Black</option>
-            <option value="#1C1C1E">Space black</option>
-            <option value="#3C4042">Night sky</option>
-            <option value="#FCFCFC">Cloud white</option>
-            <option value="#FFFFFF">White</option>
-            <option value="custom">Custom…</option>
-          </select>
-          <div class="fa" id="bgCustomFold"><div class="fa-in" inert>
-          <div class="colorrow sub" id="bgCustom">
-            <input type="color" id="bgColor" value="#000000" aria-label="Pick a background color">
-            <input type="text" id="bgHex" value="#000000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Background hex code">
+          <span class="lbl" id="bgLbl">Background</span>
+          <div class="csel" id="bgSel">
+            <div class="csel-field">
+              <button class="csel-open" id="bgOpen" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="bgLbl bgName"><i class="csel-sw"></i><span class="csel-name" id="bgName"></span></button>
+              <input type="text" class="csel-hex" id="bgHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Background hex code">
+              <button class="csel-chev" type="button" tabindex="-1" aria-hidden="true"></button>
+            </div>
+            <div class="csel-menu" hidden>
+              <ul class="csel-list" role="listbox" aria-labelledby="bgLbl"></ul>
+              <div class="csel-pick"><div class="csel-area" tabindex="0" role="slider" aria-label="Background shade and brightness"><i class="csel-thumb"></i></div><div class="csel-hue" tabindex="0" role="slider" aria-label="Background hue" aria-valuemin="0" aria-valuemax="360"><i class="csel-thumb"></i></div></div>
+            </div>
           </div>
-          </div></div>
         </div>
         <div class="field">
           <div class="check-row">
@@ -277,20 +273,18 @@
           </div>
         </div>
         <div class="field sub" id="inkField" hidden>
-          <label for="inkPreset">Ink color</label>
-          <select id="inkPreset">
-            <option value="#FCFCFC">Cloud white</option>
-            <option value="#FFFFFF">White</option>
-            <option value="#F4EBD8">Warm white</option>
-            <option value="#CFD3DB">Soft gray</option>
-            <option value="custom">Custom…</option>
-          </select>
-          <div class="fa" id="inkCustomFold"><div class="fa-in" inert>
-          <div class="colorrow sub" id="inkCustom">
-            <input type="color" id="inkColor" value="#fcfcfc" aria-label="Pick an ink color">
-            <input type="text" id="inkHex" value="#fcfcfc" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Ink hex code">
+          <span class="lbl" id="inkLbl">Ink color</span>
+          <div class="csel" id="inkSel">
+            <div class="csel-field">
+              <button class="csel-open" id="inkOpen" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="inkLbl inkName"><i class="csel-sw"></i><span class="csel-name" id="inkName"></span></button>
+              <input type="text" class="csel-hex" id="inkHex" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Ink hex code">
+              <button class="csel-chev" type="button" tabindex="-1" aria-hidden="true"></button>
+            </div>
+            <div class="csel-menu" hidden>
+              <ul class="csel-list" role="listbox" aria-labelledby="inkLbl"></ul>
+              <div class="csel-pick"><div class="csel-area" tabindex="0" role="slider" aria-label="Ink color shade and brightness"><i class="csel-thumb"></i></div><div class="csel-hue" tabindex="0" role="slider" aria-label="Ink color hue" aria-valuemin="0" aria-valuemax="360"><i class="csel-thumb"></i></div></div>
+            </div>
           </div>
-          </div></div>
         </div>
       </div>
 
@@ -298,18 +292,19 @@
       <div class="group" data-sum="shadows">
         <div class="group-head t-head">
           <h3>Shadows</h3>
+          <button class="btn small" id="shadowReset" type="button" title="Reset shadows to defaults" aria-label="Reset shadows to defaults" hidden>Reset</button>
           <label class="group-toggle"><input type="checkbox" class="switch" id="shadowsOn" aria-label="Shadows on or off" checked></label>
         </div>
         <div id="turnShadowBlock" data-motion="flip">
           <div id="centerFold">
-            <div class="subhead">Center fold</div>
+            <div class="subhead">Crease</div>
             <div class="sub">
               <div class="field">
-                <label for="gutter">Crease shading <output id="gutterOut">35%</output></label>
+                <label for="gutter">Shading <output id="gutterOut">35%</output></label>
                 <input type="range" id="gutter" min="0" max="100" step="1" value="35">
               </div>
               <div class="field">
-                <label for="divider">Divider line <output id="dividerOut">30%</output></label>
+                <label for="divider">Divider <output id="dividerOut">30%</output></label>
                 <input type="range" id="divider" min="0" max="100" step="1" value="30">
               </div>
             </div>
@@ -326,7 +321,7 @@
                 </div>
               </div>
           </div>
-          <div class="subhead">Under the score</div>
+          <div class="subhead">Under score</div>
         <div class="sub">
           <div class="field">
             <label for="scoreAmt">Strength <output id="scoreAmtOut">Off</output></label>
@@ -336,11 +331,9 @@
             <label for="scoreSoft">Softness <output id="scoreSoftOut">50%</output></label>
             <input type="range" id="scoreSoft" min="0" max="100" step="1" value="50">
           </div>
-          <p class="t-note" id="scoreHint">Shows best on a light background, with some space around the score.</p>
+          <p class="t-note" id="scoreHint">Best on a light background with margin.</p>
           <p class="t-note" id="scoreInvHint" hidden>Off while colors are inverted.</p>
         </div>
-        <!-- ----- BUTTON: Reset shadows to defaults ----- -->
-        <button class="btn small" id="shadowReset" type="button">Reset shadows to defaults</button>
       </div>
 
       <!-- ----- PANEL GROUP: FADES ----- -->
@@ -350,8 +343,7 @@
         </div>
         <div id="fadeBody">
           <div class="field" id="fadeSideField">
-            <span class="lbl" id="fadeSideLbl">Apply to</span>
-            <div class="seg" id="fadeSide" role="radiogroup" aria-labelledby="fadeSideLbl"><label><input type="radio" name="fadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="fadeSide" value="in"><span>In</span></label><label><input type="radio" name="fadeSide" value="out"><span>Out</span></label></div>
+            <div class="seg" id="fadeSide" role="radiogroup" aria-label="Apply fades to"><label><input type="radio" name="fadeSide" value="both" checked><span>Both</span></label><label><input type="radio" name="fadeSide" value="in"><span>In</span></label><label><input type="radio" name="fadeSide" value="out"><span>Out</span></label></div>
           </div>
           <div class="field" id="fadeLenField">
             <span class="lbl" id="fadeLenLbl">Length <output id="fadeLenVal">1.0s</output></span>
@@ -1010,10 +1002,10 @@
       </div></div></nav>
       <section class="pe-win" id="peWin" data-mode="pages" aria-label="Pages">
         <div class="pe-top" id="peBand">
-          <div class="pe-tv" id="peViewAdd" data-tool="pages"><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Arrange</h3><p class="pe-sub t-sub">Drag to reorder. Click to leave out.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peAddStatus" aria-live="polite"></span><button class="btn small primary" id="peAddGo" type="button">Insert</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-row" role="group" aria-label="Insert pages"><div class="pe-g"><span class="t-lbl" id="peAddKindL">Insert</span><div class="seg" role="radiogroup" aria-labelledby="peAddKindL"><label><input type="radio" name="peAddKind" value="blank" checked><span>Blank page</span></label><label><input type="radio" name="peAddKind" value="pdf"><span>PDF</span></label></div></div><div class="pe-g"><label class="t-lbl" for="peAddAt">Position</label><select id="peAddAt"></select></div><input type="file" id="peAddIn" accept="application/pdf,.pdf" hidden></div></div>
-          <div class="pe-tv" id="peViewClean" data-tool="clean" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Clean</h3><p class="pe-sub t-sub">Whiten paper and clear specks.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peCleanStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peCleanGo" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-row"><div class="pe-g"><span class="t-lbl" id="peClBgL">Paper</span><div class="seg" role="radiogroup" aria-labelledby="peClBgL"><label><input type="radio" name="peClBg" value="1" checked><span>White</span></label><label><input type="radio" name="peClBg" value="2"><span>Page color</span></label></div></div><div class="pe-g"><span class="t-lbl" id="peClSpL">Strength</span><div class="seg" role="radiogroup" aria-labelledby="peClSpL"><label><input type="radio" name="peClSp" value="1" checked><span>Light</span></label><label><input type="radio" name="peClSp" value="2"><span>Strong</span></label></div></div></div></div>
+          <div class="pe-tv" id="peViewAdd" data-tool="pages"><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Arrange</h3><p class="pe-sub t-sub">Drag to reorder. Click to leave out.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peAddStatus" aria-live="polite"></span><button class="btn small primary" id="peAddGo" type="button">Insert</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards" role="group" aria-label="Insert pages"><div class="ae-card pe-card-set"><div class="pe-g"><span class="t-lbl" id="peAddKindL">Insert</span><div class="seg" role="radiogroup" aria-labelledby="peAddKindL"><label><input type="radio" name="peAddKind" value="blank" checked><span>Blank page</span></label><label><input type="radio" name="peAddKind" value="pdf"><span>PDF</span></label></div></div></div><div class="ae-card pe-card-set"><div class="pe-g"><label class="t-lbl" for="peAddAt">Position</label><select id="peAddAt"></select></div></div><input type="file" id="peAddIn" accept="application/pdf,.pdf" hidden></div></div>
+          <div class="pe-tv" id="peViewClean" data-tool="clean" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Clean</h3><p class="pe-sub t-sub">Whiten paper and clear specks.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peCleanStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peCleanGo" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards"><div class="ae-card pe-card-set"><div class="pe-g"><span class="t-lbl" id="peClBgL">Paper</span><div class="seg" role="radiogroup" aria-labelledby="peClBgL"><label><input type="radio" name="peClBg" value="1" checked><span>White</span></label><label><input type="radio" name="peClBg" value="2"><span>Page color</span></label></div></div></div><div class="ae-card pe-card-set"><div class="pe-g"><span class="t-lbl" id="peClSpL">Strength</span><div class="seg" role="radiogroup" aria-labelledby="peClSpL"><label><input type="radio" name="peClSp" value="1" checked><span>Light</span></label><label><input type="radio" name="peClSp" value="2"><span>Strong</span></label></div></div></div></div></div>
           <div class="pe-tv" id="peViewSkew" data-tool="skew" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-kilter</h3><p class="pe-sub t-sub">Straighten tilted, slanted, and curved scans.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peSkewStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peSkewGo" type="button" aria-pressed="false">Apply</button></div></div></div>
-          <div class="pe-tv" id="peViewCrop" data-tool="crop" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Crop</h3><p class="pe-sub t-sub" id="peCropSub" data-normal="Trim empty margins around the music.">Trim empty margins around the music.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary pe-apply" id="peCropAuto" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-row spread"><div class="seg pe-cmode" role="radiogroup" aria-label="Frame"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div><label class="pe-inl" id="peCropPadF" for="peCropPad"><span>Margin</span><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2" data-default="2"><output id="peCropPadVal" for="peCropPad">2%</output></label><label class="check-row pe-sw" id="peCropSameF" for="peCropSame"><span>Keep frame</span><input type="checkbox" class="switch" id="peCropSame" checked></label></div></div>
+          <div class="pe-tv" id="peViewCrop" data-tool="crop" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Crop</h3><p class="pe-sub t-sub" id="peCropSub" data-normal="Trim empty margins around the music.">Trim empty margins around the music.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peCropStatus" aria-live="polite"></span><button class="btn small" id="peCropApply" type="button" hidden>Apply to selected</button><button class="btn small primary pe-apply" id="peCropAuto" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards pe-cropcards"><div class="ae-card pe-card-set"><div class="pe-g"><span class="t-lbl" id="peCropModeL">Frame</span><div class="seg pe-cmode" role="radiogroup" aria-labelledby="peCropModeL"><label><input type="radio" name="peCropMode" value="auto" checked><span>Auto</span></label><label><input type="radio" name="peCropMode" value="hand"><span>Manual</span></label></div></div></div><div class="ae-card pe-card-crop"><label class="pe-inl" id="peCropPadF" for="peCropPad"><span>Margin</span><input type="range" id="peCropPad" min="0" max="8" step="0.5" value="2" data-default="2"><output id="peCropPadVal" for="peCropPad">2%</output></label><label class="check-row pe-sw" id="peCropSameF" for="peCropSame"><span>Keep frame</span><input type="checkbox" class="switch" id="peCropSame" checked></label></div></div></div>
           <div class="pe-tv" id="peViewDim" data-tool="dim" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Dim</h3><p class="pe-sub t-sub">Soften music before or after a repeat.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peDimStatus" aria-live="polite"></span></div></div></div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Split spreads</h3><p class="pe-sub t-sub">Turn spreads into single pages.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peSplitGo" type="button" aria-pressed="false">Apply</button></div></div></div>
           <div class="pe-tv pe-rz" id="peViewResize" data-tool="resize" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-size</h3><p class="pe-sub t-sub">Fit every page to one size.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peRzStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peRzGo" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards pe-rzcards"><div class="ae-card pe-card-sizes"><div class="rz-grid" id="peRzGrid" role="radiogroup" aria-label="Page size"></div></div><div class="ae-card pe-card-shape"><div class="pe-g"><span class="t-lbl" id="peRzOrL">Page shape</span><div class="seg" id="peRzShape" role="radiogroup" aria-labelledby="peRzOrL"><label title="Every page takes the document's shape"><input type="radio" name="peRzOr" value="same"><span>Same</span></label><label title="Each page keeps its own shape"><input type="radio" name="peRzOr" value="each"><span>Keep</span></label></div></div></div></div></div>

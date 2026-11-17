@@ -258,18 +258,69 @@ function updateHint() {
   if (tr === 'cut') { h.innerHTML = 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.'; return; }
   h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', tr === 'slide' ? 'Slide length' : 'Turn length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
 }
+/* Background and Ink color: one field (swatch, name, hex, chevron) that opens a menu of named colors and a picker (shade and brightness, then hue). A color from the list shows its name; the picker or a typed hex shows Custom. A saved color that is not on the list reopens as Custom. */
+const COLOR_SETS = {
+  bg: [['Black', '#000000'], ['Space black', '#1C1C1E'], ['Night sky', '#3C4042'], ['Cloud white', '#FCFCFC'], ['White', '#FFFFFF']],
+  ink: [['Cloud white', '#FCFCFC'], ['White', '#FFFFFF'], ['Warm white', '#F4EBD8'], ['Soft gray', '#CFD3DB']]
+};
+const CSEL = {};
+const colorName = (key, v, hexIfCustom) => { const p = COLOR_SETS[key].find(c => c[1].toLowerCase() === String(v).toLowerCase()); return p ? p[0] : hexIfCustom ? String(v) : 'Custom'; };
+const rgbToHsv = ([r, g, b]) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let h = 0; if (d) h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [h * 60, mx ? d / mx : 0, mx]; };
+const hsvToHex = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+function colorSelect(key, onSet) {
+  const root = $('#' + key + 'Sel'), open = root.querySelector('.csel-open'), hex = root.querySelector('.csel-hex'), sw = root.querySelector('.csel-sw'), nm = root.querySelector('.csel-name'), menu = root.querySelector('.csel-menu'), list = root.querySelector('.csel-list'), area = root.querySelector('.csel-area'), hue = root.querySelector('.csel-hue');
+  let hsv = [0, 0, 0], own = false;          // own: the picker made the current color, so its hue is kept (a gray has no hue of its own)
+  COLOR_SETS[key].forEach(([name, v]) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.tabIndex = -1; li.dataset.v = v; li.innerHTML = '<i class="csel-sw"></i><span class="csel-name"></span><span class="csel-code"></span>'; li.querySelector('i').style.background = v; li.querySelector('.csel-name').textContent = name; li.querySelector('.csel-code').textContent = v.toLowerCase(); list.appendChild(li); });
+  const cur = () => String(S.set[key]).toLowerCase();
+  const paint = () => {
+    const v = cur(); sw.style.background = v; nm.textContent = colorName(key, v); if (document.activeElement !== hex) hex.value = v;
+    if (!own || hsvToHex(...hsv) !== v) hsv = rgbToHsv(hexToRgb(v));          // the picker keeps its hue while it made the color (a gray has none); a color that came from elsewhere (an undo, an import) is read afresh
+    list.querySelectorAll('li').forEach(li => li.setAttribute('aria-selected', String(li.dataset.v.toLowerCase() === v)));
+    area.style.backgroundColor = 'hsl(' + hsv[0] + ' 100% 50%)';
+    area.firstElementChild.style.left = hsv[1] * 100 + '%'; area.firstElementChild.style.top = (1 - hsv[2]) * 100 + '%';
+    hue.firstElementChild.style.left = hsv[0] / 360 * 100 + '%'; hue.setAttribute('aria-valuenow', Math.round(hsv[0]));
+  };
+  const set = (v, fromPicker) => { own = !!fromPicker; S.set[key] = v.toLowerCase(); onSet(S.set[key]); paint(); };
+  const shut = back => { if (menu.hidden) return; menu.hidden = true; open.setAttribute('aria-expanded', 'false'); if (back) open.focus({ preventScroll: true }); };
+  const show = () => { menu.hidden = false; open.setAttribute('aria-expanded', 'true'); own = false; paint(); };
+  const items = () => [...list.querySelectorAll('li')];
+  root.querySelector('.csel-open').addEventListener('click', () => menu.hidden ? show() : shut());
+  root.querySelector('.csel-chev').addEventListener('click', () => menu.hidden ? show() : shut());
+  open.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (menu.hidden) show(); (items().find(li => li.getAttribute('aria-selected') === 'true') || items()[0]).focus(); } });
+  list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) { set(li.dataset.v); shut(true); } });
+  list.addEventListener('keydown', e => {
+    const all = items(), i = all.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); (all[i + 1] || all[0]).focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (all[i - 1] || all[all.length - 1]).focus(); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (all[i]) { set(all[i].dataset.v); shut(true); } }
+  });
+  root.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { e.stopPropagation(); shut(true); } });
+  document.addEventListener('pointerdown', e => { if (!root.contains(e.target)) shut(); });
+  root.addEventListener('focusout', e => { if (e.relatedTarget && !root.contains(e.relatedTarget)) shut(); });
+  const drag = (el, fn) => {
+    el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); el.focus({ preventScroll: true }); fn(e); const mv = ev => fn(ev), up = () => { el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); }; el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); });
+  };
+  const clamp = x => Math.max(0, Math.min(1, x));
+  drag(area, e => { const r = area.getBoundingClientRect(); hsv = [hsv[0], clamp((e.clientX - r.left) / r.width), 1 - clamp((e.clientY - r.top) / r.height)]; set(hsvToHex(...hsv), true); });
+  drag(hue, e => { const r = hue.getBoundingClientRect(); hsv = [clamp((e.clientX - r.left) / r.width) * 360, hsv[1], hsv[2]]; set(hsvToHex(...hsv), true); });
+  area.addEventListener('keydown', e => { const d = { ArrowLeft: [-.02, 0], ArrowRight: [.02, 0], ArrowUp: [0, .02], ArrowDown: [0, -.02] }[e.key]; if (!d) return; e.preventDefault(); hsv = [hsv[0], clamp(hsv[1] + d[0]), clamp(hsv[2] + d[1])]; set(hsvToHex(...hsv), true); });
+  hue.addEventListener('keydown', e => { const d = { ArrowLeft: -4, ArrowDown: -4, ArrowRight: 4, ArrowUp: 4 }[e.key]; if (!d) return; e.preventDefault(); hsv = [(hsv[0] + d + 360) % 360, hsv[1], hsv[2]]; set(hsvToHex(...hsv), true); });
+  hex.addEventListener('input', e => {
+    let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+    if (/^#[0-9a-f]{6}$/i.test(v)) set(v); else if (/^#[0-9a-f]{3}$/i.test(v)) set('#' + v.slice(1).split('').map(c => c + c).join(''));
+  });
+  hex.addEventListener('blur', () => { hex.value = S.set[key]; });
+  CSEL[key] = { paint }; paint();
+}
 function syncControls() {
   const s = S.set;
   $('#bend').value = s.bend; $('#bendOut').textContent = s.bend + '%';
   document.querySelectorAll('input[name=ref]').forEach(r => r.checked = r.value === s.ref);
   syncFirstAlone(); syncPageLayout(false);
   $('#margin').value = s.margin; $('#marginOut').textContent = s.margin + '%'; $('#letterbox').checked = !!s.letterbox;
-  const pre = Array.from($('#bgPreset').options).find(o => o.value.toLowerCase() === String(s.bg).toLowerCase());
-  $('#bgPreset').value = pre ? pre.value : 'custom'; foldSet('#bgCustomFold', !pre);
-  $('#bgColor').value = s.bg; $('#bgHex').value = s.bg; updateHint();
+  if (CSEL.bg) CSEL.bg.paint(); updateHint();
   $('#invert').checked = !!s.invert; $('#inkField').hidden = !s.invert;
-  const ipre = Array.from($('#inkPreset').options).find(o => o.value.toLowerCase() === String(s.ink).toLowerCase());
-  $('#inkPreset').value = ipre ? ipre.value : 'custom'; foldSet('#inkCustomFold', !ipre); $('#inkColor').value = s.ink; $('#inkHex').value = s.ink;
+  if (CSEL.ink) CSEL.ink.paint();
   $('#aspect').value = s.aspect; $('#res').value = String(s.res); $('#fps').value = String(s.fps); $('#method').value = s.method || 'auto'; $('#codec').value = s.codec || 'avc'; if (!QUALITY_NAME[s.videoQuality]) S.set.videoQuality = s.videoQuality = 'standard';
   { const r = document.querySelector('input[name=vidQ][value=' + (s.videoQuality || 'standard') + ']'); if (r) { r.checked = true; const sg = $('#vidQ'); if (sg._place) sg._place(false); } } vqNote(); 
   SHADOW_KEYS.forEach(k => { $('#' + k).value = s[k]; setOut(k); });
@@ -423,8 +474,11 @@ function bindFontField(id, key, msgId) {
     }, 450);
   });
 }
+/* Reset sits in the Shadows heading and shows only while Shadows is on and a slider has moved from its default */
+function updateShadowReset() { $('#shadowReset').hidden = !(shOn() && SHADOW_KEYS.some(k => S.set[k] !== DEFAULTS[k])); }
 function applyGroupSwitches() {
   [['#shadowsOn', shOn()], ['#creditsOn', S.set.creditsOn === true]].forEach(([sel, on]) => $(sel).closest('.group').classList.toggle('off', !on));
+  updateShadowReset();
   if (typeof syncGroupBodies === 'function') syncGroupBodies();
 }
 /* Only show the controls that matter for the chosen page transition */
@@ -489,8 +543,7 @@ function initCombo(box) {
 /* Group headings fold their contents away. A folded group keeps a one-line summary of what is set, so nothing hides unnoticed. */
 function groupSummary(k) {
   const s = S.set, sec = v => (+v).toFixed(1) + 's', pc = v => v + '%', j = (...p) => p.filter(x => x != null && x !== '').join(' · ');
-  const opt = (sel, v) => { const o = Array.from($(sel).options).find(o => o.value.toLowerCase() === String(v).toLowerCase()); return o && o.value !== 'custom' ? o.textContent : String(v); };
-  const bg = () => opt('#bgPreset', s.bg), ink = () => opt('#inkPreset', s.ink), ref = { start: 'Start', middle: 'Middle', end: 'End' }[s.ref] || 'End';
+  const bg = () => colorName('bg', s.bg, true), ink = () => colorName('ink', s.ink, true), ref = { start: 'Start', middle: 'Middle', end: 'End' }[s.ref] || 'End';
   const dir = s.slideDir === 'out' ? 'Out' : 'In';
   // every summary follows the panel from top to bottom; the Under the score strength reads Off while colors are inverted, as on the slider
   const sc = s.invert ? 0 : s.scoreAmt;
@@ -673,18 +726,7 @@ function bindSettings() {
   });
   $('#margin').addEventListener('input', e => { S.set.margin = +e.target.value; $('#marginOut').textContent = S.set.margin + '%'; dirty(); });
   $('#letterbox').addEventListener('change', e => { S.set.letterbox = e.target.checked; dirty(); });
-  const setBg = v => { S.set.bg = v; $('#bgColor').value = v; dirty(); };
-  $('#bgPreset').addEventListener('change', e => {
-    if (e.target.value === 'custom') { foldSet('#bgCustomFold', true); $('#bgHex').value = S.set.bg; $('#bgHex').focus({ preventScroll: true }); }
-    else { foldSet('#bgCustomFold', false); $('#bgHex').value = e.target.value; setBg(e.target.value.toLowerCase()); }
-  });
-  $('#bgColor').addEventListener('input', e => { $('#bgHex').value = e.target.value; setBg(e.target.value); });
-  $('#bgHex').addEventListener('input', e => {
-    let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
-    if (/^#[0-9a-f]{6}$/i.test(v)) setBg(v.toLowerCase());
-    else if (/^#[0-9a-f]{3}$/i.test(v)) setBg('#' + v.slice(1).split('').map(c => c + c).join('').toLowerCase());
-  });
-  $('#bgHex').addEventListener('blur', () => { $('#bgHex').value = S.set.bg; });
+  colorSelect('bg', v => { S.set.bg = v; dirty(); });
   /* Invert colors: the paper drops out and the notes take the ink color; a light background is switched to black for you */
   const lumOf = hx => { const c = hexToRgb(hx); return 0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]; };
   $('#invert').addEventListener('change', e => {
@@ -696,18 +738,7 @@ function bindSettings() {
     if (notes.length) { syncControls(); applyGroupSwitches(); toast(tx('vid.inv.note', { notes: notes.join(' and ') })); }
     dirty();
   });
-  const setInk = v => { S.set.ink = v; $('#inkColor').value = v; dirty(); };
-  $('#inkPreset').addEventListener('change', e => {
-    if (e.target.value === 'custom') { foldSet('#inkCustomFold', true); $('#inkHex').value = S.set.ink; $('#inkHex').focus({ preventScroll: true }); }
-    else { foldSet('#inkCustomFold', false); $('#inkHex').value = e.target.value; setInk(e.target.value.toLowerCase()); }
-  });
-  $('#inkColor').addEventListener('input', e => { $('#inkHex').value = e.target.value; setInk(e.target.value); });
-  $('#inkHex').addEventListener('input', e => {
-    let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
-    if (/^#[0-9a-f]{6}$/i.test(v)) setInk(v.toLowerCase());
-    else if (/^#[0-9a-f]{3}$/i.test(v)) setInk('#' + v.slice(1).split('').map(c => c + c).join('').toLowerCase());
-  });
-  $('#inkHex').addEventListener('blur', () => { $('#inkHex').value = S.set.ink; });
+  colorSelect('ink', v => { S.set.ink = v; dirty(); });
   $('#aspect').addEventListener('change', e => morphStage(() => { S.set.aspect = e.target.value; saveSettings(); layoutStage(); }));
   $('#res').addEventListener('change', e => { S.set.res = +e.target.value; saveSettings(); });
   $('#fps').addEventListener('change', e => { S.set.fps = +e.target.value; saveSettings(); });
@@ -715,7 +746,7 @@ function bindSettings() {
   $('#codec').addEventListener('change', e => { S.set.codec = e.target.value; saveSettings(); });
   document.querySelectorAll('input[name=vidQ]').forEach(r => r.addEventListener('change', e => { S.set.videoQuality = e.target.value; saveSettings(); vqNote(); }));
   ['#res', '#fps', '#codec', '#aspect'].forEach(q => $(q).addEventListener('change', () => setTimeout(vqNote, 0)));
-  SHADOW_KEYS.forEach(k => $('#' + k).addEventListener('input', e => { S.set[k] = +e.target.value; setOut(k); updateScoreUI(false); $('#turnSoftField').hidden = !(S.set.turnShadow > 0); dirty(); }));
+  SHADOW_KEYS.forEach(k => $('#' + k).addEventListener('input', e => { S.set[k] = +e.target.value; setOut(k); updateScoreUI(false); $('#turnSoftField').hidden = !(S.set.turnShadow > 0); updateShadowReset(); dirty(); }));
   $('#shadowReset').addEventListener('click', () => {
     ['shadowsOn', ...SHADOW_KEYS].forEach(k => { S.set[k] = DEFAULTS[k]; });
     syncControls(); dirty(); toast(tx('vid.shadowsreset'));

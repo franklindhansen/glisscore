@@ -210,7 +210,7 @@ const outSet = () => { const o = {}; Object.keys(DEFAULTS).forEach(k => { if (!H
 const HS_GROUPS = [
   ['Fades', ['fadesOn', 'fadeIn', 'fadeOut', 'fadeLen', 'fadeOutLen', 'fadeSplit', 'fadeStyle', 'fadeShape', 'fadeAuto', 'fadeAutoOut']],
   ['Transition', ['transition', 'slideDir']], ['Turn length', ['flipDur', 'slideDur']], ['Turn reference', ['ref']], ['Bend', ['bend']], ['First page alone', ['firstAlone']],
-  ['Margin', ['margin']], ['Letterbox', ['letterbox']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under the score', ['scoreAmt', 'scoreSoft']],
+  ['Margin', ['margin']], ['Letterbox', ['letterbox']], ['Colors', ['bg', 'ink']], ['Invert', ['invert']], ['Shadows', ['shadowsOn', 'gutter', 'divider', 'turnShadow', 'turnSoft']], ['Under score', ['scoreAmt', 'scoreSoft']],
   ['Aspect', ['aspect']], ['Resolution', ['res']], ['Frame rate', ['fps']], ['Render method', ['method']], ['Codec', ['codec']], ['Video quality', ['videoQuality']],
   ['Credits', ['creditsOn', 'creditsAt', 'creditsWithLast', 'creditsEarly', 'creditsFont', 'creditsBase', 'credTitleB', 'credTitleI', 'credTitleFont', 'credL2B', 'credL2I', 'credL2Font', 'credL3B', 'credL3I', 'credL3Font']],
   ['Audio format', ['audioFormat', 'audioKbps', 'audioRate']], ['Tags', ['tagsOn', 'tagTitle', 'tagArtist', 'tagAlbumArtist', 'tagAlbum', 'tagYear', 'tagTrack', 'tagDisc', 'tagComposer', 'tagWork', 'tagMovement', 'tagMovementNo', 'tagGenre', 'tagComment', 'tagShowWork', 'tagCompilation']]];

@@ -19,6 +19,9 @@
 /* ==================== 1. THEME & VARIABLES ==================== */
 /* ----- Light theme (default colors, shadow) ----- */
 :root{
+  --hue-rail:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); --area-white:#fff; --area-black:#000;   /* the color picker: the hue strip, and the white and black its shade and brightness area fades between */
+  --sw-h:22px;   /* a switch's height; a heading row in the video panel is as tall */
+  --sh-name:50px; --sh-val:34px;   /* the Shadows rows: the name column (as wide as Softness) and the value column (as wide as 150%) */
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px; --gap-group:18px;   /* the spacing scale (2, 4, 8, 12, 16, with --gap-group, 18, the space above and below a divider between the video panel's groups): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --fs:32px; --fsm:10px; --fs-trh:50px; --hint-bridge:21px; --w-glass:28px; --combo-btn-w:28px; --div-w:7px;   /* the floating strips on the video picture: their height and their distance from the picture's edge (the script sets both per picture size), a button's width on a glass bar, the font box's list button, and the System divider's grab width */
   --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px;
@@ -246,6 +249,11 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--ty
 }
 .group{padding:var(--gap-group) 0;border-bottom:1px solid var(--line)}
 .group:last-child{border-bottom:0}
+/* in the video panel each group is a tile (the shared card look); a tile with content has room above its heading and below its last row, and a closed one is centered on its heading row. The chevron's space stays reserved when it is hidden, so the heading does not move when the group opens */
+.panel .group{padding:var(--gap-set) var(--gap-field) var(--gap-group);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);margin-bottom:var(--gap-card)}
+.panel .group:last-child{border-bottom:1px solid var(--line);margin-bottom:0}
+.panel .group.off{padding-block:var(--gap-set)}
+.panel .group>h3,.panel .group>.group-head{display:flex;align-items:center;min-height:var(--sw-h)}          /* every heading row is as tall as the switch, so the letters sit the same distance from the top of every tile, and a closed tile is centered on its heading */
 .group h3{margin:0 0 var(--gap-card);font-size:var(--type-value);font-weight:600}
 .group-head{position:relative;display:flex;align-items:center;gap:var(--gap-head)}
 .group .group-head h3{margin:0}
@@ -264,7 +272,7 @@ kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--ty
 .field output{color:var(--ink);font-variant-numeric:tabular-nums}
 .panel .field>label:not(.check),.panel .field>.lbl{margin-block:var(--cut-t) var(--cut-b)}          /* the video panel's labels are trimmed to their letters, as the PDF Editor's and Audio Editor's are */
 .panel .field:has(>.seg)>.t-note,.panel .field:has(>select)>.t-note,.panel .field:has(>.combo)>.t-note{margin-top:calc(var(--gap-label) - var(--gap-head))}
-.panel .field:has(>.seg),.panel .field:has(>select),.panel .field:has(>.combo),.panel .field:has(>.fade-shape){gap:var(--gap-head)}          /* a label over a choice, a menu, or a picture sits --gap-head above it; over a slider it keeps --gap-label */
+.panel .field:has(>.csel),.panel .field:has(>.seg),.panel .field:has(>select),.panel .field:has(>.combo),.panel .field:has(>.fade-shape){gap:var(--gap-head)}          /* a label over a choice, a menu, or a picture sits --gap-head above it; over a slider it keeps --gap-label */
 /* Sliders are drawn by the site instead of the browser, so they look the same whether or not the window is active
    (browsers gray out their own sliders after full screen, or when the window loses focus). --pct is the filled part. */
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:var(--slider-h);margin:0;padding:0;background:transparent;cursor:pointer;--pct:50%}
@@ -328,7 +336,6 @@ input.bad{border-color:var(--danger)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
 .sub>.field:last-child{margin-bottom:0}
 /* small notes under a control: tucked to the right and quieter, so they stay out of the way of the labels */
-#shadowReset{margin-top:var(--gap-field)}
 /* font box: type a name, or open the list of popular Google Fonts */
 .combo{position:relative}
 /* a font lookup runs a thin bar along the box's bottom edge, end to end (it follows the box's rounded corners), so nothing around the box moves */
@@ -351,9 +358,20 @@ input.bad{border-color:var(--danger)}
 .combo-list li:hover,.combo-list li.act{background:var(--accent-soft)}
 .combo-list li[aria-selected="true"]{font-weight:600;color:var(--accent)}
 /* small heading that splits a group into parts (Shadows: page turn, center fold, under the score) */
-.subhead{margin:var(--gap-field) 0 var(--gap-head);font-size:var(--type-small);font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.subhead{margin:0 0 var(--gap-set);font-size:var(--type-body);font-weight:600;color:var(--ink)}
+/* Shadows: three parts (Crease, Page turn, Under score) split by hairlines, each row on one line: name, slider, value. The name column is as wide as the longest name (Softness) and the value column as wide as its widest reading, the same in every part */
+[data-sum=shadows] .sub:not(.field){display:block}
+[data-sum=shadows] .sub>.field{display:grid;grid-template-columns:var(--sh-name) minmax(0,1fr) var(--sh-val);align-items:center;column-gap:var(--gap-head);margin-bottom:var(--gap-set)}
+[data-sum=shadows] .sub>.field:last-child,[data-sum=shadows] .sub>.field:not(:has(~ :not([hidden]))):not(:has(~ .t-note:not([hidden]))){margin-bottom:0}
+[data-sum=shadows] .sub>.field>label{display:contents}
+[data-sum=shadows] .sub>.field>label>output{order:3;text-align:right}
+[data-sum=shadows] .sub>.field>input[type=range]{order:2}
+#centerFold>.sub,#turnShadowBlock>.sub{padding-bottom:var(--gap-set);margin-bottom:var(--gap-set);border-bottom:1px solid var(--hairline)}
+[data-sum=shadows] .sub>.t-note{margin:calc(var(--gap-head) - var(--gap-set)) 0 0}
+[data-sum=shadows] .group-head .btn.small{margin:calc((var(--sw-h) - var(--h-s)) / 2) 0 calc((var(--sw-h) - var(--h-s)) / 2) auto}          /* the Reset button never makes the row taller, so nothing moves when it appears */
+[data-sum=shadows] .group-head .btn.small+.group-toggle{margin-left:0}
+#firstAloneField,#inkField{padding:var(--gap-set);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--ink) 4%,transparent);box-shadow:var(--shadow-inset),inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent)}
 
-.group-head+#turnShadowBlock>#centerFold>.subhead,#centerFold[hidden]+.subhead{margin-top:var(--gap-label)}
 /* Video: Advanced */
 .adv{margin:0 0 var(--gap-card)}
 .adv summary{display:flex;align-items:center;gap:var(--gap-tight);padding:var(--gap-sub) 0;font-size:var(--type-body);color:var(--muted);cursor:pointer;list-style:none}
@@ -370,7 +388,7 @@ input.bad{border-color:var(--danger)}
 .field label.check:has(>.switch){flex-direction:row-reverse;justify-content:space-between}
 
 /* ----- On / off switch (used for every toggle on the site) ----- */
-input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:38px;height:22px;margin:0;border:0;border-radius:999px;background:var(--line);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--neutral) 22%,transparent);cursor:pointer;transition:background-color var(--ae-quick) var(--ease-color)}
+input.switch{appearance:none;-webkit-appearance:none;flex:none;position:relative;width:38px;height:var(--sw-h);margin:0;border:0;border-radius:999px;background:var(--line);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--neutral) 22%,transparent);cursor:pointer;transition:background-color var(--ae-quick) var(--ease-color)}
 input.switch::before{content:'';position:absolute;top:var(--gap-sub);left:var(--gap-sub);width:18px;height:18px;border-radius:50%;background:var(--on-dark);box-shadow:var(--shadow-knob)}
 input.switch:checked{background:var(--accent);box-shadow:none}
 input.switch:checked::before{transform:translateX(16px)}
@@ -396,6 +414,29 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #turnField{padding:var(--gap-tight) var(--gap-head);margin:calc(-1 * var(--gap-tight)) calc(-1 * var(--gap-head)) var(--gap-card);border-radius:var(--r-ctl);transition:box-shadow var(--ae-quick) var(--ease-color),background var(--ae-quick) var(--ease-color)}
 #turnField.glow-ring{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent),0 0 18px 4px var(--accent)}
 .colorrow[hidden]{display:none}
+/* the color field: swatch, name, hex, and chevron in one field that opens a menu of named colors and a picker */
+.csel{position:relative}
+.csel-field{display:flex;align-items:center;gap:var(--gap-head);box-sizing:border-box;height:var(--h-m);padding:0 var(--chev-x) 0 var(--field-pad-x);border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2)}
+.csel-field:hover{border-color:var(--muted)}
+.csel-field:focus-within{border-color:var(--accent)}
+.csel-open{display:flex;align-items:center;gap:var(--gap-head);flex:1 1 auto;min-width:0;height:100%;padding:0;border:0;background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.csel-open:focus-visible{outline:none}
+.csel-sw{flex:none;width:calc(var(--sw-h) - var(--gap-sub));height:calc(var(--sw-h) - var(--gap-sub));border-radius:var(--r-sm);box-shadow:inset 0 0 0 1px var(--hairline)}
+.csel-name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.csel .csel-field input.csel-hex{flex:none;width:8ch;height:100%;padding:0;border:0;border-radius:0;background:none;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;outline:none}
+.csel-chev{flex:none;width:var(--chev-s);height:100%;padding:0;border:0;background:var(--chev) no-repeat center / var(--chev-s) auto;cursor:pointer}
+.csel-menu{position:absolute;left:0;right:0;top:calc(100% + var(--gap-label));z-index:40;display:grid;gap:var(--gap-head);padding:var(--gap-label);background:var(--panel);border:1px solid var(--line);border-radius:var(--r-ctl);box-shadow:var(--shadow)}
+.csel-menu:not([hidden]){animation:rise var(--ae-quick) var(--ease-ui);--rise:-4px}
+.csel-list{margin:0;padding:0;list-style:none}
+.csel-list li{display:flex;align-items:center;gap:var(--gap-head);padding:var(--gap-tight) var(--gap-head);border-radius:var(--r-sm);font-size:var(--type-body);cursor:pointer;outline:none}
+.csel-list li:hover,.csel-list li:focus-visible{background:var(--accent-soft)}
+.csel-list li[aria-selected="true"]{font-weight:600}
+.csel-code{margin-left:auto;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.csel-pick{display:grid;gap:var(--gap-head);padding:var(--gap-head) var(--gap-head) var(--gap-label);border-top:1px solid var(--hairline)}
+.csel-area{position:relative;height:calc(var(--h-m) * 3);border-radius:var(--r-sm);background-image:linear-gradient(to top,var(--area-black),transparent),linear-gradient(to right,var(--area-white),transparent);touch-action:none;cursor:crosshair}
+.csel-hue{position:relative;height:var(--gap-field);border-radius:99px;background:var(--hue-rail);touch-action:none;cursor:pointer}
+.csel-area:focus-visible,.csel-hue:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.csel-thumb{position:absolute;top:50%;left:0;width:var(--thumb);height:var(--thumb);box-sizing:border-box;border:2px solid var(--panel2);border-radius:50%;box-shadow:var(--chip-shadow);transform:translate(-50%,-50%);pointer-events:none}
 .colorrow input[type=color]{width:var(--swatch-w);height:var(--h-m);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);cursor:pointer}
 .panel .btn.primary{width:100%;padding:var(--gap-card) var(--gap-field);margin-top:var(--gap-tight)}
 
@@ -706,8 +747,6 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 .group.off .fold-btn::before{opacity:0}
 /* the parts of a group keep their margins inside, so opening and closing never shifts anything at the start or the end */
 .group-body,.sub:not(.field):not(.colorrow):not(.line-style),#turnShadowBlock,details.adv{display:flow-root}
-.group-body>:first-child,.group-body>#turnShadowBlock>.subhead:first-child{margin-top:0}
-.group-body>#turnShadowBlock>#centerFold:first-child>.subhead,.group-body>#turnShadowBlock>#centerFold[hidden]+.subhead{margin-top:0}
 .group>.group-head,.group>h3{transition:margin-bottom var(--ae-move) var(--ease-out)}
 /* the loading status */
 .st{display:inline-flex;align-items:center;gap:var(--gap-head);transition:color var(--ae-quick) var(--ease-color)}
@@ -1109,7 +1148,7 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
   .start-card{padding:var(--gap-set) var(--gap-card)}
   .start-card p,.empty .empty-intro .drop{display:none}
   .sc-ic{width:34px;height:34px;border-radius:var(--r-card)}.sc-ic svg{width:19px;height:19px}
-  .start-card h3{font-size:var(--type-value)}.start-card .row{gap:var(--gap-tight)}
+  .start-card h3{font-size:var(--type-value)}.start-card .row{gap:var(--gap-tight);margin-top:0}          /* a card with less in it keeps its button right under its name, as the taller card does */
 }
 @media (max-height:620px) and (min-width:701px){.start-card p{display:none}.sc-ic{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.empty::before,.empty::after,.empty-fit>*,.start-card{animation:none}.start-card,.sc-ic{transition:none}}
@@ -1572,7 +1611,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #aeExpDlg{background:color-mix(in srgb,var(--bg) 52%,transparent);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);place-items:center}
 
 /* a little more room: under every group's last row (before the divider), and between a group's heading and its first row of toggles */
-.panel .group{padding-bottom:var(--gap-group)}
 .group-body>.field.fade-pair{margin-top:var(--gap-card)}
 /* Bypass dims every lit module (Level and Fades too); a module that is already off stays as quiet as it was */
 .ae-proc.bp.off .ae-tn{opacity:var(--inactive)}
@@ -2178,6 +2216,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-cards .ae-card{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .pe-cards .pe-card-text,.pe-cards .pe-card-dir{flex-direction:column;align-items:stretch;justify-content:space-between;gap:var(--gap-set)}          /* two settings per card, each a name over its control: the first name sits on the card's top padding and the last control on its bottom, so both cards are balanced and their rows line up */
 .pe-cards .pe-g,.pe-card-dir .pe-dir{align-items:stretch}
+.pe-cards .pe-card-set{flex-direction:column;align-items:stretch;justify-content:center}          /* Clean, Crop, and Arrange: one setting per card, its name over its control, the control as wide as the card, so the two cards match */
+.pe-card-set .seg label{white-space:nowrap}
+.pe-card-set select{width:100%;height:var(--h-s);padding-block:0}
+.pe-cards .pe-card-crop{justify-content:space-between;gap:calc(var(--gap-field) + var(--gap-set))}          /* Margin and Keep frame on one center line with a wide gap */
+.pe-card-crop .pe-inl{flex:1 1 auto;min-width:0}
+.pe-card-crop .pe-sw{flex:none;white-space:nowrap}
+.pe-card-crop .pe-inl input[type=range]{flex:1 1 0;width:auto;min-width:0}
 .pe-rzcards{container:rzcards/inline-size;grid-template-columns:minmax(0,1fr) max-content}          /* Re-size: the sizes in one card, a little the longer, and Page shape in another of the same height, its one setting centered */
 .pe-rzcards .ae-card{align-items:center}
 .pe-rzcards .pe-card-sizes{display:block}
@@ -2212,6 +2257,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .pe-rail.open .pe-rail-body{grid-template-rows:1fr}
   .pe-pt h3{display:none}          /* the drop-down above already names the tool, so the head keeps only its line and its buttons */
+  #pdfDlg .pe-sub:not(.warn){display:none}          /* nor does the tool's subtitle get a row of its own under the drop-down; a warning still shows */
+  #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}
   .pe-rail-in{overflow:hidden;min-height:0;padding:0 var(--gap-head)}
   .pe-rail.open .pe-rail-in{padding:0 var(--gap-head) var(--gap-card)}
 }
@@ -2416,7 +2463,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #fadeLenField .fade-ends{position:relative;display:block;height:var(--slider-h)}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin-inline:0}
 #fadeLenField .fade-ends .sl-end[data-v="0"]{left:calc(-1 * var(--gap-label))}
-#fadeLenField .fade-ends .sl-end.auto{left:calc(var(--gap-head) + (100% - 2 * var(--gap-head)) * var(--apos,.333));transform:translateX(-50%)}
+#fadeLenField .fade-ends .sl-end.auto{left:max(calc(var(--gap-head) + (100% - 2 * var(--gap-head)) * var(--apos,.333)),3.5em);transform:translateX(-50%)}          /* on a narrow panel the Auto mark never runs into Off */
 #fadeLenField .fade-ends .sl-end:last-child{right:calc(-1 * var(--gap-label))}
 
 /* ---- Button group: the one pill for buttons that belong together (the Undo group in the video, Audio and PDF editors; the video's turn tools).
