@@ -1,4 +1,4 @@
-// Timeline bar: Undo, Redo and History share one pill; Space turns evenly and Turns to end share another; Fit and the zoom slider sit outside both; History still opens upward; no sideways scroll on a phone.
+// Timeline bar: Undo, Redo and History share one pill; Space turns evenly and Turns to end share another; Fit and the zoom slider (with its minus and plus) share a third group; History still opens upward; no sideways scroll on a phone.
 // Run with the app served on port 8123:  S=tests/fixtures NODE_PATH=$HOME/keyframes-tests/node_modules node tests/timeline-bar-groups.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -14,14 +14,14 @@ const K = '__keyframes';
     const g = id => document.querySelector(id), box = el => { const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom }; };
     const un = g('#bUndo').closest('.btn-group'), tu = g('#bSpace').closest('.btn-group');
     return { un: !!un, tu: !!tu, same1: un && un === g('#bRedo').closest('.btn-group') && un === g('#bHist').closest('.btn-group'), same2: tu && tu === g('#bToEnd').closest('.btn-group'), two: un !== tu,
-      fitOut: !g('#bFit').closest('.btn-group') && !g('#zoom').closest('.btn-group'),
+      fitOut: !!g('#bFit').closest('.zoom') && g('#zoom').closest('.zoom') === g('#bFit').closest('.zoom') && !g('#bFit').closest('.hist-wrap, .tl-turns'),
       titles: ['#bUndo', '#bRedo', '#bHist', '#bSpace', '#bToEnd'].map(s => g(s).title).every(Boolean),
       corner: un ? getComputedStyle(un).borderRadius : '', un1: un ? box(un) : null, tu1: tu ? box(tu) : null, hist: box(g('#bHist')), sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
   });
   const d = await read();
   ok('Undo, Redo and History share one container', d.un && d.same1);
   ok('Space turns evenly and Turns to end share another', d.tu && d.same2 && d.two);
-  ok('Fit and Zoom sit outside both', d.fitOut);
+  ok('Fit and Zoom (with its minus and plus) share a group of their own, apart from the other two', d.fitOut);
   ok('The buttons keep their titles', d.titles);
   ok('The group corner is the control corner plus the gap', await p.evaluate(() => { const e = document.querySelector('.btn-group'); if (!e) return false; const r = parseFloat(getComputedStyle(e).borderTopLeftRadius), c = parseFloat(getComputedStyle(document.querySelector('#bUndo')).borderTopLeftRadius), gp = parseFloat(getComputedStyle(e).paddingLeft); return Math.abs(r - (c + gp)) < 0.6; }));
   ok('Undo is greyed until there is a step', await p.evaluate(() => document.querySelector('#bUndo').disabled));

@@ -107,7 +107,7 @@ function peTool(name) {
   const redraw = PE.mode === 'crop' || name === 'crop' || PE.mode === 'dim' || name === 'dim' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
   const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
   peClearStatus(); peToast(''); PE.splitSaid = '';
-  PE.mode = name; peCropTicks(); PE.one = null; PE.oneAuto = false; PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
+  PE.mode = name; peCropTicks(); PE.one = null; PE.oneAuto = false; if (name === 'crop' && peHandMode()) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } /* Manual draws on one page, so coming back to Crop in Manual opens the first one again, as the Manual switch does */ PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
   if (redraw) peRender(false); else peState();
   peBodySlide(snap, dir);
   if (name === 'split') peSpreadScan();
@@ -385,11 +385,11 @@ function peCropReadSay(pc) {
 }
 /* the pages are read one after another while Crop is open; each card gets its frame as soon as it is known */
 async function peCropRead() {
-  if (PE.cropReading) return; PE.cropReading = true; let did = 0, shown = false, pc = 0;          // the line only shows the reading when it takes a moment (400ms), so a quick read is not a flicker
-  const tm = setTimeout(() => { if (PE.cropReading && PE.mode === 'crop' && !PE.busy) { shown = PE.cropOn = true; peCropReadSay(pc); } }, 400);
+  if (PE.cropReading) return; PE.cropReading = true; let did = 0, shown = false, pc = 0;
   try {
+    { const d0 = PE.d, t0 = d0 && PE.mode === 'crop' && !peHandMode() && !PE.busy ? peTargets() : []; if (t0.some(i => !PE.raw.has(peRawKey(d0.slots[i])))) { shown = PE.cropOn = true; peCropReadSay(0); } }          // Auto with pages still to read starts out working and greyed, from the first moment the tool opens
     for (;;) {
-      const d = PE.d; if (!d || PE.mode !== 'crop') return;          // the draft as it is now: an undo swaps it while pages are being read
+      const d = PE.d; if (!d || PE.mode !== 'crop' || peHandMode()) return;          // Manual needs none of the reading, so it stops there; the draft as it is now: an undo swaps it while pages are being read
       const ids = peTargets(), left = ids.filter(i => !PE.raw.has(peRawKey(d.slots[i]))); if (!left.length) break;
       pc = PE.cropPc = Math.round((ids.length - left.length) / ids.length * 100); if (shown && !PE.busy) peCropReadSay(pc);
       const nx = PE.one != null && left.includes(PE.one) ? PE.one : left[0];          // the page open in the large view is read first, so its frame is there to drag
@@ -398,7 +398,7 @@ async function peCropRead() {
       if (did % 2 === 0) await yieldNow();
     }
     if (did) { if (!PE.busy && shown) { peCropReadSay(100); await new Promise(r => setTimeout(r, 260)); if (!PE.d || PE.mode !== 'crop') return; peCropReadSay(null); } peCropPaintAll(); peActs(); if (PE.one != null) peOneFrame(); }
-  } finally { clearTimeout(tm); PE.cropReading = false; PE.cropOn = false; peCropReadSay(null); }
+  } finally { PE.cropReading = false; PE.cropOn = false; peCropReadSay(null); }
 }
 /* every card drawn again with its frame, and the tag on the pages that take the shared frame */
 function peCropPaintAll() {
@@ -660,7 +660,7 @@ function peCropBind() {
     peHandSet(PE.one, c); peCropPaint(c);
   });
   const end = () => { if (drag) peCropPaintAll(); drag = null; box.classList.remove('dragging'); peActs(); }; box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
-  document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; peCropTicks(); if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading && PE.cropOn) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
+  document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; peCropTicks(); if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
   peApplyClick('#peCropAuto', peCropGo, peCropClear);
   $('#peCropPad').addEventListener('input', e => { $('#peCropPadVal').textContent = e.target.value + '%'; paintRange(e.target); peCropPaintAll(); peOneFrame(); peActs(); });
   $('#peCropApply').addEventListener('click', peCropApply); $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
@@ -675,7 +675,7 @@ function peCropBind() {
   document.querySelectorAll('input[name=peAddKind]').forEach(r => r.addEventListener('change', () => swapText($('#peAddGo'), kind() === 'pdf' ? 'Choose PDF…' : 'Add page', true)));
   $('#peAddGo').addEventListener('click', () => { if (kind() === 'pdf') $('#peAddIn').click(); else peAdd('blank'); });
   $('#peAddIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) peAdd('pdf', f); });
-  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, -50, 50); paintRange(zs); $('#peGrid').style.setProperty('--pe-th', 'calc(var(--h-s) * ' + (zs.value <= 0 ? 3.9 + zs.value * 0.026 : 3.9 + zs.value * 0.074).toFixed(2) + ')'); $('#peZoomOut').disabled = +zs.value <= -50; $('#peZoomIn').disabled = +zs.value >= 50; };
+  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, -50, 50); paintRange(zs); $('#peGrid').style.gridTemplateColumns = 'repeat(auto-fill,minmax(calc(var(--h-s) * ' + (zs.value <= 0 ? 3.9 + zs.value * 0.026 : 3.9 + zs.value * 0.074).toFixed(2) + '),1fr))';          /* set on the grid itself, not as a variable the cards inherit: a changed variable makes every card and everything in it work out its style again, which made the slider stutter with many pages */ $('#peZoomOut').disabled = +zs.value <= -50; $('#peZoomIn').disabled = +zs.value >= 50; };
   zs.addEventListener('input', () => zsSet(+zs.value)); $('#peZoomOut').addEventListener('click', () => zsSet(+zs.value - 10)); $('#peZoomIn').addEventListener('click', () => zsSet(+zs.value + 10)); zsSet(+zs.value);          // the page-size slider, and its minus and plus, set the page cards' width
   peCleanBind(); peZoomBind(); $('#peSplitGo').addEventListener('click', peSplitGo); peApplyClick('#peSkewGo', peSkewGo, peSkewClear);
 }

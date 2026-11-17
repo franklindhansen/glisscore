@@ -46,8 +46,8 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   const cardSet = async () => { await S(s => { s.set.creditsOn = true; s.set.firstAlone = true; s.credits.title = 'Test piece'; s.credits.titleEdited = true; }); await p.evaluate(() => { applyGroupSwitches(); }); };
 
   // --- default and settings round trip
-  ok('Credits at defaults to End and the End radio is checked', await S(s => s.set.creditsAt) === 'end' && await checked('creditsAt') === 'end');
-  ok('Credits at has Start and End', await labels('#creditsAtField .seg') === 'Start|End', await labels('#creditsAtField .seg'));
+  ok('Location defaults to End and the End radio is checked', await S(s => s.set.creditsAt) === 'end' && await checked('creditsAt') === 'end');
+  ok('Location has Start and End', await labels('#creditsAtField .seg') === 'Start|End', await labels('#creditsAtField .seg'));
   ok('creditsAt survives export and import of settings', await p.evaluate(() => { S.set.creditsAt = 'start'; const o = JSON.parse(buildExport('settings')).settings; const c = cleanSettings(o).creditsAt; S.set.creditsAt = 'end'; return o.creditsAt === 'start' && c === 'start' && cleanSettings({ creditsAt: 'sideways' }).creditsAt === undefined; }));
 
   // --- Start on a three-page Spread score

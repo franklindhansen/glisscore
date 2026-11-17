@@ -24,7 +24,7 @@
   --sh-name:50px; --sh-val:34px;   /* the Shadows rows: the name column (as wide as Softness) and the value column (as wide as 150%) */
   --gap-sub:2px; --gap-label:4px; --gap-head:8px; --gap-set:12px; --gap-field:16px; --gap-group:18px;   /* the spacing scale (2, 4, 8, 12, 16, with --gap-group, 18, the space above and below a divider between the video panel's groups): title to its subtitle, label to its control and a control to its note, a heading to its content, one setting to the next in an editor card (and card padding), one setting to the next in the video panel and the page windows */
   --fs:32px; --fsm:10px; --fs-trh:50px; --hint-bridge:21px; --w-glass:28px; --combo-btn-w:28px; --div-w:7px;   /* the floating strips on the video picture: their height and their distance from the picture's edge (the script sets both per picture size), a button's width on a glass bar, the font box's list button, and the System divider's grab width */
-  --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px;
+  --crop-edge:1.5px; --hl:var(--crop-grip); --dz:var(--step-s); --sb:160px; --zoom-min:56px; --zoom-off:300px; --panel-side-max:40px; --swatch-w:42px; --zoom-w:110px; --kbd-w:20px;
   --black:#000; --on-turn:#1a1d26;   /* the full-screen picture's black, and the ink on an amber (--turn) fill: the same in light and dark */
   --x-size:26px;   /* the remove (x) button on a Spectra list row: a square */
   --tip-x:66px;   /* how far in from the Limiter row's left edge its warning note starts (after the word Limiter) */
@@ -236,8 +236,10 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:var(--gap-head)}
+.transport .btn{min-height:var(--h-l)}          /* every button in the play row (Add page turn, and Hide editor in full screen) is the same height as Back to start and Play */
 .hist-wrap .hi{display:none}
-kbd{font:inherit;line-height:round(calc(var(--lh) * 1em),1px);font-size:var(--type-note);padding:var(--hair) var(--gap-tight);border-radius:var(--r-paper);border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+kbd{display:inline-block;min-width:var(--kbd-w);box-sizing:border-box;padding:var(--hair) var(--gap-tight);border:1px solid var(--line);border-bottom-width:2px;border-radius:var(--r-paper);background:var(--panel2);font:inherit;font-size:var(--type-note);line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}          /* the one key cap: in the shortcuts list, in a note, in a button's hint. In running text it is the note's own size, so it never stands out */
+:is(p,li,.t-note,.btn) kbd{vertical-align:baseline;margin-block:calc(-1 * (var(--hair) + var(--gap-sub)))}          /* the cap's top and bottom edges take no line room, so a line of text or a button holding a cap is as tall as it was without one */
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
 /* ----- Panel container and groups ----- */
@@ -291,7 +293,7 @@ input.bad{border-color:var(--danger)}
 /* style row under a credits line: optional font box, then Bold and Italic */
 .line-style{display:flex;align-items:center;gap:var(--gap-tight)}
 .line-style .combo{flex:1;min-width:0}
-.line-style .line-font{padding:var(--hint-py) var(--combo-btn-w) var(--hint-py) var(--gap-head);font-size:var(--type-body)}
+.line-style .line-font{height:var(--h-s);padding:0 var(--combo-btn-w) 0 var(--gap-head);font-size:var(--type-body)}          /* the font box is one small control tall (--h-s), and Bold and Italic beside it stretch to match */
 .fmt-btn{flex:none;display:grid;place-items:center;width:var(--h-s);height:var(--h-s);padding:0;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--panel2);color:var(--ink);cursor:pointer;font:inherit;line-height:round(calc(var(--lh) * 1em),1px)}
 .fmt-btn:hover{border-color:var(--muted)}
 .fmt-btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
@@ -370,7 +372,6 @@ input.bad{border-color:var(--danger)}
 [data-sum=shadows] .sub>.t-note{margin:calc(var(--gap-head) - var(--gap-set)) 0 0}
 [data-sum=shadows] .group-head .btn.small{margin:calc((var(--sw-h) - var(--h-s)) / 2) 0 calc((var(--sw-h) - var(--h-s)) / 2) auto}          /* the Reset button never makes the row taller, so nothing moves when it appears */
 [data-sum=shadows] .group-head .btn.small+.group-toggle{margin-left:0}
-#firstAloneField,#inkField{padding:var(--gap-set);border-radius:var(--r-ctl);background:color-mix(in srgb,var(--ink) 4%,transparent);box-shadow:var(--shadow-inset),inset 0 0 0 1px color-mix(in srgb,var(--ink) 6%,transparent)}
 
 /* Video: Advanced */
 .adv{margin:0 0 var(--gap-card)}
@@ -429,8 +430,10 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .csel-menu:not([hidden]){animation:rise var(--ae-quick) var(--ease-ui);--rise:-4px}
 .csel-list{margin:0;padding:0;list-style:none}
 .csel-list li{display:flex;align-items:center;gap:var(--gap-head);padding:var(--gap-tight) var(--gap-head);border-radius:var(--r-sm);font-size:var(--type-body);cursor:pointer;outline:none}
+.csel-list li[hidden]{display:none}
 .csel-list li:hover,.csel-list li:focus-visible{background:var(--accent-soft)}
 .csel-list li[aria-selected="true"]{font-weight:600}
+.csel-custom .csel-sw{background:var(--hue-rail)}          /* the Custom row's swatch is the picker's own hue strip */
 .csel-code{margin-left:auto;color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
 .csel-pick{display:grid;gap:var(--gap-head);padding:var(--gap-head) var(--gap-head) var(--gap-label);border-top:1px solid var(--hairline)}
 .csel-area{position:relative;height:calc(var(--h-m) * 3);border-radius:var(--r-sm);background-image:linear-gradient(to top,var(--area-black),transparent),linear-gradient(to right,var(--area-white),transparent);touch-action:none;cursor:crosshair}
@@ -464,7 +467,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* ==================== 8. OVERLAYS, DIALOGS & MESSAGES ==================== */
 /* ----- Toast message and drag-and-drop veil ----- */
-.toast{position:fixed;left:50%;bottom:calc(var(--gap-hero) + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:var(--gap-card) var(--gap-field);border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);z-index:50;opacity:0;pointer-events:none}
+.toast{position:fixed;left:50%;bottom:var(--toast-bottom,calc(var(--gap-hero) + env(safe-area-inset-bottom,0px)));background:var(--ink);color:var(--bg);padding:var(--gap-card) var(--gap-field);border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);z-index:50;opacity:0;pointer-events:none}
 .toast.show{opacity:1}
 .dropveil{position:fixed;inset:0;z-index:40;background:var(--veil);display:flex;align-items:center;justify-content:center;color:var(--on-dark);font:italic 500 32px 'Newsreader',Georgia,serif;pointer-events:none;opacity:0;visibility:hidden;transition:opacity var(--ae-quick) var(--ease-ui),visibility 0s var(--ae-quick)}
 body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae-quick) var(--ease-ui),visibility 0s}
@@ -563,7 +566,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae
 .stage-wrap.zoomed{touch-action:none}
 @media (prefers-reduced-transparency:reduce){.stage-strip,.sys-zoom,.sys-bar,.sys-nav{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--panel2)}}
 .fs-only{display:none!important}
-:root{--tl-h:262px}
+:root{--tl-h:262px;--tl-gap:var(--gap-tight)}
 html.fs-lock,html.fs-lock body{overflow:hidden}
 
 /* ----- Full-screen layout and overlay controls ----- */
@@ -771,7 +774,6 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 .keys[hidden]{display:none}
 .keys dt{min-width:0}          /* a long action wraps; the keys beside it never do */
 .keys dd{margin:0;color:var(--muted);white-space:nowrap;justify-self:end;text-align:right}
-.keys kbd{display:inline-block;min-width:20px;padding:var(--hair) var(--gap-tight);border:1px solid var(--line);border-bottom-width:2px;border-radius:var(--r-paper);background:var(--panel2);font:600 var(--type-note) inherit;line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}
 
 /* the segmented control's glider */
 .seg-pill{position:absolute;top:var(--gap-sub);bottom:var(--gap-sub);left:0;width:0;border-radius:var(--r-sm);opacity:0;background:var(--accent-soft);pointer-events:none;transition:transform var(--t-press) var(--spring-press),width var(--ae-move) var(--spring-press),opacity var(--ae-quick) var(--ease-color)}
@@ -925,7 +927,6 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 @media (max-width:960px){
   .top-main{display:contents}
 }
-.tl-bar #bFit{height:var(--h-xs);min-height:0}
 .tl-bar{min-height:calc(var(--h-xs) + var(--gap-head));padding-top:0;padding-bottom:0;box-sizing:border-box}
 
 /* the page never grows a scrollbar while the entrance animations run (the timeline rises from 14px below) */
@@ -963,7 +964,7 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .chips{flex:1 1 100%;order:6}
 }
 /* timeline bar: by the timeline's own width. A clean two-row grid instead of buttons wrapping wherever they land */
-@container tl (max-width:720px){
+@container tl (max-width:800px){
   .tl-bar{display:grid;grid-template-columns:auto auto 1fr auto;grid-template-areas:"ttl inf . his" "trn trn trn zm";align-items:center;gap:var(--gap-head);padding:var(--gap-head) var(--gap-field);min-height:0}
   .tl-bar h2{grid-area:ttl}
   .tl-bar .tl-info{grid-area:inf;margin:0}
@@ -971,6 +972,14 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end}
   .tl-bar .hint.warn{grid-column:1/-1}
+}
+@container tl (max-width:520px){          /* the zoom group is wider than the old slider, so from here it takes the top row with the title and the history buttons drop to the turn tools' row */
+  .tl-bar{grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . zm" "trn trn trn his"}
+  .tl-bar .hist-wrap{justify-self:end}
+  .tl-bar .zoom{min-width:0}
+  .tl-bar .hist-wrap .hw{display:none}
+  .tl-bar .hist-wrap .hi{display:block;width:var(--icon-m);height:var(--icon-m)}
+  .tl-bar .hist-wrap>.btn{padding:0 var(--gap-tight)}
 }
 /* phones: the timeline bar in two rows (turn tools left, history icons right), and one transport row */
 @container tl (max-width:426px){
@@ -983,9 +992,6 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .zoom input{width:clamp(var(--zoom-min),calc(100vw - var(--zoom-off)),var(--zoom-w))}
   .tl-bar .hint.warn{grid-column:1/-1}
   .tl-bar .hist.up{left:auto;right:0}
-  .tl-bar .hist-wrap .hw{display:none}
-  .tl-bar .hist-wrap .hi{display:block;width:var(--icon-m);height:var(--icon-m)}
-  .tl-bar .hist-wrap>.btn{padding:0 var(--gap-tight)}
   .tl-bar .tl-turns>.btn{padding:0 var(--gap-label)}
 }
 @container stagecol (max-width:478px){
@@ -1152,13 +1158,11 @@ body.dragging .start-card:first-child{border-color:var(--accent);transform:trans
 }
 @media (max-height:620px) and (min-width:701px){.start-card p{display:none}.sc-ic{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.empty::before,.empty::after,.empty-fit>*,.start-card{animation:none}.start-card,.sc-ic{transition:none}}
-/* the file checks at the top of the settings read as small pills */
-.status .st{border:1px solid var(--line);border-radius:999px;background:var(--panel2);transition:color var(--ae-quick) var(--ease-color),border-color var(--ae-quick) var(--ease-color),background-color var(--ae-quick) var(--ease-color)}
+/* the two file checks are two tiles of the panel (the shared tile look) that split its width evenly, each with its mark and words on one line, centered */
+.status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-head);padding:0;margin-bottom:var(--gap-card);font-size:var(--type-small);border:0}
+.status .st{justify-content:center;gap:var(--gap-head);white-space:nowrap;padding:var(--gap-head);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);min-width:0}
 .status .st.done{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft)}
-.status{border-bottom:0;padding-bottom:var(--gap-tight)}.status .st{padding:var(--gap-snug) var(--field-pad-x) var(--gap-snug) var(--gap-head);font-size:var(--type-small)}
-/* the two file checks share the row evenly */
-.status{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap-head)}
-.status .st{justify-content:center;white-space:nowrap}
+.status .st-t{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 
 /* ==================== 17. AUDIO EDITOR: tool list, tools and tool window ==================== */
 .dlg.editor.ae{width:min(1000px,96vw)}
@@ -2007,17 +2011,12 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* The tool band: heading (title and subtitle left, the page-size slider right), a hairline, then one padded settings row with the tool's one Apply button at its right end. Every value is a token. */
 .pe-tv{padding:0}
 .pe-phead{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-field);padding:var(--gap-set) var(--ae-side)}
-.pe-row{display:flex;align-items:flex-end;flex-wrap:wrap;column-gap:calc(var(--gap-field) + var(--gap-set));row-gap:var(--gap-set);padding:var(--gap-set) var(--ae-side)}
-.pe-row+.pe-row{padding-top:0}
-.pe-row.spread>:last-child{margin-left:auto}          /* a row of a few short controls (Crop's): the controls keep the row's normal space between them, and the last one sits at the right edge */
 .pe-g{display:flex;flex-direction:column;align-items:flex-start;gap:var(--gap-head);min-width:0}          /* a name is trimmed to its letters (in a card or a settings row), so the control under it sits --gap-head below them: the same space you see under a name in the video panel, where the line's own room under the letters makes up the rest */
 .pe-g>.t-lbl{font-size:var(--type-body);color:var(--muted);line-height:var(--line-s)}          /* a setting's name: the same look as a slider's name (.field label), as in the video panel; small capitals are only for a card's title */
-.pe-row .seg,.pe-cards .seg{height:var(--h-s)}
-.pe-row .seg label,.pe .pe-row .seg label,.pe-cards .seg label{display:flex;align-items:center;justify-content:center;padding:0 var(--gap-head)}
-.pe-row select{width:auto;height:var(--h-s);padding-block:0}
+.pe-cards .seg{height:var(--h-s)}
+.pe-cards .seg label{display:flex;align-items:center;justify-content:center;padding:0 var(--gap-head)}
 .pe-acts{display:flex;align-items:center;justify-content:flex-end;gap:var(--gap-head);flex:none;margin-left:auto}
 .pe-lone{justify-content:flex-end}
-.pe-row .btn.small,.pe-row .fmt-btn{min-height:var(--h-s)}
 .pe-inl{display:flex;align-items:center;gap:var(--gap-head);height:var(--h-s);font-size:var(--type-body);color:var(--muted)}
 .pe-inl input[type=range]{width:calc(var(--h-s) * 3.2);flex:none}
 .pe-inl output{min-width:var(--val-w);text-align:left;color:var(--ink);font-variant-numeric:tabular-nums}
@@ -2026,12 +2025,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-sw{display:flex;align-items:center;gap:var(--gap-head);height:var(--h-s);color:var(--muted);font-size:var(--type-body)}
 .pe-text{display:flex;align-items:center;gap:var(--gap-head)}
 .pe-text input[type=text]{width:calc(var(--h-s) * 3);height:var(--h-s)}
-.pe-text :is(input[type=text],.fmt-btn){font-size:var(--type-body)}          /* the text and its Bold and Italic buttons are the same size as every name and choice around them */
-.pe-bi{display:inline-flex;gap:var(--gap-label)}
+.pe-text :is(input[type=text],.fmt-btn,.fmt-group>.btn){font-size:var(--type-body)}          /* the text and its Bold and Italic buttons are the same size as every name and choice around them */
 .pe-dir{display:flex;align-items:center;gap:var(--gap-head);min-width:0}
 .btn.primary.pe-apply[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 /* Re-size: two rows of four size cards, then Orientation and Apply on the right */
-.pe-row .seg label,.pe-rzcards .seg label{white-space:nowrap}
+.pe-rzcards .seg label{white-space:nowrap}
 .pe-rz .rz-grid{display:grid;grid-template-columns:repeat(4,minmax(max-content,1fr));gap:calc(var(--gap-set) + var(--hair)) var(--gap-set);align-content:start;width:100%}          /* the rows are a pixel further apart than the columns, so the card's height leaves Page shape's card an even room to center its one setting in, on whole pixels; the sizes spread across their card: equal columns where there is room, as wide as their words where there is not */
 .pe-rz .rz-opt{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-label);padding:0 var(--gap-head);min-height:var(--h-s)}
 .pe-rz .rz-opt b{font-weight:400}          /* a size's name is regular like every other label; the chosen one is told by its fill and ink */
@@ -2041,7 +2039,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
 .pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:var(--pe-edge) var(--pe-edge) var(--pe-edge-b);overscroll-behavior:contain}
-.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--pe-th,116px),1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start}
+.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start}
 .pe .page-card{display:flex;flex-direction:column;gap:var(--gap-head);padding:var(--gap-tight);border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color var(--ae-quick) var(--ease-color),transform var(--t-hover) var(--spring-hover)}
 .pe .page-card[aria-pressed]{border:0;background:none}
 .pe .pe-grid.arrange .page-card{cursor:grab}
@@ -2227,7 +2225,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-rzcards .ae-card{align-items:center}
 .pe-rzcards .pe-card-sizes{display:block}
 .pe-card-dir .pe-dir .seg{flex:1 1 0;min-width:0}
-.pe-row input[type=text]:focus-visible,.pe-row input[type=number]:focus-visible{outline:none;border-color:var(--accent)}          /* a field you type in shows its edge in the accent, not a ring */
 @container rzcards (min-width:644px){.pe-rz .rz-opt:nth-child(-n+4){grid-row:1}.pe-rz .rz-opt:nth-child(n+5){grid-row:2}}
 @container rzcards (max-width:643px){.pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container rzcards (max-width:257px){.pe-rz .rz-opt{height:var(--h-l);min-height:var(--h-l);padding-block:0}.pe-rz .rz-opt:not(.cu){flex-direction:column;align-items:flex-start;justify-content:center;gap:0}}          /* too narrow even for that (the sizes' box under 258px): the numbers sit under the name */
@@ -2269,7 +2266,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-phead{flex-wrap:wrap;gap:var(--gap-head)}
   .pe-acts{flex-wrap:wrap;flex:0 1 auto;min-width:0}
   .pe-status{white-space:normal;text-align:right}
-  .pe-row{padding-inline:var(--gap-set);column-gap:var(--gap-set)}          /* controls share a line at the one spacing between settings */
   .pe-grid-wrap{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
   .pe-grid{gap:var(--gap-field) var(--gap-head)}
   .pe-stage{flex:none;height:min(58vh,480px);padding:var(--gap-field)}
@@ -2277,8 +2273,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-bar .pe-pages{width:calc(var(--h-s) * 3.2);margin:0 var(--gap-sub) 0 var(--gap-label)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
 }
-@container pedlg (max-width:488px){#pdfDlg #peViewClean .pe-row .pe-g{flex:1 1 auto}  #pdfDlg #peViewClean .pe-row .pe-g>.seg{align-self:stretch}  /* Paper and Strength share a line when they fit, and otherwise each fills the window's width, as Watermark's Direction and Layout do */
-  #pdfDlg .pe-row.spread{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center}  #pdfDlg .pe-row.spread .pe-inl{min-width:0}  #pdfDlg .pe-row.spread .pe-inl input[type=range]{flex:1 1 0;width:auto;min-width:0}  #pdfDlg .pe-row.spread>:last-child{grid-column:1 / -1;justify-self:end;margin-left:0}  /* Crop's Auto | Manual and Margin share a line, Keep frame under them, at the right edge with its switch beside it, as wide */
+@container pedlg (max-width:488px){
   #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead,#pdfDlg .pe-rail-cur span{display:none}  #pdfDlg .pe-rail-cur{padding-right:var(--gap-head)}
   #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
@@ -2463,7 +2458,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #fadeLenField .fade-ends{position:relative;display:block;height:var(--slider-h)}
 #fadeLenField .fade-ends .sl-end{position:absolute;top:0;margin-inline:0}
 #fadeLenField .fade-ends .sl-end[data-v="0"]{left:calc(-1 * var(--gap-label))}
-#fadeLenField .fade-ends .sl-end.auto{left:max(calc(var(--gap-head) + (100% - 2 * var(--gap-head)) * var(--apos,.333)),3.5em);transform:translateX(-50%)}          /* on a narrow panel the Auto mark never runs into Off */
 #fadeLenField .fade-ends .sl-end:last-child{right:calc(-1 * var(--gap-label))}
 
 /* ---- Button group: the one pill for buttons that belong together (the Undo group in the video, Audio and PDF editors; the video's turn tools).
@@ -2475,6 +2469,14 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .btn-group>.btn[aria-pressed=true]{background:var(--accent-soft)}
 .btn-group .vsep{display:block;width:1px;height:16px;margin:0 var(--gap-snug);background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
 .btn-group.hist-wrap{gap:0}
+.btn-group.fmt-group{align-self:stretch;flex:none}          /* Bold and Italic: one group as tall as the field beside it (the font box, the text box), whatever that height is */
+.btn-group.fmt-group>.btn{align-self:stretch;height:auto;display:grid;place-items:center;min-width:var(--h-s);padding:0 var(--gap-head)}
+.btn-group.fmt-group>.btn[aria-pressed=true]{color:var(--accent)}
+.btn-group.zoom{gap:0}          /* the timeline's zoom: minus, the slider, plus, then Fit, in the same group as Undo and Redo (the page-size strip's minus and plus) */
+.btn-group.zoom>.zbtn{width:var(--w-glass);height:calc(var(--h-xs) - var(--gap-tight));border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none}
+.btn-group.zoom>.zbtn:hover:not(:disabled){background:var(--accent-soft)}
+.btn-group.zoom>.zbtn svg{width:14px;height:14px}
+.btn-group.zoom>input{margin-inline:var(--gap-label)}
 /* full screen: the group floats over the wave, so it is glass with a shadow; its buttons stay flat inside it */
 #audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow)}
 #audioDlg.afull .ed-head .btn-group>.btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -2590,7 +2592,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   --trim-t:var(--cut-t);--trim-b:var(--cut-b);          /* --cut is always the metrics' trim, for text the browser cannot trim (a label that is a flex box holds its text in a box of no name) */
 }
 @supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
-:is(#audioDlg,#pdfDlg) :is(.ae-card,.pe-row) :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+:is(#audioDlg,#pdfDlg) .ae-card :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 #audioDlg .ae-card .lv-big{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a big number is trimmed to its letters like any text */
 #audioDlg .ae-card>.lv-big{margin-block:auto 0;position:relative;top:calc((var(--trim-t) - var(--trim-b)) / 2)}          /* a big value that is a card's own part (Gain) is centered between the heading and the slider: the spare room is split evenly between its top and the slider's top (the card's last part already takes the rest), so there is equal room above and below its letters. Where the browser cannot trim text, the box has the font's spare room, which top gives back */
 #audioDlg .ae-card .eq-lbl{height:var(--line-s);line-height:var(--line-s);margin-block:var(--cut-t) var(--cut-b)}          /* every label in the band row is one 16px line trimmed to its letters, so every label shares one line and every control one center line */

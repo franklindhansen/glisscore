@@ -45,6 +45,16 @@ const SLIDER_CATCH = 0.02;
 let _slDrag = null;
 document.addEventListener('pointerdown', e => { const r = e.target; _slDrag = r instanceof HTMLInputElement && r.type === 'range' ? r : null; }, true);
 for (const t of ['pointerup', 'pointercancel']) document.addEventListener(t, () => { _slDrag = null; }, true);
+/* Space plays and pauses everywhere, and the arrows move the playhead, except on a control the person is using: a button, switch, or choice they reached with the keyboard keeps its own Space (a button clicked with the mouse was not reached that way, so Space still plays after it), and a slider or choice keeps the arrows. */
+document.addEventListener('focusin', e => { try { e.target._kbd = e.target.matches(':focus-visible'); } catch (x) {} }, true);          // how a control got its focus, read when it did (a key press itself makes the ring show, so it cannot be asked later)
+document.addEventListener('pointerdown', e => { if (e.target) e.target._kbd = false; }, true);
+function ownsKey(e) {
+  const t = e.target; if (!t || !t.matches) return false;
+  if ((e.code === 'Space' || e.key === 'Enter') && t.matches('.csel-list li,[role=option],.combo-list li,.sp-item')) return true;          // a list's own item takes Space and Enter to choose it
+  if (e.code === 'Space') return t.matches('button,a[href],input[type=checkbox],input[type=radio],[role=button],[role=switch]') && t._kbd === true;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') return t.matches('input[type=range],input[type=radio]');
+  return false;
+}
 function sliderDefault(r) {
   if (r.dataset.default != null && r.dataset.default !== '') return +r.dataset.default;
   return typeof DEFAULTS !== 'undefined' && typeof DEFAULTS[r.id] === 'number' ? DEFAULTS[r.id] : null;
@@ -52,6 +62,7 @@ function sliderDefault(r) {
 document.addEventListener('input', e => {
   const r = e.target; if (r !== _slDrag) return;
   const lo = r.min === '' ? 0 : +r.min, hi = r.max === '' ? 100 : +r.max, d = sliderDefault(r);
-  if (d == null || Math.abs(d - (lo + hi) / 2) > 1e-9) return;
-  if (+r.value !== d && Math.abs(+r.value - d) <= (hi - lo) * SLIDER_CATCH) r.value = d;
+  if (d == null) return;
+  const hold = r.dataset.catch ? +r.dataset.catch : Math.abs(d - (lo + hi) / 2) <= 1e-9 ? (hi - lo) * SLIDER_CATCH : 0;          // a slider can ask for a hold at its default even when that is not the middle (the Fades length: data-catch, in the slider's own units)
+  if (hold > 0 && +r.value !== d && Math.abs(+r.value - d) <= hold) r.value = d;
 }, true);

@@ -148,9 +148,7 @@ function setBusyFrac(f) { busyFrac = f; busySweepT0 = f == null ? busySweepT0 ||
 /* Before a score is loaded the intro text carries the Open buttons; afterwards they live in the header and say Change */
 /* one line of the status: the circle fills and the check draws itself when something loads, and the words swap with a small rise */
 function setStatus(sel, done, yes, no) {
-  const el = $(sel), t = el.querySelector('.st-t'), txt = done ? yes : no;
-  if (t.textContent !== txt) { const had = t.textContent !== ''; t.textContent = txt; if (had && t.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) t.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE_OUT }); }
-  el.classList.toggle('done', done);
+  const el = $(sel); el.classList.toggle('done', done); el.title = done ? yes : no; el.setAttribute('aria-label', done ? yes : no);          // the tile's words never change (they fit and never jump); its mark says whether it is loaded, and the tooltip and screen readers say so in words
 }
 function updateFileButtons() {
   titleFlipMark();
@@ -166,7 +164,7 @@ function updateFileButtons() {
   document.querySelectorAll('.panel .group').forEach(g => { g.inert = !pdf; });
   $('.panel').classList.toggle('locked', !pdf);
   $('.timeline').classList.toggle('locked', !pdf);
-  setStatus('#stScore', pdf, 'Score loaded', 'Score not loaded'); setStatus('#stAudio', aud, 'Audio loaded', 'Audio not loaded');
+  setStatus('#stScore', pdf, 'Score loaded', 'Score not loaded yet'); setStatus('#stAudio', aud, 'Audio loaded', 'Audio not loaded yet');
   clearTimeout(updateFileButtons.t);
   if (pdf && aud) updateFileButtons.t = setTimeout(() => { if (S.pdf && S.audio) $('#fileStatus').hidden = true; }, 1100);     // the last check gets a moment before the line slides away
   else $('#fileStatus').hidden = false;
@@ -188,7 +186,7 @@ function updateButtons() {
   updateFileButtons();
   syncExport(); $('#btnThumb').disabled = !has;
   if (typeof syncFadeLens === 'function') syncFadeLens();             // an automatic fade length follows the video's length
-  $('#bFit').disabled = $('#zoom').disabled = !has; syncSysBusy();
+  $('#bFit').disabled = $('#zoom').disabled = $('#zoomOut').disabled = $('#zoomIn').disabled = !has; syncSysBusy();
   $('#stageStrip').hidden = !S.pdf; if (!S.pdf) szReset(false); try { layoutStage(); } catch (e) {}          // the picture makes room for the full screen button once there is one
   $('#bStart').disabled = !has;
   $('#tTot').textContent = fmt(duration());
@@ -269,13 +267,14 @@ const rgbToHsv = ([r, g, b]) => { const mx = Math.max(r, g, b), mn = Math.min(r,
 const hsvToHex = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return '#' + [f(5), f(3), f(1)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
 function colorSelect(key, onSet) {
   const root = $('#' + key + 'Sel'), open = root.querySelector('.csel-open'), hex = root.querySelector('.csel-hex'), sw = root.querySelector('.csel-sw'), nm = root.querySelector('.csel-name'), menu = root.querySelector('.csel-menu'), list = root.querySelector('.csel-list'), area = root.querySelector('.csel-area'), hue = root.querySelector('.csel-hue');
-  let hsv = [0, 0, 0], own = false;          // own: the picker made the current color, so its hue is kept (a gray has no hue of its own)
+  let hsv = [0, 0, 0], own = false, typing = false;          // typing: a hex code is being typed, so the field says Custom at once          // own: the picker made the current color, so its hue is kept (a gray has no hue of its own)
   COLOR_SETS[key].forEach(([name, v]) => { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.tabIndex = -1; li.dataset.v = v; li.innerHTML = '<i class="csel-sw"></i><span class="csel-name"></span><span class="csel-code"></span>'; li.querySelector('i').style.background = v; li.querySelector('.csel-name').textContent = name; li.querySelector('.csel-code').textContent = v.toLowerCase(); list.appendChild(li); });
+  { const li = document.createElement('li'); li.setAttribute('role', 'option'); li.tabIndex = -1; li.className = 'csel-custom'; li.innerHTML = '<i class="csel-sw"></i><span class="csel-name">Custom</span>'; list.appendChild(li); }          // the last row says a color of your own is welcome: it takes you to the hex box (the picker is just below)
   const cur = () => String(S.set[key]).toLowerCase();
   const paint = () => {
-    const v = cur(); sw.style.background = v; nm.textContent = colorName(key, v); if (document.activeElement !== hex) hex.value = v;
+    const v = cur(); sw.style.background = v; nm.textContent = typing ? 'Custom' : colorName(key, v); if (document.activeElement !== hex) hex.value = v;
     if (!own || hsvToHex(...hsv) !== v) hsv = rgbToHsv(hexToRgb(v));          // the picker keeps its hue while it made the color (a gray has none); a color that came from elsewhere (an undo, an import) is read afresh
-    list.querySelectorAll('li').forEach(li => li.setAttribute('aria-selected', String(li.dataset.v.toLowerCase() === v)));
+    list.querySelectorAll('li').forEach(li => { const c = li.classList.contains('csel-custom'), on = c ? colorName(key, v) === 'Custom' : li.dataset.v.toLowerCase() === v; li.setAttribute('aria-selected', String(on)); li.hidden = on; });          // the color in use is already shown in the field, so the list holds only the others
     area.style.backgroundColor = 'hsl(' + hsv[0] + ' 100% 50%)';
     area.firstElementChild.style.left = hsv[1] * 100 + '%'; area.firstElementChild.style.top = (1 - hsv[2]) * 100 + '%';
     hue.firstElementChild.style.left = hsv[0] / 360 * 100 + '%'; hue.setAttribute('aria-valuenow', Math.round(hsv[0]));
@@ -283,16 +282,17 @@ function colorSelect(key, onSet) {
   const set = (v, fromPicker) => { own = !!fromPicker; S.set[key] = v.toLowerCase(); onSet(S.set[key]); paint(); };
   const shut = back => { if (menu.hidden) return; menu.hidden = true; open.setAttribute('aria-expanded', 'false'); if (back) open.focus({ preventScroll: true }); };
   const show = () => { menu.hidden = false; open.setAttribute('aria-expanded', 'true'); own = false; paint(); };
-  const items = () => [...list.querySelectorAll('li')];
+  const items = () => [...list.querySelectorAll('li:not([hidden])')];
   root.querySelector('.csel-open').addEventListener('click', () => menu.hidden ? show() : shut());
   root.querySelector('.csel-chev').addEventListener('click', () => menu.hidden ? show() : shut());
-  open.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (menu.hidden) show(); (items().find(li => li.getAttribute('aria-selected') === 'true') || items()[0]).focus(); } });
-  list.addEventListener('click', e => { const li = e.target.closest('li'); if (li) { set(li.dataset.v); shut(true); } });
+  open.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (menu.hidden) show(); items()[0].focus(); } });
+  const goCustom = () => { typing = true; paint(); hex.focus(); hex.select(); };          // the Custom row: the field reads Custom and the hex box is ready to be typed in
+  list.addEventListener('click', e => { const li = e.target.closest('li'); if (!li) return; if (li.classList.contains('csel-custom')) goCustom(); else { set(li.dataset.v); shut(true); } });
   list.addEventListener('keydown', e => {
     const all = items(), i = all.indexOf(document.activeElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); (all[i + 1] || all[0]).focus(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); (all[i - 1] || all[all.length - 1]).focus(); }
-    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (all[i]) { set(all[i].dataset.v); shut(true); } }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (all[i]) { if (all[i].classList.contains('csel-custom')) goCustom(); else { set(all[i].dataset.v); shut(true); } } }
   });
   root.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden) { e.stopPropagation(); shut(true); } });
   document.addEventListener('pointerdown', e => { if (!root.contains(e.target)) shut(); });
@@ -305,11 +305,16 @@ function colorSelect(key, onSet) {
   drag(hue, e => { const r = hue.getBoundingClientRect(); hsv = [clamp((e.clientX - r.left) / r.width) * 360, hsv[1], hsv[2]]; set(hsvToHex(...hsv), true); });
   area.addEventListener('keydown', e => { const d = { ArrowLeft: [-.02, 0], ArrowRight: [.02, 0], ArrowUp: [0, .02], ArrowDown: [0, -.02] }[e.key]; if (!d) return; e.preventDefault(); hsv = [hsv[0], clamp(hsv[1] + d[0]), clamp(hsv[2] + d[1])]; set(hsvToHex(...hsv), true); });
   hue.addEventListener('keydown', e => { const d = { ArrowLeft: -4, ArrowDown: -4, ArrowRight: 4, ArrowUp: 4 }[e.key]; if (!d) return; e.preventDefault(); hsv = [(hsv[0] + d + 360) % 360, hsv[1], hsv[2]]; set(hsvToHex(...hsv), true); });
+  let fresh = false;          // the click that gave the hex box focus must not undo its select-all, so typing replaces the code
+  hex.addEventListener('focus', () => { fresh = true; hex.select(); });
+  hex.addEventListener('mouseup', e => { if (fresh) { e.preventDefault(); fresh = false; } });
+  hex.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hex.blur(); } else if (e.key === 'Escape') { e.stopPropagation(); hex.blur(); } });
   hex.addEventListener('input', e => {
     let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
-    if (/^#[0-9a-f]{6}$/i.test(v)) set(v); else if (/^#[0-9a-f]{3}$/i.test(v)) set('#' + v.slice(1).split('').map(c => c + c).join(''));
+    typing = true; nm.textContent = 'Custom';          // whatever is typed, the field jumps to Custom
+    if (/^#[0-9a-f]{6}$/i.test(v)) { typing = false; set(v); }          // a whole code is a color: it shows its name if it has one on the list, and Custom if it does not
   });
-  hex.addEventListener('blur', () => { hex.value = S.set[key]; });
+  hex.addEventListener('blur', () => { typing = false; fresh = false; let v = hex.value.trim(); if (v && v[0] !== '#') v = '#' + v; if (/^#[0-9a-f]{3}$/i.test(v)) set('#' + v.slice(1).split('').map(c => c + c).join('')); hex.value = S.set[key]; paint(); });          // a short code (#f00) is read when you leave the box, so typing a long one never flashes the short one
   CSEL[key] = { paint }; paint();
 }
 function syncControls() {
@@ -378,7 +383,7 @@ function syncFadeLens() {
   const s = S.set, { Li, Lo } = fadeLens(s, S.vStart, vEnd()), oi = fadeOn(s, 'in'), oo = fadeOn(s, 'out'), ai = fadeAutoSide(s, 'in'), ao = fadeAutoSide(s, 'out'), pa = fadeAutoPos(), r = $('#fadeLen');
   if (FADE_SIDE === 'both' && !FADE_FORCE && (oi !== oo || (oi && (ai !== ao || (!ai && Li !== Lo))))) { FADE_SIDE = 'in'; applyFadeUI(); }          // the two sides differ (a saved setting, an undo), so Both cannot say what they are
   const on = FADE_SIDE === 'out' ? oo : FADE_SIDE === 'in' ? oi : oi || oo, len = FADE_SIDE === 'out' ? Lo : Li, au = FADE_SIDE === 'out' ? ao : ai;
-  r.dataset.default = pa; r.parentNode.querySelector('.fade-ends').style.setProperty('--apos', pa / FADE_MAX); r.parentNode.querySelector('.sl-end.auto').dataset.v = pa;
+  r.dataset.default = pa;
   if (!r._glide) r.value = !on ? 0 : au ? pa : Math.round(len * 10); { const lv = $('#fadeLenVal'); lv.textContent = !on ? 'Off' : au ? 'Auto' : len.toFixed(1) + 's'; if (on && au) { const d = document.createElement('span'); d.className = 'ov-dim'; d.textContent = ' · ' + len.toFixed(1) + 's'; lv.appendChild(d); } }
   foldSet('#fadeMoreFold', oi || oo); paintRanges(); drawFadeShape();          // Shape, Curve and Fade to fold away while both fades are off
 }

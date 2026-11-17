@@ -365,6 +365,7 @@ function boot() {
   $('#bSpace').addEventListener('click', () => { const was = S.turns.map((_, i) => shownTurn(i)); autoSpace(true); glideFrom(was); toast(tx('app.spaced')); });
   $('#bToEnd').addEventListener('click', turnsToEnd);
   $('#bFit').addEventListener('click', zoomFit);
+  $('#zoomOut').addEventListener('click', () => setZoom(S.pxPerSec / 1.4, TL.vw / 2)); $('#zoomIn').addEventListener('click', () => setZoom(S.pxPerSec * 1.4, TL.vw / 2));
   $('#zoom').addEventListener('input', e => setZoom(sliderToZoom(+e.target.value), TL.vw / 2));
   $('#btnExport').addEventListener('click', () => onExportClick());
   $('#btnThumb').addEventListener('click', saveThumbnail);
@@ -421,6 +422,7 @@ function boot() {
   window.addEventListener('keydown', e => {
     const tg = e.target, tag = tg.tagName, type = tg.type;
     if (!$('#aeExpDlg').hidden) { if (e.key === 'Escape') { e.preventDefault(); if ($('#aePgWrap').classList.contains('meta')) aePage(false); else aeExpClose(); } return; }
+    if (ownsKey(e)) return;          // a control the person is using keeps its own Space and arrows
     if ((e.code === 'Space' || e.key === 'Enter') && tg.closest && tg.closest('.fold-btn')) return;        // a focused heading button keeps its own Space and Enter
     if (tag === 'TEXTAREA' || tag === 'SELECT' || (tag === 'INPUT' && (type === 'text' || type === 'color'))) return;
     if (!$('#howDlg').hidden) { if (e.key === 'Escape') dlgClose($('#howDlg')); return; }

@@ -743,6 +743,7 @@ function readColors() {
 /* The timeline's x axis: audio time, with a little empty room at both ends where the video's start and end handles can be
    dragged outward. While a handle is being dragged the axis is frozen, so the handle follows the pointer. */
 const TL_ROOM = 36;
+const TL_PAD = 8, TL_TXT = 31;          // a page block: the same space above its picture and below its time line, and the height of the two text lines with the space between (6 + 15 + 10)
 const tlLo = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.lo : TL.hold ? Math.min(TL.hold.lo, Math.min(S.vStart, 0)) : Math.min(S.vStart, 0);
 const tlHi = () => TL.drag && TL.drag.kind === 'trim' ? TL.drag.hi : TL.hold ? Math.max(TL.hold.hi, vEnd(), S.audio ? S.audio.duration : 0) : Math.max(vEnd(), S.audio ? S.audio.duration : 0);
 const tlInnerWidth = () => Math.max(TL.vw + (TL.hold ? TL.hold.pad || 0 : 0), Math.ceil(2 * TL_ROOM + (tlHi() - tlLo()) * S.pxPerSec - 1e-6));          // while a glide runs, a zoomed-out axis (narrower than the window) keeps the scroll room the glide needs to travel
@@ -764,7 +765,8 @@ function layoutTimeline() {
   TL.canvas.style.width = vw + 'px'; TL.canvas.style.height = h + 'px';
   if (TL.sc.width !== cw) TL.sc.width = cw;
   if (TL.sc.height !== ch) TL.sc.height = ch;
-  TL.trackH = clamp(Math.round(h * 0.42), 68, 92); TL.waveY = TL.trackY + TL.trackH + 10; TL.waveH = Math.max(36, h - TL.waveY - 8);
+  const gp = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tl-gap')) || 6;          // the one space above the page strip, between the two strips, and under the audio strip
+  TL.trackY = TL.rulerH + gp; TL.trackH = clamp(Math.round(h * 0.42), 68, 92); TL.waveY = TL.trackY + TL.trackH + gp; TL.waveH = Math.max(36, h - TL.waveY - gp);
   if (S.fitMode) { setZoom(fitPps(), 0, true); fitScroll(); }
   else TL.inner.style.width = tlInnerWidth() + 'px';
   TL.staticDirty = true;
@@ -887,7 +889,7 @@ function sysTurnInfo(i) {
 }
 function drawSysBlocks(c) {
   const busy = sysBusy(), dim = clamp(hsGet('sysdim', busy ? .45 : 1), .3, 1);          // while systems are found the page blocks stay, dimmed, with no cells; they rise to full strength once when it ends
-  const { C, vw, trackY, trackH } = TL, pa = S.pdf ? S.pdf.aspect : .77, th = Math.max(18, trackH - 48), tw = th * pa, bp = rvProgress('blocks'), last = S.spreads.length - 1;
+  const { C, vw, trackY, trackH } = TL, pa = S.pdf ? S.pdf.aspect : .77, th = Math.max(18, trackH - 2 * TL_PAD - TL_TXT), tw = th * pa, bp = rvProgress('blocks'), last = S.spreads.length - 1;
   const at = (t, a, b, i) => t >= a && (t < b || (i === last && t <= b));
   sysBlocks().forEach(q => {
     const x0 = t2x(q.a), x1 = t2x(q.b); if (x1 < -4 || x0 > vw + 4) return;
@@ -901,7 +903,7 @@ function drawSysBlocks(c) {
       if (at(S.time, ca, cb, q.i0 + j)) { c.fillStyle = C.accentSoft; c.fillRect(t2x(ca), trackY, t2x(cb) - t2x(ca), trackH); }          // the system under the playhead
       if (j) { c.save(); c.globalAlpha *= .6; c.fillStyle = C.turnSys; c.fillRect(Math.round(t2x(ca)), trackY, 1, trackH); c.restore(); }
     }
-    const tx = Math.max(x0 + 7, 7), y = trackY + 5;
+    const tx = Math.max(x0 + 7, 7), y = trackY + TL_PAD;
     if (!card) {
       const img = slotThumb(q.page); if (img) c.drawImage(img, tx, y, tw, th); else { c.fillStyle = PAGE_WAIT_PAPER; c.fillRect(tx, y, tw, th); }
       c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(tx + .5, y + .5, tw - 1, th - 1);
@@ -917,7 +919,7 @@ function drawSysBlocks(c) {
 function drawBlocks(c) {
   if (sysOn()) return drawSysBlocks(c);
   const { C, vw, trackY, trackH } = TL, n = S.spreads.length, pa = S.pdf ? S.pdf.aspect : .77;
-  const th = Math.max(18, trackH - 48), tw = th * pa, bp = rvProgress('blocks');      // smaller pictures, with the page numbers and times stacked underneath them
+  const th = Math.max(18, trackH - 2 * TL_PAD - TL_TXT), tw = th * pa, bp = rvProgress('blocks');      // smaller pictures, with the page numbers and times stacked underneath them
   for (let i = 0; i < n; i++) {
     const [a, b] = spreadBounds(i);
     const x0 = t2x(a), x1 = t2x(b);
@@ -930,7 +932,7 @@ function drawBlocks(c) {
     let col = 0;                                   // a page that is alone in its spread takes the front spot
     [0, 1].forEach(k => {
       const idx = sp[k]; if (idx < 0) return;
-      const x = tx + col++ * (tw + 2), y = trackY + 5, th_ = slotThumb(idx);
+      const x = tx + col++ * (tw + 2), y = trackY + TL_PAD, th_ = slotThumb(idx);
       if (th_) c.drawImage(th_, x, y, tw, th); else { c.fillStyle = '#fff'; c.fillRect(x, y, tw, th); }
       c.strokeStyle = 'rgba(0,0,0,.25)'; c.strokeRect(x + .5, y + .5, tw - 1, th - 1);
     });
@@ -939,9 +941,9 @@ function drawBlocks(c) {
     c.fillStyle = C.ink; c.font = '600 12px "Hanken Grotesk",system-ui,sans-serif'; c.textBaseline = 'top';
     lbl += sysTag;
     if (c.measureText(lbl).width > x1 - labelX - 8) lbl = lbl.replace('Pages ', 'pp. ').replace('Page ', 'p. ');       // a narrow block gets the short form
-    c.fillText(lbl, labelX, trackY + 5 + th + 6);
+    c.fillText(lbl, labelX, trackY + TL_PAD + th + 6);
     c.fillStyle = C.muted; c.font = '11px "Hanken Grotesk",system-ui,sans-serif';
-    c.fillText(fmt(a - S.vStart) + ' – ' + fmt(b - S.vStart), labelX, trackY + 5 + th + 21);
+    c.fillText(fmt(a - S.vStart) + ' – ' + fmt(b - S.vStart), labelX, trackY + TL_PAD + th + 21);
     c.restore();
   }
 }

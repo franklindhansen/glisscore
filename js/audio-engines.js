@@ -583,6 +583,8 @@ document.addEventListener('input', e => { if (e.target.type === 'range') paintRa
 let toastTimer = 0;
 function toast(msg, ms = TOAST_MS) {
   const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+  const tl = document.querySelector('#tlScroll'), r = tl && tl.getBoundingClientRect(), edit = document.querySelector('.exp-overlay:not([hidden])');          // over the timeline, a message sits at the middle of both strips, whichever one it is about
+  if (r && r.height > 0 && !edit) el.style.setProperty('--toast-bottom', Math.round(innerHeight - r.top - r.height / 2 - el.offsetHeight / 2) + 'px'); else el.style.removeProperty('--toast-bottom');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), ms);
 }
 

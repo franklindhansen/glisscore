@@ -866,7 +866,7 @@ async function aePlay() {
   ph.tap(1, g); ph.tap(2, tapC); AE.ph = ph; AE.dh = dk ? ph : null; AE.src = src; AE.g = g; AE.tapC = tapC; if (AE.chain) AE.chain.output = tapC; AE.gT = AE.gv = lv; AE.gAt = performance.now();
   aeTap(); AE.playing = true; AE.pos = from;
   aeLimSync(); if (!AE.chain || !AE.chain.update(aeHearFx())) aeRoute();          // whatever changed while the first sound was being made
-  $('#aePlayIcon').innerHTML = '<rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>';
+  $('#aePlay').setAttribute('aria-label', 'Pause preview'); $('#aePlayIcon').innerHTML = '<rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>';
   const tick = () => {
     if (!AE.playing) return;
     const t = aeNow(), dd = AE.d;
@@ -895,7 +895,7 @@ function aeStop(ended) {
   aeUntap(); AE.ph = AE.dh = null; AE.mem = null; AE.src = AE.g = AE.out = AE.tapC = null; AE.chain = null;
   if (eased) { try { const ct = o.out.context.currentTime; o.out.gain.cancelScheduledValues(ct); o.out.gain.setValueAtTime(o.out.gain.value, ct); o.out.gain.linearRampToValueAtTime(0, ct + 0.01); } catch (e) {} setTimeout(cut, 40); } else cut();
   if (ended && AE.d) AE.pos = Math.max(0, AE.d.vStart);
-  $('#aePlayIcon').innerHTML = '<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>'; aeDraw(); clearTimeout(AE.stopT); AE.stopT = setTimeout(() => { if (AE.d && !AE.playing) aeToolsRefresh(); }, 80);
+  $('#aePlay').setAttribute('aria-label', 'Play preview'); $('#aePlayIcon').innerHTML = '<path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>'; aeDraw(); clearTimeout(AE.stopT); AE.stopT = setTimeout(() => { if (AE.d && !AE.playing) aeToolsRefresh(); }, 80);
 }
 /* the draft as a 16-bit WAV: the trimmed part, with the fades and volume applied */
 /* ---------------- Sample-rate conversion ----------------
@@ -2747,7 +2747,7 @@ function aeResume(n) {
   AE.wantPlay = false; aeWaitUI(false); aePlay();
 }
 /* the play button pulses while it waits, and the status bar says what it is waiting for */
-function aeWaitUI(on, why) { const b = $('#aePlay'); if (!b) return; const t = why || 'Waiting for noise reduction to finish'; b.classList.toggle('waiting', !!on); b.setAttribute('aria-label', on ? t : 'Play preview'); b.title = on ? t : ''; }
+function aeWaitUI(on, why) { const b = $('#aePlay'); if (!b) return; const t = why || 'Waiting for noise reduction to finish'; b.classList.toggle('waiting', !!on); b.setAttribute('aria-label', on ? t : AE.playing ? 'Pause preview' : 'Play preview'); b.title = on ? t : ''; }
 /* the learned noise: its level at every frequency (hum shows up as spikes, hiss as a slope), with the floor it will be turned down to */
 function aeNrDraw() {
   const cv = $('#aeNrCv'); if (!AE.d || $('#aePaneNoise').hidden || !aeCvSize(cv)) return;
@@ -2926,11 +2926,11 @@ function aeKey(e) {
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) aeRedo(); else aeUndo(); return; }
   if (e.code === 'KeyB' && !e.metaKey && !e.ctrlKey && !e.altKey && !['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) { e.preventDefault(); aeToggleBypass(); return; }
   { const tg = e.target.tagName, typing = ['INPUT', 'SELECT', 'TEXTAREA'].includes(tg), nav = e.key === 'ArrowLeft' || e.key === 'ArrowRight';
-    if (!e.metaKey && !e.ctrlKey && !e.altKey && ((e.key === 'Enter' && !typing && tg !== 'BUTTON' && tg !== 'A') || (nav && !typing))) {          // the same keys as the main window: Enter back to the start, arrows move 1s (Shift 5s)
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && ((e.key === 'Enter' && !typing && tg !== 'BUTTON' && tg !== 'A' && !ownsKey(e)) || (nav && !typing))) {          // the same keys as the main window: Enter back to the start, arrows move 1s (Shift 5s)
       e.preventDefault(); const d = AE.d, was = AE.playing; if (was) aeStop();
       aeSeek(e.key === 'Enter' ? Math.max(0, d.vStart) : AE.pos + (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1)); if (was) aePlay(); return;
     } }
-  if (e.code === 'Space' && !e.repeat && !['SELECT', 'TEXTAREA'].includes(e.target.tagName) && !(e.target.tagName === 'INPUT' && ['text', 'number'].includes(e.target.type))) { e.preventDefault(); aeToggle(); }
+  if (e.code === 'Space' && !e.repeat && !ownsKey(e) && !['SELECT', 'TEXTAREA'].includes(e.target.tagName) && !(e.target.tagName === 'INPUT' && ['text', 'number'].includes(e.target.type))) { e.preventDefault(); aeToggle(); }
 }
-window.addEventListener('keyup', e => { if (e.code === 'Space' && !$('#audioDlg').hidden && e.target.tagName === 'BUTTON') e.preventDefault(); }, true);
+window.addEventListener('keyup', e => { if (e.code === 'Space' && !$('#audioDlg').hidden && e.target.tagName === 'BUTTON' && !ownsKey(e)) e.preventDefault(); }, true);
 

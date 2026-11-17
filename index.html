@@ -179,8 +179,8 @@
     <aside class="panel locked" aria-label="Settings">
       <!-- ----- STATUS: what is loaded (hidden once both a score and audio are in) ----- -->
       <div class="status" id="fileStatus">
-        <span class="st" id="stScore"><svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true"><circle class="st-c" cx="12" cy="12" r="10"/><path class="st-k" d="m16 9-5.5 5.5L8 12"/></svg><span class="st-t">Score not loaded</span></span>
-        <span class="st" id="stAudio"><svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true"><circle class="st-c" cx="12" cy="12" r="10"/><path class="st-k" d="m16 9-5.5 5.5L8 12"/></svg><span class="st-t">Audio not loaded</span></span>
+        <span class="st" id="stScore"><svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true"><circle class="st-c" cx="12" cy="12" r="10"/><path class="st-k" d="m16 9-5.5 5.5L8 12"/></svg><span class="st-t">Score loaded</span></span>
+        <span class="st" id="stAudio"><svg class="st-ic" viewBox="0 0 24 24" aria-hidden="true"><circle class="st-c" cx="12" cy="12" r="10"/><path class="st-k" d="m16 9-5.5 5.5L8 12"/></svg><span class="st-t">Audio loaded</span></span>
       </div>
       <!-- ----- PANEL GROUP: PAGE TRANSITION ----- -->
       <div class="group" data-sum="transition">
@@ -231,7 +231,7 @@
           <p class="t-note sys-why" id="sysTilt" hidden><span id="sysTiltT"></span> <button class="btn small" id="sysLevel" type="button">Re-kilter</button></p>
           <p class="t-note sys-why" id="sysWide" hidden><span id="sysWideT"></span> <button class="btn small" id="sysSplitGo" type="button">Split spreads</button></p>
         </div>
-        <div class="field sub" id="firstAloneField">
+        <div class="field" id="firstAloneField">
           <div class="check-row">
             <label class="check" for="firstAlone">First page alone</label>
             <input type="checkbox" class="switch" id="firstAlone" aria-label="First page alone" checked>
@@ -272,7 +272,7 @@
             <input type="checkbox" class="switch" id="invert" aria-label="Invert colors">
           </div>
         </div>
-        <div class="field sub" id="inkField" hidden>
+        <div class="field" id="inkField" hidden>
           <span class="lbl" id="inkLbl">Ink color</span>
           <div class="csel" id="inkSel">
             <div class="csel-field">
@@ -347,7 +347,7 @@
           </div>
           <div class="field" id="fadeLenField">
             <span class="lbl" id="fadeLenLbl">Length <output id="fadeLenVal">1.0s</output></span>
-            <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" aria-labelledby="fadeLenLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end auto" type="button" data-v="10">Auto</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
+            <input type="range" id="fadeLen" min="0" max="30" step="1" value="10" data-default="10" data-catch="2" aria-labelledby="fadeLenLbl"><div class="sl-ends fade-ends"><button class="sl-end" type="button" data-v="0">Off</button><button class="sl-end" type="button" data-v="30">Longer</button></div>
           </div>
           <div class="fa open" id="fadeMoreFold"><div class="fa-in">
             <div class="field">
@@ -380,20 +380,18 @@
           <div class="fa line-fold" id="credTitleFold"><div class="fa-in" inert>
             <div class="line-style sub" id="credTitleStyle">
               <div class="combo" id="credTitleFontBox"><input type="text" class="line-font" id="credTitleFont" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for the title"><span class="ph" aria-hidden="true"></span></div>
-              <button type="button" class="fmt-btn" id="credTitleB" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-              <button type="button" class="fmt-btn" id="credTitleI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+              <span class="btn-group fmt-group" role="group" aria-label="Style"><button type="button" class="btn" id="credTitleB" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button><span class="vsep" aria-hidden="true"></span><button type="button" class="btn" id="credTitleI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></span>
             </div>
           </div></div>
         </div>
         <div class="field">
           <label for="credL2">Line 2</label>
           <div class="line-row"><textarea id="credL2" class="autogrow" rows="1" maxlength="160" placeholder="Performed by…" spellcheck="false"></textarea><button type="button" class="fmt-btn aa" id="credL2Aa" aria-expanded="false" aria-controls="credL2Fold" aria-label="Font, bold, and italic for line 2" title="Font, bold, and italic">Aa</button></div>
-          <p class="t-note">Press Enter to split this into two lines.</p>
+          <p class="t-note">Press <kbd>Enter</kbd> to split this into two lines.</p>
           <div class="fa line-fold" id="credL2Fold"><div class="fa-in" inert>
             <div class="line-style sub" id="credL2Style">
               <div class="combo" id="credL2FontBox"><input type="text" class="line-font" id="credL2Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 2"><span class="ph" aria-hidden="true"></span></div>
-              <button type="button" class="fmt-btn" id="credL2B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-              <button type="button" class="fmt-btn" id="credL2I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+              <span class="btn-group fmt-group" role="group" aria-label="Style"><button type="button" class="btn" id="credL2B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button><span class="vsep" aria-hidden="true"></span><button type="button" class="btn" id="credL2I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></span>
             </div>
           </div></div>
         </div>
@@ -403,8 +401,7 @@
           <div class="fa line-fold" id="credL3Fold"><div class="fa-in" inert>
             <div class="line-style sub" id="credL3Style">
               <div class="combo" id="credL3FontBox"><input type="text" class="line-font" id="credL3Font" maxlength="60" placeholder=" " autocomplete="off" spellcheck="false" aria-label="Font for line 3"><span class="ph" aria-hidden="true"></span></div>
-              <button type="button" class="fmt-btn" id="credL3B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button>
-              <button type="button" class="fmt-btn" id="credL3I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button>
+              <span class="btn-group fmt-group" role="group" aria-label="Style"><button type="button" class="btn" id="credL3B" aria-label="Bold" title="Bold" aria-pressed="false"><b>B</b></button><span class="vsep" aria-hidden="true"></span><button type="button" class="btn" id="credL3I" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></span>
             </div>
           </div></div>
         </div>
@@ -414,7 +411,7 @@
           <p class="t-note" id="credFontMsg"></p>
         </div>
         <div class="field" id="creditsAtField">
-          <span class="lbl" id="credAtLbl">Credits at</span>
+          <span class="lbl" id="credAtLbl">Location</span>
           <div class="seg" role="radiogroup" aria-labelledby="credAtLbl">
             <label><input type="radio" name="creditsAt" value="start"><span>Start</span></label>
             <label><input type="radio" name="creditsAt" value="end" checked><span>End</span></label>
@@ -536,10 +533,13 @@
         <button class="btn small" id="bToEnd" type="button" disabled title="Move every turn after the playhead to the end">Turns to end</button>
       </span>
       <span class="vsep" aria-hidden="true"></span>
-      <div class="zoom">
-        <button class="btn small" id="bFit" type="button">Fit</button>
+      <div class="zoom btn-group" role="group" aria-label="Timeline zoom">
+        <button class="icon-btn zbtn" id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
         <label class="sr" for="zoom">Zoom</label>
         <input type="range" id="zoom" min="0" max="100" value="30">
+        <button class="icon-btn zbtn" id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>
+        <span class="vsep" aria-hidden="true"></span>
+        <button class="btn" id="bFit" type="button">Fit</button>
       </div>
     </div>
     <div class="tl-scroll" id="tlScroll"><div class="tl-inner" id="tlInner"><canvas id="tl"></canvas></div></div>
@@ -603,7 +603,7 @@
           <h4>Clean</h4><p>Whiten paper and clear specks.</p>
           <h4>Re-kilter</h4><p>Straighten tilted, slanted, and curved scans.</p>
           <h4>Crop</h4><p>Trim empty margins around the music. <span class="hb">Auto</span> finds the frames for you. <span class="hb">Manual</span> lets you drag them yourself.</p>
-          <h4>Dim</h4><p>Soften music before or after a repeat. Draw a box over the music, drag its edges to adjust, and press X to remove it.</p>
+          <h4>Dim</h4><p>Soften music before or after a repeat. Draw a box over the music, drag its edges to adjust, and press <kbd>X</kbd> to remove it.</p>
           <h4>Split spreads</h4><p>Turn spreads into single pages.</p>
           <h4>Re-size</h4><p>Fit every page to one size.</p>
           <h4>Watermark</h4><p>Print text across chosen pages.</p>
@@ -619,7 +619,7 @@
           <h4>Fades</h4><p>Ease the start and end. Adjust <span class="hb">Length</span> or curve type.</p>
           <h4>Emulator</h4><p>Borrow the sound of another recording. Measure a reference’s tone and loudness, then adjust your EQ, width, and level toward it.</p>
         </div></details></section>
-      <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold Shift and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. Style chooses between <span class="hb">Turn</span>, <span class="hb">Slide</span>, and <span class="hb">Cut</span>.</p></section>
+      <section><h3>Page turns</h3><p>Each turn is drawn in 3D by your graphics card. Drag a turn into the next one and that one gets pushed along. Hold <kbd>Shift</kbd> and click to select several at once. <span class="hb">Turns to end</span> packs the turns after the playhead against the end of the video. <span class="hb">Add page turn</span> places them in order. In <span class="hb">Single page</span> layout, each page gets its own turn, centered in the frame. Style chooses between <span class="hb">Turn</span>, <span class="hb">Slide</span>, and <span class="hb">Cut</span>.</p></section>
       <section><h3>Video</h3><p>Your browser renders and encodes every frame. Unless you pick Real-time recording, the sound is stored losslessly (24-bit) and the video goes into a MOV file. Real-time recording compresses the sound and saves an MP4 or WebM file. On Automatic, if fast export isn’t available, the video is recorded in real time instead.</p></section>
       <section><h3>Save and load</h3><p>Settings stay in this browser. Import / Export saves your settings to a small text file you can load back later.</p></section>
     </div>
@@ -1009,7 +1009,7 @@
           <div class="pe-tv" id="peViewDim" data-tool="dim" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Dim</h3><p class="pe-sub t-sub">Soften music before or after a repeat.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peDimStatus" aria-live="polite"></span></div></div></div>
           <div class="pe-tv" id="peViewSplit" data-tool="split" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Split spreads</h3><p class="pe-sub t-sub">Turn spreads into single pages.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peSplitStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peSplitGo" type="button" aria-pressed="false">Apply</button></div></div></div>
           <div class="pe-tv pe-rz" id="peViewResize" data-tool="resize" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Re-size</h3><p class="pe-sub t-sub">Fit every page to one size.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peRzStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peRzGo" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards pe-rzcards"><div class="ae-card pe-card-sizes"><div class="rz-grid" id="peRzGrid" role="radiogroup" aria-label="Page size"></div></div><div class="ae-card pe-card-shape"><div class="pe-g"><span class="t-lbl" id="peRzOrL">Page shape</span><div class="seg" id="peRzShape" role="radiogroup" aria-labelledby="peRzOrL"><label title="Every page takes the document's shape"><input type="radio" name="peRzOr" value="same"><span>Same</span></label><label title="Each page keeps its own shape"><input type="radio" name="peRzOr" value="each"><span>Keep</span></label></div></div></div></div></div>
-          <div class="pe-tv pe-wm" id="peViewWm" data-tool="wm" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Watermark</h3><p class="pe-sub t-sub">Print text across chosen pages.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peWmStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peWmAdd" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards"><div class="ae-card pe-card-text"><div class="pe-g"><span class="t-lbl" id="peWmTextL">Text</span><div class="pe-text"><input type="text" id="peWmText" maxlength="60" placeholder="Perusal score" autocomplete="off" spellcheck="false" aria-labelledby="peWmTextL"><span class="pe-bi"><button type="button" class="fmt-btn pe-fmt" id="peWmB" aria-label="Bold" title="Bold" aria-pressed="true"><b>B</b></button><button type="button" class="fmt-btn pe-fmt" id="peWmI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></span></div></div><div class="field"><label for="peWmOpacity"><span>Opacity</span><output id="peWmOpacityVal">20%</output></label><input type="range" id="peWmOpacity" min="5" max="60" step="1" value="20" data-default="20"></div></div><div class="ae-card pe-card-dir"><div class="pe-g"><span class="t-lbl" id="peWmAngleLbl">Direction</span><div class="pe-dir"><div class="seg" role="radiogroup" aria-labelledby="peWmAngleLbl"><label><input type="radio" name="peWmAngle" value="45" checked><span>Diagonal</span></label><label><input type="radio" name="peWmAngle" value="0"><span>Straight</span></label><label class="cu"><input type="radio" name="peWmAngle" value="custom"><span class="cu-in"><span class="cu-word">Custom</span><span class="cu-field" inert><input type="text" id="peWmDeg" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" aria-label="Degrees"><span class="cu-unit" aria-hidden="true">°</span></span></span></label></div></div></div><div class="pe-g"><span class="t-lbl" id="peWmModeLbl">Layout</span><div class="seg" role="radiogroup" aria-labelledby="peWmModeLbl"><label><input type="radio" name="peWmMode" value="center" checked><span>Centered</span></label><label><input type="radio" name="peWmMode" value="tile"><span>Tiled</span></label></div></div></div></div></div>
+          <div class="pe-tv pe-wm" id="peViewWm" data-tool="wm" hidden><div class="pe-phead"><div class="pe-pt t-block tool"><h3>Watermark</h3><p class="pe-sub t-sub">Print text across chosen pages.</p></div><div class="pe-acts"><span class="pe-status t-note inline" id="peWmStatus" aria-live="polite"></span><button class="btn small primary pe-apply" id="peWmAdd" type="button" aria-pressed="false">Apply</button></div></div><i class="ae-rule" aria-hidden="true"></i><div class="pe-cards"><div class="ae-card pe-card-text"><div class="pe-g"><span class="t-lbl" id="peWmTextL">Text</span><div class="pe-text"><input type="text" id="peWmText" maxlength="60" placeholder="Perusal score" autocomplete="off" spellcheck="false" aria-labelledby="peWmTextL"><span class="btn-group fmt-group" role="group" aria-label="Style"><button type="button" class="btn" id="peWmB" aria-label="Bold" title="Bold" aria-pressed="true"><b>B</b></button><span class="vsep" aria-hidden="true"></span><button type="button" class="btn" id="peWmI" aria-label="Italic" title="Italic" aria-pressed="false"><i>I</i></button></span></div></div><div class="field"><label for="peWmOpacity"><span>Opacity</span><output id="peWmOpacityVal">20%</output></label><input type="range" id="peWmOpacity" min="5" max="60" step="1" value="20" data-default="20"></div></div><div class="ae-card pe-card-dir"><div class="pe-g"><span class="t-lbl" id="peWmAngleLbl">Direction</span><div class="pe-dir"><div class="seg" role="radiogroup" aria-labelledby="peWmAngleLbl"><label><input type="radio" name="peWmAngle" value="45" checked><span>Diagonal</span></label><label><input type="radio" name="peWmAngle" value="0"><span>Straight</span></label><label class="cu"><input type="radio" name="peWmAngle" value="custom"><span class="cu-in"><span class="cu-word">Custom</span><span class="cu-field" inert><input type="text" id="peWmDeg" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="4" aria-label="Degrees"><span class="cu-unit" aria-hidden="true">°</span></span></span></label></div></div></div><div class="pe-g"><span class="t-lbl" id="peWmModeLbl">Layout</span><div class="seg" role="radiogroup" aria-labelledby="peWmModeLbl"><label><input type="radio" name="peWmMode" value="center" checked><span>Centered</span></label><label><input type="radio" name="peWmMode" value="tile"><span>Tiled</span></label></div></div></div></div></div>
         </div>
         <i class="pe-rule" id="peRule" aria-hidden="true"></i>
         <div class="pe-body">

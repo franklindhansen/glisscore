@@ -16,9 +16,10 @@ const rgb = h => { const n = parseInt(h.slice(1), 16); return 'rgb(' + [n >> 16,
     await p.evaluate(() => { const i = document.querySelector('#invert'); i.checked = true; i.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(500);
     const tag = dark ? ' (dark)' : '';
     ok('the old menu and the separate swatch and hex row are gone' + tag, !(await p.$('#bgPreset, #inkPreset, #bgColor, #inkColor, .colorrow')));
-    for (const [key, listed] of [['bg', ['Black', '#000000']], ['ink', ['White', '#ffffff']]]) {
+    for (const [key, listed] of [['bg', ['Space black', '#1c1c1e']], ['ink', ['White', '#ffffff']]]) {
       const open = '#' + key + 'Open', area = '#' + key + 'Sel .csel-area', hue = '#' + key + 'Sel .csel-hue', hex = '#' + key + 'Hex';
       await p.click(open); await p.waitForTimeout(250);
+      ok(key + ': the color in use is not in the list, the others are' + tag, await p.evaluate(k => { const li = [...document.querySelectorAll('#' + k + 'Sel li')]; const cur = li.filter(x => x.getAttribute('aria-selected') === 'true'); return cur.length === 1 && cur[0].offsetParent === null && li.filter(x => x.offsetParent !== null).length === li.length - 1; }, key));
       await p.click('#' + key + 'Sel li[data-v="' + listed[1].toUpperCase() + '"]'); await p.waitForTimeout(150);
       let s = await read(p, key); ok(key + ': a listed color shows its name, hex, and swatch' + tag, s.name === listed[0] && s.hex === listed[1] && s.sw === rgb(listed[1]) && s.set === listed[1] && !s.open, JSON.stringify(s));
       await p.click(open); await p.waitForTimeout(250);
@@ -30,6 +31,19 @@ const rgb = h => { const n = parseInt(h.slice(1), 16); return 'rgb(' + [n >> 16,
       s = await read(p, key); ok(key + ': a typed hex is used and reads Custom' + tag, s.set === '#123456' && s.name === 'Custom' && s.sw === rgb('#123456'), JSON.stringify(s));
       await p.click(hex, { clickCount: 3 }); await p.keyboard.type(listed[1]); await p.waitForTimeout(150);
       s = await read(p, key); ok(key + ': a typed hex that is on the list shows its name' + tag, s.name === listed[0], JSON.stringify(s));
+      await p.evaluate(k => { document.activeElement.blur(); S.set[k] = '#abcdef'; syncControls(); }, key);
+      await p.click(hex); await p.keyboard.type('12'); await p.waitForTimeout(100); s = await read(p, key);
+      ok(key + ': one click on the hex box selects it, and typing replaces the code and reads Custom at once' + tag, s.hex === '12' && s.name === 'Custom', JSON.stringify(s));
+      await p.keyboard.type('3'); await p.keyboard.press('Tab'); await p.waitForTimeout(150); s = await read(p, key);
+      ok(key + ': a short code (123) is read when you leave the box' + tag, s.hex === '#112233', JSON.stringify(s));
+      await p.evaluate(k => { document.activeElement.blur(); S.set[k] = '#abcdef'; syncControls(); }, key);
+      await p.evaluate(k => { document.activeElement.blur(); S.set[k] = '#000000'; if (k === 'ink') S.set[k] = '#ffffff'; syncControls(); }, key);
+      await p.evaluate(k => { const m = document.querySelector('#' + k + 'Sel .csel-menu'); if (m.hidden) document.querySelector('#' + k + 'Open').click(); }, key); await p.waitForTimeout(300);
+      { const rows = await p.evaluate(k => [...document.querySelectorAll('#' + k + 'Sel .csel-list li:not([hidden])')].map(l => l.querySelector('.csel-name').textContent), key);
+        ok(key + ': the list ends with a Custom row' + tag, rows[rows.length - 1] === 'Custom', JSON.stringify(rows));
+        await p.click('#' + key + 'Sel .csel-custom'); await p.waitForTimeout(200); s = await read(p, key);
+        ok(key + ': choosing the Custom row reads Custom, selects the hex box, and keeps the picker open' + tag, s.name === 'Custom' && (await p.evaluate(k => document.activeElement === document.querySelector('#' + k + 'Hex') && !document.querySelector('#' + k + 'Sel .csel-menu').hidden, key)), JSON.stringify(s));
+        await p.keyboard.type('00ff00'); await p.waitForTimeout(150); s = await read(p, key); ok(key + ': then typing a code sets that color' + tag, s.set === '#00ff00', JSON.stringify(s)); }
       await p.evaluate(k => { document.activeElement.blur(); S.set[k] = '#abcdef'; syncControls(); }, key); s = await read(p, key);
       ok(key + ': a saved color that is not listed reopens as Custom with its hex' + tag, s.name === 'Custom' && s.hex === '#abcdef' && s.sw === rgb('#abcdef'), JSON.stringify(s));
       await p.focus(open); await p.keyboard.press('ArrowDown'); await p.waitForTimeout(250);
