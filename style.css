@@ -1457,7 +1457,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .im-head .seg{width:auto;font-size:var(--type-small)}
 .im-view{grid-area:1/1;transition:opacity var(--ae-ms) var(--ease-ui) calc(var(--ae-ms) * .15),transform var(--ae-ms) var(--ease-out) calc(var(--ae-ms) * .15)}
 .im-view.off{opacity:0;transform:translateY(calc(var(--ae-lift) * -1));pointer-events:none;visibility:hidden;transition:opacity calc(var(--ae-ms) * .55) var(--ease-ui),transform calc(var(--ae-ms) * .55) var(--ease-out),visibility 0s var(--ae-ms)}.im-view .field:last-child{margin-bottom:0}#aeWvBands.off{transform:translateY(var(--ae-lift))}
-.hz{font-style:normal;color:var(--muted);font-size:var(--type-note);margin-left:var(--gap-label)}
+.hz{font-style:normal;color:var(--muted);font-size:var(--type-note);margin-left:var(--gap-label);position:relative;top:calc(var(--cap) * (var(--type-note) - var(--type-body)) / 2)}          /* a smaller word after a label: moved up by half the difference in their capitals' heights, so its letters' middle is the label's (on a slider's line); moved, not laid out higher, so the row keeps its size */
 .im-low{display:flex;align-items:center;justify-content:space-between;gap:var(--gap-set)}
 .im-low .check{white-space:nowrap}
 .im-lowf{display:flex;align-items:center;gap:var(--gap-head);flex:1;min-width:0;max-width:210px;transition:opacity var(--ae-ms) var(--ease-ui)}
