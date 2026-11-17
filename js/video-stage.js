@@ -178,9 +178,12 @@ function drawCreditsCard(cv, o) {
   if (o.l3) { const wt = lineWeight('L3', l3S), size = Math.min(fitOne(o.l3, s1 * 0.8, wt, l3S), ens * 0.82); blocks.push({ lines: [o.l3], size, weight: wt, st: l3S, lh: 1.25, gapAfter: 0 }); }
   if (!blocks.length) return;
   blocks[blocks.length - 1].gapAfter = 0;
-  let total = 0; blocks.forEach((b, i) => { total += b.lines.length * b.size * b.lh + (i < blocks.length - 1 ? b.gapAfter : 0); });
+  const sum = () => { let t = 0; blocks.forEach((b, i) => { t += b.lines.length * b.size * b.lh + (i < blocks.length - 1 ? b.gapAfter : 0); }); return t; };
+  let total = sum();
+  if (o.band && total > o.band) { const k = o.band / total; blocks.forEach(b => { b.size *= k; b.gapAfter *= k; }); total = sum(); }          // the System layout's Letterbox: the whole block, every line by one factor, fits the band it is seen in
   let y = h * 0.5 - total / 2;
-  c.fillStyle = o.dark ? '#ececec' : '#1b1b1f'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (o.paper) { c.fillStyle = 'rgb(' + o.paper.join(',') + ')'; c.fillRect(0, 0, w, h); }          // the System layout: the card is a sheet of the score's own paper
+  c.fillStyle = o.paper ? '#1b1b1f' : o.dark ? '#ececec' : '#1b1b1f'; c.textAlign = 'center'; c.textBaseline = 'middle';
   blocks.forEach((b, i) => {
     setFont(b.size, b.weight, b.st);
     b.lines.forEach(line => { c.fillText(line, w / 2, y + b.size * b.lh / 2); y += b.size * b.lh; });
@@ -220,6 +223,19 @@ async function resolveGoogleFont(raw) {
 }
 const CRED_FONT_KEYS = ['creditsFont', 'credTitleFont', 'credL2Font', 'credL3Font'];
 const creditsFontsInUse = () => CRED_FONT_KEYS.map(k => S.set[k]).filter(Boolean);
+/* The Letterbox's bars slide in and out on the preview over the Audio Editor's move time, on its glide curve (at once with reduced motion). v is how far in they are, 0 to 1.
+   The export and any frame at rest read the setting itself, so they are exactly as before. */
+const LB = { v: 0, from: 0, to: 0, t0: 0, sys: false, moving: false };
+function lbStep() {
+  const sys = sysOn(), want = sys && S.set.letterbox ? 1 : 0, now = performance.now();
+  if (!sys || !LB.sys || reducedMotion()) { LB.v = LB.to = want; LB.moving = false; LB.sys = sys; return; }          // another layout, or just arrived in System: no slide
+  if (LB.to !== want) { LB.from = LB.v; LB.to = want; LB.t0 = now; }
+  const p = clamp((now - LB.t0) / AE_MOVE_MS, 0, 1);
+  if (p >= 1) { LB.v = LB.to; LB.moving = false; return; }
+  const [x1, y1, x2, y2] = EASE_GLIDE.match(/[\d.]+/g).map(Number), at = (a, b, s) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+  let lo = 0, hi = 1; for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2; at(x1, x2, m) < p ? lo = m : hi = m; }
+  LB.v = LB.from + (LB.to - LB.from) * at(y1, y2, (lo + hi) / 2); LB.moving = true; stageDirty = true;          // the next frame is drawn too
+}
 class Renderer {
   constructor(canvas, src, opts = {}) {
     this.canvas = canvas; this.src = src; this.cap = opts.cap || 14;
@@ -247,7 +263,7 @@ class Renderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
     this.setTexParams();
     this.scoreFade = 1; this.bgRgb = [0, 0, 0]; this.inkRgb = [0.99, 0.99, 0.99];
-    this.tex = new Map(); this.pending = new Map(); this.ph = new Map(); this.notReady = new Map(); this.fx = new Map(); this.framePages = []; this.sizeKey = ''; this.geo = ''; this.lay = null; this.onUpdate = null; this.W = canvas.width; this.H = canvas.height;
+    this.tex = new Map(); this.lbT = new Map(); this.live = !!opts.live; this.pending = new Map(); this.ph = new Map(); this.notReady = new Map(); this.fx = new Map(); this.framePages = []; this.sizeKey = ''; this.geo = ''; this.lay = null; this.onUpdate = null; this.W = canvas.width; this.H = canvas.height;
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
   }
   setTexParams() {
@@ -293,6 +309,7 @@ class Renderer {
     if (idx === BLANK) return this.white;
     if (idx === CARD) return this.cardTexture();
     if (idx < 0) return null;
+    if (this.live && (LB.moving || this.lbT.has(idx))) { const a = this.lbTexture(idx); if (a) return a; }          // while the bars move, and after they stop until the sharp sheet has come
     const e = this.tex.get(idx);
     if (e) { this.tex.delete(idx); this.tex.set(idx, e); return e.t; }
     const st = this.ph.get(idx); if (st && st.stale && this.hold && performance.now() < this.hold) return st.t;          // the size is still moving: the old picture, scaled
@@ -312,6 +329,19 @@ class Renderer {
     while (this.ph.size > this.cap + 4) { const k = this.ph.keys().next().value; gl.deleteTexture(this.ph.get(k).t); this.ph.delete(k); }
     return t;
   }
+  /* While the bars slide, a system too tall for the band is composed again each frame from its page's kept drawing at the size the band has now (nothing is drawn from the PDF), so it grows or shrinks with the bars.
+     A system that fits in either band is not touched: its sheet is the same at both ends and does not move. */
+  lbTexture(idx) {
+    const lay = this.lay, now = sysFit(idx, lay.pw, lay.ph, true), rest = sysFit(idx, lay.pw, lay.ph);
+    if (Math.abs(now.s - rest.s) < 1e-6 && !this.lbT.has(idx)) return null;
+    const ent = sysKept(sysPage(idx)); if (!ent) return null;
+    const gl = this.gl; let e = this.lbT.get(idx); if (!e) { e = { t: gl.createTexture(), cv: document.createElement('canvas') }; e.cv.width = lay.pw; e.cv.height = lay.ph; this.lbT.set(idx, e); }
+    if (e.cv.width !== lay.pw || e.cv.height !== lay.ph) { e.cv.width = lay.pw; e.cv.height = lay.ph; }
+    sysCompose(ent, now, lay.pw, lay.ph, e.cv);
+    gl.bindTexture(gl.TEXTURE_2D, e.t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, e.cv); this.setTexParams();
+    return e.t;
+  }
+  lbDrop(landed) { const gl = this.gl; this.lbT.forEach((e, idx) => { if (landed && !this.tex.has(idx) && sysOn()) return; gl.deleteTexture(e.t); e.cv.width = e.cv.height = 0; this.lbT.delete(idx); }); }          // landed: only the ones whose sharp sheet is in
   request(idx) {
     if (this.pending.has(idx)) return this.pending.get(idx);
     const key = this.sizeKey, lay = this.lay, gl = this.gl;
@@ -374,8 +404,10 @@ class Renderer {
       if (!ok && document.fonts && document.fonts.load) document.fonts.load(spec).then(() => { stageDirty = true; }, () => {});
       return ok ? 1 : 0;
     }).join('');
-    const o = { title: creditsTitle(), l2: S.credits.l2.trim(), l3: S.credits.l3.trim(), dark };
-    const key = [o.title, o.l2, o.l3, lay.pw, lay.ph, dark, JSON.stringify(['Title', 'L2', 'L3'].map(lineStyle)), ready].join('|');
+    const sys = sysOn() && S.pdf, o = { title: creditsTitle(), l2: S.credits.l2.trim(), l3: S.credits.l3.trim(), dark };
+    if (sys && !S.set.invert) o.paper = sysScorePaper();          // System with Invert colors off: one paper color for the whole score, so a turn to the card shows no step (with Invert on, the card is as it was)
+    if (sys && (this.live ? LB.v > 0 : S.set.letterbox)) o.band = Math.round(sysBandH(lay.pw, lay.ph, this.live) * Math.max(0.5, 1 - 4 * S.set.margin / 100));
+    const key = [o.title, o.l2, o.l3, lay.pw, lay.ph, dark, JSON.stringify(['Title', 'L2', 'L3'].map(lineStyle)), ready, o.paper || '', o.band || ''].join('|');
     if (this.cardKey === key && this.cardTex) return this.cardTex;
     const cv = document.createElement('canvas'); cv.width = lay.pw; cv.height = lay.ph;
     drawCreditsCard(cv, o);
@@ -511,13 +543,14 @@ class Renderer {
   }
   render(st) {
     this.render_(st);
-    if (sysOn() && S.set.letterbox) {          // the black bars of the Letterbox, drawn last so every return path of the render has them
-      const gl = this.gl, bar = Math.floor((this.H - Math.min(this.H, this.W / 2.39)) / 2);
+    if (sysOn() && (this.live ? LB.v > 0 : S.set.letterbox)) {          // the black bars of the Letterbox, drawn last so every return path of the render has them
+      const gl = this.gl, bar = Math.floor((this.H - sysBandH(this.W, this.H, this.live)) / 2);
       if (bar > 0) { gl.enable(gl.SCISSOR_TEST); gl.clearColor(0, 0, 0, 1); gl.scissor(0, 0, this.W, bar); gl.clear(gl.COLOR_BUFFER_BIT); gl.scissor(0, this.H - bar, this.W, bar); gl.clear(gl.COLOR_BUFFER_BIT); gl.disable(gl.SCISSOR_TEST); }
     }
   }
   render_(st) {
     const gl = this.gl, lay = this.layout(); this.lay = lay; this.checkSize(lay); this.framePages = [];
+    if (this.live) { lbStep(); if (!LB.moving && this.lbT.size) this.lbDrop(true); }
     gl.viewport(0, 0, this.W, this.H);
     const bg = hexToRgb(S.set.bg); gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const sp = S.spreads[st.spread]; if (!sp) return;
@@ -596,7 +629,7 @@ class Renderer {
     if (!scoreOnly) this.drawFade(1 - fade);
     this.notReady.forEach((_, k) => { if (!shown.has(k)) this.notReady.delete(k); }); this.fx.forEach((_, k) => { if (!shown.has(k)) this.fx.delete(k); });          // only a page seen unfinished, and still in view, fades in
   }
-  destroy() { try { if (this.cardTex) this.gl.deleteTexture(this.cardTex); this.clearTextures(); const e = this.gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (e) {} }
+  destroy() { try { this.lbDrop(); if (this.cardTex) this.gl.deleteTexture(this.cardTex); this.clearTextures(); const e = this.gl.getExtension('WEBGL_lose_context'); if (e) e.loseContext(); } catch (e) {} }
 }
 
 /* ====================================================================

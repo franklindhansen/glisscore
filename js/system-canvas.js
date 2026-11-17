@@ -299,6 +299,8 @@ function selMarkBind() {
     if (t === 'second') { const y0 = M.y0, P = sysPush(g.base, 'new', 0, y0, clamp(selPt(e).y, 0, 1)); M.y0 = M.hover = null; if (P.out[P.cur][1] - P.out[P.cur][0] >= SYS_MINH) await sysPlace(idx, P.boxes, P.out); selPaintSoon(); return; }
     if (g.moved && L) { if (t === 'new') M.y0 = null; if (big) await sysPlace(idx, L.boxes, L.out); selPaintSoon(); return; }
     if (t === 'new') { M.y0 = clamp(g.p.y, 0, 1); M.hover = M.y0; M.pg = idx; selPaintSoon(); return; }          // the first click of a click-click mark
+    const now = performance.now(), tap = M.tap; M.tap = g.box ? { t: now, x: e.clientX, y: e.clientY, box: g.box, pg: idx } : null;
+    if (tap && g.box && tap.box === g.box && tap.pg === idx && now - tap.t < 450 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 6) { M.tap = null; selClick(e); sysResetOne(idx, g.box).then(() => selPaintSoon()); return; }          // a double-click (or two quick taps) on a system or its edge: that one box goes back to what was found
     selClick(e);                                                  // a click on a system or its edge: the playhead goes there
   };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);

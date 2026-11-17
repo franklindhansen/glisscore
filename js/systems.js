@@ -11,7 +11,8 @@ const SYS_W = 1600;          // the width a page is drawn at for this: staff lin
    2. Five lines evenly spaced are a staff (one line missing in a dropout is filled in).
    3. Staves joined by an unbroken vertical stroke (a bar line) belong to one system.
    4. A system reaches up and down to the music attached to it, and stops at the blank space between it and its neighbor.
-   5. Its left and right edges are the first and last stretch of real ink (a dot alone is dust), so specks never move them. */
+   5. Its left and right edges are its staves' line ends, reaching out only over ink attached to them (a brace, a bracket, a bar line), so a name, a page number, a margin note, or a scan shadow never moves them;
+      an edge far from the page's other systems, with plain staff ends that are not, goes back to the staff ends. */
 function sysDetectCore(ink, w, h, deg, reg) {
   const X0 = Math.max(0, Math.floor(reg[0])), Y0 = Math.max(0, Math.floor(reg[1])), X1 = Math.min(w, Math.ceil(reg[2])), Y1 = Math.min(h, Math.ceil(reg[3])), W = X1 - X0;
   const none = { systems: [], staves: 0, d: 0 };
@@ -114,6 +115,34 @@ function sysDetectCore(ink, w, h, deg, reg) {
   };
   for (let k = groups.length - 1; k >= 0; k--) if (!groups[k].some(q => q.blob) && !written(groups[k])) groups.splice(k, 1);          // (a lump is all ink: there is no bare staff to look through)
   if (!groups.length) return Object.assign({}, none, { staves: staves.length });
+  /* A system's edges: the staves' own line ends, reaching out only over ink attached to them (a brace, a bracket, a bar line) and no further. Attached ink is a connected piece of ink at least two and a half staff spaces tall
+     (a brace or a bracket is as tall as the staves; a letter is not), no further than five staff spaces out, and joined to the staff end, or to the piece before it, across no more than two staff spaces of blank.
+     So the words beside a system (an instrument name), a page number, a margin note, and a scan shadow never move an edge. Each staff keeps its own reach (e0, e1), so a mark by hand takes its edges from the staves it holds. */
+  const reachOf = g => {
+    const d = g.reduce((t, q) => t + q.d, 0) / g.length, lim = Math.round(5 * d), need = Math.max(3, 2.5 * d), blankMax = Math.round(2 * d), ya = Math.max(Y0, Math.round(g[0].top - 2 * d)), yb = Math.min(Y1 - 1, Math.round(g[g.length - 1].bot + 2 * d));
+    g.forEach(q => { q.e0 = Math.round(q.x0); q.e1 = Math.round(q.x1) - 1; });
+    for (const dir of [-1, 1]) {
+      const anchor = dir < 0 ? Math.round(Math.min(...g.map(q => q.x0))) : Math.round(Math.max(...g.map(q => q.x1))) - 1, xa = dir < 0 ? Math.max(X0, anchor - lim) : anchor + 1, xb = dir < 0 ? anchor - 1 : Math.min(X1 - 1, anchor + lim);
+      if (xb < xa) continue;
+      const ww = xb - xa + 1, hh = yb - ya + 1, lab = new Int32Array(ww * hh), comps = [];
+      for (let y = 0; y < hh; y++) for (let x = 0; x < ww; x++) {
+        if (lab[y * ww + x] || !px[(ya + y) * w + xa + x]) continue;
+        const id = comps.length + 1, c = { x0: x, x1: x, y0: y, y1: y, id }; comps.push(c); const st = [y * ww + x]; lab[st[0]] = id;
+        while (st.length) {
+          const i = st.pop(), cy = (i / ww) | 0, cx = i - cy * ww; if (cx < c.x0) c.x0 = cx; if (cx > c.x1) c.x1 = cx; if (cy < c.y0) c.y0 = cy; if (cy > c.y1) c.y1 = cy;
+          for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) { const ny = cy + oy, nx = cx + ox; if (ny < 0 || nx < 0 || ny >= hh || nx >= ww) continue; const j = ny * ww + nx; if (!lab[j] && px[(ya + ny) * w + xa + nx]) { lab[j] = id; st.push(j); } }
+        }
+      }
+      const tall = comps.filter(c => c.y1 - c.y0 + 1 >= need).sort((a1, b1) => dir < 0 ? b1.x1 - a1.x1 : a1.x0 - b1.x0), ok = new Set(); let cur = dir < 0 ? ww : -1;          // cur: the outer edge reached so far, in window dots
+      for (const c of tall) { const near = dir < 0 ? c.x1 : c.x0; if (dir < 0 ? cur - near - 1 <= blankMax : near - cur - 1 <= blankMax) { ok.add(c.id); cur = dir < 0 ? Math.min(cur, c.x0) : Math.max(cur, c.x1); } }
+      g.forEach((q, i) => {          // this staff's own rows, and the room between it and its neighbors
+        const r0 = Math.max(ya, i ? Math.round((g[i - 1].bot + q.top) / 2) : ya), r1 = Math.min(yb, i < g.length - 1 ? Math.round((q.bot + g[i + 1].top) / 2) : yb);
+        let best = dir < 0 ? Infinity : -Infinity;
+        for (let y = r0; y <= r1; y++) for (let x = 0; x < ww; x++) if (ok.has(lab[(y - ya) * ww + x])) { if (dir < 0 ? x < best : x > best) best = x; }
+        if (best !== Infinity && best !== -Infinity) { if (dir < 0) q.e0 = Math.min(q.e0, xa + best); else q.e1 = Math.max(q.e1, xa + best); }
+      });
+    }
+  };
   // 4. how far each system reaches
   const blank = Math.max(2, W * 0.006);
   const valley = (a, b, d) => {                       // the middle of the emptiest stretch between two systems
@@ -137,16 +166,36 @@ function sysDetectCore(ink, w, h, deg, reg) {
     let dn = Math.round(s.bot); run = 0;
     for (let y = Math.round(s.bot) + 1; y <= limDn; y++) { if (rc[y] > blank) { dn = y; run = 0; } else if (++run >= need) break; }
     const top = Math.max(limUp, up - pad), bot = Math.min(limDn, dn + pad);
-    // 5. the first and last real stretch of ink inside that band
-    let left = -1, right = -1, r = 0;
-    for (let x = X0; x < X1; x++) {
-      let c = 0; for (let y = top; y <= bot; y++) { const i = y * w + x; if (px[i] && (px[i - 1] || px[i + 1] || px[i - w] || px[i + w])) c++; }          // a dot with no neighbor is dust
-      if (c >= 3) { r++; if (r >= 5) { if (left < 0) left = x - 4; right = x; } } else r = 0;
-    }
-    if (left < 0) { const g = groups[k]; left = Math.round(Math.min(...g.map(q => q.x0))); right = Math.round(Math.max(...g.map(q => q.x1))) - 1; }
+    // 5. its left and right edges: the staves' own line ends, reaching out only over ink attached to them (see reachOf)
+    const g = groups[k]; reachOf(g); let left = Infinity, right = -Infinity;
+    for (const q of g) { left = Math.min(left, q.e0); right = Math.max(right, q.e1); }
     out.push({ top: top / h, bottom: (bot + 1) / h, left: left / w, right: (right + 1) / w });
   });
-  return { systems: out, staves: staves.length, d: sys.reduce((t, q) => t + q.d, 0) / sys.length };
+  // an edge far from the page's other systems, with plain staff ends that are not far from them, was pulled out by something that is not the system's own: it goes back to the staff ends
+  if (out.length > 2) {
+    const med = a => { const q = a.slice().sort((x, y) => x - y); return q[(q.length - 1) >> 1]; }, ml = med(out.map(o => o.left * w)), mr = med(out.map(o => o.right * w));
+    out.forEach((o, k) => {
+      const g = groups[k], d = sys[k].d, sl = Math.min(...g.map(q => Math.round(q.x0))), sr = Math.max(...g.map(q => Math.round(q.x1)));
+      if (Math.abs(o.left * w - ml) > 3 * d && Math.abs(sl - ml) <= 3 * d) { o.left = sl / w; g.forEach(q => { q.e0 = Math.round(q.x0); }); }
+      if (Math.abs(o.right * w - mr) > 3 * d && Math.abs(sr - mr) <= 3 * d) { o.right = sr / w; g.forEach(q => { q.e1 = Math.round(q.x1) - 1; }); }
+    });
+  }
+  const stv = []; groups.forEach((g, k) => g.forEach(q => stv.push({ k, top: q.top / h, bot: q.bot / h, x0: q.x0 / w, x1: q.x1 / w, e0: q.e0 / w, e1: (q.e1 + 1) / w })));          // the staves of the systems kept, in the same frame as the systems (k: which system)
+  return { systems: out, staves: staves.length, d: sys.reduce((t, q) => t + q.d, 0) / sys.length, stv };
+}
+
+/* The whole measuring of one page, for a worker (it runs there with no outside names; the page's own thread draws the page and reads its pixels, nothing more).
+   rgba: the page's pixels; k: how dark a dot must be, against the paper, to count as ink. The grey, the paper, the threshold, the music's box, the tilt, and the finder are the same steps the page's own thread took before. */
+function sysMeasure(rgba, w, h, k) {
+  const px = new Uint8ClampedArray(rgba), g = new Uint8Array(w * h);
+  for (let i = 0, j = 0; i < g.length; i++, j += 4) g[i] = (px[j] * 77 + px[j + 1] * 150 + px[j + 2] * 29) >> 8;
+  const hist = new Uint32Array(256); for (let i = 0; i < g.length; i++) hist[g[i]]++;
+  let acc = 0, bg = 255; for (let t = 255; t >= 0; t--) { acc += hist[t]; if (acc > g.length * 0.08) { bg = t; break; } }
+  const lim = Math.max(30, bg * k), ink = new Uint8Array(w * h); let n = 0; for (let i = 0; i < g.length; i++) if (g[i] < lim) { ink[i] = 1; n++; }
+  const sc = { w, h, ink, n }, reg = peInkBox(sc, 0);
+  if (!reg) return { systems: [], staves: 0, d: 0, tilt: 0, bare: true };
+  const t = peTilt(sc), tilt = t.gain > 0.03 ? t.deg : 0, m = sysDetectCore(ink, w, h, tilt, [reg[0] * w, reg[1] * h, reg[2] * w, reg[3] * h]);
+  m.tilt = tilt; return m;
 }
 
 /* A system on the timeline is a page number plus a multiple of SYS_STRIDE, so system 0 is the page itself and every other part of the app keeps reading a page number. */
@@ -279,22 +328,23 @@ const SYS = {
   lanes() { return clamp(Math.round((navigator.hardwareConcurrency || 2) / 3), 1, 3); },
   worker(k) {
     if (this.ws[k]) return this.ws[k];
-    const url = URL.createObjectURL(new Blob(['const core=' + sysDetectCore.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:core(m.ink,m.w,m.h,m.deg,m.reg)});};'], { type: 'text/javascript' }));
+    const clampFn = (v, a, b) => Math.min(b, Math.max(a, v)), src = 'const clamp=' + clampFn.toString() + ',peInkBox=' + peInkBox.toString() + ',peTilt=' + peTilt.toString() + ',sysDetectCore=' + sysDetectCore.toString() + ',sysMeasure=' + sysMeasure.toString() + ';onmessage=e=>{const m=e.data;postMessage({id:m.id,r:sysMeasure(m.rgba,m.w,m.h,m.k)});};';
+    const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' }));
     const w = this.ws[k] = new Worker(url); URL.revokeObjectURL(url);
     w.onmessage = e => { const f = this.pend.get(e.data.id); if (f) { this.pend.delete(e.data.id); f.res(e.data.r); } };
     w.onerror = () => {                                 // a worker that fails: its pages are measured here instead, and it is not used again
       this.ws[k] = null; this.bad[k] = true;
-      [...this.pend].filter(([, f]) => f.k === k).forEach(([id, f]) => { this.pend.delete(id); f.res(sysDetectCore(f.m.ink, f.m.w, f.m.h, f.m.deg, f.m.reg)); });
+      [...this.pend].filter(([, f]) => f.k === k).forEach(([id, f]) => { this.pend.delete(id); Promise.resolve(f.m.rgba.byteLength ? f.m.rgba : f.m.again()).then(b => f.res(sysMeasure(b, f.m.w, f.m.h, f.m.k))); });          // the pixels may already have gone to the worker: the page is drawn again
     };
     return w;
   },
   run(m, k = 0) {                                       // the answer, or null when it was stopped
     let w; try { w = this.bad[k] ? null : this.worker(k); } catch (e) { w = null; this.bad[k] = true; }
-    if (!w) return Promise.resolve(sysDetectCore(m.ink, m.w, m.h, m.deg, m.reg));
-    return new Promise(res => { const id = ++this.n; this.pend.set(id, { res, k, m }); w.postMessage({ id, ink: m.ink, w: m.w, h: m.h, deg: m.deg, reg: m.reg }); });
+    if (!w) return Promise.resolve(sysMeasure(m.rgba, m.w, m.h, m.k));
+    return new Promise(res => { const id = ++this.n; this.pend.set(id, { res, k, m }); w.postMessage({ id, rgba: m.rgba, w: m.w, h: m.h, k: m.k }, [m.rgba]); });          // the pixels are handed over, not copied
   },
   stop() {                                              // leaving the layout: the workers end at once, and the pages already found stay
-    this.token++; this.ws.forEach(w => w && w.terminate()); this.ws = []; this.bad = [];
+    this.token++; sysPagesClear(); this.ws.forEach(w => w && w.terminate()); this.ws = []; this.bad = [];
     this.pend.forEach(f => f.res(null)); this.pend.clear(); this.job = null; this.loadedMsg = null; if (this.prog) sysProg(null);
   }
 };
@@ -347,15 +397,12 @@ function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) 
 async function sysDetectPage(idx, lane) {
   sysFresh();
   const hit = SYS.byPage.get(idx); if (hit) return hit;
-  const tok = SYS.token, geo = sysGeo(S.pdf.slots[idx]), sc = await peScan(S.pdf.slots[idx].src, SYS_W, null, 0.85, false);
+  const tok = SYS.token, geo = sysGeo(S.pdf.slots[idx]), slot = S.pdf.slots[idx], draw = () => peScan(slot.src, SYS_W, null, 0.85, false, true), sc = await draw();
   if (tok !== SYS.token) return null;
-  const reg = peInkBox(sc, 0), t = reg ? peTilt(sc) : { deg: 0, gain: 0 }, tilt = t.gain > 0.03 ? t.deg : 0;
-  let r = { systems: [], tilt, staves: 0, geo, full: true };
-  if (reg) {
-    const regPx = [reg[0] * sc.w, reg[1] * sc.h, reg[2] * sc.w, reg[3] * sc.h], m = await SYS.run({ ink: sc.ink, w: sc.w, h: sc.h, deg: tilt, reg: regPx, token: tok }, lane || 0);
-    if (!m || tok !== SYS.token) return null;
-    r = { systems: m.systems, tilt, staves: m.staves, geo, full: !m.systems.length };
-  }
+  const m = await SYS.run({ rgba: sc.rgba, w: sc.w, h: sc.h, k: 0.85, again: async () => (await draw()).rgba, token: tok }, lane || 0);
+  if (!m || tok !== SYS.token) return null;
+  const tilt = m.tilt || 0, r = m.bare ? { systems: [], tilt: 0, staves: 0, geo, full: true } : { systems: m.systems, tilt, staves: m.staves, geo, full: !m.systems.length };
+  if (m.stv && m.stv.length) r.stv = m.stv;          // where its staves are, so a mark by hand takes its edges from them with no new drawing
   if (SYS.byPage.has(idx)) return SYS.byPage.get(idx);          // marked or restored while it was being found: that stays
   SYS.byPage.set(idx, r); stageDirty = true; return r;
 }
@@ -397,8 +444,26 @@ function sysRestore(m) {
   });
   SYS.rev++; stageDirty = true; return true;
 }
-/* the first and last real stretch of ink inside a band (fractions of the page): the same rule as the finder, so a mark sits on its ink the same way */
+/* One page measured again as a calculation: nothing is replaced, the page's record and its Selections are left as they are. Resolves with the finder's answer, or null when it was stopped. */
+async function sysMeasureAgain(idx) {
+  sysFresh(); const tok = SYS.token, sl = S.pdf.slots[idx], draw = () => peScan(sl.src, SYS_W, null, 0.85, false, true), sc = await draw();
+  return await SYS.run({ rgba: sc.rgba, w: sc.w, h: sc.h, k: 0.85, again: async () => (await draw()).rgba, token: tok }, 0);
+}
+/* a page's staves with their reach (the finder's own measure, kept on the page's record): a page found by the finder has them already; a page restored from saved work measures them once */
+async function sysStaves(idx) {
+  sysFresh(); let r = SYS.byPage.get(idx); if (r && r.stv) return r.stv;
+  const gen = SYS.gen, geo = sysGeo(S.pdf.slots[idx]), m = await sysMeasureAgain(idx), stv = m && m.stv ? m.stv : [];
+  r = SYS.byPage.get(idx); if (m && r && gen === SYS.gen && r.geo === geo) r.stv = stv;
+  return stv;
+}
+/* the left and right edges of a band (fractions of the page): the staves in the band, each reaching out over the ink attached to it, by the same rule as a found system, so a mark by hand sits on its music the same way. A band with no staff in it lines up with the page's other staves. */
 async function sysEdges(idx, top, bottom) {
+  const stv = await sysStaves(idx), inBand = stv.filter(q => (q.top + q.bot) / 2 >= top && (q.top + q.bot) / 2 <= bottom), use = inBand.length ? inBand : stv;
+  if (use.length) return [Math.min(...use.map(q => q.e0)), Math.max(...use.map(q => q.e1))];
+  return sysEdgesInk(idx, top, bottom);          // a page with no staff at all: the first and last real ink in the band
+}
+/* the first and last real stretch of ink inside a band (fractions of the page); a dot alone is dust */
+async function sysEdgesInk(idx, top, bottom) {
   const { w, h, ink: px } = await sysLevel(idx);
   const y0 = Math.max(1, Math.round(top * h)), y1 = Math.min(h - 2, Math.round(bottom * h)); let left = -1, right = -1, r = 0;
   for (let x = 1; x < w - 1; x++) {
@@ -469,6 +534,24 @@ async function sysPlace(idx, boxes, out) {
   r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }; return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
   r.full = !r.systems.length; r.held = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
+/* Double-click a Selection: that one box returns to what the finder found for it, as one History step. The default is the found system that overlaps the box most (at least half of the smaller of the two); a box with no
+   found system under it (one drawn by hand where nothing was found) does nothing. A neighbor in the way gives way as in a drag (sysPush). Resolves with whether anything changed. */
+async function sysResetOne(idx, box) {
+  const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box) || !S.pdf || !S.pdf.slots[idx]) return false;
+  let auto = r0.auto || (SYS.hand.has(idx) ? null : r0.systems.map(q => Object.assign({}, q)));          // a page nobody marked still has what the finder found
+  if (!auto) { const m = await sysMeasureAgain(idx); if (!m) return false; auto = m.systems; }
+  const r = SYS.byPage.get(idx); if (!r || r !== r0 || !r.systems.includes(box) || !auto || !auto.length) return false;          // the page changed while it was measured
+  let best = null, bo = 0; for (const a of auto) { const o = Math.min(box.bottom, a.bottom) - Math.max(box.top, a.top); if (o > bo && o >= 0.5 * Math.min(box.bottom - box.top, a.bottom - a.top)) { bo = o; best = a; } }
+  if (!best) return false;
+  const same = (x, y) => Math.abs(x - y) < 1e-5; if (same(box.top, best.top) && same(box.bottom, best.bottom) && same(box.left, best.left) && same(box.right, best.right)) return false;
+  const base = r.systems.slice(), i = base.indexOf(box), a = sysPush(base, 'top', i, best.top), mid = base.map((q, k) => Object.assign({}, q, { top: a.out[k][0], bottom: a.out[k][1] })), b = sysPush(mid, 'bottom', i, best.bottom), out = b.out;
+  const edges = []; for (let k = 0; k < out.length; k++) edges.push(k !== i && (!same(out[k][0], base[k].top) || !same(out[k][1], base[k].bottom)) ? await sysEdges(idx, out[k][0], out[k][1]) : null);
+  const now = SYS.byPage.get(idx); if (now !== r || !r.systems.includes(box) || r.systems.length !== base.length) return false;
+  if (!r.auto) r.auto = auto.map(q => Object.assign({}, q));          // kept, so Detect again and an undo can return to it
+  pushHistory(); const rr = sysHandRec(idx);
+  base.forEach((s2, k) => { if (k === i) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: best.left, right: best.right }); else if (edges[k]) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }); });          // the same boxes, so a turn stays with its Selection
+  rr.systems = base.sort((x, y) => x.top - y.top); rr.full = false; rr.held = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+}
 /* a mark from top to bottom (page fractions), among the others */
 async function sysMark(idx, a, b) {
   const r = SYS.byPage.get(idx), p = sysPush(r ? r.systems : [], 'new', 0, clamp(a, 0, 1), clamp(b, 0, 1));
@@ -487,14 +570,24 @@ async function sysRedetect(idx) {
 
 /* ---------- the sheet: one system alone on a full-frame sheet of the page's own paper ---------- */
 const SYS_FEATHER = 3;          // dots over which the join between the page and the plain paper around it is softened
-/* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
-   left in the frame (the Letterbox band, when it is on), with a 6% inner room, shrinks alone. A page with no system is fitted whole. */
-function sysFit(key, W, H) {
-  const idx = sysPage(key), pa = S.pdf.aspect, mx = S.set.margin / 100, band = S.set.letterbox ? Math.min(H, W / 2.39) : H, whole = { top: 0, bottom: 1, left: 0, right: 1 };
+/* the widest system of the whole score, kept until what was found or the page list changes (it was worked out again on every paint) */
+const SYS_WIDE = { key: '', v: 0 };
+function sysWide() {
+  const pa = S.pdf.aspect, k = [SYS.rev, SYS.gen, SYS.byPage.size, pa, S.pdf.keep.join(',')].join('|');
+  if (SYS_WIDE.key === k) return SYS_WIDE.v;
   let wide = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
+  SYS_WIDE.key = k; SYS_WIDE.v = wide; return wide;
+}
+/* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
+   left in the frame (the Letterbox band, when it is on, less twice the Margin above and below), shrinks alone. A page with no system is fitted whole. */
+/* the height of the band the music has: the whole frame, or the 2.39:1 band between the Letterbox's bars. anim: the preview's bars while they slide (what is shown); otherwise the Letterbox as it is set (what every sheet is made for, and every export frame). */
+const sysBandH = (W, H, anim) => H - (H - Math.min(H, W / 2.39)) * (anim ? LB.v : S.set.letterbox ? 1 : 0);
+function sysFit(key, W, H, anim) {
+  const idx = sysPage(key), pa = S.pdf.aspect, mx = S.set.margin / 100, band = sysBandH(W, H, anim), whole = { top: 0, bottom: 1, left: 0, right: 1 };
+  const wide = sysWide();
   const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, r = SYS.byPage.get(idx), list = r && r.systems.length ? r.systems : [whole];
   const box = list[Math.min(sysNo(key), list.length - 1)];
-  const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), band * 0.88 / Math.max(1e-6, box.bottom - box.top));
+  const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), band * Math.max(0.5, 1 - 4 * mx) / Math.max(1e-6, box.bottom - box.top));          // the room above and below follows the Margin too: 0.88 of the band's height is left at the default 3%
   return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
 /* the paper: the median color of what is not ink inside the box */
@@ -505,21 +598,63 @@ function sysPaper(cv) {
   for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
   return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
 }
-async function sysSheet(key, W, H) {
-  await sysDetectAll();
-  const idx = sysPage(key), f = sysFit(key, W, H), sl = S.pdf.slots[idx], pa = S.pdf.aspect, box = f.box;
-  const page = await S.pdf.doc.getPage(sl.src + 1), rot = page.rotate || 0, v1 = page.getViewport({ scale: 1, rotation: rot });
-  const sc = pa * f.s / v1.width, vp = page.getViewport({ scale: sc, rotation: rot });
-  const src = document.createElement('canvas'); src.width = f.dw; src.height = f.dh;
-  const sx = src.getContext('2d', { alpha: false }); sx.fillStyle = '#fff'; sx.fillRect(0, 0, f.dw, f.dh);
-  await page.render({ canvasContext: sx, viewport: vp, transform: [1, 0, 0, 1, -box.left * vp.width, -box.top * vp.height], background: '#ffffff' }).promise;
-  try { page.cleanup(); } catch (e) {}
-  const paper = sysPaper(src), cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+/* the paper of the whole score: the median of each active page's paper (the thumbnails, by the rule above), kept until the pages change. White until a thumbnail is in. */
+const SYS_SP = { key: '', v: [255, 255, 255] };
+function sysScorePaper() {
+  const srcs = [...new Set(S.pdf.keep)].map(i => S.pdf.slots[i].src).filter(src => S.thumbs[src]), key = (S.pdf.gen || 0) + '|' + srcs.join(',');
+  if (SYS_SP.key === key) return SYS_SP.v;
+  const all = srcs.map(src => sysPaper(S.thumbs[src])), med = c => { const a = all.map(q => q[c]).sort((x, y) => x - y); return a.length ? a[a.length >> 1] : 255; };
+  SYS_SP.key = key; SYS_SP.v = [med(0), med(1), med(2)]; return SYS_SP.v;
+}
+/* Each page is drawn from the PDF once per size and kept; every system on it, and every Margin or Letterbox change, is cut from that one drawing and never draws the page again.
+   The store holds the page under the playhead and its neighbors: at most SYS_KEEP pages and SYS_KEEP_PX dots in all (the newest is always kept), the oldest used going first. */
+const SYS_KEEP = 3, SYS_KEEP_PX = 48e6, SYS_PAGES = new Map(), SYS_DRAWING = new Map();
+function sysPagesClear() { SYS_PAGES.forEach(e => { e.cv.width = e.cv.height = 0; }); SYS_PAGES.clear(); SYS_DRAWING.clear(); }
+async function sysPageDraw(idx, s) {
+  const sl = S.pdf.slots[idx], geo = sysGeo(sl), gen = S.pdf.gen || 0, e = SYS_PAGES.get(sl.src);
+  if (e && e.geo === geo && e.gen === gen && e.s >= s * 0.999 && e.s <= s * 1.6) { SYS_PAGES.delete(sl.src); SYS_PAGES.set(sl.src, e); return e; }          // big enough to cut from, and not wastefully big
+  const dk = sl.src + '|' + Math.round(s);
+  if (SYS_DRAWING.has(dk)) return SYS_DRAWING.get(dk);
+  const job = (async () => {
+    const page = await S.pdf.doc.getPage(sl.src + 1), rot = page.rotate || 0, v1 = page.getViewport({ scale: 1, rotation: rot }), pa = S.pdf.aspect, vp = page.getViewport({ scale: pa * s / v1.width, rotation: rot });
+    const cv = document.createElement('canvas'); cv.width = Math.max(2, Math.round(vp.width)); cv.height = Math.max(2, Math.round(vp.height));
+    const x = cv.getContext('2d', { alpha: false }); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
+    await page.render({ canvasContext: x, viewport: vp, background: '#ffffff' }).promise;
+    try { page.cleanup(); } catch (err) {}
+    const ent = { cv, s, geo, gen, paper: new Map() };
+    if (S.pdf.gen === gen && sysGeo(S.pdf.slots[idx] || sl) === geo) {
+      const old = SYS_PAGES.get(sl.src); if (old && old !== ent) old.cv.width = old.cv.height = 0;
+      SYS_PAGES.delete(sl.src); SYS_PAGES.set(sl.src, ent);
+      let px = 0; SYS_PAGES.forEach(q => { px += q.cv.width * q.cv.height; });
+      while (SYS_PAGES.size > 1 && (SYS_PAGES.size > SYS_KEEP || px > SYS_KEEP_PX)) { const k = SYS_PAGES.keys().next().value, q = SYS_PAGES.get(k); px -= q.cv.width * q.cv.height; q.cv.width = q.cv.height = 0; SYS_PAGES.delete(k); }
+    }
+    return ent;
+  })();
+  SYS_DRAWING.set(dk, job); job.then(() => SYS_DRAWING.delete(dk), () => SYS_DRAWING.delete(dk));
+  return job;
+}
+/* a sheet: the system cut from its page's kept drawing (ent) and laid on the page's paper, its edges feathered into it. f: the fit it is made for. */
+function sysCompose(ent, f, W, H, cv) {
+  const box = f.box, pw = ent.cv.width, ph = ent.cv.height; let sx = box.left * pw, sy = box.top * ph, sw = Math.max(1, (box.right - box.left) * pw), sh = Math.max(1, (box.bottom - box.top) * ph);
+  if (Math.abs(sw / f.dw - 1) < 0.004 && Math.abs(sh / f.dh - 1) < 0.004) { sx = clamp(Math.round(sx), 0, Math.max(0, pw - f.dw)); sy = clamp(Math.round(sy), 0, Math.max(0, ph - f.dh)); sw = Math.min(f.dw, pw); sh = Math.min(f.dh, ph); }          // drawn at this very size: a dot for a dot, so it is as sharp as a drawing made for it
+  const pk = [box.left, box.top, box.right, box.bottom].join(); let paper = ent.paper.get(pk);
+  if (!paper) {          // the paper is read from a small copy of the system, once per drawing
+    const k = Math.min(1, 320 / sw), t = document.createElement('canvas'); t.width = Math.max(2, Math.round(sw * k)); t.height = Math.max(2, Math.round(sh * k));
+    t.getContext('2d', { alpha: false }).drawImage(ent.cv, sx, sy, sw, sh, 0, 0, t.width, t.height); paper = sysPaper(t); t.width = t.height = 0; ent.paper.set(pk, paper);
+  }
+  if (!cv) { cv = document.createElement('canvas'); cv.width = W; cv.height = H; }
   const c = cv.getContext('2d', { alpha: false }), x = Math.round((W - f.dw) / 2), y = Math.round((H - f.dh) / 2), col = a => 'rgba(' + paper.join(',') + ',' + a + ')';
-  c.fillStyle = col(1); c.fillRect(0, 0, W, H); c.drawImage(src, x, y);
+  c.fillStyle = col(1); c.fillRect(0, 0, W, H); c.imageSmoothingQuality = 'high'; c.drawImage(ent.cv, sx, sy, sw, sh, x, y, f.dw, f.dh);
   const F = Math.min(SYS_FEATHER, f.dw >> 2, f.dh >> 2);          // each edge fades into the paper around it, so an uneven scan shows no hard seam
   [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {
     const g = c.createLinearGradient(q[4], q[5], q[6], q[7]); g.addColorStop(0, col(1)); g.addColorStop(1, col(0)); c.fillStyle = g; c.fillRect(q[0], q[1], q[2], q[3]);
   });
   return cv;
 }
+async function sysSheet(key, W, H) {
+  await sysDetectAll();
+  const idx = sysPage(key), f = sysFit(key, W, H), ent = await sysPageDraw(idx, f.s);
+  return sysCompose(ent, f, W, H);
+}
+/* the kept drawing of a page, as it stands, with no waiting (null when there is none): the Letterbox's slide composes from it every frame */
+function sysKept(idx) { const sl = S.pdf && S.pdf.slots[idx], e = sl && SYS_PAGES.get(sl.src); return e && e.geo === sysGeo(sl) && e.gen === (S.pdf.gen || 0) ? e : null; }

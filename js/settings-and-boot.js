@@ -338,7 +338,7 @@ function initUiExtras() {
 function boot() {
   creditsBaseLoad().then(() => { stageDirty = true; });          // the credits' own font, drawn on the stage, has to be there before the first frame
   syncControls(); bindSettings(); readColors();
-  try { previewR = new Renderer(stageCanvas, PageSource, { cap: 14 }); }
+  try { previewR = new Renderer(stageCanvas, PageSource, { cap: 14, live: true }); }
   catch (e) { toast(e.message, 8000); console.error(e); return; }
   previewR.onUpdate = () => { stageDirty = true; };
   layoutStage(); layoutTimeline(); updateButtons(); updateTimeUI(true); setChips();

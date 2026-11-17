@@ -74,6 +74,39 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   s = await sys(); ok('Detect this page again returns to three systems', s.length === 3 && s[0][0] > 0.1, JSON.stringify(s));
   ok('it is one step', await steps() === h1 + 1);
   ok('only the shown page changed', (await sys(1)).length === 2);
+  // double-click a Selection: that one box returns to what was found, as one step; a neighbor in the way gives way; a hand-drawn box with nothing found under it does nothing
+  await p.evaluate(() => selJump(sysKey(1, 0))); await p.waitForTimeout(600);
+  const box1 = () => p.evaluate(() => SYS.byPage.get(1).systems.map(s => [s.top, s.bottom, s.left, s.right].map(v => +v.toFixed(4))));
+  const dbl = async pt => { await p.mouse.move(...pt); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(60); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(700); };
+  const f0 = await box1(); let hd = await steps();
+  await dbl(await at((f0[0][0] + f0[0][1]) / 2));
+  ok('double-clicking a Selection that is at its default does nothing', JSON.stringify(await box1()) === JSON.stringify(f0) && await steps() === hd, JSON.stringify([f0, await box1()]));
+  await drag(await at(f0[0][1]), await at(f0[0][1] + 0.05)); const r1 = await box1();         // the first system is made taller by hand, which pushes the second down
+  ok('a hand resize changes the box', r1[0][1] > f0[0][1] + 0.03, JSON.stringify([f0[0], r1[0]]));
+  hd = await steps(); await dbl(await at((r1[0][0] + r1[0][1]) / 2));
+  const r2 = await box1();
+  ok('double-click resets that one box to what was found, as one step', r2[0].every((v, j) => Math.abs(v - f0[0][j]) < 0.002) && await steps() === hd + 1, JSON.stringify([f0[0], r2[0]]));
+  ok('the other Selection on the page is left where it was', JSON.stringify(r2[1]) === JSON.stringify(r1[1]), JSON.stringify([r1[1], r2[1]]));
+  await p.click('#bUndo'); await p.waitForTimeout(500);
+  ok('undo puts the box back where the hand left it', JSON.stringify(await box1()) === JSON.stringify(r1), JSON.stringify(await box1()));
+  await p.click('#bRedo'); await p.waitForTimeout(500);
+  // a neighbor in the way: the second system is moved up over the first one's default, then the first is reset
+  const turnBefore = await p.evaluate(() => S.spreads.map(sp => sp.b ? 1 : 0).length);
+  await p.evaluate(async () => { const r = SYS.byPage.get(1), a = r.systems[0], c = r.systems[1], p = sysPush(r.systems.slice(), 'move', 1, -(c.top - (a.top + 0.05))); await sysPlace(1, p.boxes, p.out); });
+  const r3 = await box1(); hd = await steps();
+  await p.evaluate(async () => { const r = SYS.byPage.get(1); window.__ok = await sysResetOne(1, r.systems[0]); });
+  const r4 = await box1();
+  ok('a neighbor in the way gives way and nothing is removed', await p.evaluate(() => window.__ok === true) && r4.length === 2 && r4[1][0] >= r4[0][1] - 1e-6 && r4[0][0] === f0[0][0] && r4[0][1] === f0[0][1] && await steps() === hd + 1, JSON.stringify([r3, r4]));
+  // a hand-drawn box over nothing found does nothing
+  const none = await p.evaluate(async () => { const r = SYS.byPage.get(1); await sysMark(1, 0.01, 0.05); const q = r.systems.find(s => s.bottom <= 0.06); const h = S.history.length; const ok = q ? await sysResetOne(1, q) : 'no box'; return { ok, steps: S.history.length - h, has: !!q }; });
+  ok('a hand-drawn box with no found system under it does nothing', none.has && none.ok === false && none.steps === 0, JSON.stringify(none));
+  // saved work with no record of what was found: the page is measured again, and nothing else on it is replaced
+  const saved = await p.evaluate(async f0 => {
+    const r = SYS.byPage.get(1); delete r.auto; SYS.hand.add(1); r.systems = f0.map(b => ({ top: b[0], bottom: b[1], left: b[2], right: b[3] })); r.systems[r.systems.length - 1].bottom = Math.min(1, r.systems[r.systems.length - 1].bottom + 0.02);
+    const last = r.systems[r.systems.length - 1], n = r.systems.length, sc = window.peScan; let scans = 0; window.peScan = (...a) => { scans++; return sc(...a); };
+    const ok = await sysResetOne(1, last); window.peScan = sc; return { ok, scans, n: SYS.byPage.get(1).systems.length, same: SYS.byPage.get(1) === r, kept: !!r.auto };
+  }, f0);
+  ok('with no record of what was found, one page is measured once and kept', saved.ok === true && saved.scans === 1 && saved.same && saved.kept, JSON.stringify(saved));
   // a tilted page: a mark measures its ink the way the finder did, and the scan is kept between marks
   await p.evaluate(() => selJump(sysKey(2, 0))); await p.waitForTimeout(600);
   const tb = await p.evaluate(() => { const r = SYS.byPage.get(2); return { tilt: r.tilt, n: r.systems.length, s: r.systems[0] }; });
@@ -82,7 +115,10 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const m1 = await p.evaluate(async tb => { const b = await sysMark(2, tb.s.top, tb.s.bottom); return b; }, tb);
   ok('a mark on a tilted page lands on the same ink edges as the finder', m1 && Math.abs(m1.left - tb.s.left) < 0.012 && Math.abs(m1.right - tb.s.right) < 0.012, JSON.stringify([m1, tb.s]));
   await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom + 0.01); }, tb);
-  ok('the page is scanned once for several marks', await p.evaluate(() => window.__scans === 1), String(await p.evaluate(() => window.__scans)));
+  ok('marks on a page whose staves are kept scan nothing', await p.evaluate(() => window.__scans === 0), String(await p.evaluate(() => window.__scans)));
+  await p.evaluate(() => { delete SYS.byPage.get(2).stv; window.__scans = 0; });          // a page restored from saved work has no kept staves: it is measured once
+  await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom); await sysMark(2, tb.s.top, tb.s.bottom + 0.01); }, tb);
+  ok('a page with no kept staves is measured once for several marks', await p.evaluate(() => window.__scans === 1 && !!SYS.byPage.get(2).stv), String(await p.evaluate(() => window.__scans)));
   const sharp = await p.evaluate(async () => {          // the tallest row of ink: staff lines are sharpest when the page is level
     const peak = sc => { let m = 0; for (let y = 0; y < sc.h; y++) { let n = 0; for (let x = 0, i = y * sc.w; x < sc.w; x++, i++) n += sc.ink[i]; if (n > m) m = n; } return m; };
     const lv = await sysLevel(2), raw = await peScan(S.pdf.slots[2].src, SYS_W, null, 0.85, false); return [peak(lv), peak(raw)];

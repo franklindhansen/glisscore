@@ -12,6 +12,7 @@ function drawPage(doc, font, spec) {
   const T = (x, y) => { const X = x - PW / 2, Y = (PH - y) - PH / 2; return { x: PW / 2 + X * c - Y * s, y: PH / 2 + X * s + Y * c }; };
   const line = (x0, y0, x1, y1, t) => page.drawLine({ start: T(x0, y0), end: T(x1, y1), thickness: t, color: rgb(0, 0, 0) });
   (spec.texts || []).forEach(([txt, x, y, sz]) => { const p = T(x, y); page.drawText(txt, { x: p.x, y: p.y, size: sz, font }); });
+  (spec.lines || []).forEach(([x0, y0, x1, y1, t]) => line(x0, y0, x1, y1, t));
   (spec.systems || []).forEach(sy => {
     sy.staves.forEach((off, si) => {
       for (let k = 0; k < 5; k++) { if (sy.skip && sy.skip[0] === si && sy.skip[1] === k) continue; line(sy.x0, sy.y + off + k * sy.d, sy.x1, sy.y + off + k * sy.d, spec.lw || 0.7); }
@@ -131,6 +132,22 @@ const trio = (extra = {}) => ({ texts: [['Piano Trio', 220, 60, 28]], systems: [
     const res = await sysDetectAll({}); window.Worker = O; return { res, size: SYS.byPage.size };
   });
   ok('with no worker the page finds them itself', fb.res === true && fb.size === 9, JSON.stringify(fb));
+
+  // edges from the staves: a bracket is kept, and an instrument name, a page number, and a scan shadow never move an edge
+  const trio2 = (extra = {}) => ({ systems: [0, 1, 2].map(k => ({ y: 130 + k * 230, staves: [0, 62], d: 7, x0: 100, x1: 545 })), ...extra });
+  const bracket = k => [93, 130 + k * 230, 93, 130 + k * 230 + 62 + 28, 2.2];
+  const doc2 = await PDFDocument.create(), font2 = await doc2.embedFont(StandardFonts.Helvetica);
+  drawPage(doc2, font2, trio2({ lines: [0, 1, 2].map(bracket).concat([[6, 0, 6, 842, 2]]), texts: [['Violin', 45, 150, 9], ['Cello', 50, 380, 9], ['12', 30, 30, 9], ['a note in the margin', 30, 800, 8]] }));          // 0: a bracket, names, a page number, a margin note, a long shadow down the left
+  drawPage(doc2, font2, trio2({ lines: [bracket(0), bracket(2), [70, 360, 70, 400, 1.5]] }));                                            // 1: the middle system has no bracket but a stray tall stroke four staff spaces out
+  drawPage(doc2, font2, trio2({ lines: [0, 1, 2].map(bracket) }));                                                                      // 2: the same with nothing extra
+  await p.setInputFiles('#pdfIn', { name: 'edges.pdf', mimeType: 'application/pdf', buffer: Buffer.from(await doc2.save()) });
+  await p.waitForFunction(() => S.pdf && S.pdf.keep.length === 3, null, { timeout: 60000 }); await p.waitForTimeout(800);
+  const E0 = (await find(0)).r.systems, E1 = (await find(1)).r.systems, E2 = (await find(2)).r.systems;
+  ok('a bracket is kept inside the edges', E2.length === 3 && E2.every(s => near(s.left, 92 / PW, 0.006) && near(s.right, 545 / PW, 0.006)), JSON.stringify(E2.map(s => [s.left.toFixed(3), s.right.toFixed(3)])));
+  ok('a name, a page number, a margin note, and a scan shadow never move an edge', E0.length === 3 && E0.every((s, k) => near(s.left, E2[k].left, 0.002) && near(s.right, E2[k].right, 0.002)), JSON.stringify(E0.map(s => [s.left.toFixed(3), s.right.toFixed(3)])));
+  ok('an edge far from the page\'s others, pulled out by a stroke that is not the system\'s own, goes back to the staff ends', E1.length === 3 && near(E1[1].left, 100 / PW, 0.004) && near(E1[0].left, E2[0].left, 0.002), JSON.stringify(E1.map(s => [s.left.toFixed(3), s.right.toFixed(3)])));
+  const kept = await p.evaluate(() => { const r = SYS.byPage.get(0); return { n: r.stv.length, ok: r.stv.every(q => q.e0 <= q.x0 && q.e1 >= q.x1) }; });
+  ok('each page keeps its staves and how far each reaches', kept.n === 6 && kept.ok, JSON.stringify(kept));
   ok('no page errors', errs.length === 0, errs.join('; '));
   await b.close();
 })();

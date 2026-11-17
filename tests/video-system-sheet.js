@@ -78,6 +78,7 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   }
   // the exported video draws what the preview draws
   const same = await p.evaluate(async () => {
+    await new Promise(r => setTimeout(r, 700));          // the Letterbox's bars may still be sliding from the steps above: a frame at rest is the one that matches the export
     const W = previewR.W, H = previewR.H, cv = document.createElement('canvas'), rend = new Renderer(cv, PageSource, { cap: 6 }); rend.resize(W, H);
     S.time = showAt(1, 0); const st = frameState(S.time); st.fade = 1; previewR.clearTextures(); await rend.ensure(pagesFor(st)); await previewR.ensure(pagesFor(st)); previewR.fx.clear();
     const read = r => { r.render(st); const g = r.gl, px = new Uint8Array(W * H * 4); g.readPixels(0, 0, W, H, g.RGBA, g.UNSIGNED_BYTE, px); return px; };
@@ -102,6 +103,28 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
     return { step, paper: v(2), src: 0.88 * 255 };
   });
   ok('the page edge is feathered into the paper', Math.abs(u.paper - u.src) > 15 && u.step <= Math.abs(u.paper - u.src) * 0.6, JSON.stringify(u));
+  // Margin is the room around the music on every side: a Full page and a tall system answer it above and below too, and at the default 3% they are exactly as they were
+  const mg = await p.evaluate(() => {
+    const W = 1280, H = 720, o = S.set.margin, ol = S.set.letterbox, r = SYS.byPage.get(1), keep = r.systems, tall = sysKey(2, 0), out = {};
+    const old = (key, m, lb) => { const pa = S.pdf.aspect, mx = m / 100, band = lb ? Math.min(H, W / 2.39) : H, f = (() => { S.set.margin = m; S.set.letterbox = lb; return sysFit(key, W, H); })(), b = f.box;
+      let wide = 0; new Set(S.pdf.keep).forEach(i => { const q = SYS.byPage.get(i); if (q) q.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
+      const sc = wide ? W * (1 - 2 * mx) / wide : W * (1 - 2 * mx) / pa, s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (b.right - b.left) * pa), band * 0.88 / Math.max(1e-6, b.bottom - b.top)); return { f, s }; };
+    r.systems = []; const full = sysKey(1, 0), o1 = old(full, 3, false), o2 = old(full, 3, true), o3 = old(tall, 3, false), o4 = old(tall, 3, true);          // the 0.88 of before, worked out here
+    out.same = [o1, o2, o3, o4].map(q => Math.abs(q.f.s - q.s) < 1e-9);
+    const h = m => { S.set.margin = m; S.set.letterbox = false; const f = sysFit(full, W, H); return f.dh; };
+    out.full = [0, 3, 6, 10].map(h); r.systems = keep; S.set.margin = o; S.set.letterbox = ol; return out;
+  });
+  ok('at 3% a Full page and a tall system are fitted exactly as before, with and without Letterbox', mg.same.every(Boolean), JSON.stringify(mg));
+  ok('a Full page grows and shrinks with Margin', mg.full[0] > mg.full[1] && mg.full[1] > mg.full[2] && mg.full[2] > mg.full[3] && mg.full[0] >= 718, JSON.stringify(mg.full));
+  // a page is drawn from the PDF once per size, however many systems it has, and Margin or Letterbox never draw it again
+  const dr = await p.evaluate(async () => {
+    const pg = await S.pdf.doc.getPage(1), P = Object.getPrototypeOf(pg), o = P.render; let n = 0; P.render = function (...a) { n++; return o.apply(this, a); };
+    sysPagesClear(); const W = 1280, H = 720, om = S.set.margin, keys = [0, 1, 2].map(k => sysKey(0, k)), out = {};
+    for (const k of keys) await sysSheet(k, W, H); out.systems = n; n = 0;
+    S.set.margin = 4; for (const k of keys) await sysSheet(k, W, H); S.set.letterbox = true; for (const k of keys) await sysSheet(k, W, H); S.set.letterbox = false; out.steps = n; S.set.margin = om; P.render = o; return out;
+  });
+  ok('three systems on a page draw the page once', dr.systems === 1, JSON.stringify(dr));
+  ok('a Margin step and a Letterbox switch draw nothing from the PDF', dr.steps === 0, JSON.stringify(dr));
   ok('no page errors', errs.length === 0, errs.join('; '));
   await b.close();
 })();
