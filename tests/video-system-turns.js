@@ -46,6 +46,8 @@ function staffPage(doc, n) {
   // system turns: ticks when zoomed far out, handles when zoomed in; every turn works as before
   const info = await p.evaluate(() => { const inner = []; for (let i = 0; i < S.turns.length; i++) { const t = sysTurnInfo(i); if (t && t.inner) inner.push(i); } return { inner, n: S.turns.length }; });
   ok('the score has system turns inside its pages', info.inner.length >= 4, JSON.stringify(info));
+  const bands = await p.evaluate(() => { let n = 0; const ctx = new Proxy({}, { get: (t, k) => k === 'canvas' ? document.createElement('canvas') : k === 'measureText' ? () => ({ width: 10 }) : (...a) => { if (k === 'fillRect' && Math.abs(a[3] - TL.trackH) < 0.5) n++; }, set: () => true }); S.pxPerSec = Math.max(S.pxPerSec, 60); TL.staticDirty = true; drawHandles(ctx); let other = 0; for (let i = 0; i < S.turns.length; i++) { const t = sysTurnInfo(i); if (!(t && t.inner)) other++; } return { n, other, inner: S.turns.length - other }; });
+  ok('a system turn draws no transition band (a page turn keeps its own)', bands.inner >= 4 && bands.n <= bands.other, JSON.stringify(bands));
   const zoom = () => p.evaluate(() => { S.pxPerSec = Math.max(S.pxPerSec, 60); const t = S.turns[2]; TL.scroller.scrollLeft = Math.max(0, (t - tlLo()) * S.pxPerSec + TL_ROOM - 300); TL.staticDirty = TL.overlayDirty = true; });
   // zoomed far out, a spread narrower than a handle (24px) makes its system turn a tick: the playhead outranks one beside it, and a tick needs a few pixels of travel to move
   await p.evaluate(() => setZoom(2.5, 0, false)); await p.waitForTimeout(400);

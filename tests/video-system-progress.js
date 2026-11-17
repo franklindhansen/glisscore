@@ -35,6 +35,9 @@ function staffPage(doc, n, o = {}) {
   ok('Play, Add page turn, Space turns evenly, and Turns to end are greyed', s.grey);
   ok('the page under the playhead is found first', s.found.length > 0 && s.found[0] === 2, JSON.stringify(s.found));
   ok('no per-page labels while finding', await p.evaluate(() => !document.querySelector('#stageWaits .pg-wait, #selWaits .pg-wait')));
+  const wv = await p.evaluate(() => { let n = -1; const o = window.selMarkPaint; window.selMarkPaint = (g, list, ...r) => { n = list.length; return o(g, list, ...r); }; selPaint(); window.selMarkPaint = o; return { n, found: SYS.byPage.has(2), key: sysPage(SEL.key) }; });
+  ok('while finding, the selector waits with the preview: no Selections, though its own page was found', wv.found && wv.key === 2 && wv.n === 0, JSON.stringify(wv));
+  ok('the timeline\'s dim is the shared inactive level', await p.evaluate(() => INACTIVE === parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--inactive'))));
   const lane = await p.evaluate(() => ({ busy: sysBusy() }));
   ok('the timeline is held back while finding', lane.busy);
   await pick('spread'); await p.waitForTimeout(500);
@@ -58,6 +61,7 @@ function staffPage(doc, n, o = {}) {
   ok('Page layout has no scan notes and no Re-kilter or Split spreads buttons', !w.note, JSON.stringify(w));
   ok('one toast names the tilted page, then the two-page scan', w.toast === 'Page 3 is tilted, which can clip its systems. Page 4 is a two-page scan, which hides its systems.', w.toast);
   ok('Export video is available once done', !w.exp);
+  ok('when finding ends the selector comes up with its Selections', await p.evaluate(() => { let n = -1; const o = window.selMarkPaint; window.selMarkPaint = (g, list, ...r) => { n = list.length; return o(g, list, ...r); }; selPaint(); window.selMarkPaint = o; return n > 0; }));
   const nt = await p.evaluate(() => [sysNote('tilt', [3, 6, 11]), sysNote('wide', [1, 2]), sysNote('tilt', [0, 1, 2, 3, 4, 5, 6])]);
   ok('three pages are listed with the Oxford comma, two with and, more than five are counted', nt[0] === 'Pages 4, 7, and 12 are tilted, which can clip their systems.' && nt[1] === 'Pages 2 and 3 are two-page scans, which hides their systems.' && nt[2] === '7 pages are tilted, which can clip their systems.', JSON.stringify(nt));
   // a few pages found again after an edit: the toast speaks only for those pages

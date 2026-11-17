@@ -19,7 +19,8 @@ function splitSync() {
   const sel = show ? (free ? Math.max(1, Math.round(clamp(SPLIT.f, 0, 0.9) * (stack ? chh : cw) * Math.max(1, need / Math.max(1, clamp(SPLIT.ref, 0.1, 0.9) * cw)))) : Math.max(Math.round(clamp(SPLIT.f, 0.1, 0.9) * (stack ? chh : cw)), Math.round(need))) : 0;
   const was = SPLIT.shown; SPLIT.shown = show; SPLIT.stack = stack;
   const pane = $('#sysSel'), div = $('#sysDiv'), cv = $('#selCv');
-  pane.hidden = div.hidden = !show; $('#sysPresets').hidden = !on;
+  const keep = !!(SPLIT.view && SPLIT.view.ghost);          // a selector that is closing by a glide stays until it has closed
+  pane.hidden = div.hidden = !show && !keep; $('#sysPresets').hidden = !on;
   wrap.classList.toggle('sys-split', on); wrap.classList.toggle('sys-stack', on && stack);
   div.setAttribute('aria-orientation', stack ? 'horizontal' : 'vertical');
   const pl = show && !stack ? sel + DIV_W : 0, pt = show && stack ? sel + DIV_W : 0;
@@ -64,16 +65,68 @@ function presetBind() {
   Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).addEventListener('click', e => { if (mouse && e.detail) return; open(false); cur.focus(); }));          // under the mouse the choices stay, so another can be tried at once; they fold on moving away
 }
 function splitSet(f) { SPLIT.f = f; layoutStage(); }
-/* the divider glides to a share the way a slider glides to its default: the same ease, and a longer way takes longer */
+/* A View change is one motion. The new layout is made at once (and the picture drawn for it), then the preview and the selector travel from where they were to where they are by transform alone, on one ease and one time, the way full screen does: the preview and the selector's page scale and move, the strips and the divider move, and the selector's pane opens or closes by a clip. Nothing is laid out while it moves, so nothing can snap. A change made during one starts from where things are. */
+const VIEW_STEPS = 24;
+const viewBox = el => { const r = el.getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; };
+function viewStop() {
+  const g = SPLIT.view; if (!g) return; SPLIT.view = null;
+  g.anims.forEach(a => a.cancel());
+  if (g.ghost) { const keep = SPLIT.shown; $('#sysSel').hidden = $('#sysDiv').hidden = !keep; }          // a selector that was going away goes now
+}
+/* how far the glide has come, 0 to 1 */
+const viewAt = g => clamp((performance.now() - g.t0) / g.dur, 0, 1);
+function viewGlide(to) {
+  const from = SPLIT.f, pane = $('#sysSel'), div = $('#sysDiv'), nav = $('.sys-nav'), zoom = $('#selZoom'), scv = $('#selCv');
+  const measure = () => ({ cv: viewBox(stageCanvas), scv: viewBox(scv), nav: viewBox(nav), zoom: viewBox(zoom), div: viewBox(div), pane: viewBox(pane) });
+  const run = SPLIT.view, was = SPLIT.shown || !!(run && run.ghost);
+  const A = measure(), visA = run ? (() => { const k = AE_EASE(viewAt(run)); return { w: run.vf.w + (run.vt.w - run.vf.w) * k, h: run.vf.h + (run.vt.h - run.vf.h) * k }; })() : { w: A.pane.w, h: A.pane.h };
+  viewStop();
+  SPLIT.f = to; layoutStage(); try { drawStage(); stageDirty = false; } catch (e) {}          // the picture is made for the layout it is moving into
+  const now = SPLIT.shown, stack = SPLIT.stack, ghost = was && !now; if (ghost) pane.hidden = div.hidden = false;          // a selector that goes stays until it has closed
+  const B = measure(), lay = B;          // where everything lies now, free of any transform
+  const undo = () => { if (ghost) pane.hidden = div.hidden = true; };          // nothing to move: a selector that was to close closes at once
+  if (!was && !now) return;
+  if (B.cv.w < 2 || A.cv.w < 2) { undo(); return; }
+  const off = r => stack ? { l: r.l, t: r.t - lay.pane.h, w: r.w, h: r.h } : { l: r.l - lay.pane.w, t: r.t, w: r.w, h: r.h };
+  const F = was ? A : null, T = now ? B : null, mix = (a, b, p) => a + (b - a) * p, g = { anims: [], ghost, t0: performance.now(), dur: 240 + 260 * Math.min(1, Math.abs(to - from) / 0.7) };
+  const ease = []; for (let i = 0; i <= VIEW_STEPS; i++) ease.push(AE_EASE(i / VIEW_STEPS));
+  const frames = f => ease.map((p, i) => Object.assign({ offset: i / VIEW_STEPS }, f(p)));
+  const rect = name => name === 'cv' ? { a: A.cv, b: B.cv } : { a: F ? F[name] : off(T[name]), b: T ? T[name] : off(F[name]) };          // the preview is always there; the selector's parts come from, or go to, just outside the pane
+  const place = (name, how) => {          // how: 'box' scales and moves a picture, 'l' and 'r' only move a strip by its left or right edge
+    const base = lay[name], { a, b } = rect(name); if (base.w < 1 && how === 'box') return null;
+    return frames(p => {
+      const l = mix(a.l, b.l, p), t = mix(a.t, b.t, p), w = mix(a.w, b.w, p), h = mix(a.h, b.h, p);
+      if (how === 'box') return { transformOrigin: '0 0', transform: 'translate(' + (l - base.l) + 'px,' + (t - base.t) + 'px) scale(' + w / base.w + ',' + h / base.h + ')' };
+      const x = how === 'r' ? l + w - (base.l + base.w) : l - base.l; return { transform: 'translate(' + x + 'px,' + (t - base.t) + 'px)' };
+    });
+  };
+  const A0 = F ? { w: visA.w, h: visA.h } : stack ? { w: B.pane.w, h: 0 } : { w: 0, h: B.pane.h }, B0 = T ? { w: B.pane.w, h: B.pane.h } : stack ? { w: A.pane.w, h: 0 } : { w: 0, h: A.pane.h };
+  g.vf = A0; g.vt = B0;
+  const o = { duration: g.dur, easing: 'linear' }, add = (el, f, x) => { if (el && f) g.anims.push(el.animate(f, x || o)); };
+  const cvf = place('cv', 'box'); add(stageCanvas, cvf); add($('#stageWaits'), cvf);
+  if (was || now) {
+    const sc = place('scv', 'box'); add(scv, sc); add($('#selWaits'), sc);
+    add(nav, place('nav', 'l')); add(zoom, place('zoom', 'r')); add(div, place('div', 'l'));
+    add(pane, frames(p => ({ clipPath: 'inset(0px ' + (lay.pane.w - mix(A0.w, B0.w, p)) + 'px ' + (lay.pane.h - mix(A0.h, B0.h, p)) + 'px 0px)' })));
+  }
+  if (!g.anims.length) { undo(); return; }
+  SPLIT.view = g; g.anims[0].onfinish = () => { if (SPLIT.view === g) { viewStop(); stageDirty = true; } };
+}
 function splitGlide(to) {
   cancelAnimationFrame(SPLIT.raf); const from = SPLIT.f;
-  if (reducedMotion() || from === to) { splitSet(to); return; }
+  if (reducedMotion() || from === to) { viewStop(); splitSet(to); return; }
+  if (!stageCanvas.animate || SZ.z !== 1 || SZS.z !== 1) { viewStop(); splitGlideLive(to); return; }          // a zoomed picture has its own transform: it lays out as it moves
+  SPLIT.glide = 0; SPLIT.moving = false; viewGlide(to);
+}
+/* the same glide made by laying out every frame (a zoomed picture, where transforms are already in use) */
+function splitGlideLive(to) {
+  const from = SPLIT.f;
   SPLIT.ref = to > 0 ? to : from;          // the share whose width the glide starts or ends at, so the selector's size is continuous with the one that rests there
   const t0 = performance.now(), dur = 240 + 260 * Math.min(1, Math.abs(to - from) / 0.7), g = SPLIT.glide = {};
   const step = now => { if (SPLIT.glide !== g) return; const k = clamp((now - t0) / dur, 0, 1); SPLIT.moving = (from === 0 || to === 0) && k < 1; splitSet(k < 1 ? from + (to - from) * AE_EASE(k) : to); if (k < 1) SPLIT.raf = requestAnimationFrame(step); };
   SPLIT.raf = requestAnimationFrame(step);
 }
-function splitStop() { cancelAnimationFrame(SPLIT.raf); SPLIT.glide = 0; SPLIT.moving = false; }
+function splitStop() { cancelAnimationFrame(SPLIT.raf); SPLIT.glide = 0; SPLIT.moving = false; viewStop(); }
 /* the System group's status line: the run with its bar */
 function sysStatusUI() {
   const on = sysOn() && !!S.pdf, p = on ? SYS.prog : null;
@@ -165,10 +218,10 @@ function selPaint() {
   SEL.geo = { u, ox, oy, idx, pa, w, h, box, k };
   selNeed(idx, Math.ceil(u / 200) * 200);
   g.clearRect(0, 0, w, h);
-  const found = SYS.byPage.has(idx), ready = found && SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0);
+  const found = SYS.byPage.has(idx) && !sysBusy(), ready = found && SEL.bmp && SEL.bmpIdx === idx && SEL.bmpGen === (S.pdf.gen || 0);          // while systems are found the selector waits with the preview, and both come up together
   if (ready) { g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u); g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); }
   else g.drawImage(selSoft(idx), X(0), Y(0), pa * u, u);          // not made or not found yet: the page's softened thumbnail, never a white sheet
-  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r ? r.systems : [];
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r && found ? r.systems : [];
   selMarkPaint(g, list, box, X, Y, accent);
   selWaitSync(idx, found, ready, X(0) / k, Y(0) / k, pa * u / k, u / k);
 }
@@ -267,7 +320,7 @@ function selMarkBind() {
   document.addEventListener('keyup', e => { if (e.code === 'Space' && M.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
   pane.addEventListener('pointerdown', e => {
     if (M.space) return;
-    if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null) return;
+    if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null || sysBusy()) return;          // nothing is marked while systems are found
     e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
     const h = selHit(e), b = M.blank; M.blank = null;
     G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, base: selList().slice() });

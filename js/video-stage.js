@@ -715,7 +715,7 @@ function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy
 function szReset(smooth, st = SZ) { st.z = 1; st.x = st.y = 0; szApply(smooth, st); }
 function szBind() {
   const wrap = $('#stageWrap'), ptr = new Map(); let pan = null, pinch = null, gz = 1;
-  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty, #sysDiv, .sys-nav, .sys-zoom');
+  const live = e => S.pdf && !e.target.closest('#stageStrip, .empty, #sysDiv, .sys-nav, .sys-zoom, .sys-tools');
   const at = e => e.target.closest('#sysSel') ? SZS : SZ;          // the picture under the pointer
   [[SZ, 'sz'], [SZS, 'selZ']].forEach(([v, id]) => { $('#' + id + 'In').addEventListener('click', () => szAt(v.z * 1.6, null, null, true, v)); $('#' + id + 'Out').addEventListener('click', () => szAt(v.z / 1.6, null, null, true, v)); $('#' + id + 'Fit').addEventListener('click', () => szReset(true, v)); });          // the preview's strip moves the preview; the selector's own strip moves the selector
   wrap.addEventListener('pointermove', e => { szOverPrev = !e.target.closest('#sysSel'); });
@@ -921,7 +921,7 @@ function sysTurnInfo(i) {
   return { page: pa, k: pa == null ? 0 : sysNo(a[1]), inner: pa != null && pa === pb };
 }
 function drawSysBlocks(c) {
-  const busy = sysBusy(), dim = clamp(hsGet('sysdim', busy ? .45 : 1), .3, 1);          // while systems are found the page blocks stay, dimmed, with no cells; they rise to full strength once when it ends
+  const busy = sysBusy(), dim = clamp(hsGet('sysdim', busy ? INACTIVE : 1), .3, 1);          // while systems are found the page blocks stay, dimmed, with no cells; they rise to full strength once when it ends
   const { C, vw, trackY, trackH } = TL, pa = S.pdf ? S.pdf.aspect : .77, th = Math.max(18, trackH - 2 * TL_PAD - TL_TXT), tw = th * pa, bp = rvProgress('blocks'), last = S.spreads.length - 1;
   const at = (t, a, b, i) => t >= a && (t < b || (i === last && t <= b));
   sysBlocks().forEach(q => {

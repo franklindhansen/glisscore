@@ -46,8 +46,11 @@ function rebuildSpreads(forceSpace, noHistory) {
   S.spreads = buildSpreads();
   S.manualDur = Math.max(S.manualDur || 0, 20, S.spreads.length * 8);
   if (forceSpace || S.spreads.length !== before || S.turns.length !== Math.max(0, S.spreads.length - 1)) {
-    if (old.edited && S.history && !noHistory) { S.history.push(old); S.redo = []; updateHistoryButtons(); }
-    autoSpace(false);
+    if (!forceSpace && sysOn() && SYS.hold) sysHoldApply();          // pages found again after an edit: the placed turns stay with their stops
+    else {
+      if (old.edited && S.history && !noHistory) { S.history.push(old); S.redo = []; updateHistoryButtons(); }
+      SYS.hold = null; autoSpace(false);
+    }
   }
   afterStructureChange();
 }
@@ -233,16 +236,18 @@ document.addEventListener('keydown', e => { if (e.repeat) return; if (e.target.m
 document.addEventListener('pointerup', () => { if (HB.open) setTimeout(hsClose, 0); });
 document.addEventListener('change', () => { if (HB.open) setTimeout(hsClose, 0); });
 const audSnap = () => { const o = { fx: fxClone(S.set.fx), bp: Object.assign({}, S.set.bp) }; AE_SET.forEach(k => { o[k] = S.set[k]; }); return o; };
-const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap(), sys: S.pdf ? sysSnap() : null });
+const snap = () => ({ lay: S.set.pageLayout, set: outSet(), turns: S.turns.slice(), edited: S.turnsEdited, ph: S.ph.slice(), vStart: S.vStart, vEndSet: S.vEndSet, creditsEnd: S.creditsEnd, pdf: S.pdf ? recipeOf() : null, aud: audSnap(), sys: S.pdf ? sysSnap() : null, sp: S.pdf && sysOn() ? sysStops(S.spreads) : null });
 function applySnap(h) { HB.quiet = true; try { applySnapIn(h); } finally { HB.quiet = false; hsClose(); } }
 function applySnapIn(h) {
   let struct = false;
   if (h.set) { const set = Object.assign({}, h.set, { fadeShape: aeShape(h.set.fadeShape) }), ch = Object.keys(set).filter(k => set[k] !== S.set[k]); if (ch.length) { ch.forEach(k => { S.set[k] = set[k]; }); struct = ch.some(k => HS_STRUCT.includes(k)); saveSettings(); stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true; syncControls(); layoutStage(); } }
   const layChanged = !!h.lay && h.lay !== S.set.pageLayout; if (layChanged) { S.set.pageLayout = h.lay; saveSettings(); syncPageLayout(true); syncFirstAlone(); if (S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; } }
   if (h.aud) { AE_SET.forEach(k => { S.set[k] = h.aud[k]; }); S.set.audioFadeShape = aeShape(S.set.audioFadeShape); S.set.fx = fxClone(h.aud.fx); S.set.bp = Object.assign({}, h.aud.bp); saveSettings(); stageDirty = true; fxGet(soundSet().fx).then(() => { stageDirty = true; }, () => {}); } S.turns = h.turns.slice(); S.turnsEdited = h.edited; S.ph = h.ph ? h.ph.slice() : new Array(h.turns.length).fill(false); if (h.vStart !== undefined) { S.vStart = h.vStart; S.vEndSet = h.vEndSet; } if (h.creditsEnd !== undefined) S.creditsEnd = h.creditsEnd;
-  if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
+  SYS.hold = null;          // the turns come from this step; a page that is found again because of it holds them afresh
+  if (h.pdf && S.pdf && recipeSig(h.pdf) !== recipeSig(recipeOf())) { if (h.sp && sysOn()) S.spreads = h.sp; setRecipe(h.pdf); S.spreads = buildSpreads(); setChips(); }       // the pages come back too
   if (struct && !layChanged && S.pdf) { S.spreads = buildSpreads(); S.time = S.vStart; }
   const sysCh = !!h.sys && !!S.pdf && sysRestore(h.sys); if (sysCh && !layChanged && !struct && sysOn()) S.spreads = buildSpreads();          // the hand marks come back too
+  if (sysOn() && SYS.hold) sysHoldApply();          // pages found again after an undo: their turns come back with them
   reconcileTurns(); if ((layChanged || struct || sysCh) && S.pdf) afterStructureChange(); }
 function updateHistoryButtons() { if (!HB.open && !HB.quiet) HB.base = lightSnap(); const u = $('#bUndo'), r = $('#bRedo'); if (u) u.disabled = S.history.length === 0; if (r) r.disabled = S.redo.length === 0; try { MAIN_HIST.refresh(); } catch (e) {} }
 /* History: a list of the steps taken, newest on top; pick one to go back (or forward) to it. The PDF Editor and the main view use this, the way the Audio Editor does.

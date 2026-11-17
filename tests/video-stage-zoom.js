@@ -72,6 +72,18 @@ const FX = process.env.S || 'tests/fixtures', K = '__keyframes';
       return { hit: s.left < c.right && s.right > c.left && s.top < c.bottom && s.bottom > c.top, inside: s.left >= w.left - 0.5 && s.right <= w.right + 0.5 && s.top >= w.top - 0.5 && s.bottom <= w.bottom + 0.5, over: document.documentElement.scrollWidth > innerWidth }; });
     ok(VW + 'x' + VH + ' ' + scheme + ': the strip sits inside the stage and never covers the picture at 1x', !r.hit && r.inside && !r.over, JSON.stringify(r)); await p.close();
   }
+  // System: with the preview zoomed, a press on the View strip is a click on its button, never a pan, and each of the four presets works (the preview keeps its zoom, clamped)
+  { const p = await open(1300, 900);
+    await p.evaluate(() => { const r = document.querySelector('input[name=pageLayout][value=system]'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); });
+    await p.waitForFunction(K => { return !document.querySelector('#sysFind').classList.contains('on') && !document.querySelector('#sysSel').hidden; }, K); await p.waitForTimeout(900);
+    await p.click('#szIn'); await p.waitForTimeout(500); await p.click('#szIn'); await p.waitForTimeout(500);
+    const z0 = await Z(p), split = () => p.evaluate(K => window[K].S.set.sysSplit, K);
+    for (const [id, want] of [['spOnly', 0], ['spPrev', 0.3], ['spSel', 0.7], ['spEq', 0.5]]) {
+      await p.hover('#spCur'); await p.waitForTimeout(250); await p.click('#' + id); await p.waitForTimeout(900);
+      const z = await Z(p), f = await split();
+      ok('zoomed, the ' + id + ' preset works and the preview keeps its zoom', Math.abs(f - want) < 0.01 && z.z > 1.5 && z.z <= z0.z + 0.001, JSON.stringify([id, f, z0.z, z.z]));
+    }
+    await p.close(); }
   ok('No script errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

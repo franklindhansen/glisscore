@@ -231,6 +231,7 @@ function sysUI() {
   if (typeof syncExport === 'function') syncExport();
   if (typeof syncSysBusy === 'function') syncSysBusy();
   if (typeof sysStatusUI === 'function') sysStatusUI();
+  if (typeof selPaintSoon === 'function' && SPLIT.shown) selPaintSoon();          // the selector waits and releases with the preview
   stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true;
 }
 const SYS_TILT = 0.3;          // degrees of tilt that earn a note
@@ -250,10 +251,12 @@ function sysNote(kind, ids) {
    With no turn placed by hand the video is spaced evenly again. Otherwise only the changed pages' own turns change (sysRetime). The playhead stays on its system. */
 function sysSettle() {
   if (!sysOn() || !S.pdf) return;
+  const hold = SYS.hold; if (!SYS.prog) SYS.hold = null;          // pages were found again after an edit: their turns come from the stops as they were before, until finding ends
   const old = S.spreads, before = spreadSig(), turns = S.turns.slice(), ph = S.ph.slice(), at = old.length ? clamp(frameState(S.time).spread, 0, old.length - 1) : -1;
   S.spreads = buildSpreads();
-  if (spreadSig() === before) return;
-  if (!S.turnsEdited || turns.length !== Math.max(0, old.length - 1)) autoSpace(false); else sysRetime(old, turns, ph);
+  if (spreadSig() === before && !hold) return;
+  if (hold) sysRetime(hold.sp, hold.turns, hold.ph);
+  else if (!S.turnsEdited || turns.length !== Math.max(0, old.length - 1)) autoSpace(false); else sysRetime(old, turns, ph);
   if (at >= 0 && S.spreads.length && !Transport.playing) {
     const A = sysRuns(old), B = sysRuns(S.spreads), ra = A.find(q => at >= q.i0 && at <= q.i1), rb = ra && B.find(q => q.id === ra.id);
     if (rb) {
@@ -264,6 +267,15 @@ function sysSettle() {
   }
   afterStructureChange(); onTurnsChanged();
 }
+/* The stops as they were, with their Selections copied by value, kept while pages are found again after an edit (and in a History step, so undo and redo can match too). */
+const sysStops = sp => sp.map(e => Object.assign(e.slice(), { b: e.b ? { top: e.b.top, bottom: e.b.bottom } : e.b, credits: e.credits, inlineCredits: e.inlineCredits, startCredits: e.startCredits }));
+/* Turns placed by hand are about to lose their stops (a page is found again): keep the stops and the turns as they are, once, until finding ends. */
+function sysHoldTurns() {
+  if (SYS.hold || !sysOn() || !S.turnsEdited || !S.spreads.length || S.turns.length !== S.spreads.length - 1) return;
+  SYS.hold = { sp: sysStops(S.spreads), turns: S.turns.slice(), ph: S.ph.slice() };
+}
+/* the turns follow the stops that were held: the pages not edited keep every turn, an edited page keeps its block's start */
+function sysHoldApply() { const h = SYS.hold; if (h) sysRetime(h.sp, h.turns, h.ph); }
 /* the stops grouped by page, in order: { id, i0, i1 }. A page used twice gets two ids; a credits card is its own group. */
 function sysRuns(sp) {
   const out = [], seen = {};
@@ -280,11 +292,12 @@ function sysRetime(old, turns, ph) {
   const start = i => i === 0 ? -Infinity : turns[i - 1], A = new Map(sysRuns(old).map(q => [q.id, q])), n = S.spreads.length, ns = new Array(n).fill(null), np = new Array(n).fill(false);
   sysRuns(S.spreads).forEach(r => {
     const o = A.get(r.id); if (!o) return; let last = -Infinity;
+    const from = sysMatch(old, o, r);
     for (let j = r.i0; j <= r.i1; j++) {
-      let from = -1; const bx = S.spreads[j].b; if (bx) for (let k = o.i0; k <= o.i1; k++) if (old[k].b === bx) from = k;
-      if (j === r.i0) from = o.i0;          // the block starts where it did
-      else if (from >= 0 && !(start(from) > last)) from = -1;
-      if (from >= 0) { ns[j] = start(from); np[j] = from > 0 && !!ph[from - 1]; last = ns[j]; }
+      let f = from[j - r.i0];
+      if (j === r.i0) f = o.i0;          // the block starts where it did
+      else if (f >= 0 && !(start(f) > last)) f = -1;
+      if (f >= 0) { ns[j] = start(f); np[j] = f > 0 && !!ph[f - 1]; last = ns[j]; }
     }
   });
   if (n) ns[0] = -Infinity;
@@ -298,10 +311,27 @@ function sysRetime(old, turns, ph) {
   }
   S.turns = ns.slice(1); S.ph = np.slice(1); normalizeTurns(); S.turnsEdited = true;
 }
+/* which old stop each new stop of a page's block follows (-1 for none). A Selection that is the same object follows its own stop. A page found again has new Selections: the same number of systems follow in order; a different number, by overlap (at least half of the smaller, each old one used once, in order). */
+function sysMatch(old, o, r) {
+  const out = []; let hit = 0;
+  for (let j = r.i0; j <= r.i1; j++) { let f = -1; const bx = S.spreads[j].b; if (bx) for (let k = o.i0; k <= o.i1; k++) if (old[k].b === bx) f = k; out.push(f); if (f >= 0) hit++; }
+  if (hit || r.i1 === r.i0) return out;
+  if (r.i1 - r.i0 === o.i1 - o.i0) return out.map((_, q) => o.i0 + q);
+  let k0 = o.i0;
+  for (let j = r.i0; j <= r.i1; j++) {
+    const bx = S.spreads[j].b; if (!bx) continue;
+    for (let k = k0; k <= o.i1; k++) {
+      const ob = old[k].b; if (!ob) continue;
+      const ov = Math.min(ob.bottom, bx.bottom) - Math.max(ob.top, bx.top);
+      if (ov >= 0.5 * Math.min(ob.bottom - ob.top, bx.bottom - bx.top)) { out[j - r.i0] = k; k0 = k + 1; break; }
+    }
+  }
+  return out;
+}
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), scan: new Map(), prog: null, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
+  byPage: new Map(), scan: new Map(), prog: null, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(), hold: null,
   /* one to three workers, by what the browser reports about the computer; the page's own thread when none can start */
   lanes() { return clamp(Math.round((navigator.hardwareConcurrency || 2) / 3), 1, 3); },
   worker(k) {
@@ -322,7 +352,7 @@ const SYS = {
     return new Promise(res => { const id = ++this.n; this.pend.set(id, { res, k, m }); w.postMessage({ id, rgba: m.rgba, w: m.w, h: m.h, k: m.k }, [m.rgba]); });          // the pixels are handed over, not copied
   },
   stop() {                                              // leaving the layout: the workers end at once, and the pages already found stay
-    this.token++; sysPagesClear(); this.ws.forEach(w => w && w.terminate()); this.ws = []; this.bad = [];
+    this.token++; this.hold = null; sysPagesClear(); this.ws.forEach(w => w && w.terminate()); this.ws = []; this.bad = [];
     this.pend.forEach(f => f.res(null)); this.pend.clear(); this.job = null; this.loadedMsg = null; if (this.prog) sysProg(null);
   }
 };
@@ -334,6 +364,7 @@ function sysSync() {
   [...SYS.byPage.keys()].forEach(i => {
     const r = SYS.byPage.get(i), sl = S.pdf.slots[i]; if (r.geo === undefined) r.geo = sl ? sysGeo(sl) : '';
     if (sl && r.geo === sysGeo(sl)) return;
+    sysHoldTurns();          // the page's stops are about to collapse: its placed turns are kept until it is found again
     if (SYS.hand.has(i) && S.pdf.keep.includes(i)) named.push(pageNo(i));
     SYS.byPage.delete(i); SYS.scan.delete(i); SYS.hand.delete(i); gone = true;
   });
@@ -344,7 +375,7 @@ function sysSync() {
 /* Every found page for the project and the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]], f: 1 on Full page, h: systems held aside on Full page, a: 1 when found automatically, g: the picture it was found on}] */
 const sysToList = () => [...SYS.byPage.keys()].filter(i => S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
   const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => [q(b.top), q(b.bottom), q(b.left), q(b.right)], e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
-  if (r.full) e.f = 1; if (r.held && r.held.length) e.h = r.held.map(box); if (!SYS.hand.has(i)) e.a = 1; e.g = r.geo || sysGeo(S.pdf.slots[i]);
+  if (r.full) e.f = 1; if (r.held && r.held.length) e.h = r.held.map(box); if (r.heldTurns && r.heldTurns.length) e.ht = r.heldTurns.map(q => [Math.round(q.t * 10000) / 10000, q.ph ? 1 : 0]); if (!SYS.hand.has(i)) e.a = 1; e.g = r.geo || sysGeo(S.pdf.slots[i]);
   return e;
 });
 /* only values this site understands; null when nothing usable */
@@ -354,7 +385,7 @@ function sysListClean(list, n) {
   for (const e of list) {
     if (!e || !Number.isInteger(e.p) || e.p < 1 || e.p > n || !Array.isArray(e.s) || e.s.length > 100) continue;
     const t = Number.isFinite(e.t) ? clamp(e.t, -15, 15) : 0, s = boxes(e.s), o = { p: e.p, t, s };
-    if (e.f === 1 || e.f === true) o.f = true; if (e.a === 1 || e.a === true) o.a = true; const h = boxes(e.h); if (h.length) o.h = h; if (typeof e.g === 'string' && e.g.length < 300) o.g = e.g;
+    if (e.f === 1 || e.f === true) o.f = true; if (e.a === 1 || e.a === true) o.a = true; const h = boxes(e.h); if (h.length) o.h = h; if (Array.isArray(e.ht) && h.length) { const ht = e.ht.slice(0, 100).filter(q => Array.isArray(q) && Number.isFinite(q[0]) && q[0] >= 0 && q[0] < 1e5).map(q => [q[0], q[1] ? 1 : 0]); if (ht.length) o.ht = ht; } if (typeof e.g === 'string' && e.g.length < 300) o.g = e.g;
     out.push(o);
   }
   return out.length ? out : null;
@@ -364,7 +395,7 @@ function sysFromList(list) {
   sysFresh(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear();
   (list || []).forEach(e => {
     const i = e.p - 1, sl = S.pdf.slots[i]; if (!sl || (e.g && e.g !== sysGeo(sl))) return;
-    SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [], full: !!e.f || !e.s.length, held: (e.h || []).slice().sort((a, b) => a.top - b.top) });
+    SYS.byPage.set(i, { systems: e.s.slice().sort((a, b) => a.top - b.top), tilt: e.t, staves: 0, geo: sysGeo(sl), auto: [], full: !!e.f || !e.s.length, held: (e.h || []).slice().sort((a, b) => a.top - b.top), heldTurns: (e.ht || []).map(q => ({ t: q[0], ph: !!q[1] })) });
     if (e.a) delete SYS.byPage.get(i).auto; else SYS.hand.add(i);
   });
   SYS.rev++; stageDirty = true; if (sysOn()) sysKick();
@@ -408,17 +439,17 @@ function sysDetectAll(opt = {}) {
 
 /* ---------- marking by hand: the page's systems as the person set them, kept with the page like a Dim region ---------- */
 /* the hand-marked pages (page -> systems), as one part of a History step */
-const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPage.get(i); if (r) o[i] = { systems: r.systems.map(q => Object.assign({}, q)), tilt: r.tilt || 0, geo: r.geo, full: !!r.full, held: (r.held || []).map(q => Object.assign({}, q)) }; }); return o; };
+const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPage.get(i); if (r) o[i] = { systems: r.systems.map(q => Object.assign({}, q)), tilt: r.tilt || 0, geo: r.geo, full: !!r.full, held: (r.held || []).map(q => Object.assign({}, q)), ht: (r.heldTurns || []).map(q => Object.assign({}, q)) }; }); return o; };
 /* Goes back to a snapshot's marks; true when anything changed. A page that is not marked there returns to what was found (or is found again). */
 function sysRestore(m) {
   sysFresh(); if (JSON.stringify(m) === JSON.stringify(sysSnap())) return false;
   [...SYS.hand].forEach(i => {
     if (m[i]) return; SYS.hand.delete(i); const r = SYS.byPage.get(i);
-    if (r && r.auto) { r.systems = r.auto; delete r.auto; r.full = !r.systems.length; r.held = []; } else SYS.byPage.delete(i);
+    if (r && r.auto) { r.systems = r.auto; delete r.auto; r.full = !r.systems.length; r.held = []; r.heldTurns = []; } else SYS.byPage.delete(i);
   });
   Object.keys(m).forEach(k => {
     const fresh = !SYS.byPage.has(+k), r = sysHandRec(+k); if (fresh) delete r.auto;          // a page that was cleared has no found result to go back to; it is found again
-    r.systems = m[k].systems.map(q => Object.assign({}, q)); r.tilt = m[k].tilt; r.geo = m[k].geo; r.full = !!m[k].full; r.held = (m[k].held || []).map(q => Object.assign({}, q));
+    r.systems = m[k].systems.map(q => Object.assign({}, q)); r.tilt = m[k].tilt; r.geo = m[k].geo; r.full = !!m[k].full; r.held = (m[k].held || []).map(q => Object.assign({}, q)); r.heldTurns = (m[k].ht || []).map(q => Object.assign({}, q));
   });
   SYS.rev++; stageDirty = true; return true;
 }
@@ -473,14 +504,31 @@ function sysHandRec(idx) {
 function sysCommit(idx, list) {
   pushHistory();
   const r = sysHandRec(idx);
-  r.systems = list.slice().sort((a, b) => a.top - b.top); r.full = !r.systems.length; r.held = []; SYS.rev++; stageDirty = true; sysSettle();          // a page left with none is a full page
+  r.systems = list.slice().sort((a, b) => a.top - b.top); r.full = !r.systems.length; r.held = []; r.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle();          // a page left with none is a full page
 }
 /* Systems | Full page: a full page is shown whole, as one stop; the systems found (or marked) wait aside and come back with Systems. One History step. */
 function sysSetFull(idx, full) {
   const r = SYS.byPage.get(idx); if (!r || !!r.full === full) return;
   pushHistory(); sysHandRec(idx);
-  if (full) { r.held = r.systems; r.systems = []; r.full = true; } else { r.systems = r.held || []; r.held = []; r.full = false; }
+  if (full) { r.heldTurns = sysTurnsOf(idx); r.held = r.systems; r.systems = []; r.full = true; } else { r.systems = r.held || []; r.held = []; r.full = false; }
   SYS.rev++; stageDirty = true; sysSettle();
+  if (!full) sysTurnsBack(idx);
+}
+/* a page's inner turns as times from its block's start, with their placeholder flags: [] unless turns were placed by hand */
+function sysTurnsOf(idx) {
+  const run = S.turnsEdited ? sysRuns(S.spreads).find(q => q.pg === idx) : null; if (!run || run.i1 === run.i0 || S.turns.length !== S.spreads.length - 1) return [];
+  const bs = run.i0 === 0 ? S.vStart + refOffset() : S.turns[run.i0 - 1], out = [];
+  for (let k = run.i0; k < run.i1; k++) out.push({ t: S.turns[k] - bs, ph: !!S.ph[k] });
+  return out;
+}
+/* Systems again: the page's inner turns come back at its block's start plus the times they were held at; when they no longer fit before the next block's start they are scaled to fit, in order */
+function sysTurnsBack(idx) {
+  const r = SYS.byPage.get(idx), ht = r && r.heldTurns || []; if (r) r.heldTurns = [];
+  const run = sysRuns(S.spreads).find(q => q.pg === idx), m = run ? run.i1 - run.i0 : 0;
+  if (!S.turnsEdited || !ht.length || !run || ht.length !== m || S.turns.length !== S.spreads.length - 1) return;
+  const lo = S.vStart + refOffset(), bs = run.i0 === 0 ? lo : S.turns[run.i0 - 1], D = turnGap(), end = run.i1 + 1 < S.spreads.length ? S.turns[run.i1] : vEnd() + refOffset(), limit = end - D, tl = ht[m - 1].t, f = tl > 0 && bs + tl > limit ? Math.max(0, limit - bs) / tl : 1;
+  ht.forEach((q, q0) => { S.turns[run.i0 + q0] = bs + q.t * f; S.ph[run.i0 + q0] = q.ph; });
+  normalizeTurns(); onTurnsChanged();
 }
 /* Moving a Selection never removes another: its neighbors give way by the rule the timeline's handles follow. From where they stood when the drag began (base),
    a neighbor's facing edge is pushed along; at the least height the whole neighbor slides and pushes the next; the page's top and bottom stop everything.
@@ -510,7 +558,7 @@ async function sysPlace(idx, boxes, out) {
   const r0 = SYS.byPage.get(idx); if (boxes.some(s => s && !(r0 && r0.systems.includes(s)))) return false;          // the page changed under the drag
   pushHistory(); const r = sysHandRec(idx);
   r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }; return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
-  r.full = !r.systems.length; r.held = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+  r.full = !r.systems.length; r.held = []; r.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
 /* Double-click a Selection: that one box returns to what the finder found for it, as one History step. The default is the found system that overlaps the box most (at least half of the smaller of the two); a box with no
    found system under it (one drawn by hand where nothing was found) does nothing. A neighbor in the way gives way as in a drag (sysPush). Resolves with whether anything changed. */
@@ -528,7 +576,7 @@ async function sysResetOne(idx, box) {
   if (!r.auto) r.auto = auto.map(q => Object.assign({}, q));          // kept, so Detect again and an undo can return to it
   pushHistory(); const rr = sysHandRec(idx);
   base.forEach((s2, k) => { if (k === i) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: best.left, right: best.right }); else if (edges[k]) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }); });          // the same boxes, so a turn stays with its Selection
-  rr.systems = base.sort((x, y) => x.top - y.top); rr.full = false; rr.held = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+  rr.systems = base.sort((x, y) => x.top - y.top); rr.full = false; rr.held = []; rr.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
 /* a mark from top to bottom (page fractions), among the others */
 async function sysMark(idx, a, b) {
