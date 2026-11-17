@@ -19,17 +19,19 @@ const ok = (n, c, x) => console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? ' — ' +
     // the drop veil: hidden at rest, visible while a file is dragged over the window
     const veil = () => p.evaluate(() => { const v = getComputedStyle(document.querySelector('.dropveil')); return { op: +v.opacity, vis: v.visibility }; });
     ok(tag + 'drop veil hidden at rest', (await veil()).vis === 'hidden');
-    await p.evaluate(() => document.body.classList.add('dragging'));
-    await p.waitForTimeout(50);
-    const mid = await veil();
+    // the veil's opacity is read halfway through its fade, held there in the same task as the class change, so a busy machine cannot skip past it
+    const halfway = on => p.evaluate(on => {
+      const v = document.querySelector('.dropveil'); document.body.classList.toggle('dragging', on); getComputedStyle(v).opacity;
+      const a = v.getAnimations().find(x => x.transitionProperty === 'opacity'); if (!a) { const c = getComputedStyle(v); return { op: +c.opacity, vis: c.visibility, ms: 0 }; }
+      const ms = a.effect.getTiming().duration; a.pause(); a.currentTime = ms / 2; const c = getComputedStyle(v), r = { op: +c.opacity, vis: c.visibility, ms }; a.play(); return r;
+    }, on);
+    const mid = await halfway(true);
     await p.waitForTimeout(400);
     const end = await veil();
     ok(tag + 'drop veil shows while dragging', end.op === 1 && end.vis === 'visible', JSON.stringify(end));
-    if (!calm) ok('drop veil fades in, not in one frame', mid.op > 0 && mid.op < 1, JSON.stringify(mid));
-    await p.evaluate(() => document.body.classList.remove('dragging'));
-    await p.waitForTimeout(50);
-    const out = await veil();
-    if (!calm) ok('drop veil fades out (still visible for a moment)', out.op > 0 && out.vis === 'visible', JSON.stringify(out));
+    if (!calm) ok('drop veil fades in, not in one frame', mid.ms > 0 && mid.op > 0 && mid.op < 1, JSON.stringify(mid));
+    const out = await halfway(false);
+    if (!calm) ok('drop veil fades out (still visible for a moment)', out.ms > 0 && out.op > 0 && out.vis === 'visible', JSON.stringify(out));
     await p.waitForTimeout(400);
     ok(tag + 'drop veil hidden again after the drag', (await veil()).vis === 'hidden');
 

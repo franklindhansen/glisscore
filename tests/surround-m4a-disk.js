@@ -19,6 +19,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kfsur-')), sh = c => cp.execS
     ok((disk ? 'disk store' : 'memory') + ': no errors', errs.length === 0, errs.join(' | ')); await p.close();
   }
   const d = res[1], m = res[0]; ok('the surround file is on the store', !!(d && d.disk) && !!(m && !m.disk));
-  if (d && m) { let big = 0; const n = Math.min(d.n, m.n); for (let i = 0; i < n; i++) big = Math.max(big, Math.abs(d.L[i] - m.L[i]), Math.abs(d.R[i] - m.R[i])); ok('stereo fold is the same sound as in memory', big < 1e-6 && Math.abs(d.n - m.n) <= 1 && d.pk > 0.05, 'max difference ' + big + ', frames ' + d.n + ' / ' + m.n + ', peak ' + d.pk); }
+  const want = 0.125 * 0.3 * 1.9516 / 1.7;          // ffmpeg's sine is 1/8 high, the mix is at 0.3, the left sum (300Hz + 0.707 of 600Hz and 900Hz) peaks at 1.95 of one tone, and the fold scales by 1/1.7
+  if (d && m) { let big = 0; const n = Math.min(d.n, m.n); for (let i = 0; i < n; i++) big = Math.max(big, Math.abs(d.L[i] - m.L[i]), Math.abs(d.R[i] - m.R[i])); ok('stereo fold is the same sound as in memory', big < 1e-6 && Math.abs(d.n - m.n) <= 1 && Math.abs(d.pk / want - 1) < 0.2, 'max difference ' + big + ', frames ' + d.n + ' / ' + m.n + ', peak ' + d.pk + ' (folded level ' + want.toFixed(4) + ')'); }
   await br.close();
 })();

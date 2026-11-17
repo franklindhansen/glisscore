@@ -66,7 +66,9 @@ const look = fs => {
   ok(mode + ': nothing in the timeline bar or the transport passes its box, covers another, or wraps, at any width from ' + FROM + 'px to ' + TO + 'px', !bad.length, bad.slice(0, 6).map(o => o.w + 'px: ' + o.r.bad.join(', ')).join(' || '));
   };
   await sweep('page');
-  await p.setViewportSize({ width: TO, height: 900 }); await p.evaluate(() => document.querySelector('#btnFull').click()); await p.waitForTimeout(1200);
+  // full screen in its full-window form (the same layout): a window in the browser's own full screen cannot be resized, so the sweep could not run
+  await p.setViewportSize({ width: TO, height: 900 }); await p.evaluate(() => { Element.prototype.requestFullscreen = () => Promise.reject(new Error('the check sizes the window itself')); document.querySelector('#btnFull').click(); }); await p.waitForTimeout(1200);
+  ok('full screen is on, in its full-window form', await p.evaluate(() => FS.on && !FS.native && document.querySelector('.app').classList.contains('fs')));
   await sweep('fs');
   ok('no page errors', errs.length === 0, errs.slice(0, 2).join(' | '));
   await b.close();

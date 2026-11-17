@@ -9,7 +9,16 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   for (const video of [0, 1]) for (const disk of [0, 1]) {
     const tag = (video ? 'video timeline, ' : 'Audio Editor, ') + (disk ? 'disk store: ' : 'memory: ');
     const p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(15000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.addInitScript(() => { const c = AudioNode.prototype.connect; window.REC = []; AudioNode.prototype.connect = function (t, ...r) { if (t instanceof AudioDestinationNode && !this._rec) { const self = this, sp = this.context.createScriptProcessor(1024, 1, 1); sp.onaudioprocess = e => { window.REC.push({ id: self._rec, d: new Float32Array(e.inputBuffer.getChannelData(0)) }); }; c.call(this, sp); c.call(sp, t); this._rec = (window.NID = (window.NID || 0) + 1); } return c.call(this, t, ...r); }; });
+    // the recorder: an audio worklet on each player's way out, sample for sample in the audio thread (a ScriptProcessor runs on the page's thread and drops blocks while the page is busy, which reads as a click that is not there)
+    await p.addInitScript(() => {
+      const src = 'class R extends AudioWorkletProcessor { constructor(o) { super(); this.id = o.processorOptions.id; } process(i) { const x = i[0] && i[0][0]; if (x) this.port.postMessage({ id: this.id, d: x.slice() }); return true; } } registerProcessor("rec", R);';
+      const url = URL.createObjectURL(new Blob([src], { type: 'text/javascript' })); window.REC = [];
+      const C = window.AudioContext; window.AudioContext = class extends C { constructor(...a) { super(...a); this.__rec = this.audioWorklet.addModule(url); } };
+      const c = AudioNode.prototype.connect; AudioNode.prototype.connect = function (t, ...r) {
+        if (t instanceof AudioDestinationNode && !this._rec) { const self = this, id = this._rec = (window.NID = (window.NID || 0) + 1), ctx = this.context;
+          (ctx.__rec || Promise.resolve()).then(() => { const w = new AudioWorkletNode(ctx, 'rec', { processorOptions: { id } }), z = ctx.createGain(); w.port.onmessage = e => window.REC.push(e.data); z.gain.value = 0; c.call(self, w); c.call(w, z); c.call(z, ctx.destination); }); }
+        return c.call(this, t, ...r); };
+    });
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=' + disk); await p.setInputFiles('#audioIn', FX + '/s24.wav'); await p.waitForFunction(() => S.audio); await p.waitForTimeout(1200);
     if (video) {
       await p.setInputFiles('#pdfIn', FX + '/score.pdf'); await p.waitForFunction(() => S.pdf); await p.waitForTimeout(500);

@@ -1,4 +1,4 @@
-// Ogg files (Opus and Vorbis) go to the disk store, decoded by the browser's own decoder: the length must be the one ffmpeg decodes and the sound must be the same within what two decoders differ by. Needs ffmpeg.
+// Ogg files (Opus and Vorbis) go to the disk store, decoded by the browser's own decoder: the length must be the one ffmpeg decodes and the sound must be the same within what two decoders differ by (for Vorbis, the same as the browser's one-shot decoder gives). Needs ffmpeg.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/ogg-disk.js
 const { chromium } = require('playwright-core'); const fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -19,6 +19,8 @@ const cases = [
   for (const [name, nm, args, rate] of cases) {
     const f = path.join(tmp, nm), raw = path.join(tmp, 't.raw'); sh(`ffmpeg -v error -y -f lavfi -i "${src}" ${args} ${f}`); sh(`ffmpeg -v error -y -i ${f} -f f32le -c:a pcm_f32le ${raw}`);
     const info = JSON.parse(sh(`ffprobe -v error -show_entries stream=sample_rate,channels -of json ${f}`)).streams[0], buf = fs.readFileSync(raw), ref = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4);
+    // ffmpeg's own Vorbis decoder reads the second channel of a file from its own (experimental) encoder differently from the reference decoder (libvorbis, as Firefox and Chrome decode it), so for Vorbis the sound is checked against the browser's one-shot decoder, trimmed to the length ffmpeg gives
+    if (name.startsWith('Vorbis')) { const one = await p.evaluate(async ([b64, sr, ch]) => { const ab = Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer, b = await new OfflineAudioContext(ch, sr, sr).decodeAudioData(ab); return Array.from({ length: ch }, (_, c) => Array.from(b.getChannelData(c))); }, [fs.readFileSync(f).toString('base64'), +info.sample_rate, +info.channels]); for (let i = 0; i < ref.length; i++) ref[i] = one[i % info.channels][Math.floor(i / info.channels)] || 0; }
     await p.setInputFiles('#audioIn', f); await p.waitForFunction(x => S.audio && S.audio.name === x && !document.querySelector('#chips .busybar'), nm, { timeout: 60000 }).catch(() => {}); await p.waitForTimeout(300);
     const got = await p.evaluate(async () => { if (!S.audio || !S.audio.disk) return { disk: false }; const m = DISK.meta, r = await DISK.read(0, m.frames); return { disk: true, sr: m.sr, ch: m.ch, frames: m.frames, x: Array.from({ length: m.ch }, (_, c) => Array.from(r.chans[c])) }; });
     let rms = 0, err = 0, lag = 0;

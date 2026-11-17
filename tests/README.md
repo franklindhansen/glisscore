@@ -4,7 +4,9 @@ These run the Audio Editor in Chromium with Playwright. They check values, label
 
 Setup, once (outside the project, so no package files are added to it):
 
-    mkdir -p ~/keyframes-tests && cd ~/keyframes-tests && npm init -y && npm i playwright-core@1.47.2 && npx playwright-core install chromium
+    mkdir -p ~/keyframes-tests && cd ~/keyframes-tests && npm init -y && npm i playwright-core@1.65.0 && npx playwright-core install chromium
+
+Use 1.65.0 or later. Chromium 129 (playwright-core 1.47) has a bug: a garbage collection right after a promise from `page.evaluate` settles makes the call fail with "Execution context was destroyed, most likely because of a navigation", though nothing navigated. On a busy machine it hits checks that move large page pictures at random.
     python3 tests/make-fixtures.py
 
 Run one check, a group by its prefix, or everything. The script serves the app itself on a free port and stops that server when it ends, so never start one yourself:
