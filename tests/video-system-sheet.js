@@ -60,7 +60,7 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   ok('it keeps the score\'s one scale: narrower than the wide systems', (s.bb[2] - s.bb[0]) < 0.6 * w0, (s.bb[2] - s.bb[0]) + ' vs ' + w0);
   ok('the white page gives a white sheet', s.paper.every(v => v >= 250), JSON.stringify(s.paper));
   // Letterbox: it never changes the scale, and shrinks only a system that no longer fits the band
-  const set = (k, v) => p.evaluate(([k, v]) => { S.set[k] = v; }, [k, v]);
+  const set = async (k, v) => { await p.evaluate(([k, v]) => { S.set[k] = v; }, [k, v]); if (k === 'letterbox') await p.waitForFunction(t => Math.abs(LB.v - t) < 0.001, v ? 1 : 0, { timeout: 4000 }); };          // old: the next read came while the bars were still gliding in (a half-shrunk system); new: it waits for them to land
   ok('Letterbox is off by default and an old tbMargin is ignored on import', await p.evaluate(() => DEFAULTS.letterbox === false && !('tbMargin' in DEFAULTS) && !('tbMargin' in cleanSettings({ tbMargin: 12 }))));
   const w0b = (await look(1, 0)).bb, t0 = await look(2, 0); await set('letterbox', true); const wl = (await look(1, 0)).bb, tl = await look(2, 0); await set('letterbox', false);
   ok('Letterbox leaves the score scale alone', Math.abs((w0b[2] - w0b[0]) - (wl[2] - wl[0])) <= 2 && (wl[3] - wl[1]) === (w0b[3] - w0b[1]), (w0b[2] - w0b[0]) + ' vs ' + (wl[2] - wl[0]));
@@ -118,8 +118,9 @@ const trio = (x1s, paper) => ({ paper, systems: [0, 1, 2].map(k => ({ y: 110 + k
   ok('a Full page grows and shrinks with Margin', mg.full[0] > mg.full[1] && mg.full[1] > mg.full[2] && mg.full[2] > mg.full[3] && mg.full[0] >= 718, JSON.stringify(mg.full));
   // a page is drawn from the PDF once per size, however many systems it has, and Margin or Letterbox never draw it again
   const dr = await p.evaluate(async () => {
-    const pg = await S.pdf.doc.getPage(1), P = Object.getPrototypeOf(pg), o = P.render; let n = 0; P.render = function (...a) { n++; return o.apply(this, a); };
-    sysPagesClear(); const W = 1280, H = 720, om = S.set.margin, keys = [0, 1, 2].map(k => sysKey(0, k)), out = {};
+    const pg = await S.pdf.doc.getPage(1), P = Object.getPrototypeOf(pg), o = P.render; let n = 0, last = Date.now(); P.render = function (...a) { last = Date.now(); if (this === pg) n++; return o.apply(this, a); };          // old: every page's draws were counted, so the neighbors' draws made in the background (and the selector's) landed in the window; new: only page 1's, and only after the app has been quiet for 0.7s
+    for (let i = 0; i < 100 && Date.now() - last < 700; i++) await new Promise(r => setTimeout(r, 100));
+    n = 0; sysPagesClear(); const W = 1280, H = 720, om = S.set.margin, keys = [0, 1, 2].map(k => sysKey(0, k)), out = {};
     for (const k of keys) await sysSheet(k, W, H); out.systems = n; n = 0;
     S.set.margin = 4; for (const k of keys) await sysSheet(k, W, H); S.set.letterbox = true; for (const k of keys) await sysSheet(k, W, H); S.set.letterbox = false; out.steps = n; S.set.margin = om; P.render = o; return out;
   });
