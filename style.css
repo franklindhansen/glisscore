@@ -677,6 +677,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   --glass-blur:blur(22px) saturate(1.5);      /* the one blur for every glass element */
   --ae-quick:200ms;   /* a hover or color change, a tip, a toast, a chip */
   --t-hover:300ms;    /* a hover spring plays at its drawn length */
+  --glass-off:blur(0px);      /* glass that a state switches off: no blur, but never none. Safari paints an element at half strength for good when it gains a blur while a fade of its own opacity is running, so glass that comes and goes only changes how much it blurs */
   --t-press:400ms;    /* a press spring plays at its drawn length */
   --ae-ms:260ms;      /* the Audio Editor's one fade time: a tool switch, a view switch, a note, a pill; JS reads it too (AE_TOOL_MS) */
   --ae-move:400ms;    /* the Audio Editor's one slide time: a fold, the selection pill, the dock, the waveform resize */
@@ -1603,7 +1604,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ed-head .t-block{display:none}
 #audioDlg.afull .ed-head .ed-tools{pointer-events:auto;margin:0}
 #audioDlg.afull .ed-head .btn,.app.fs .transport .btn:not(.primary),.app.fs .transport .icon-btn:not(.play){background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);border:1px solid var(--glass-edge);color:var(--ink);box-shadow:var(--glass-shadow)}
-#audioDlg.afull .ed-head .btn:disabled{opacity:var(--inactive)}
+#audioDlg.afull .ed-head .btn:disabled:not(.btn-group:not(:has(>:is(button,input):enabled))>*){opacity:var(--inactive)}          /* a button in a group that is switched off as a whole is not dimmed again (the group is) */
+/* glass that only full screen switches on keeps the off blur outside it (see --glass-off); the timeline and the tool window hold menus and tips, so they stay none outside full screen and their own opacity is never faded while their glass switches */
+.app .transport,#audioDlg .ed-head .btn,#audioDlg .ed-head .btn-group{-webkit-backdrop-filter:var(--glass-off);backdrop-filter:var(--glass-off)}
 /* the score player's controls: one glass row above the timeline, the same recipe as the Audio Editor's */
 .app.fs .transport{left:var(--fs-gap);right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card));padding:var(--gap-head) var(--gap-field);gap:var(--gap-head);border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),var(--shadow-float);color:var(--ink);text-shadow:none;isolation:isolate}
 .app.fs .transport .info,.app.fs .transport .time span{color:var(--muted)}
@@ -2480,7 +2483,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .btn-group.zoom>input{margin-inline:var(--gap-label)}
 /* full screen: the group floats over the wave, so it is glass with a shadow; its buttons stay flat inside it */
 #audioDlg.afull .ed-head .btn-group{border-color:var(--glass-edge);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow)}
-#audioDlg.afull .ed-head .btn-group>.btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+#audioDlg.afull .ed-head .btn-group>.btn{background:transparent;border:0;box-shadow:none;-webkit-backdrop-filter:var(--glass-off);backdrop-filter:var(--glass-off)}
 #audioDlg.afull .ed-head .btn-group>.btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
 
 /* Dim: boxes drawn on a page. The frame and handles are Crop's own; the area inside is faded like the finished page, and a round X at its center deletes it */
