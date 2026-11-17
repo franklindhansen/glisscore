@@ -50,6 +50,10 @@ const record = (p, ms) => p.evaluate(ms => new Promise(res => {
       }
       const after = await geo(); ok((calm ? 'reduced motion, ' : '') + (VW <= 760 ? 'phone, ' : '') + view + ': after the round trip the window is where it started', Math.abs(after.box.l - normal.box.l) < 1.5 && Math.abs(after.box.w - normal.box.w) < 1.5 && Math.abs(after.cv.h - normal.cv.h) < 1.5, JSON.stringify({ after: after.box, normal: normal.box }));
     }
+    if (!calm && VW > 760) {          // a glide that never lands (its watcher is lost) is finished by itself: nothing is left dimmed and the window is in full screen
+      const st = await p.evaluate(async () => { aeFs(true); AE.fsAnims = null; await new Promise(r => setTimeout(r, AE_FS_MS * 2 + 1400)); const o = ['.ed-head', '.ae-main', '.ae-bar'].map(q => +getComputedStyle(document.querySelector('#audioDlg ' + q)).opacity); const r = { o, full: AE.full, busy: AE.fsBusy, cls: document.querySelector('#audioDlg').classList.contains('fsmove') }; aeFs(false); await new Promise(r2 => setTimeout(r2, 1500)); return r; });
+      ok('a full screen glide that stalls still ends with the tools at full strength', st.full && !st.busy && !st.cls && st.o.every(v => v === 1), JSON.stringify(st));
+    }
     await ctx.close();
   }
   ok('no page errors', !errs.length, errs.slice(0, 2).join(' | '));

@@ -2865,8 +2865,9 @@ function aeFs(on, instant) {
   const dlg = $('#audioDlg'), box = dlg.querySelector('.dlg'), wave = dlg.querySelector('.ae-wave'); on = !!on; if (!!AE.full === on || AE.fsBusy) return;
   const calm = instant || reducedMotion() || !box.animate || dlg.hidden;
   if (calm) { dlg.classList.add('fsmove'); aeFsApply(on); aeFsStop(true); return; }          // the layout changes at once, with nothing gliding into it
-  const D = AE_FS_MS, fade = (full, from, to, o) => [...box.children].filter(el => el !== wave).map(el => el.animate(full && el.matches('.row') ? [{ opacity: 0 }, { opacity: 0 }] : [{ opacity: from }, { opacity: to }], o));          // everything in the window but the picture fades, so the picture is seen travelling with the window and the controls come and go around it (the picture only eases to about half strength at the hand-over, where it is stretched most); in full screen the buttons row lies hidden behind the picture, so it stays hidden
+  const D = AE_FS_MS, fade = (full, from, to, o) => fadeEls().map(el => el.animate(full && el.matches('.row') ? [{ opacity: 0 }, { opacity: 0 }] : [{ opacity: from }, { opacity: to }], o));          // everything in the window but the picture fades, so the picture is seen travelling with the window and the controls come and go around it (the picture only eases to about half strength at the hand-over, where it is stretched most); in full screen the buttons row lies hidden behind the picture, so it stays hidden
   dlg.classList.add('fsmove');          // nothing else transitions while the window moves, or while the other layout is measured
+  const fadeEls = () => [...box.children].filter(el => el !== wave).flatMap(el => el.matches('.row') ? [el] : [...el.children]);          // the glass parts stay as they are and what is in them fades: Safari leaves a glass part faint after its own opacity has been animated
   const g0 = aeFsGeo(box, wave), g1 = aeFsTarget(dlg, box, wave, on), rect = g => ({ l: g.l + g.wl, t: g.t + g.wt, w: g.w - g.wl - g.wr, h: g.h - g.wt - g.wb }), w0 = rect(g0), w1 = rect(g1), mix = (a, b, p) => a + (b - a) * p;
   const path = (gx, wx, from, to) => {          // the window and the picture each travel between their two rectangles on the shared ease; the picture sits inside the window, so its own transform is the one that, after the window's, lands it on its rectangle. Written against the layout that is in place (gx, wx)
     const boxKF = [], waveKF = [], n = 14;
@@ -2886,11 +2887,20 @@ function aeFs(on, instant) {
   const swap = () => {          // the window is partway: the other layout takes over in the same frame, at the same place and size (wherever the window has got to), and the motion goes on to the end with its parts fading in
     const s = Math.min(AE_FS_SWAP + 0.2, Math.max(AE_FS_SWAP, first[0].currentTime / D));
     AE.fsAnims.forEach(a => a.cancel()); aeFsApply(on);
-    const rest = path(g1, w1, s, 1); AE.fsAnims = rest; AE.fsXform = true; const ins = fade(on, AE_FS_LOW, 1, { duration: AE_FS_IN, easing: 'ease-out' }), t0 = document.timeline.currentTime; rest.concat(ins).forEach(a => { a.startTime = t0; });          // all start in this frame, not the next, so the window never stands still at the hand-over          // the window lands while its parts are still coming in
+    const rest = path(g1, w1, s, 1); AE.fsAnims = rest; AE.fsXform = true; const parts = fadeEls().filter(el => !(on && el.matches('.row')));          // the parts come in by their own style, not an animation: Safari leaves a part faint when an animation of its opacity ends or is cancelled while the window is still moving
+    parts.forEach(el => { el.style.opacity = AE_FS_LOW; });
+    { const t1 = performance.now(), step = () => { if (AE.fsAnims !== rest) { parts.forEach(el => { el.style.opacity = ''; }); return; } const k = Math.min(1, (performance.now() - t1) / AE_FS_IN), e = 1 - (1 - k) * (1 - k); parts.forEach(el => { el.style.opacity = k < 1 ? AE_FS_LOW + (1 - AE_FS_LOW) * e : ''; }); if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+    const t0 = document.timeline.currentTime; rest.forEach(a => { a.startTime = t0; });          // both start in this frame, not the next, so the window never stands still at the hand-over; its parts come in as it lands
     rest[0].onfinish = () => { AE.fsXform = false; aeFsStop(true); box.style.transformOrigin = wave.style.transformOrigin = ''; AE.fsBusy = false; aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow(); };
   };
   const watch = () => { if (AE.fsAnims !== live) return; if (first[0].currentTime >= D * AE_FS_SWAP) swap(); else requestAnimationFrame(watch); };
   requestAnimationFrame(watch);
+  const tok = AE.fsTok = (AE.fsTok || 0) + 1;          // if the glide never finishes (a stalled frame, a cancelled animation), the window is put straight into the layout it was heading for, with nothing left faded or mid-way, so the tools are never left dim
+  setTimeout(() => {
+    if (AE.fsTok !== tok || !AE.fsBusy) return;
+    (AE.fsAnims || []).forEach(x => x.cancel()); [box, ...box.children].forEach(el => el.getAnimations().forEach(x => x.cancel())); wave.getAnimations().forEach(x => x.cancel());
+    if (!!AE.full !== on) aeFsApply(on); AE.fsXform = false; aeFsStop(); box.style.transformOrigin = wave.style.transformOrigin = ''; AE.fsBusy = false; aeFsLayout(); aeSize(); aeDraw(); aeRailSel(false); aeWiresFollow();
+  }, D * 2 + 600);
 }
 /* in full screen the picture reaches just under the floating head and just behind the floating bottom, so nothing important hides behind them but the glass still has something to blur */
 /* the Wave | Spec switch starts where the tool window's heading starts, so the two line up down the page */
