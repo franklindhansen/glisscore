@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.31
+
+Turns you place by hand stay where they are when a page is edited, and View changes in System layout glide smoothly instead of jumping. The selector now waits with the preview while systems are found.
+
 ## 1.2.30
 
 New systems on a page are marked by double-clicking and dragging, and a double tap on a touch screen is more forgiving. The Audio Editor's tools no longer look faded in Safari full screen, and the drop message sits on a card.
