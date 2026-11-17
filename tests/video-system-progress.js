@@ -1,4 +1,4 @@
-// Video, System layout: the progress line, the Stop button, Export video held back, and the reason lines for a tilted page and a two-page scan.
+// Video, System layout: the progress line, the Stop button, Export video held back, and the one toast for a tilted page and a two-page scan.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-system-progress.js
 const { chromium } = require('playwright-core');
 const { PDFDocument } = require('../vendor/pdf-lib.min.js');
@@ -47,46 +47,26 @@ function staffPage(doc, n, o = {}) {
   await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 }); await p.waitForTimeout(100);
   const rv = await p.evaluate(() => ({ rv: !!(TL.rv && TL.rv.blocks), pill: document.querySelector('#sysFind').classList.contains('on'), toast: document.querySelector('#toast') ? document.querySelector('#toast').textContent : '' }));
   ok('when finding ends the blocks come in once with the shared reveal, and the pill goes', rv.rv && !rv.pill, JSON.stringify(rv));
-  ok('"4 pages loaded." shows once finding is done', /4 pages loaded\./.test(rv.toast), rv.toast);
+  ok('the scan toast takes the place of "4 pages loaded."', /tilted/.test(rv.toast) && !/loaded/.test(rv.toast), rv.toast);
   await p.emulateMedia({ reducedMotion: 'reduce' }); await load(); await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 });
   ok('reduced motion shows the timeline at once', await p.evaluate(() => !(TL.rv && TL.rv.blocks)));
   await p.emulateMedia({ reducedMotion: 'no-preference' });
 
   await load();
-  await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.warn, null, { timeout: 60000 }); await p.waitForTimeout(300);
-  const w = await p.evaluate(() => ({ tilt: !document.querySelector('#sysTilt').hidden, tt: document.querySelector('#sysTiltT').textContent, wide: !document.querySelector('#sysWide').hidden, wt: document.querySelector('#sysWide').textContent, exp: document.querySelector('#btnExport').disabled }));
-  ok('a tilted page gets a reason line with Level these pages', w.tilt && /tilted/.test(w.tt), JSON.stringify(w));
-  ok('a two-page scan points to Split spreads', w.wide && /Split spreads/.test(w.wt), w.wt);
+  await pick('system'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 }); await p.waitForTimeout(600);
+  const w = await p.evaluate(() => ({ note: !!document.querySelector('#sysNote, #sysTilt, #sysWide, #sysLevel, #sysSplitGo'), toast: document.querySelector('#toast').textContent, exp: document.querySelector('#btnExport').disabled }));
+  ok('Page layout has no scan notes and no Re-kilter or Split spreads buttons', !w.note, JSON.stringify(w));
+  ok('one toast names the tilted page, then the two-page scan', w.toast === 'Page 3 is tilted, which can clip its systems. Page 4 is a two-page scan, which hides its systems.', w.toast);
   ok('Export video is available once done', !w.exp);
-  ok('the tilt note names its page and carries Re-kilter', w.tt === 'Page 3 is tilted, which can clip its systems.' && await p.evaluate(() => document.querySelector('#sysLevel').textContent === 'Re-kilter'), w.tt);
-  ok('the two-page note names its page and carries Split spreads', /^Page 4 is a two-page scan, which hides its systems\.\s*Split spreads$/.test(w.wt.trim()), w.wt);
   const nt = await p.evaluate(() => [sysNote('tilt', [3, 6, 11]), sysNote('wide', [1, 2]), sysNote('tilt', [0, 1, 2, 3, 4, 5, 6])]);
   ok('three pages are listed with the Oxford comma, two with and, more than five are counted', nt[0] === 'Pages 4, 7, and 12 are tilted, which can clip their systems.' && nt[1] === 'Pages 2 and 3 are two-page scans, which hides their systems.' && nt[2] === '7 pages are tilted, which can clip their systems.', JSON.stringify(nt));
-  // Split spreads opens the PDF Editor on that tool with the scan ticked; after Done only the changed pages are found again
-  await p.evaluate(() => { window.__rp = []; window.__odp = window.sysDetectPage; const od = window.__odp; window.sysDetectPage = function (i, ...r) { window.__rp.push(i); return od.call(this, i, ...r); }; });
-  await p.click('#sysSplitGo'); await p.waitForTimeout(800);
-  const pe = await p.evaluate(() => ({ mode: PE.mode, tick: [...PE.splitSel] }));
-  ok('Split spreads opens the editor on Split spreads with those pages ticked', pe.mode === 'split' && pe.tick.join() === '3', JSON.stringify(pe));
-  await p.click('#peSplitGo'); await p.waitForFunction(() => !document.querySelector('#peSplitGo').disabled || PE.d.slots.length > 4, null, { timeout: 30000 }); await p.waitForTimeout(500);
-  await p.click('#peDone'); await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === new Set(S.pdf.keep).size, null, { timeout: 60000 }); await p.waitForTimeout(300);
-  const sp = await p.evaluate(() => ({ pages: window.__rp.slice().sort().join(), keep: S.pdf.keep.length, wide: SYS.warn ? SYS.warn.wide.length : -1 }));
-  ok('after Split spreads only the split page and its new half are found again', sp.pages === '3,4' && sp.keep === 5, JSON.stringify(sp));
-  await p.evaluate(() => { window.sysDetectPage = window.__odp; });
-  ok('the two-page note goes when no scan remains', await p.evaluate(() => document.querySelector('#sysWide').hidden), JSON.stringify(sp));
+  // a few pages found again after an edit: the toast speaks only for those pages
+  await p.evaluate(() => { document.querySelector('#toast').textContent = ''; const r = recipeOf(); r.slots[0].crop = [0, 0, 1, 0.95]; setRecipe(r); rebuildSpreads(false); });
+  await p.waitForFunction(() => !SYS.prog && SYS.byPage.size === 4, null, { timeout: 60000 }); await p.waitForTimeout(800);
+  const again = await p.evaluate(() => document.querySelector('#toast').textContent);
+  ok('finding page 1 again says nothing about pages 3 and 4', !/tilted|two-page/.test(again), again);
   const g = await p.evaluate(() => (window.uiGuard && uiGuard.report ? uiGuard.report() : []));
   ok('uiGuard reports nothing', !g.length, JSON.stringify(g));
-  await p.evaluate(async () => { await sysMark(2, 0.1, 0.3); window.__recs = [0, 1, 3].map(i => SYS.byPage.get(i)); window.__rp = []; window.__odp = window.sysDetectPage; const od = window.__odp; window.sysDetectPage = function (i, ...r) { window.__rp.push(i); return od.call(this, i, ...r); }; });
-  const before = await p.evaluate(() => ({ h: S.history.length }));
-  await p.click('#sysLevel'); await p.waitForFunction(() => !SYS.leveling, null, { timeout: 60000 }); await p.waitForFunction(() => !SYS.prog, null, { timeout: 30000 }); await p.waitForTimeout(500);
-  const rk = await p.evaluate(() => ({ rp: window.__rp, same: [0, 1, 3].every((i, k) => SYS.byPage.get(i) === window.__recs[k]), hand: SYS.hand.has(2), toast: document.querySelector('#toast').textContent }));
-  ok('after Re-kilter only the leveled page is found again; the others keep their systems and marks', rk.rp.join() === '2' && rk.same, JSON.stringify(rk));
-  ok('the leveled page loses its marks, said in a toast', !rk.hand && /^Marks cleared on p\. 3\.$/.test(rk.toast), JSON.stringify(rk));
-  const after = await p.evaluate(() => ({ h: S.history.length, sk: S.pdf.slots.map(s => s.skew || 0), tilt: !document.querySelector('#sysTilt').hidden }));
-  ok('Level these pages levels only the tilted page', after.sk[2] !== 0 && after.sk[0] === 0 && after.sk[1] === 0 && after.sk[3] === 0, JSON.stringify(after.sk));
-  ok('it is one History step', after.h === before.h + 1, JSON.stringify([before.h, after.h]));
-  ok('the reason line goes once the page is level', !after.tilt);
-  await p.click('#bUndo'); await p.waitForTimeout(400);
-  ok('Undo brings the tilt back', await p.evaluate(() => (S.pdf.slots[2].skew || 0) === 0));
   ok('no page errors', !errs.length, errs.join('; '));
   await b.close();
 })();

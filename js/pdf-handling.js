@@ -58,7 +58,7 @@ function syncPageLayout(glide) {
   const seg = $('#pagesField .seg'); if (seg && seg._place) seg._place(!!glide);
   $('#firstAloneField').hidden = one; $('#centerFold').hidden = one; $('#letterboxField').hidden = !sysOn(); applyTransitionUI();
   if (!sysOn() && (SYS.prog || SYS.job)) SYS.stop();          // leaving System ends the finding at once
-  if (sysOn() && S.pdf && !SYS.prog) sysWarn(); else sysUI();
+  sysUI();
 }
 /* changing it is one History step; the turns are spaced evenly again for the new number of pages, and it says so when they had been placed by hand */
 function setPageLayout(v) {

@@ -768,7 +768,7 @@ TL.sc = document.createElement('canvas'); TL.sctx = TL.sc.getContext('2d');
 
 function readColors() {
   const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
-  TL.C = { bad: g('--bad'), bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), hairline: g('--hairline'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), turnSysSoft: g('--turn-sys-soft'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2'), pill: g('--pill-bg') };
+  TL.C = { bad: g('--bad'), bg: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'), hairline: g('--hairline'), block: g('--block'), wave: g('--wave'), turn: g('--turn'), fade: g('--fade'), cred: g('--cred'), credSoft: g('--cred-soft'), turnSoft: g('--turn-soft'), turnSys: g('--turn-sys'), accentSoft: g('--accent-soft'), play: g('--play'), accent: g('--accent'), panel2: g('--panel2'), pill: g('--pill-bg') };
   TL.staticDirty = true;
   aeColorsChanged();          // the editors' pictures are drawn again in the new theme, in the same frame
   peColorsChanged();
@@ -1037,7 +1037,7 @@ function drawHandles(c) {
     if (sysBusy()) continue;          // no handles until the systems are found
     let tick = false;          // a system turn too narrow for a handle is just the tick between its cells, until it is hovered, selected, or dragged
     if (sysT) { const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1); tick = Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) < 24 && TL.hover !== i && !selSet.has(i) && !(TL.drag && TL.drag.kind === 'turn' && TL.drag.i === i); }
-    const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : sysT ? C.turnSysSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a quiet gray, so amber means a page turn only
+    const col = isCr ? C.cred : sysT ? C.turnSys : C.turn, soft = isCr ? C.credSoft : C.turnSoft;     // the credits marker has its own color; a system turn inside a page's block is the skinny handle in a quiet gray, so amber means a page turn only
     if (tick && !ph) {          // never nothing: a short mark in its own color where there is no room for the handle
       const [a0, a1] = spreadBounds(i), [b0, b1] = spreadBounds(i + 1);
       if (Math.min(t2x(a1) - t2x(a0), t2x(b1) - t2x(b0)) >= 7) { c.fillStyle = col; roundRect(c, x - 1, trackY + trackH / 2 - 5, 2, 10, 1); c.fill(); }
@@ -1050,7 +1050,7 @@ function drawHandles(c) {
       roundRect(c, x - pw_ / 2, cy - ph_ / 2, pw_, ph_, rd); c.fillStyle = C.bg; c.fill(); c.stroke();
       c.setLineDash([]); c.lineWidth = 1; c.globalAlpha = 1; selRing(c, x, cy, pw_, ph_, selSet.has(i)); continue;
     }
-    if (D > 0) { c.fillStyle = soft; c.fillRect(bx0, trackY, Math.max(1, bx1 - bx0), trackH); if (!sysT) c.fillRect(bx0, waveY, Math.max(1, bx1 - bx0), waveH); }          // a system turn's band is in the page lane only
+    if (D > 0 && !sysT) { c.fillStyle = soft; c.fillRect(bx0, trackY, Math.max(1, bx1 - bx0), trackH); c.fillRect(bx0, waveY, Math.max(1, bx1 - bx0), waveH); }          // a system turn has no transition band; a page turn and the credits marker keep theirs
     if (!sysT) { c.strokeStyle = col; c.globalAlpha = .55 * pop; c.setLineDash([4, 3]); c.beginPath(); c.moveTo(x + .5, trackY + trackH); c.lineTo(x + .5, waveY + waveH); c.stroke(); c.setLineDash([]); } c.globalAlpha = pop;
     c.fillStyle = col; if (!sysT) c.fillRect(x - 1, trackY - 3, 2, trackH + 6);
     c.save(); if (sc > 1.02) { c.shadowColor = col; c.shadowBlur = (sc - 1) * 60; }

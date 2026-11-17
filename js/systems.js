@@ -211,14 +211,17 @@ function sysBoxes(page) { const r = SYS.byPage.get(page); return r && r.systems.
 function sysKick() {
   if (!S.pdf) return; sysFresh();
   const pages = [...new Set(S.pdf.keep)], left = pages.filter(i => !SYS.byPage.has(i)).length;
-  if (!left) { if (SYS.prog) sysProg(null); sysWarn(); return; }
+  if (!left) { if (SYS.prog) sysProg(null); return; }
   if (SYS.prog && SYS.job) return;
   sysProg({ done: pages.length - left, total: pages.length });
-  const head = selCurrent();          // the page under the playhead is found first
+  const fresh = pages.filter(i => !SYS.byPage.has(i)), head = selCurrent();          // the page under the playhead is found first
   sysDetectAll({ first: head == null ? null : sysPage(head), onProgress: (done, total) => sysProg({ done, total }) }).then(done => {
     if (!done) return;
-    sysProg(null); sysSettle(); rvStart('blocks'); sysWarn();          // the timeline appears once, with the same rise-in as the other layouts
-    if (SYS.loadedMsg) { toast(SYS.loadedMsg); SYS.loadedMsg = null; }
+    sysProg(null); sysSettle(); rvStart('blocks');          // the timeline appears once, with the same rise-in as the other layouts
+    sysScan(fresh).then(w => {          // one toast says what was found on the pages found now: tilted pages, then two-page scans; it takes the place of "loaded"
+      const said = w ? [w.tilt.length ? sysNote('tilt', w.tilt) : '', w.wide.length ? sysNote('wide', w.wide) : ''].filter(Boolean).join(' ') : '';
+      if (said) toast(said); else if (SYS.loadedMsg) toast(SYS.loadedMsg); SYS.loadedMsg = null;
+    });
   });
 }
 /* the run, said in the System group and on the timeline and Export video */
@@ -230,43 +233,18 @@ function sysUI() {
   if (typeof sysStatusUI === 'function') sysStatusUI();
   stageDirty = true; TL.staticDirty = true; TL.overlayDirty = true;
 }
-const SYS_TILT = 0.3;          // degrees of tilt that earn a reason line
-/* the pages that are tilted past the limit and not yet leveled, and how many are two-page scans */
-async function sysWarn() {
-  if (!sysOn() || !S.pdf) { SYS.warn = null; sysUI(); return; }
-  const gen = SYS.gen, pages = [...new Set(S.pdf.keep)];
-  const tilt = pages.filter(i => { const r = SYS.byPage.get(i); return r && Math.abs(r.tilt) > SYS_TILT && !SYS.leveled.has(i) && !peTilted(S.pdf.slots[i]); });
+const SYS_TILT = 0.3;          // degrees of tilt that earn a note
+/* what finding these pages turned up: the ones tilted past the limit, and the two-page scans */
+async function sysScan(pages) {
+  const gen = SYS.gen, tilt = pages.filter(i => { const r = SYS.byPage.get(i); return r && Math.abs(r.tilt) > SYS_TILT && !peTilted(S.pdf.slots[i]); });
   const wide = []; for (const i of pages) { const sl = S.pdf.slots[i]; try { await peAspectOf(sl); } catch (e) {} if (peSpread(sl)) wide.push(i); }
-  if (gen !== SYS.gen || !sysOn()) return;
-  SYS.warn = { tilt, wide }; sysUI();
+  return gen === SYS.gen && sysOn() ? { tilt, wide } : null;
 }
 /* a note naming its pages: "Pages 4, 7, and 12 are tilted…"; more than five are counted */
 const sysList = a => a.length < 3 ? a.join(' and ') : a.slice(0, -1).join(', ') + ', and ' + a[a.length - 1];
 function sysNote(kind, ids) {
   const pg = ids.map(pageNo).sort((a, b) => a - b);
   return pg.length > 5 ? tx('sys.' + kind + '.count', { n: pg.length }) : tx('sys.' + kind + (pg.length === 1 ? '.one' : '.many'), { pages: sysList(pg) });
-}
-/* Split spreads: the PDF Editor opens on that tool with the two-page scans ticked */
-function sysSplitPages() {
-  const ids = SYS.warn ? SYS.warn.wide.slice() : []; if (!ids.length || !S.pdf) return;
-  openPdfEditor(); PE.splitSel = new Set(ids); peTool('split');
-}
-/* Re-kilter: Re-kilter on only the tilted pages, one History step. The pages are found again on the new tilt. */
-async function sysLevelPages() {
-  const ids = SYS.warn ? SYS.warn.tilt.slice() : []; if (!ids.length || SYS.leveling || !S.pdf) return;
-  SYS.leveling = true; sysUI(); const gen = SYS.gen;
-  try {
-    const res = new Map(); for (const id of ids) { res.set(id, await peLevelOne(S.pdf.slots[id])); await yieldNow(); if (gen !== SYS.gen || !sysOn()) return; }
-    const r = recipeOf(); let changed = false;
-    ids.forEach(id => { const [sk, vs, wk, crop] = res.get(id), sl = r.slots[id]; if (sk !== (sl.skew || 0) || vs !== (sl.vskew || 0) || wk !== (sl.warp || 0)) changed = true; sl.skew = sk; sl.vskew = vs; sl.warp = wk; if (crop) sl.crop = crop; });
-    ids.forEach(id => SYS.leveled.add(id));
-    if (!changed) { toast(tx('pe.skew.none')); return; }
-    const was = Transport.playing, at = Transport.now(); Transport.pause();
-    pushHistory(); const base = S.history.length;
-    SYS.noted = false; setRecipe(r);          // the pages whose picture changed are found again (and lose their marks, said in a toast); the rest keep theirs
-    rebuildSpreads(false); if (S.history.length > base) S.history.length = base;
-    S.time = was ? clamp(at, S.vStart, vEnd()) : S.time; setChips(); updateTimeUI(true); if (was) Transport.play();
-  } finally { SYS.leveling = false; sysWarn(); }
 }
 /* The stops changed (a system marked or removed, Full page, a page found again): the timeline follows.
    With no turn placed by hand the video is spaced evenly again. Otherwise only the changed pages' own turns change (sysRetime). The playhead stays on its system. */
@@ -323,7 +301,7 @@ function sysRetime(old, turns, ph) {
 
 /* ---------- running it: a worker, one page at a time, and the pages found so far ---------- */
 const SYS = {
-  byPage: new Map(), scan: new Map(), prog: null, warn: null, leveled: new Set(), leveling: false, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
+  byPage: new Map(), scan: new Map(), prog: null, prev: 'spread', hand: new Set(), rev: 0, gen: null, token: 0, job: null, ws: [], bad: [], loadedMsg: null, n: 0, pend: new Map(),
   /* one to three workers, by what the browser reports about the computer; the page's own thread when none can start */
   lanes() { return clamp(Math.round((navigator.hardwareConcurrency || 2) / 3), 1, 3); },
   worker(k) {
@@ -392,7 +370,7 @@ function sysFromList(list) {
   SYS.rev++; stageDirty = true; if (sysOn()) sysKick();
 }
 /* the pages were rebuilt (an edit, a new score): what was found no longer lines up */
-function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear(); SYS.leveled.clear(); SYS.warn = null; SYS.rev++; SYS.gen = g; } sysSync(); }
+function sysFresh() { const g = S.pdf ? S.pdf.gen || 0 : -1; if (SYS.gen !== g) { SYS.stop(); SYS.byPage.clear(); SYS.scan.clear(); SYS.hand.clear(); SYS.rev++; SYS.gen = g; } sysSync(); }
 /* one page: its systems as fractions of the page ({ systems, tilt, staves }), found once and kept */
 async function sysDetectPage(idx, lane) {
   sysFresh();

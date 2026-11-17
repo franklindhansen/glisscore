@@ -74,20 +74,15 @@ function splitGlide(to) {
   SPLIT.raf = requestAnimationFrame(step);
 }
 function splitStop() { cancelAnimationFrame(SPLIT.raf); SPLIT.glide = 0; SPLIT.moving = false; }
-/* the System group's status line: the run with its bar and Stop, then the reason lines for tilted pages and two-page scans */
+/* the System group's status line: the run with its bar */
 function sysStatusUI() {
-  const note = $('#sysNote'); if (!note) return;
-  const on = sysOn() && !!S.pdf, p = on ? SYS.prog : null, w = on && !p ? SYS.warn : null, tilt = w ? w.tilt.length : 0, wide = w ? w.wide.length : 0;
-  $('#sysTilt').hidden = !tilt; $('#sysWide').hidden = !wide; note.hidden = !(tilt || wide);
+  const on = sysOn() && !!S.pdf, p = on ? SYS.prog : null;
   const pill = $('#sysFind'), was = pill.classList.contains('on'); pill.classList.toggle('on', !!p);
   if (p && !was) { const t = $('#sysFindT'); t.style.minWidth = ''; let w = 0; [tx('sys.finding.wait'), tx('sys.finding', { pct: 100 })].forEach(x => { t.textContent = x; w = Math.max(w, t.offsetWidth); }); t.style.minWidth = w + 'px'; }          // the pill keeps one width from "Processing…" to "Processing 100%", so it never shifts as the number grows
   if (p) { const pct = p.total ? Math.round(p.done / p.total * 100) : 0; $('#sysFindT').textContent = p.done > 0 ? tx('sys.finding', { pct }) : tx('sys.finding.wait'); const fill = $('#sysFindFill'); if (!was) { fill.style.transition = 'none'; fill.style.transform = 'scaleX(0)'; void fill.offsetWidth; fill.style.transition = ''; } fill.style.transform = 'scaleX(' + pct / 100 + ')'; const bar = $('#sysFindBar'); if (p.done > 0) sweepStop(bar); else sweepStart(bar); }          // before the first number the length is unknown: the shared sweep; after, the fill
   if (!p) sweepStop($('#sysFindBar'));
-  if (tilt) { $('#sysTiltT').textContent = sysNote('tilt', w.tilt); $('#sysLevel').disabled = SYS.leveling; }
-  if (wide) $('#sysWideT').textContent = sysNote('wide', w.wide);
 }
 function splitBind() {
-  $('#sysLevel').addEventListener('click', sysLevelPages); $('#sysSplitGo').addEventListener('click', sysSplitPages);
   const div = $('#sysDiv'), wrap = $('#stageWrap'); let live = false, queued = 0;
   const at = e => { const r = wrap.getBoundingClientRect(), inset = 1; return SPLIT.stack ? (e.clientY - r.top - inset) / wrap.clientHeight : (e.clientX - r.left - inset) / wrap.clientWidth; };
   div.addEventListener('pointerdown', e => { if (e.button) return; splitStop(); live = true; div.setPointerCapture(e.pointerId); div.classList.add('drag'); e.preventDefault(); });

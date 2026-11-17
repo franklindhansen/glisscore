@@ -46,7 +46,7 @@ function staffPage(doc, n) {
   ok('the skinny handle can be grabbed as easily as the page handle', await p.evaluate(() => { const i = sysTurnInfo(0).inner ? 0 : -1, x = t2x(shownTurn(i)), y = TL.trackY + TL.trackH / 2; return i === 0 && hitTurn({ x: x + 6, y }) === 0 && hitTurn({ x: x - 6, y }) === 0; }));
   ok('every page and system is drawn, with the playhead in a cell, without errors', await p.evaluate(() => { S.time = (S.spreads.length ? spreadBounds(1)[0] + 0.1 : 0); TL.staticDirty = true; drawTimeline(); return true; }) && errs.length === 0, errs.join('; '));
   const css = require('fs').readFileSync(__dirname + '/../style.css', 'utf8');
-  ok('--turn-sys is in all three theme blocks', (css.match(/--turn-sys:/g) || []).length === 3 && (css.match(/--turn-sys-soft:/g) || []).length === 3 && css.includes('--turn-sys:#8690a6'));
+  ok('--turn-sys is in all three theme blocks, and a system turn has no band color', (css.match(/--turn-sys:/g) || []).length === 3 && !css.includes('--turn-sys-soft') && css.includes('--turn-sys:#8690a6'));
   ok('the page and system handles pass 3:1 against the block in both themes', [['#d97706', '#ffffff'], ['#bf6500', '#ffffff'], ['#f59e3b', '#252b37'], ['#d97706', '#252b37']].every(([f, g]) => contrast(f, g) >= 3), [contrast('#d97706', '#ffffff'), contrast('#bf6500', '#ffffff'), contrast('#f59e3b', '#252b37'), contrast('#d97706', '#252b37')].map(v => v.toFixed(2)).join(' '));
   const keep = await p.evaluate(async () => {
     const R = window.__keyframes.previewR; S.time = S.vStart; drawStage(); await R.ensure([S.spreads[0][1]]);
