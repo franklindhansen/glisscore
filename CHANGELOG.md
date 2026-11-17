@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.29
+
+The Audio Editor's tools no longer look faded in Safari after going full screen, and the file tiles sit evenly in the side panel. Crop's Manual mode is simpler, and scan notes now appear in one toast.
+
 ## 1.2.28
 
 System selections now sit on the staves and ignore names, page numbers, and scan shadows, and double-clicking a selection resets it. Finding systems is faster, Margin moves full pages, the Letterbox bars slide, and the credits card matches the score's paper.
