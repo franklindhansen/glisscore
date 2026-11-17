@@ -254,7 +254,7 @@ function updateHint() {
   const where = { start: 'starts', middle: 'is halfway through', end: 'finishes' }[S.set.ref], tr = S.set.transition, noun = tr === 'slide' ? 'slide' : 'page turn';
   const term = (k, t) => '<span class="term" data-glow="' + k + '" tabindex="0">' + t + '</span>';
   if (tr === 'cut') { h.innerHTML = 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.'; return; }
-  h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', tr === 'slide' ? 'Slide length' : 'Turn length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
+  h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', 'Length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
 }
 /* Background and Ink color: one field (swatch, name, hex, chevron) that opens a menu of named colors and a picker (shade and brightness, then hue). A color from the list shows its name; the picker or a typed hex shows Custom. A saved color that is not on the list reopens as Custom. */
 const COLOR_SETS = {
@@ -491,7 +491,7 @@ function applyTransitionUI() {
   const t = S.set.transition;
   $('#turnField').hidden = t === 'cut';
   $('#slideField').hidden = t !== 'slide';
-  swapText($('#turnLenLbl'), t === 'slide' ? 'Slide length' : 'Turn length', true);
+  swapText($('#turnLenLbl'), 'Length', true);
   const len = $('#flipDur'), v = +S.set[lenKey()];      // the one slider shows whichever length belongs to the chosen style
   len.min = t === 'slide' ? '0.1' : '0.3'; len.value = v; $('#flipDurOut').textContent = v.toFixed(1) + 's'; paintRange(len);
   $('#refField').hidden = t === 'cut';
@@ -563,8 +563,8 @@ function groupSummary(k) {
   // each entry lists wordings from the fullest to the shortest; the longest one that fits on a single line is used
   if (k === 'transition') {
     if (s.transition === 'cut') return ['Cut'];
-    if (s.transition === 'slide') return [j('Slide', 'Direction: ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks: ' + ref), j('Slide', 'Direction: ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
-    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
+    if (s.transition === 'slide') return [j('Slide', 'Direction: ' + dir, 'Length ' + sec(s.slideDur), 'Handle marks: ' + ref), j('Slide', 'Direction: ' + dir, 'Length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
+    return [j('Turn', 'Length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
   if (k === 'layout') { const fa = sysOn() ? 'System' : singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null; return [j(fa, 'Margin ' + pc(s.margin)), j(fa, pc(s.margin))]; }
   if (k === 'colors') { const iv = s.invert ? 'Invert colors' : null; return [j(bg(), iv, s.invert ? 'Ink color: ' + ink() : null), j(bg(), iv, s.invert ? 'Ink: ' + ink() : null), j(bg(), iv)]; }

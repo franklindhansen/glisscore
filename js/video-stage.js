@@ -389,7 +389,7 @@ class Renderer {
     const N = this.N, M = this.M, pw = lay.pw, ph = lay.ph, cd = this.curlData, wd = this.world;
     const L = 0.12 + 1.3 * (S.set.bend / 100), skew = 0.10, ds = pw / N;
     const f = pw * 20, zs = 1 / (pw * 1.3);
-    const lx = -0.45, ly = -0.35, lz = 0.82;
+    const lx = -0.45, ly = -0.35, lz = 0.82, lit = shOn() ? clamp(S.set.turnShadow / 100, 0, 1) : 0;
     let k = 0, w = 0;
     for (let j = 0; j <= M; j++) {
       const v = j / M, Y = (v - 0.5) * ph;
@@ -407,7 +407,7 @@ class Renderer {
         const sc = f / (f - z);
         cd[k++] = lay.cx - shift + x * sc; cd[k++] = lay.cy + Y * sc; cd[k++] = -z * zs;
         cd[k++] = s; cd[k++] = v;
-        cd[k++] = 0.62 + 0.38 * rf; cd[k++] = 0.62 + 0.38 * rb; cd[k++] = cosA;
+        cd[k++] = 1 - 0.38 * (1 - rf) * lit; cd[k++] = 1 - 0.38 * (1 - rb) * lit; cd[k++] = cosA;          // the turning page's own darkening (and 0.24 more where it faces away) follows Shadows and Page turn: both off or at 0% leave it fully lit
         wd[w++] = x - shift; wd[w++] = Y; wd[w++] = z;
       }
     }

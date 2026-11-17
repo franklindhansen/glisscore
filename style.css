@@ -236,6 +236,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .transport[data-info=short] .si[data-l=spread] :is(.p,.c,.s){display:none}
 .transport[data-info=short] .si[data-l=single] :is(.p,.s,.t){display:none}
 .tapbtn{gap:var(--gap-head)}
+.transport .icon-btn:not(.play){border-color:var(--muted)}          /* Back to start's outline reads as clearly as Play's filled edge, so the two look the same height: the pale border faded into the page and made the filled button look taller */
 .transport .btn{min-height:var(--h-l)}          /* every button in the play row (Add page turn, and Hide editor in full screen) is the same height as Back to start and Play */
 .hist-wrap .hi{display:none}
 kbd{display:inline-block;min-width:var(--kbd-w);box-sizing:border-box;padding:var(--hair) var(--gap-tight);border:1px solid var(--line);border-bottom-width:2px;border-radius:var(--r-paper);background:var(--panel2);font:inherit;font-size:var(--type-note);line-height:round(1.5em,1px);--lh:1.5;text-align:center;color:var(--ink)}          /* the one key cap: in the shortcuts list, in a note, in a button's hint. In running text it is the note's own size, so it never stands out */
@@ -801,7 +802,6 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 /* a disabled slider (the timeline zoom before there is a score) looks switched off, not just still */
 input[type=range]:disabled{opacity:var(--inactive);cursor:not-allowed}
 input[type=range]:disabled::-webkit-slider-thumb{transform:none}
-.zoom:has(input:disabled){opacity:var(--inactive)}
 
 .panel .btn.wide{width:100%;margin-top:var(--gap-card)}
 
@@ -2469,11 +2469,13 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
 .btn-group>.btn[aria-pressed=true]{background:var(--accent-soft)}
 .btn-group .vsep{display:block;width:1px;height:16px;margin:0 var(--gap-snug);background:var(--line)}          /* the 3px each side keep a button's hover fill clear of the divider */
+.btn-group:not(:has(>:is(button,input):enabled)){opacity:var(--inactive)}          /* a group with nothing to act on (Undo, Redo, and History before there is a step; the timeline zoom before there is a score) is dimmed once as a whole, frame and all, so every group looks the same when it is switched off */
+.btn-group:not(:has(>:is(button,input):enabled))>:disabled{opacity:1}          /* and its controls are not dimmed a second time */
 .btn-group.hist-wrap{gap:0}
 .btn-group.fmt-group{align-self:stretch;flex:none}          /* Bold and Italic: one group as tall as the field beside it (the font box, the text box), whatever that height is */
 .btn-group.fmt-group>.btn{align-self:stretch;height:auto;display:grid;place-items:center;min-width:var(--h-s);padding:0 var(--gap-head)}
 .btn-group.fmt-group>.btn[aria-pressed=true]{color:var(--accent)}
-.btn-group.zoom{gap:0}          /* the timeline's zoom: minus, the slider, plus, then Fit, in the same group as Undo and Redo (the page-size strip's minus and plus) */
+.btn-group.zoom{gap:0;color:var(--ink)}          /* the zoom group reads as Undo, Redo, and Fit do: ink when it can be used, dimmed with the rest of the group when it cannot (it inherited the muted label color before, so a usable minus, plus, and Fit looked switched off) */          /* the timeline's zoom: minus, the slider, plus, then Fit, in the same group as Undo and Redo (the page-size strip's minus and plus) */
 .btn-group.zoom>.zbtn{width:var(--w-glass);height:calc(var(--h-xs) - var(--gap-tight));border:0;border-radius:var(--r-sm);background:transparent;box-shadow:none}
 .btn-group.zoom>.zbtn:hover:not(:disabled){background:var(--accent-soft)}
 .btn-group.zoom>.zbtn svg{width:14px;height:14px}
