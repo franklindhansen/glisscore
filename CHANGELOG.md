@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.26
+
+Even file tiles, shared Bold and Italic and zoom groups, and a custom color field. Closed settings groups are better balanced, and the Shadows switch stays at the right.
+
 ## 1.2.25
 
 The video editor's settings now sit in tiles, with Shadows laid out in one-line rows and a Reset beside its switch. Background and Ink color are one field with a color picker, and the PDF Editor's Clean, Crop, and Arrange use cards. Glass bars share one look.
