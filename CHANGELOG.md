@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.30
+
+New systems on a page are marked by double-clicking and dragging, and a double tap on a touch screen is more forgiving. The Audio Editor's tools no longer look faded in Safari full screen, and the drop message sits on a card.
+
 ## 1.2.29
 
 The Audio Editor's tools no longer look faded in Safari after going full screen, and the file tiles sit evenly in the side panel. Crop's Manual mode is simpler, and scan notes now appear in one toast.
