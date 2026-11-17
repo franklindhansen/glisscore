@@ -471,7 +471,9 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* ----- Toast message and drag-and-drop veil ----- */
 .toast{position:fixed;left:50%;bottom:var(--toast-bottom,calc(var(--gap-hero) + env(safe-area-inset-bottom,0px)));background:var(--ink);color:var(--bg);padding:var(--gap-card) var(--gap-field);border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);z-index:50;opacity:0;pointer-events:none}
 .toast.show{opacity:1}
-.dropveil{position:fixed;inset:0;z-index:40;background:var(--veil);display:flex;align-items:center;justify-content:center;color:var(--on-dark);font:italic 500 32px 'Newsreader',Georgia,serif;pointer-events:none;opacity:0;visibility:hidden;transition:opacity var(--ae-quick) var(--ease-ui),visibility 0s var(--ae-quick)}
+.dropveil{position:fixed;inset:0;z-index:40;background:var(--veil);display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;visibility:hidden;transition:opacity var(--ae-quick) var(--ease-ui),visibility 0s var(--ae-quick)}
+/* the drop card wears the toast's look (same ink, background, padding, radius, shadow, and width), but is its own element */
+.drop-card{background:var(--ink);color:var(--bg);padding:var(--gap-card) var(--gap-field);border-radius:var(--r-ctl);box-shadow:var(--shadow);max-width:min(560px,90vw);text-align:center}
 body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae-quick) var(--ease-ui),visibility 0s}
 @media (prefers-reduced-motion:reduce){.dropveil{transition:none}}
 
