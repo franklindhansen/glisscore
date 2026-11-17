@@ -255,6 +255,7 @@ kbd{display:inline-block;min-width:var(--kbd-w);box-sizing:border-box;padding:va
 .panel .group{padding:var(--gap-set) var(--gap-field) var(--gap-group);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);margin-bottom:var(--gap-card)}
 .panel .group:last-child{border-bottom:1px solid var(--line);margin-bottom:0}
 .panel .group.off{padding-block:var(--gap-set)}
+.panel .group.collapsed:not(.off){padding-bottom:calc(var(--gap-group) - var(--gap-label))}          /* a closed group with its summary: the heading row leaves room above its letters and the summary's line leaves --gap-label under its own, so the space above the heading and below the summary reads the same */
 .panel .group>h3,.panel .group>.group-head{display:flex;align-items:center;min-height:var(--sw-h)}          /* every heading row is as tall as the switch, so the letters sit the same distance from the top of every tile, and a closed tile is centered on its heading */
 .group h3{margin:0 0 var(--gap-card);font-size:var(--type-value);font-weight:600}
 .group-head{position:relative;display:flex;align-items:center;gap:var(--gap-head)}
@@ -371,7 +372,7 @@ input.bad{border-color:var(--danger)}
 #centerFold>.sub,#turnShadowBlock>.sub{padding-bottom:var(--gap-set);margin-bottom:var(--gap-set);border-bottom:1px solid var(--hairline)}
 [data-sum=shadows] .sub>.t-note{margin:calc(var(--gap-head) - var(--gap-set)) 0 0}
 [data-sum=shadows] .group-head .btn.small{margin:calc((var(--sw-h) - var(--h-s)) / 2) 0 calc((var(--sw-h) - var(--h-s)) / 2) auto}          /* the Reset button never makes the row taller, so nothing moves when it appears */
-[data-sum=shadows] .group-head .btn.small+.group-toggle{margin-left:0}
+[data-sum=shadows] .group-head .btn.small:not([hidden])+.group-toggle{margin-left:0}          /* the switch stays at the right edge when Reset is hidden */
 
 /* Video: Advanced */
 .adv{margin:0 0 var(--gap-card)}

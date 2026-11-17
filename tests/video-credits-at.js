@@ -161,7 +161,7 @@ const K = '__keyframes', URL = 'http://localhost:' + (process.env.PORT || 8123) 
   ok('exporting with credits on and no text still shows the warning dialog', asked.includes('Credits are enabled but empty'), JSON.stringify(asked));
 
   // --- the group summary and the tooltip
-  ok('the credits tooltip is true for both ends', await p.evaluate(() => /beside the first page or at the end/.test(document.querySelector('[data-tip="tip.credits"]').textContent)));
+  ok('the credits tooltip is true for both ends', await p.evaluate(() => /shown at the start or end/i.test(document.querySelector('[data-tip="tip.credits"]').textContent)));
 
   // --- spacing is even and the rows glide in each combination
   const gaps = async () => p.evaluate(() => {

@@ -173,7 +173,7 @@ function updateFileButtons() {
 function syncExport() {
   const has = !!S.pdf, wait = sysBusy();
   $('#btnExport').disabled = !has || wait;
-  $('#exportHint').textContent = !has ? '' : wait ? tx('sys.export') : (S.audio ? 'Exports as a MOV.' : 'No audio is loaded, so the video will be silent.');
+  $('#exportHint').textContent = !has ? '' : wait ? tx('sys.export') : (S.audio ? 'Exports as a MOV.' : 'No audio loaded. Video will be silent.');
 }
 /* while systems are found there is no timeline to act on: Play, Add page turn, Space turns evenly, and Turns to end are greyed */
 function syncSysBusy() {
@@ -563,11 +563,11 @@ function groupSummary(k) {
   // each entry lists wordings from the fullest to the shortest; the longest one that fits on a single line is used
   if (k === 'transition') {
     if (s.transition === 'cut') return ['Cut'];
-    if (s.transition === 'slide') return [j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks ' + ref), j('Slide', 'Direction ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
-    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
+    if (s.transition === 'slide') return [j('Slide', 'Direction: ' + dir, 'Slide length ' + sec(s.slideDur), 'Handle marks: ' + ref), j('Slide', 'Direction: ' + dir, 'Slide length ' + sec(s.slideDur)), j('Slide', dir, sec(s.slideDur))];
+    return [j('Turn', 'Turn length ' + sec(s.flipDur), 'Bend effect ' + pc(s.bend), 'Handle marks: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend), 'Handle: ' + ref), j('Turn', sec(s.flipDur), 'Bend ' + pc(s.bend)), j('Turn', sec(s.flipDur))];
   }
   if (k === 'layout') { const fa = sysOn() ? 'System' : singleOn() ? 'Single page' : firstAloneOn() ? 'First page alone' : null; return [j(fa, 'Margin ' + pc(s.margin)), j(fa, pc(s.margin))]; }
-  if (k === 'colors') { const iv = s.invert ? 'Invert colors' : null; return [j(bg(), iv, s.invert ? 'Ink color ' + ink() : null), j(bg(), iv, s.invert ? 'Ink ' + ink() : null), j(bg(), iv)]; }
+  if (k === 'colors') { const iv = s.invert ? 'Invert colors' : null; return [j(bg(), iv, s.invert ? 'Ink color: ' + ink() : null), j(bg(), iv, s.invert ? 'Ink: ' + ink() : null), j(bg(), iv)]; }
   if (k === 'shadows') return [sh(['Crease', 'Divider', 'Page turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Under score']), sh(['Crease', 'Divider', 'Turn', 'Score'])];
   if (k === 'fades') return [fd(false), fd(true)];
   if (k === 'credits') {
