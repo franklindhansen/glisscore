@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.27
+
+Turning off Shadows now leaves the turning page unshaded. Page transition's length slider is just called Length, and groups with nothing to act on dim as one. The zoom buttons look active when usable.
+
 ## 1.2.26
 
 Even file tiles, shared Bold and Italic and zoom groups, and a custom color field. Closed settings groups are better balanced, and the Shadows switch stays at the right.
