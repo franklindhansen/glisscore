@@ -11,7 +11,7 @@ let actx = null;
   document.addEventListener('pointerup', e => {
     if (e.pointerType !== 'touch' || !down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10) { last = null; return; }          // a drag is not a tap
     const n = performance.now(), el = e.target;
-    if (last && n - last.t < 350 && last.el === el && Math.hypot(e.clientX - last.x, e.clientY - last.y) < 30) {
+    if (last && last.el === el && dblNear(n - last.t, e.clientX - last.x, e.clientY - last.y, 'touch')) {
       last = null; const o = { bubbles: true, cancelable: true, clientX: e.clientX, clientY: e.clientY, view: window };
       setTimeout(() => { if (performance.now() - real > 400) el.dispatchEvent(new MouseEvent('dblclick', o)); }, 60);          // unless the browser sent one itself
     } else last = { t: n, x: e.clientX, y: e.clientY, el };

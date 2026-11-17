@@ -3,6 +3,9 @@ const cssNum = (name, fallback) => { const v = parseFloat(getComputedStyle(docum
 const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = cssNum('--ae-ms', 260), AE_MOVE_MS = cssNum('--ae-move', 400), AE_LIFT = cssNum('--ae-lift', 10), AE_NOTE_MS = cssNum('--ae-note-ms', 3000), TOAST_MS = cssNum('--toast-ms', 4200), TOAST_LONG_MS = cssNum('--toast-long-ms', 6000);          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length and lift of an Audio Editor switch (the CSS --ae-ms and --ae-lift, defined once in style.css)
 const $ = (s, r = document) => r.querySelector(s);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+/* the one definition of a double-click or double-tap: two presses within this time and distance (a finger lands less exactly than a mouse) */
+const DBL_MS = 450, DBL_PX = 6, DBL_TOUCH_PX = 30;
+const dblNear = (dt, dx, dy, type) => dt < DBL_MS && Math.hypot(dx, dy) < (type === 'touch' ? DBL_TOUCH_PX : DBL_PX);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 /* gives the page a turn without a timer: timers are slowed to one a second in a hidden tab or frame, and a long job that waits on them crawls */
 const tick = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => { c.port1.close(); r(); }; c.port2.postMessage(0); });

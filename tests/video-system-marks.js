@@ -37,26 +37,45 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const at = (y, x = 0.5) => p.evaluate(([y, x]) => { const cv = document.querySelector('#selCv'), g = SEL.geo, r = cv.getBoundingClientRect(), k = r.width / cv.width; return [r.left + (g.ox + x * g.pa * g.u) * k, r.top + (g.oy + y * g.u) * k]; }, [y, x]);
   const drag = async (a, b2) => { await p.mouse.move(...a); await p.mouse.down(); await p.mouse.move(...b2, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(500); };
   const click = async pt => { await p.mouse.move(...pt); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(150); };
-  const before = await sys(), h0 = await steps();
+  const before = await sys(), h0 = await steps(); let s;
   ok('three systems are found first', before.length === 3, JSON.stringify(before));
   ok('marking is on without a button', await p.evaluate(() => !document.querySelector('#spMark')));
-  await drag(await at(0.03), await at(0.085));
-  let s = await sys();
-  ok('press-drag marks a region the finder skipped', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
+  // a new system is made only by a double-click-and-drag on blank page; nothing else on blank page does anything
+  const ddrag = async (a, b2, gap = 80) => { await p.mouse.move(...a); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(gap); await p.mouse.down(); await p.mouse.move(...b2, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(500); };
+  const same = async (name) => ok(name, JSON.stringify(await sys()) === JSON.stringify(before) && await steps() === h0, JSON.stringify(await sys()));
+  await drag(await at(0.03), await at(0.085)); await same('a plain drag on blank page does nothing');
+  await click(await at(0.03)); await same('a single click on blank page does nothing');
+  await click(await at(0.03)); await p.waitForTimeout(600); await click(await at(0.09)); await same('two clicks apart (the old click-click mark) do nothing');
+  await ddrag(await at(0.03), await at(0.085), 600); await same('a second press after the double-click time is a plain drag');
+  { const a0 = await at(0.03), a1 = [a0[0], a0[1] + 12]; await p.mouse.move(...a0); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(80); await p.mouse.move(...a1); await p.mouse.down(); await p.mouse.move(a1[0], a1[1] + 40, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(500); await same('a second press too far from the first is a plain drag'); }
+  ok('blank page shows the plain pointer, not a crosshair', await p.evaluate(() => document.querySelector('#selCv').style.cursor !== 'crosshair'));
+  await ddrag(await at(0.03), await at(0.085));
+  s = await sys();
+  ok('double-click-and-drag marks a region the finder skipped', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
   ok('it is one History step', await steps() === h0 + 1);
   await p.click('#bUndo'); await p.waitForTimeout(500);
   ok('undo takes the mark away', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys()));
   await p.click('#bRedo'); await p.waitForTimeout(500);
   ok('redo brings it back', (await sys()).length === 4);
-  // click-click over the second and third system replaces both
+  // double-click-and-drag over the second and third system replaces neither but pushes them
   const q = await sys();
-  await click(await at(q[2][0] - 0.03)); await p.mouse.move(...(await at(q[3][1] + 0.03)), { steps: 3 }); await click(await at(q[3][1] + 0.03));
+  await ddrag(await at(q[2][0] - 0.03), await at(q[3][1] + 0.03));
   s = await sys();
-  ok('click-click marks the same way, pushing what it overlaps and removing nothing', s.length === q.length + 1 && s.every((r, i) => r[1] - r[0] >= 0.014 && (!i || r[0] >= s[i - 1][1] - 1e-6)) && s[s.length - 1][1] <= 1.0001 && s.some(r => r[0] < q[2][0] && r[1] > q[3][1] - 0.001), JSON.stringify(s));
+  ok('a double-click-and-drag over systems pushes what it overlaps and removes nothing', s.length === q.length + 1 && s.every((r, i) => r[1] - r[0] >= 0.014 && (!i || r[0] >= s[i - 1][1] - 1e-6)) && s[s.length - 1][1] <= 1.0001 && s.some(r => r[0] < q[2][0] && r[1] > q[3][1] - 0.001), JSON.stringify(s));
   ok('and is one step', await steps() === h0 + 2);
   await p.click('#bUndo'); await p.click('#bUndo'); await p.waitForTimeout(500);
   ok('two undos restore the found systems', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys()));
-  if (process.env.SHOTS) { await click(await at(0.3)); await p.mouse.move(...(await at(0.37))); await p.waitForTimeout(200); await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/marks.png' }); await p.keyboard.press('Escape'); }
+  // touch: a double tap and drag marks the same way
+  { const cdp = await p.context().newCDPSession(p), pt = ([x, y]) => [{ x, y, id: 1 }]; await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
+    const t = async (type, xy) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: xy ? pt(xy) : [] });
+    const b0 = await at(0.9), b1 = await at(0.96); await t('touchStart', b0); await t('touchMove', b1); await t('touchEnd'); await p.waitForTimeout(500); ok('touch: a plain drag on blank page does nothing', JSON.stringify(await sys()) === JSON.stringify(before));
+    const a0 = await at(0.03), a1 = await at(0.085); await t('touchStart', a0); await t('touchEnd'); await p.waitForTimeout(100); await t('touchStart', a0);
+    for (let i = 1; i <= 6; i++) await t('touchMove', [a0[0] + (a1[0] - a0[0]) * i / 6, a0[1] + (a1[1] - a0[1]) * i / 6]); await t('touchEnd'); await p.waitForTimeout(600);
+    s = await sys(); ok('touch: a double tap and drag marks a system', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
+    ok('a double tap allows a finger-sized gap, a double-click does not', await p.evaluate(() => dblNear(100, 20, 0, 'touch') && !dblNear(100, 20, 0, 'mouse') && dblNear(100, 4, 0, 'mouse') && !dblNear(500, 0, 0, 'touch')));
+    
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }); await p.waitForTimeout(300); await p.click('#bUndo'); await p.waitForTimeout(600); ok('touch: undo takes the touch mark away', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify([await sys(), await steps(), h0])); }
+  if (process.env.SHOTS) { await p.mouse.move(...(await at(0.37))); await p.waitForTimeout(200); await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/marks.png' }); await p.keyboard.press('Escape'); }
   // resize by the bottom edge
   const t = await sys(); await drag(await at(t[0][1]), await at(t[0][1] + 0.03));
   s = await sys(); ok('a bottom edge drag resizes', s.length === 3 && s[0][1] > t[0][1] + 0.02 && Math.abs(s[0][0] - t[0][0]) < 0.003, JSON.stringify([t[0], s[0]]));

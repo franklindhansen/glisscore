@@ -100,7 +100,7 @@ function splitBind() {
 }
 
 /* ---------- the selector ---------- */
-const SEL = { mark: { space: false, over: false, y0: null, pg: -1, hover: null, live: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
+const SEL = { mark: { space: false, over: false, live: null, blank: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
 /* the system the playhead is on: a credits card shows the nearest system instead */
 function selCurrent(ahead) {
   const n = S.spreads.length; if (!n) return null;
@@ -130,7 +130,7 @@ function selSync(force) {
   const sig = [key, cv.clientWidth, cv.clientHeight, S.set.margin, S.set.letterbox, S.set.aspect, S.set.res, SYS.byPage.size, SYS.gen, SYS.rev, S.pdf.gen || 0].join();
   if (!force && sig === SEL.sig) return;
   if (sysPage(key) !== sysPage(SEL.key == null ? -1 : SEL.key) && SZS.z !== 1) szReset(false, SZS);          // a new page starts at Fit
-  SEL.sig = sig; SEL.key = key; if (SEL.mark.y0 != null && SEL.mark.pg !== sysPage(key)) SEL.mark.y0 = SEL.mark.hover = SEL.mark.live = null;
+  SEL.sig = sig; SEL.key = key; SEL.mark.blank = SEL.mark.live = null;
   const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(key));
   const rec = SYS.byPage.get(sysPage(key)); document.querySelectorAll('input[name=selMode]').forEach(r => { r.checked = r.value === (rec && rec.full ? 'full' : 'systems'); r.disabled = !rec; }); { const sg = $('#selMode'); if (sg._place) sg._place(false); }
   selPgText(); $('#selPrev').disabled = i <= 0; $('#selNext').disabled = i < 0 || i >= pages.length - 1;
@@ -209,7 +209,6 @@ function selMarkPaint(g, list, box, X, Y, accent) {
     g.globalAlpha = s.cur ? 1 : 0.45; g.fillStyle = accent; g.fill(); g.globalAlpha = 1; g.fillStyle = '#fff'; g.fillText(t, c[0], c[1] + k * 0.5);
   });
   g.textAlign = 'start'; g.textBaseline = 'alphabetic';
-  if (!L && M.y0 != null) { g.globalAlpha = 1; g.setLineDash([6 * k, 4 * k]); g.lineWidth = lw * 1.6; g.beginPath(); g.moveTo(X(0), Y(M.y0)); g.lineTo(X(pa), Y(M.y0)); g.stroke(); }          // the first click of a click-click mark
   g.restore();
   if (list.includes(box) && !L) { const c = selXPos(); g.save(); g.fillStyle = accent; g.beginPath(); g.arc(c[0], c[1], c[2], 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = Math.max(1.5, k * 1.25); g.lineCap = 'round'; const q = c[2] * 0.4; g.beginPath(); g.moveTo(c[0] - q, c[1] - q); g.lineTo(c[0] + q, c[1] + q); g.moveTo(c[0] + q, c[1] - q); g.lineTo(c[0] - q, c[1] + q); g.stroke(); g.restore(); }
 }
@@ -249,7 +248,6 @@ function selHit(e) {
   const geo = SEL.geo; if (!geo || SEL.key == null) return { t: 'new' };
   const p = selPt(e), r = SYS.byPage.get(geo.idx), list = r ? r.systems : [], { box } = geo, xc = selXPos();
   if (list.includes(box) && Math.hypot(p.px - xc[0], p.py - xc[1]) <= xc[2] + 3) return { t: 'del', box, p };
-  if (SEL.mark.y0 != null) return { t: 'second', p };
   let best = null, bd = Infinity;
   list.forEach(s => { if (p.x < -p.tol || p.x > geo.pa + p.tol) return; [['top', s.top], ['bottom', s.bottom]].forEach(([n, v]) => { const d = Math.abs(p.y - v) + ((n === 'bottom') === (p.y > v) ? p.tol * 0.01 : 0); if (d <= p.tol && d < bd) { bd = d; best = { t: n, box: s, p }; } }); });          // where two systems touch, the pointer's own side decides
   if (best) return best;
@@ -257,12 +255,13 @@ function selHit(e) {
   return { t: 'new', p };
 }
 const selList = () => { const r = SEL.geo && SYS.byPage.get(SEL.geo.idx); return r ? r.systems : []; };
-const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', move: 'move', new: 'crosshair', second: 'crosshair' };
+/* a new system is made only by a double-click-and-drag on blank page: press, release, press again within the shared double-click time and distance (DBL_MS, DBL_PX, DBL_TOUCH_PX in core.js), then drag. A double-click on a system uses the same. */
+const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', move: 'move', new: 'default' };
 let selPaintQ = 0; const selPaintSoon = () => { cancelAnimationFrame(selPaintQ); selPaintQ = requestAnimationFrame(selPaint); };
 function selMarkBind() {
   const pane = $('#sysSel'), cv = $('#selCv'), M = SEL.mark; let G = null;
-  $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.y0 = M.live = null; sysRedetect(SEL.geo.idx); } });
-  /* a zoomed page pans by dragging while Space is held over it (a plain drag marks); Space then does not play */
+  $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.blank = M.live = null; sysRedetect(SEL.geo.idx); } });
+  /* a zoomed page pans by dragging while Space is held over it (a double-click-and-drag marks a new system); Space then does not play */
   const spaceSet = on => { M.space = on; pane.classList.toggle('pan-ready', on); };
   pane.addEventListener('pointerenter', () => { M.over = true; }); pane.addEventListener('pointerleave', () => { M.over = false; });
   document.addEventListener('keyup', e => { if (e.code === 'Space' && M.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
@@ -270,16 +269,17 @@ function selMarkBind() {
     if (M.space) return;
     if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null) return;
     e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
-    const h = selHit(e); G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, base: selList().slice() });
+    const h = selHit(e), b = M.blank; M.blank = null;
+    G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, base: selList().slice() });
+    if (h.t === 'new') G.dbl = !!b && b.pg === G.pg && dblNear(performance.now() - b.t, e.clientX - b.x, e.clientY - b.y, e.pointerType);          // the second press of a double-click on blank page
   });
   cv.addEventListener('pointermove', e => {
     if (!SEL.geo) return;
     const p = selPt(e);
-    if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; if (M.y0 != null) { M.hover = clamp(p.y, 0, 1); M.live = Math.abs(M.hover - M.y0) > 0.004 ? sysPush(selList(), 'new', 0, M.y0, M.hover) : null; selPaintSoon(); } return; }
+    if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; return; }
     if (!G.moved && Math.hypot(e.clientX - G.sx, e.clientY - G.sy) < 4) return; G.moved = true;
     const y = clamp(p.y, 0, 1), t = G.t, i = G.base.indexOf(G.box);
-    if (t === 'new') M.live = sysPush(G.base, 'new', 0, clamp(G.p.y, 0, 1), y);
-    else if (t === 'second') { M.hover = y; M.live = sysPush(G.base, 'new', 0, M.y0, y); }
+    if (t === 'new') { if (G.dbl) M.live = sysPush(G.base, 'new', 0, clamp(G.p.y, 0, 1), y); }          // a plain drag on blank page does nothing
     else if (i >= 0 && (t === 'top' || t === 'bottom')) M.live = sysPush(G.base, t, i, y);
     else if (i >= 0 && t === 'move') M.live = sysPush(G.base, 'move', i, y - G.p.y);
     selPaintSoon();
@@ -289,20 +289,19 @@ function selMarkBind() {
     const geo = SEL.geo, L = M.live; M.live = null;
     if (e.type === 'pointercancel' || !geo) { selPaintSoon(); return; }
     const t = g.t, idx = g.pg; if (idx !== geo.idx) { selPaintSoon(); return; }          // the page changed under the gesture
-    if (t === 'del' && !g.moved) { M.y0 = M.hover = null; sysRemove(idx, g.box); return; }
+    if (t === 'del' && !g.moved) { sysRemove(idx, g.box); return; }
     const big = L && L.out[L.cur][1] - L.out[L.cur][0] >= SYS_MINH;
-    if (t === 'second') { const y0 = M.y0, P = sysPush(g.base, 'new', 0, y0, clamp(selPt(e).y, 0, 1)); M.y0 = M.hover = null; if (P.out[P.cur][1] - P.out[P.cur][0] >= SYS_MINH) await sysPlace(idx, P.boxes, P.out); selPaintSoon(); return; }
-    if (g.moved && L) { if (t === 'new') M.y0 = null; if (big) await sysPlace(idx, L.boxes, L.out); selPaintSoon(); return; }
-    if (t === 'new') { M.y0 = clamp(g.p.y, 0, 1); M.hover = M.y0; M.pg = idx; selPaintSoon(); return; }          // the first click of a click-click mark
+    if (g.moved && L) { if (big) await sysPlace(idx, L.boxes, L.out); selPaintSoon(); return; }
+    if (t === 'new') { if (!g.moved && !g.dbl) M.blank = { t: performance.now(), x: e.clientX, y: e.clientY, pg: idx }; selPaintSoon(); return; }          // a click or a drag on blank page does nothing; a click is remembered as the first half of a double-click
     const now = performance.now(), tap = M.tap; M.tap = g.box ? { t: now, x: e.clientX, y: e.clientY, box: g.box, pg: idx } : null;
-    if (tap && g.box && tap.box === g.box && tap.pg === idx && now - tap.t < 450 && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) < 6) { M.tap = null; selClick(e); sysResetOne(idx, g.box).then(() => selPaintSoon()); return; }          // a double-click (or two quick taps) on a system or its edge: that one box goes back to what was found
+    if (tap && g.box && tap.box === g.box && tap.pg === idx && dblNear(now - tap.t, e.clientX - tap.x, e.clientY - tap.y, e.pointerType)) { M.tap = null; selClick(e); sysResetOne(idx, g.box).then(() => selPaintSoon()); return; }          // a double-click (or two quick taps) on a system or its edge: that one box goes back to what was found
     selClick(e);                                                  // a click on a system or its edge: the playhead goes there
   };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && SPLIT.shown && M.over && SZS.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); return; }
     if (!SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
-    if (e.key === 'Escape' && (M.y0 != null || M.live)) { M.y0 = M.live = M.hover = null; G = null; selPaintSoon(); e.stopPropagation(); }
+    if (e.key === 'Escape' && (M.blank || M.live)) { M.blank = M.live = null; G = null; selPaintSoon(); e.stopPropagation(); }
     else if ((e.key === 'Delete' || e.key === 'Backspace') && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
   }, true);
 }
