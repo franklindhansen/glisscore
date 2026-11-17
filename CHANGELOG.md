@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.28
+
+System selections now sit on the staves and ignore names, page numbers, and scan shadows, and double-clicking a selection resets it. Finding systems is faster, Margin moves full pages, the Letterbox bars slide, and the credits card matches the score's paper.
+
 ## 1.2.27
 
 Turning off Shadows now leaves the turning page unshaded. Page transition's length slider is just called Length, and groups with nothing to act on dim as one. The zoom buttons look active when usable.
