@@ -15,7 +15,7 @@ const PE_HIST = histPanel({ btn: 'peHistBtn', pop: 'peHist', list: 'peHistList',
   apply: t => { const st = PE.undo.concat([PE.d], PE.redo.slice().reverse()); PE.undo = st.slice(0, t); PE.redo = st.slice(t + 1).reverse(); PE.d = st[t]; peRender(true); } });
 function peUndo() { const s = PE.undo.pop(); if (!s) return; PE.redo.push(peSnap()); PE.d = s; PE.rzPend = undefined; PE.rzShape = undefined; PE.wmSel = null; peRender(true); }
 function peRedo() { const s = PE.redo.pop(); if (!s) return; PE.undo.push(peSnap()); PE.d = s; PE.rzPend = undefined; PE.rzShape = undefined; peRender(true); }
-function peReset() { if (peIsIdentity()) return; pePush(); PE.d = identityRecipe(peBaseN()); peRender(true); }
+function peReset() { if (peIsIdentity() && !PE.hand.size) return; pePush(); PE.d = identityRecipe(peBaseN()); PE.hand.clear(); PE.handLast = null; peRender(true); if (PE.mode === 'crop') { peCropPaintAll(); if (PE.one != null) peOneFrame(); peActs(); } }          // the frames you drew in Manual go too, so the boxes return to their starting place
 /* a playful line takes the place of an editor's usual instructions, then is typed over by them and they stay */
 function edLead(which, quip, once, hold) {
   hold = hold || 4800;
@@ -186,7 +186,7 @@ function peSplitNote() {          // what Split found is said once, as a toast o
 }
 /* a greyed main button says why on its tool's status line; the line goes when the button is enabled (a message the tool set itself is left alone) */
 /* a reason goes on the status line only when the user can fix it and nothing else on screen says it; these belong on the greyed button's tooltip, whichever call sends them */
-const PE_WHY_TIP = new Set(['pe.why.page', 'pe.why.choose', 'pe.why.apply', 'pe.why.draw', 'pe.why.cleaned', 'pe.why.cropped', 'pe.why.spread', 'pe.why.level', 'pe.why.resize']);
+const PE_WHY_TIP = new Set(['pe.why.page', 'pe.why.choose', 'pe.why.draw', 'pe.why.cleaned', 'pe.why.cropped', 'pe.why.spread', 'pe.why.level', 'pe.why.resize']);
 const peOf = (a, b) => a + ' / ' + b;          // a position or a count, said one way everywhere: "1 / 3" (the bar's "3 / 3 selected" and the large view's page)
 function peTip(sel, key) {          // a greyed button's tooltip: set from a reason, cleared when the reason goes
   const b = typeof sel === 'string' ? $(sel) : sel; if (!b) return;
@@ -217,7 +217,7 @@ function peActs() {
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') { const off = !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())); set('#peRzGo', off); peTip('#peRzGo', off ? 'pe.why.resize' : ''); }
   else if (PE.mode === 'wm') { const on = !!d.wm.on; peApplyBtn('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id)), on); }
-  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualBoxes() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length, src = hand ? peApplySrc() : null, apply = hand && src != null && peApplyTo(src).length > 0; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); set('#peCropApply', !apply); $('#peCropPad').disabled = busy || !!PE.cropShown; peTip('#peCropApply', hand && !apply ? (src == null ? 'pe.why.draw' : 'pe.why.apply') : ''); peWhy('#peCropStatus', hand ? (src == null ? 'pe.why.draw' : '') : none ? 'pe.why.page' : '', ''); }
+  else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualPlan() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', none ? (hand ? 'pe.why.draw' : 'pe.why.page') : '', ''); }
   else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
@@ -361,22 +361,20 @@ function peManualBoxes() {
   const d = PE.d, m = new Map(); d.order.forEach(id => { if (!d.slots[id].x && PE.hand.has(id)) m.set(id, PE.hand.get(id)); });
   return m;
 }
-/* Manual keeps its own ticks, starting with none: they only choose where Apply to selected copies a frame. Auto's ticks wait until you come back */
+/* Manual keeps its own ticks, starting with none: they choose which pages without a frame of their own take the open page's frame when you press Apply. Auto's ticks wait until you come back */
 function peCropTicks() {
   const want = PE.mode === 'crop' && peHandMode(); if (want === !!PE.manTicks) return;
   if (want) { PE.autoSkip = PE.skip; PE.skip = PE.manSkip || new Set(PE.d.order); } else { PE.manSkip = PE.skip; PE.skip = PE.autoSkip; }
   PE.manTicks = want;
 }
-/* the page whose frame Apply to selected copies: the open page, or in the grid the page you drew on last */
+/* the page whose frame the ticked pages take: the open page, or in the grid the page you drew on last */
 const peSrcBox = id => PE.hand.get(id) || (id === PE.one && !PE.d.slots[id].half && PE.d.slots[id].crop) || null;          // the frame you drew, or the crop the open page already has
 const peApplySrc = () => { const d = PE.d, id = PE.one != null ? PE.one : PE.handLast; return id != null && d.slots[id] && !d.slots[id].x && peSrcBox(id) ? id : null; };
 const peApplyTo = src => PE.d.order.filter(id => id !== src && !PE.d.slots[id].x && !PE.d.slots[id].half && !PE.skip.has(id));
-/* crops that page and the ticked pages with its frame */
-function peCropApply() {
-  const d = PE.d, src = peApplySrc(); if (src == null) return;
-  const b = peSrcBox(src), to = peApplyTo(src); if (!b || !to.length) return;
-  pePush(); [src].concat(to).forEach(id => { d.slots[id].crop = peRound(b); });          // only the crop is set, so Undo reverses it all
-  PE.rustle = true; peRender(true); peSay('#peCropStatus', '');
+/* what Manual's Apply crops: every page you drew a frame on, and each ticked page you did not draw on, which takes the frame of the open page (or the page you drew on last). A ticked page with its own frame keeps it */
+function peManualPlan() {
+  const m = new Map(peManualBoxes()), src = peApplySrc(); if (src == null) return m;
+  const b = peSrcBox(src); peApplyTo(src).forEach(id => { if (!m.has(id)) m.set(id, b.slice()); }); return m;
 }
 /* while Crop is open and the pages are read for their frames, the Crop button says so ("Processing 40%", filling as it goes) and it and the margin slider are greyed in Auto; the Crop button is only ever busy once you press it */
 function peCropReadSay(pc) {
@@ -421,9 +419,9 @@ function peFullThumb(sl) {
 }
 async function peCropGo() {
   const d = PE.d;
-  if (peHandMode()) {          // Manual crops the pages you drew on, and the open page, each with its own frame
-    const mm = peManualBoxes(); if (!mm.size) return;
-    pePush(); mm.forEach((b, id) => { PE.hand.set(id, b.slice()); d.slots[id].crop = peRound(b); });
+  if (peHandMode()) {          // Manual crops the pages you drew on, each with its own frame, and the ticked pages without one with the open page's frame
+    const mm = peManualPlan(); if (!mm.size) return;
+    pePush(); mm.forEach((b, id) => { d.slots[id].crop = peRound(b); });
     PE.rustle = true; peRender(true); peSay('#peCropStatus', ''); return;
   }
   const ids = peTargets(); if (!ids.length) return;
@@ -444,14 +442,11 @@ function peCropNote(qs) {
   const sub = $('#peCropSub'), pad = +$('#peCropPad').value, full = !peHandMode() && pad > 0 && qs.length > 0 && qs.every(q => q && q.box && q.box[0] < 0.002 && q.box[1] < 0.002 && q.box[2] > 0.998 && q.box[3] > 0.998);
   const t = full ? tx('pe.crop.full') : peCropSubText(sub); if (sub.classList.contains('warn') !== full || sub.textContent !== t) { sub.classList.toggle('warn', full); swapText(sub, t, true); }          // the note takes the subtitle's own line, so nothing moves
 }
-/* the subtitle's usual line: Auto's own, or Manual's, and the note that page 1 sets the video's page shape */
-function peCropSubText(sub) {
-  const d = PE.d, first = d.order.find(id => !d.slots[id].x); sub.dataset.auto = sub.dataset.auto || sub.dataset.normal;
-  return (peHandMode() ? tx('pe.crop.manual') : sub.dataset.auto) + (first != null && d.slots[first].crop && !d.size ? ' ' + tx('pe.crop.page1') : '');
-}
+/* the subtitle's usual line, the same in Auto and Manual: the screen shows what to do, so no instruction is added */
+function peCropSubText(sub) { return sub.dataset.normal; }
 /* called whenever the window is drawn while Crop is open */
 function peCropRefresh() {
-  const hand = peHandMode(); $('#peCropPadF').classList.toggle('dim', hand); $('#peCropSameF').hidden = hand; $('#peCropApply').hidden = !hand;
+  const hand = peHandMode(); $('#peCropPadF').classList.toggle('dim', hand); $('#peCropSameF').hidden = hand;
   peCropPaintAll(); peCropRead();
 }
 /* ---- one page, large: opened from a page's corner button in Re-kilter and Crop. Crop shows the frame (yours to drag in Manual);
@@ -663,7 +658,7 @@ function peCropBind() {
   document.querySelectorAll('input[name=peCropMode]').forEach(r => r.addEventListener('change', e => { PE.cropMode = e.target.value; peCropTicks(); if (peHandMode() && PE.one == null) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } else if (!peHandMode() && PE.oneAuto && PE.one != null) PE.one = null; if (!peHandMode()) PE.oneAuto = false; peState(); if (PE.cropReading) peCropReadSay(PE.cropPc); }));          // Manual opens one page to draw on; Auto takes you back to all the pages, unless you opened that page yourself
   peApplyClick('#peCropAuto', peCropGo, peCropClear);
   $('#peCropPad').addEventListener('input', e => { $('#peCropPadVal').textContent = e.target.value + '%'; paintRange(e.target); peCropPaintAll(); peOneFrame(); peActs(); });
-  $('#peCropApply').addEventListener('click', peCropApply); $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
+  $('#peCropSame').addEventListener('change', () => { peCropPaintAll(); peOneFrame(); peActs(); }); $('#peCropPrev').addEventListener('click', () => peOneStep(-1)); $('#peCropNext').addEventListener('click', () => peOneStep(1));
   $('#peOneBack').addEventListener('click', peOneClose); $('#peOneCmp').addEventListener('click', () => { PE.orig = !PE.orig; peOneRefresh(); });
   { const wp = $('#peWipe'); let on = false;          // the line between the original and the leveled page
     wp.addEventListener('pointerdown', e => { e.preventDefault(); PE.wipeRun = (PE.wipeRun || 0) + 1; wp.setPointerCapture(e.pointerId); on = true; });
@@ -926,7 +921,7 @@ function peState() {
   { const deg = $('#peWmDeg'), host = deg.closest('.cu'); cuOpen(host, preset === 'custom'); if (document.activeElement !== deg) deg.value = PE.wmDeg == null ? '' : PE.wmDeg; const sg = host.closest('.seg'), pill = sg.querySelector('.seg-pill'); sg._place && sg._place(!!(pill && pill.style.opacity === '1' && pill.style.width)); }          // glide, so a click on Custom slides the pill as any choice does; the first placing as the tool opens does not
   $('#peWmOpacity').value = w.opacity; $('#peWmOpacityVal').textContent = w.opacity + '%'; paintRange($('#peWmOpacity'));
   { const eb = $('#peExport'); eb.disabled = !!pdfWhy(); eb.removeAttribute('title'); }
-  $('#peUndo').disabled = !PE.undo.length; $('#peRedo').disabled = !PE.redo.length; $('#peReset').disabled = peIsIdentity(); PE_HIST.refresh();
+  $('#peUndo').disabled = !PE.undo.length; $('#peRedo').disabled = !PE.redo.length; $('#peReset').disabled = peIsIdentity() && !PE.hand.size; PE_HIST.refresh();
   if (m === 'crop') peCropRefresh();
 }
 const pePop = card => { const tk = card && card.querySelector('.tick'); if (tk && tk.animate && !reducedMotion()) tk.animate([{ transform: 'scale(.6)' }, { transform: 'scale(1.18)', offset: .55 }, { transform: 'none' }], { duration: 440, easing: EASE_OUT }); };

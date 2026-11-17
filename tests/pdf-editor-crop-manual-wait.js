@@ -1,5 +1,5 @@
 // PDF Editor: Manual in Crop while the pages are still being read. The frame and its handles are there to drag, each page keeps its own frame when you step with the arrows,
-// Apply to selected copies the open page's frame to the ticked pages, and Crop applies the frames you drew at once, without waiting for the read.
+// In Manual, Crop gives the open page's frame to the ticked pages with no frame of their own and applies the frames you drew, at once, without waiting for the read.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-crop-manual-wait.js
 // the large view's position reads "2 / 4" (old: "Page 2 of 4")
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
@@ -47,12 +47,12 @@ const near = (a, b, e = 0.02) => a && b && a.length === b.length && a.every((v, 
     ok('Own frames: Crop gives page 1 and page 2 their own dragged frames', near(cr2[0], a1, 0.03) && near(cr2[1], b1, 0.03) && !near(cr2[0], cr2[1], 0.03), JSON.stringify({ cr2, a1, b1 }));
     ok('Own frames: pages not drawn on are left alone', cr2[2] === null && cr2[3] === null, JSON.stringify(cr2)); await p.close(); }
 
-  // 2. Apply to selected copies the open page's frame to the ticked pages while the read is still going
+  // 2. Crop copies the open page's frame to the ticked pages while the read is still going
   { const p = await fresh(); await hand(p); await drag(p, -80, -80); const a1 = await frame(p);
-    const off = await p.evaluate(() => $('#peCropApply').disabled); await p.evaluate(() => { PE.skip.delete(PE.d.order[1]); PE.skip.delete(PE.d.order[2]); peState(); peActs(); }); await p.waitForTimeout(300);
-    const on = await p.evaluate(() => $('#peCropApply').disabled); await p.click('#peCropApply'); await p.waitForTimeout(900); const cr = await crops(p);
-    ok('Apply to selected: greyed out until a page is ticked, then crops the open page and the ticked pages with its frame, and no other', off && !on && near(cr[0], a1, 0.03) && near(cr[1], a1, 0.03) && near(cr[2], a1, 0.03) && cr[3] === null, JSON.stringify({ off, on, cr, a1 }));
-    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Apply to selected: page 2 shows the copied frame', (await page(p)) === '2 / 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
+    const off = await p.evaluate(() => $('#peCropAuto').getAttribute('aria-pressed') === 'true'); await p.evaluate(() => { PE.skip.delete(PE.d.order[1]); PE.skip.delete(PE.d.order[2]); peState(); peActs(); }); await p.waitForTimeout(300);
+    const on = await p.evaluate(() => $('#peCropAuto').disabled); await p.click('#peCropAuto'); await p.waitForTimeout(900); const cr = await crops(p);
+    ok('Manual Crop: with no page ticked it applies only the drawn frame; with pages ticked it also crops them with that frame, and no other', !on && near(cr[0], a1, 0.03) && near(cr[1], a1, 0.03) && near(cr[2], a1, 0.03) && cr[3] === null, JSON.stringify({ off, on, cr, a1 }));
+    await p.click('#peCropNext'); await p.waitForTimeout(700); const b0 = await frame(p); ok('Manual Crop: page 2 shows the copied frame', (await page(p)) === '2 / 4' && near(b0, a1, 0.02), JSON.stringify({ b0, a1 }));
     // old: Crop in Manual then cropped the open page too; new: the open page already has the copied frame, so the button reads Applied and pressing it takes that crop off
     const pr = await p.evaluate(() => $('#peCropAuto').getAttribute('aria-pressed') === 'true'); await p.evaluate(() => document.querySelector('#peCropAuto').click()); await p.waitForTimeout(900); const cr2 = await crops(p);
     ok('Manual: with the open page already cropped the button reads Applied, and pressing it takes the crops off', pr && cr2.every(c => c === null), JSON.stringify({ pr, cr2, a1 })); await p.close(); }

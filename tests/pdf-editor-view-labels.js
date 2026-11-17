@@ -55,7 +55,7 @@ async function makePdf() {
   await p.evaluate(() => { PE.one = null; peState(); peTool('skew'); }); await p.waitForTimeout(500);
   await p.evaluate(() => { PE.one = PE.d.order[0]; peState(); }); await p.waitForFunction(() => !document.querySelector('#peCropPg').classList.contains('loading')); await p.waitForTimeout(500);
   const h = await p.evaluate(() => { const e = document.querySelector('#peOneHint'); return { on: e.classList.contains('on'), t: e.textContent, o: getComputedStyle(e).opacity }; });
-  ok('A page that has not been leveled says so in the large view', h.on && /Re-kilter/.test(h.t) && +h.o > 0.9, JSON.stringify(h));
+  ok('A page that has not been leveled says so in the large view', h.on && /^Not leveled yet\.$/.test(h.t) && +h.o > 0.9, JSON.stringify(h));
   await p.evaluate(() => { PE.one = null; peState(); peTool('clean'); }); await p.waitForTimeout(300);
   await p.evaluate(() => { PE.one = PE.d.order[0]; peState(); }); await p.waitForTimeout(900);
   ok('Clean has no such line', await p.evaluate(() => !document.querySelector('#peOneHint').classList.contains('on')));
