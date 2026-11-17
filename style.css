@@ -244,7 +244,7 @@ kbd{display:inline-block;min-width:var(--kbd-w);box-sizing:border-box;padding:va
 
 /* ==================== 6. SIDE PANEL (SETTINGS) ==================== */
 /* ----- Panel container and groups ----- */
-.panel{position:relative;border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:var(--gap-tight) var(--gap-field) var(--gap-group);min-height:0}
+.panel{position:relative;border-left:1px solid var(--line);background:var(--panel);overflow:auto;padding:var(--gap-card) var(--gap-field) var(--gap-group);min-height:0}
 /* keep the panel's width steady when its scrollbar appears or disappears (e.g. when a group opens) */
 @container app (min-width:961px){
   .panel{overflow-x:hidden;overflow-y:scroll}
@@ -633,7 +633,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .stage-wrap>.empty:not([hidden]){position:relative;inset:auto;flex:none;width:100%}
   .stage-col{grid-template-rows:auto auto}
   .stage-col{padding:var(--gap-field) var(--gap-field) var(--gap-card)}
-  .panel{border-left:0;border-top:1px solid var(--line);padding:var(--gap-tight) clamp(var(--gap-field),5vw,var(--panel-side-max)) calc(var(--gap-group) + var(--gap-tight))}
+  .panel{border-left:0;border-top:1px solid var(--line);padding:var(--gap-card) clamp(var(--gap-field),5vw,var(--panel-side-max)) calc(var(--gap-group) + var(--gap-tight))}
   .panel .group,.panel .status{max-width:560px;margin-left:auto;margin-right:auto}
 }
 @container app (max-width:760px){.stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
