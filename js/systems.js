@@ -616,14 +616,8 @@ function sysFit(key, W, H, anim) {
   const s = Math.min(sc, W * (1 - 2 * mx) / Math.max(1e-6, (box.right - box.left) * pa), band * Math.max(0.5, 1 - 4 * mx) / Math.max(1e-6, box.bottom - box.top));          // the room above and below follows the Margin too: 0.88 of the band's height is left at the default 3%
   return { box, s, dw: Math.max(2, Math.round((box.right - box.left) * pa * s)), dh: Math.max(2, Math.round((box.bottom - box.top) * s)) };
 }
-/* the paper: the median color of what is not ink inside the box */
-function sysPaper(cv) {
-  const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, step = Math.max(1, Math.floor(d.length / 4 / 40000)), lum = [];
-  for (let i = 0; i < d.length; i += 4 * step) lum.push(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8);
-  const top = lum.slice().sort((a, b) => a - b)[Math.floor(lum.length * 0.95)] || 255, cut = top * 0.9, ch = [[], [], []];
-  for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
-  return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
-}
+/* the paper: the median color of what is not ink inside the box (the one shared reading, `paperOf` in pdf-handling.js) */
+const sysPaper = cv => paperOf(cv);
 /* the paper of the whole score: the median of each active page's paper (the thumbnails, by the rule above), kept until the pages change. White until a thumbnail is in. */
 const SYS_SP = { key: '', v: [255, 255, 255] };
 function sysScorePaper() {
@@ -631,6 +625,15 @@ function sysScorePaper() {
   if (SYS_SP.key === key) return SYS_SP.v;
   const all = srcs.map(src => sysPaper(S.thumbs[src])), med = c => { const a = all.map(q => q[c]).sort((x, y) => x - y); return a.length ? a[a.length >> 1] : 255; };
   SYS_SP.key = key; SYS_SP.v = [med(0), med(1), med(2)]; return SYS_SP.v;
+}
+/* the paper of one sheet of the score: in System the system's own paper (read when the sheet was composed), else its page's paper (`pagePaper`); the back of a turning sheet is plain paper of this color */
+function sheetPaper(key) {
+  if (sysOn() && key >= 0) {
+    const page = sysPage(key), r = SYS.byPage.get(page), ent = sysKept(page), list = r && r.systems.length ? r.systems : null;
+    if (ent && list) { const b = list[Math.min(sysNo(key), list.length - 1)], p = ent.paper.get([b.left, b.top, b.right, b.bottom].join()); if (p) return p; }
+    return pagePaper(page);
+  }
+  return pagePaper(key);
 }
 /* Each page is drawn from the PDF once per size and kept; every system on it, and every Margin or Letterbox change, is cut from that one drawing and never draws the page again.
    The store holds the page under the playhead and its neighbors: at most SYS_KEEP pages and SYS_KEEP_PX dots in all (the newest is always kept), the oldest used going first. */

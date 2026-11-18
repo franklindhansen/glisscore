@@ -264,6 +264,7 @@ class Renderer {
     this.white = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, this.white);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
     this.setTexParams();
+    this.paperT = new Map();
     this.scoreFade = 1; this.bgRgb = [0, 0, 0]; this.inkRgb = [0.99, 0.99, 0.99];
     this.tex = new Map(); this.lbT = new Map(); this.live = !!opts.live; this.pending = new Map(); this.ph = new Map(); this.notReady = new Map(); this.fx = new Map(); this.framePages = []; this.sizeKey = ''; this.geo = ''; this.lay = null; this.onUpdate = null; this.W = canvas.width; this.H = canvas.height;
     this.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -305,6 +306,12 @@ class Renderer {
       } else this.clearTextures();
       this.sizeKey = key; this.geo = geo; this.wasSys = sys;
     }
+  }
+  /* a plain sheet of one paper color (the back of a turning page that has no page behind it) */
+  paperTex(rgb) {
+    const k = rgb.join(), gl = this.gl; let t = this.paperT.get(k);
+    if (!t) { t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([rgb[0], rgb[1], rgb[2], 255])); this.setTexParams(); this.paperT.set(k, t); }
+    return t;
   }
   tex_(idx) {
     if (idx === -1) return null;
@@ -625,7 +632,7 @@ class Renderer {
         this.useShadow = true;
         drawPage(sp[0], lay.x0, -1); drawPage(nx[1], lay.cx, 1);
         this.useShadow = false;
-        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : null);
+        this.drawCurl(lay, isSheet(sp[1]) ? this.tex_(sp[1]) : null, isSheet(nx[0]) ? this.tex_(nx[0]) : isSheet(sp[1]) && sp[1] !== BLANK && sp[1] !== CARD ? this.paperTex(sheetPaper(sp[1])) : null);          // no page behind it (Single page, System): the back is a plain sheet of its own paper
       }
     }
     if (!scoreOnly) this.drawFade(1 - fade);

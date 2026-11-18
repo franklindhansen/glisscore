@@ -587,6 +587,27 @@ function paintDim(ctx, boxes, rot, cr, px, py, pw, ph) {
   boxes.forEach(b => { const q = dimRect(b, rot, cr, px, py, pw, ph); if (q[2] > 0 && q[3] > 0) ctx.fillRect(q[0], q[1], q[2], q[3]); });
   ctx.restore();
 }
+/* THE paper color: the median color of what is not ink, inside rect (the whole canvas when none). Every place that shows plain paper (a resized page's padding, the back of a turning page, System's sheets) reads it this way. */
+function paperOf(cv, rect) {
+  const r = rect ? [Math.max(0, Math.round(rect[0])), Math.max(0, Math.round(rect[1])), Math.round(rect[2]), Math.round(rect[3])] : [0, 0, cv.width, cv.height];
+  r[2] = Math.min(r[2], cv.width - r[0]); r[3] = Math.min(r[3], cv.height - r[1]); if (r[2] < 1 || r[3] < 1) return [255, 255, 255];
+  const d = cv.getContext('2d').getImageData(r[0], r[1], r[2], r[3]).data, step = Math.max(1, Math.floor(d.length / 4 / 40000)), lum = [];
+  for (let i = 0; i < d.length; i += 4 * step) lum.push(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8);
+  const top = lum.slice().sort((a, b) => a - b)[Math.floor(lum.length * 0.95)] || 255, cut = top * 0.9, ch = [[], [], []];
+  for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
+  return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
+}
+/* the paper color of a page (a slot), read once from its picture and kept until that picture changes (an edit, Clean, a new PDF each make a new canvas); white until a picture is in */
+const PAPER_OF = new WeakMap();
+function thumbPaper(t) { if (!t) return [255, 255, 255]; let p = PAPER_OF.get(t); if (!p) { p = paperOf(t); PAPER_OF.set(t, p); } return p; }
+const slotPaper = sl => thumbPaper(sl && S.pdf ? slotBase(sl, S.pdf.aspect) : null);
+const pagePaper = idx => slotPaper(S.pdf && S.pdf.slots[idx]);
+/* the padding around a page that does not fill its picture (Resize, Crop): plain paper of the page's own color */
+function paintPadding(ctx, w, h, a) {
+  const x0 = Math.round(a[0]), y0 = Math.round(a[1]), x1 = Math.round(a[0] + a[2]), y1 = Math.round(a[1] + a[3]); if (x0 <= 0 && y0 <= 0 && x1 >= w && y1 >= h) return;
+  ctx.fillStyle = 'rgb(' + paperOf(ctx.canvas, a).join(',') + ')';
+  ctx.fillRect(0, 0, w, Math.max(0, y0)); ctx.fillRect(0, y1, w, Math.max(0, h - y1)); ctx.fillRect(0, y0, Math.max(0, x0), y1 - y0); ctx.fillRect(x1, y0, Math.max(0, w - x1), y1 - y0);
+}
 async function renderPdfPage(doc, idx, w, h, rot = 0, wm = null, geo = null) {
   const page = await doc.getPage(idx + 1);
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
@@ -614,6 +635,7 @@ async function renderPdfPage(doc, idx, w, h, rot = 0, wm = null, geo = null) {
   }
   try { page.cleanup(); } catch (e) {}
   if (geo && (geo.bg || geo.sp)) await pdfCleanCanvas(cv, geo.bg || 0, geo.sp || 0, [px, py, pw, ph]);
+  paintPadding(ctx, w, h, [px, py, pw, ph]);          // after Clean, so a page cleaned to white pads in white
   if (geo && geo.dim) paintDim(ctx, geo.dim, rot, geo.crop, px, py, pw, ph);
   if (wm) drawWatermark(ctx, wm, px, py, pw, ph);
   return cv;

@@ -793,7 +793,7 @@ function peDrawCard(card, sl, frame) {
   if (cv.width !== sz[0] || cv.height !== sz[1]) { cv.width = sz[0]; cv.height = sz[1]; }
   const x = cv.getContext('2d'), w = cv.width, h = cv.height;
   if (PE.mode === 'crop' && !sl.x && !(sl.crop && !sl.half)) {          // in Crop: an uncropped page shows whole, with the frame it will get and the rest dimmed; a cropped page shows its result
-    const t = peFullThumb(sl), id = +card.dataset.id; x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';
+    const t = peFullThumb(sl), id = +card.dataset.id; x.fillStyle = 'rgb(' + thumbPaper(t).join(',') + ')'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';
     if (frame === undefined) frame = peCropOn(id) ? peCropBox(id) : null;
     const k = Math.min(w / (side ? t.height : t.width), h / (side ? t.width : t.height)), tw = t.width * k, th = t.height * k, b = frame && frame.box;
     x.save(); x.translate(w / 2, h / 2); x.rotate(rot * Math.PI / 180); x.drawImage(t, -tw / 2, -th / 2, tw, th);
@@ -803,7 +803,7 @@ function peDrawCard(card, sl, frame) {
     x.restore(); return;
   }
   const t = slotBase(PE.mode === 'dim' && dimKey(sl) ? Object.assign({}, sl, { dim: null }) : sl, peAspect());          // in Dim the boxes are live on top, so the picture under them is drawn without the dimming
-  x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';
+  x.fillStyle = 'rgb(' + thumbPaper(t).join(',') + ')'; x.fillRect(0, 0, w, h); if (!t) return; x.imageSmoothingQuality = 'high';          // the padding around a page that is smaller than its card (Resize) is the page's own paper
   const W = side ? h : w, H = side ? w : h, ta = t.width / t.height, fw = Math.min(W, H * ta), fh = fw / ta;                // the picture is fitted into the card, whatever shape the page was drawn at
   x.save(); x.translate(w / 2, h / 2); x.rotate(rot * Math.PI / 180); x.drawImage(t, -fw / 2, -fh / 2, fw, fh); x.restore();
   const wm = PE.d && PE.d.wm;
@@ -1221,7 +1221,8 @@ async function buildPdfBlob(r, ui) {
       const fit = r.size ? sizeDims(r.size, r.each ? vw0 / vh0 : S.pdf.aspect0 * (cr[2] - cr[0]) / (cr[3] - cr[1])) : null, tw0 = fit ? fit[0] * 72 : vw0, th0 = fit ? fit[1] * 72 : vh0, sc = fit ? Math.min(tw0 / vw0, th0 / vh0) : 1, f = sl.bg || sl.sp || (enc && !sl.warp) ? Math.min(300 / 72, (await pdfNativeScale(S.pdf.doc, sl.src)) || 300 / 72, 4200 / Math.max(vw0, vh0)) : Math.min(200 / 72, 3600 / Math.max(vw0, vh0));
       const cv = await renderPdfPage(S.pdf.doc, sl.src, Math.round(vw0 * f), Math.round(vh0 * f), rot, null, slotGeo(sl));
       const jpg = await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92)), img = await out.embedJpg(new Uint8Array(await jpg.arrayBuffer()));
-      pg = out.addPage([tw0, th0]); R0 = 0; pg.drawImage(img, { x: tw0 / 2 - vw0 * sc / 2, y: th0 / 2 - vh0 * sc / 2, width: vw0 * sc, height: vh0 * sc });
+      pg = out.addPage([tw0, th0]); R0 = 0; if (fit) { const pc = paperOf(cv); pg.drawRectangle({ x: 0, y: 0, width: tw0, height: th0, color: rgb(pc[0] / 255, pc[1] / 255, pc[2] / 255), borderWidth: 0 }); }          // the padding is the page's own paper (read from the cleaned picture)
+      pg.drawImage(img, { x: tw0 / 2 - vw0 * sc / 2, y: th0 / 2 - vh0 * sc / 2, width: vw0 * sc, height: vh0 * sc });
     } else if (r.size || sl.crop || sl.skew || sl.vskew) {             // resized, cropped or straightened: each page is placed on a new page and cut to its crop (still vector, nothing re-drawn as a picture)
       const srcPage = srcDoc.getPage(sl.src), vb = pdfVisibleBox(srcPage), emb = await out.embedPage(srcPage, { left: vb.x, bottom: vb.y, right: vb.x + vb.width, top: vb.y + vb.height }), { pushGraphicsState, popGraphicsState, moveTo, lineTo, closePath, clip, endPath, concatTransformationMatrix } = L;
       const intrR = ((srcPage.getRotation().angle || 0) % 360 + 360) % 360, rot = ((sl.rot || 0) % 360 + 360) % 360, cr = sl.crop || [0, 0, 1, 1], W0 = emb.width, H0 = emb.height;
@@ -1232,6 +1233,7 @@ async function buildPdfBlob(r, ui) {
       m.translateSelf(Ws / 2, Hs / 2); m.multiplySelf(skewMat(sl.skew, sl.vskew)); m.translateSelf(-Ws / 2, -Hs / 2);
       const T = new DOMMatrix([1, 0, 0, -1, 0, th0]).multiply(m).multiply(K), hw = vw0 * sc / 2, hh = vh0 * sc / 2, ox = tw0 / 2, oy = th0 / 2;
       pg = out.addPage([tw0, th0]); R0 = 0; dimGeo = { rot, cr, a: [ox - hw, oy - hh, hw * 2, hh * 2] };
+      if (fit) { const pc = paperOf(S.thumbs[sl.src] || await renderPdfPage(S.pdf.doc, sl.src, 60, 80)); pg.drawRectangle({ x: 0, y: 0, width: tw0, height: th0, color: rgb(pc[0] / 255, pc[1] / 255, pc[2] / 255), borderWidth: 0 }); }          // the padding is the page's own paper, drawn behind the page (which stays vector)
       pg.pushOperators(pushGraphicsState(), moveTo(ox - hw, oy - hh), lineTo(ox + hw, oy - hh), lineTo(ox + hw, oy + hh), lineTo(ox - hw, oy + hh), closePath(), clip(), endPath(), concatTransformationMatrix(T.a, T.b, T.c, T.d, T.e, T.f));
       pg.drawPage(emb, { x: 0, y: 0, xScale: 1, yScale: 1 });
       pg.pushOperators(popGraphicsState());
