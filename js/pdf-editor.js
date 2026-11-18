@@ -864,11 +864,26 @@ function peGridFit() {
   { const w = $('#peWrap'), g = Math.max(0, w.offsetWidth - w.clientWidth); if (g !== PE.gut) { PE.gut = g; w.style.setProperty('--pe-gutter', g + 'px'); } }          // the scroll bar's reserved room is part of the right margin, so with no bar showing the pages are as far from the right edge as from the left
   const grid = $('#peGrid'), wrap = $('#peWrap'), tpl = peZsTpl(PE.zv), W = grid.getBoundingClientRect().width, m = PE.gm;
   if (!W || !m) { grid.style.gridTemplateColumns = tpl; return; }
-  const cards = Array.from(grid.children), vp = wrap.getBoundingClientRect(), mid = vp.top + vp.height / 2;
-  const was = cards.map(el => el.getBoundingClientRect()), on = r => r.bottom > vp.top && r.top < vp.bottom;
+  const cards = Array.from(grid.children), vp = wrap.getBoundingClientRect(), mid = vp.top + vp.height / 2, cols0 = PE.cols, flip = cols0 && peFarSizeAt(W) !== cols0 && !reducedMotion();
+  const was = cards.map(el => el.getBoundingClientRect()), on = r => r.bottom > vp.top && r.top < vp.bottom;          // read with any move still running, so a new move starts from where the card is seen
+  if (flip) cards.forEach(el => { if (el._zf) { el._zf.cancel(); el._zf = null; } });          // only when the columns change: a move still running while the cards only grow is left alone
   let ai = -1, best = 1e9; was.forEach((r, i) => { if (on(r)) { const d = Math.abs(r.top + r.height / 2 - mid); if (d < best) { best = d; ai = i; } } });
   grid.style.gridTemplateColumns = tpl; peFarSize(W);
   if (ai >= 0) { const r = cards[ai].getBoundingClientRect(); wrap.scrollTop += (r.top + r.height / 2) - (was[ai].top + was[ai].height / 2); }          // the card nearest the middle stays where it was
+  if (flip) { const t = performance.now(), sweep = t - (PE.zfAt || 0) < PE_ZOOM_MS; PE.zfAt = t; if (!sweep && Math.abs(PE.cols - cols0) <= PE_ZOOM_LEAP) peZoomSettle(cards, was, vp); }          // a quick sweep or a jump is placed at once, so only a deliberate step is animated, one move at a time
+}
+/* when the slider changes the number of columns, the pages that are in view slide to their new places (the cards keep their width, so the move is a slide, never a stretch) in the site's one slide time;
+   a page that comes into view fades in, and every other page is simply placed. While the slider keeps moving (a column change before the last move would have finished) or jumps far, the pages are placed at once. */
+const PE_ZOOM_MS = Math.round(AE_MOVE_MS * 1.25);          // the site's slide time and a quarter more (500ms), on its glide ease: slow enough for the eye to follow a page to its new place
+const PE_ZOOM_LEAP = 2;          // a change of more columns than this (a jump along the slider) is placed at once: nothing can be followed over that distance
+function peZoomSettle(cards, was, vp) {
+  const on = r => r.bottom > vp.top && r.top < vp.bottom, o = { duration: PE_ZOOM_MS, easing: EASE_GLIDE };
+  cards.forEach((el, i) => {
+    const now = el.getBoundingClientRect(); if (!on(now)) return;
+    if (!on(was[i])) { el._zf = el.animate([{ opacity: 0 }, { opacity: 1 }], o); return; }
+    const dx = was[i].left - now.left, dy = was[i].top - now.top; if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    el._zf = el.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], o);
+  });
 }
 const peFarSizeAt = W => { const m = PE.gm, w = Math.min(m.hs * peZsMin(PE.zv), W); return Math.max(1, Math.floor((W + m.gap) / (w + m.gap))); };          // the number of columns the slider's value gives, before the grid is changed
 function peFarWatch() {
