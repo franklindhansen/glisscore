@@ -1334,7 +1334,7 @@ async function exportRealtime(o, fps, dur, ctl) {
     }
     if (!ctl.cancelled) {          // the true last frame (fully faded) is drawn and held for a few frames before the recorder stops
       const st = frameState(vS + dur); await rend.ensure(pagesFor(st)); rend.render(st);
-      for (let k = 0; k < 4; k++) { if (manual) vtrack.requestFrame(); await new Promise(r => setTimeout(r, 1000 / fps)); }
+      for (let k = 0; k < 6; k++) { await new Promise(r => requestAnimationFrame(r)); rend.render(st); if (manual) vtrack.requestFrame(); await new Promise(r => setTimeout(r, 1000 / fps)); }          // each held frame is drawn again just before it is asked for (a drawing is gone once shown)
     }
   } finally {
     try { if (src) src.stop(); } catch (e) {}
