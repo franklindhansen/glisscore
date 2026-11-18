@@ -1248,7 +1248,7 @@ async function exportWebCodecs(o, fps, dur, ctl, caps) {
     dbg('rendering ' + totalFrames + ' frames');
     for (let i = 0; i < totalFrames; i++) {
       if (ctl.cancelled || encErr) break;
-      const v = i < 4, n = i + 1, st = frameState(S.vStart + i / fps);
+      const v = i < 4, n = i + 1, st = frameState(S.vStart + i / fps, S.vStart + (totalFrames - 1) / fps);          // the fade-out ends on the last frame drawn
       const key = st.spread + '|' + st.flip + '|' + st.fade + '|' + creditsAlpha(st.t);          // nothing on screen has moved since the last frame: the canvas still holds it, so it is not drawn again
       if (key !== lastKey) {
         stage('frame ' + n + ': loading score pages');
@@ -1331,6 +1331,10 @@ async function exportRealtime(o, fps, dur, ctl) {
       if (manual && now - lastReq >= 900 / fps) { vtrack.requestFrame(); lastReq = now; }
       expUI('working', 'Processing', t / dur, 'This method records at normal speed, so it takes as long as your piece. Keep this tab open and in front.');
       await new Promise(r => requestAnimationFrame(r));
+    }
+    if (!ctl.cancelled) {          // the true last frame (fully faded) is drawn and held for a few frames before the recorder stops
+      const st = frameState(vS + dur); await rend.ensure(pagesFor(st)); rend.render(st);
+      for (let k = 0; k < 4; k++) { if (manual) vtrack.requestFrame(); await new Promise(r => setTimeout(r, 1000 / fps)); }
     }
   } finally {
     try { if (src) src.stop(); } catch (e) {}

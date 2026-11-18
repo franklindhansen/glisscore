@@ -373,7 +373,8 @@ function fadeEnv(s, vs, ve, t) {
   if (s.fadeOut && Lo > 0) f = Math.min(f, (ve - t) / Lo);
   return AE_SHAPES[aeShape(s.fadeShape)](clamp(f, 0, 1));          // the picture's curve: Gradual or Straight
 }
-const fadeAt = t => fadeEnv(S.set, S.vStart, vEnd(), t);
+/* fe = where the picture's fade-out ends: the video's end, or (in an export) the last frame drawn, so that frame is fully faded */
+const fadeAt = (t, fe) => fadeEnv(S.set, S.vStart, fe == null ? vEnd() : fe, t);
 /* the sound's fades are the Audio Editor's, in the video and in an exported audio file alike; the Fades panel on the page is for the picture only */
 /* the sound's fades, read once from what is heard (the video and an exported audio file alike) */
 const soundFadeFn = () => { const h = soundSet(), [li, lo] = aeFadeLens(h), vs = S.vStart, ve = vEnd(); return t => aeEnv(vs, ve, t, li, h.audioFadeShape, lo); };
@@ -409,8 +410,8 @@ function audioGain() {
   if (normCache.key !== key) normCache = { key, v: levelFor(s.normalize, s.gainDb, S.vStart, vEnd()) };
   return normCache.v;
 }
-function frameState(t) {
-  const n = S.spreads.length, fade = fadeAt(t);
+function frameState(t, fe) {
+  const n = S.spreads.length, fade = fadeAt(t, fe);
   if (!n) return { spread: 0, flip: null, t, fade };
   const D = flipDur(), off = refOffset();
   let cur = 0;

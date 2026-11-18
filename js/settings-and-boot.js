@@ -450,7 +450,7 @@ function boot() {
     requestAnimationFrame(tick);
     if (Transport.playing) {
       const t = Transport.now();
-      if (t >= vEnd()) { Transport.pause(); S.time = vEnd(); }
+      if (t >= vEnd()) { Transport.pause(); S.time = fadeLookAt = vEnd(); }          // playback reached the end: the faded last frame stays until the playhead moves
       else S.time = t;
       if (Transport.dh) { const v = soundFadeAt(t) * audioGain(); if (v !== Transport.lvl) { Transport.lvl = v; Transport.dh.post({ gain: v }); } }
       updateTimeUI(); followPlayhead(); stageDirty = true; TL.overlayDirty = true;

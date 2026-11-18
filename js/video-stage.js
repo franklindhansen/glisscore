@@ -2,6 +2,7 @@
 /* ====================================================================
    Transport (play / pause / seek)
    ==================================================================== */
+let fadeLookAt = NaN;          // the time you last scrubbed to, or where playback ended: the paused preview shows the fade under the playhead there, and the full picture anywhere else
 const Transport = {
   playing: false, t0: 0, off: 0, src: null,
   now() {
@@ -57,6 +58,7 @@ const Transport = {
   toggle() { if (typeof sysBusy === 'function' && sysBusy()) return; this.playing ? this.pause() : this.play(); },
   seek(t) {
     t = clamp(t, S.vStart, vEnd());
+    fadeLookAt = NaN;          // a jump is not a scrub: the paused picture is the full one
     if (this.playing) { this.pause(); S.time = t; this.play(); } else S.time = t;
     stageDirty = true; TL.overlayDirty = true; updateTimeUI(true);
   }
@@ -745,9 +747,10 @@ function prefetchAround() {
   // current first so it is rendered before neighbors
   const cur = pagesFor(st); previewR.prefetch(cur.concat(want));
 }
-let lastSpreadShown = -1, fadeLookAt = NaN;          // the time you last scrubbed to
+let lastSpreadShown = -1, fadeSeenT = NaN;
 function drawStage() {
   const st = frameState(S.time);
+  if (S.time !== fadeSeenT) { if (fadeLookAt !== S.time) fadeLookAt = NaN; fadeSeenT = S.time; }          // any move that is not a scrub (or the end of playback) forgets the looked-at time, however it was made
   if (!Transport.playing && fadeLookAt !== S.time) st.fade = 1;      // the paused preview shows the full picture, except where you scrubbed to: there it shows the fade under the playhead
   previewR.render(st);
   pageWaitSync(); if (previewR.fx.size) stageDirty = true;
