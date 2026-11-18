@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.32
+
+Moving a page in the PDF Editor is now one smooth motion, and page tags read as plain numbers. Settings choices no longer go blank after full screen, and the score, audio, and export buttons share consistent icons.
+
 ## 1.2.31
 
 Turns you place by hand stay where they are when a page is edited, and View changes in System layout glide smoothly instead of jumping. The selector now waits with the preview while systems are found.
