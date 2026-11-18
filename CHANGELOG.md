@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.33
+
+Pages in the PDF Editor now slide gently to their new places when the page size changes. File chip text is centered the same way as the rest of the app.
+
 ## 1.2.32
 
 Moving a page in the PDF Editor is now one smooth motion, and page tags read as plain numbers. Settings choices no longer go blank after full screen, and the score, audio, and export buttons share consistent icons.
