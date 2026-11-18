@@ -49,7 +49,7 @@ function adoptPriorTurns(prior, quiet) {
   if (added > 0) { const b = turns.length ? turns[turns.length - 1] : 0; for (let k = 1; k <= added; k++) { turns.push(b + (dur - b) * k / (added + 1)); ph.push(true); } }
   S.turns = turns; S.ph = ph; S.turnsEdited = true; normalizeTurns(); onTurnsChanged();
   const dropped = Math.max(0, prior.turns.length - need);
-  if (!quiet) toast([tx('turns.kept'), added ? tx(added === 1 ? 'turns.added.one' : 'turns.added.many', { n: added }) : '', dropped ? tx(dropped === 1 ? 'turns.dropped.one' : 'turns.dropped.many', { n: dropped }) : ''].filter(Boolean).join(' '), 8000);
+  if (!quiet) toast([tx('turns.kept'), added ? tx(added === 1 ? 'turns.added.one' : 'turns.added.many', { n: added }) : '', dropped ? tx(dropped === 1 ? 'turns.dropped.one' : 'turns.dropped.many', { n: dropped }) : ''].filter(Boolean).join(' '));
   return { added, dropped };
 }
 

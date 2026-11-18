@@ -39,7 +39,7 @@ const Transport = {
       let h; if (S.audio.disk) { DISK.fxUse(soundSet().fx); h = await DISK.play(ac, Math.floor(t * S.audio.sr), this.src, Object.assign({ fx: true }, o)); } else h = await soundPlay(ac, memSound(ac, outBuf()), Math.floor(t * ac.sampleRate), this.src, o);
       if (this.tok !== tok) { h.stop(); return; }
       this.dh = h;
-    } catch (e) { if (this.tok === tok && e !== STALE) { console.error(e); this.pause(); toast(tx('ae.playfail') + ' ' + (e && e.message || ''), 5000); } }
+    } catch (e) { if (this.tok === tok && e !== STALE) { console.error(e); this.pause(); toast(tx('ae.playfail') + ' ' + (e && e.message || ''), 'long'); } }
   },
   pause() {
     if (!this.playing) return;
@@ -676,7 +676,8 @@ function morphStage(apply) {
 }
 function layoutStage() {
   if (fsGliding) return;          // the frame is moving by transform, so its rectangle is not where it lays out: the picture is fitted once, as the glide begins and as it ends
-  const wrap = $('#stageWrap'), r = wrap.getBoundingClientRect();
+  const wrap = $('#stageWrap'), r0 = wrap.getBoundingClientRect(), cs = getComputedStyle(wrap), pad = $('.app').classList.contains('fs') ? ['Top', 'Bottom', 'Left', 'Right'].map(k => parseFloat(cs['padding' + k]) || 0) : [0, 0, 0, 0];          // in full screen the safe area is the frame's padding: the picture fits inside it
+  const r = { width: r0.width - pad[2] - pad[3], height: r0.height - pad[0] - pad[1] };
   if (r.width < 10 || r.height < 10) return;
   const g = splitSync();          // System: the selector takes its share of the stage and the picture fits in what is left
   const ar = ASPECTS[S.set.aspect] || 16 / 9;
@@ -1439,7 +1440,7 @@ function endDrag(e) {
   if (d.kind === 'turn' && d.moved) onTurnsChanged();
   if (d.kind === 'credEnd') {
     if (!d.moved) { S.history.pop(); S.redo = d.rb || []; updateHistoryButtons(); }
-    else toast(tx('vid.credend', { t: fmt(S.creditsEnd - S.vStart) }), 2600);
+    else toast(tx('vid.credend', { t: fmt(S.creditsEnd - S.vStart) }));
   }
   if (d.kind === 'trim') {
     if (!d.moved) { S.history.pop(); S.redo = d.rb || []; updateHistoryButtons(); }
@@ -1450,7 +1451,7 @@ function endDrag(e) {
         TL.inner.style.width = tlInnerWidth() + 'px'; sc.scrollLeft = Math.max(0, sc.scrollLeft + (d.lo - tlLo()) * S.pxPerSec);
         onTrimChanged(); if (from) tlGlide(from);          // the axis can shrink under a view scrolled to its end, which would jump: it glides like Fit does
       }
-      toast(trimText(d.which) + '.', 2600);
+      toast(trimText(d.which) + '.');
     }
   }
   TL.staticDirty = true; TL.overlayDirty = true;
@@ -1461,12 +1462,12 @@ TL.canvas.addEventListener('dblclick', e => {
   if (!S.pdf) return;
   const which = hitTrim(tlPoint(e)); if (!which) return;
   const home = which === 'start' ? 0 : null;
-  if (which === 'start' ? S.vStart === 0 : S.vEndSet == null) { toast(trimText(which) + '.', 2200); return; }
+  if (which === 'start' ? S.vStart === 0 : S.vEndSet == null) { toast(trimText(which) + '.'); return; }
   pushHistory(); const lo0 = tlLo(), from = Object.assign(tlMap(), { lo: lo0, hi: tlHi(), s: TL.trimD ? TL.trimD.s : S.vStart, e: TL.trimD ? TL.trimD.e : vEnd() });
   if (which === 'start') S.vStart = 0; else S.vEndSet = home;
   S.time = clamp(S.time, S.vStart, vEnd());
   if (!S.fitMode) { TL.inner.style.width = tlInnerWidth() + 'px'; TL.scroller.scrollLeft = Math.max(0, TL.scroller.scrollLeft + (lo0 - tlLo()) * S.pxPerSec); }
-  normalizeTurns(); onTurnsChanged(); onTrimChanged(); if (from) tlGlide(from); toast(trimText(which) + '.', 2600);
+  normalizeTurns(); onTurnsChanged(); onTrimChanged(); if (from) tlGlide(from); toast(trimText(which) + '.');
 });
 TL.canvas.addEventListener('pointerup', e => { tlPinchUp(e); endDrag(e); });
 TL.canvas.addEventListener('pointercancel', e => { tlPinchUp(e); endDrag(e); });

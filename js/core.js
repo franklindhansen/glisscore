@@ -1,6 +1,6 @@
 'use strict';
 const cssNum = (name, fallback) => { const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)); return v > 0 ? v : fallback; };
-const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = cssNum('--ae-ms', 260), AE_MOVE_MS = cssNum('--ae-move', 400), AE_LIFT = cssNum('--ae-lift', 10), AE_NOTE_MS = cssNum('--ae-note-ms', 3000), TOAST_MS = cssNum('--toast-ms', 4200), TOAST_LONG_MS = cssNum('--toast-long-ms', 6000);          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length and lift of an Audio Editor switch (the CSS --ae-ms and --ae-lift, defined once in style.css)
+const EASE_GLIDE = 'cubic-bezier(.3,.8,.2,1)', EASE_OUT = 'cubic-bezier(.22,1,.36,1)', AE_TOOL_MS = cssNum('--ae-ms', 260), AE_MOVE_MS = cssNum('--ae-move', 400), AE_LIFT = cssNum('--ae-lift', 10), AE_NOTE_MS = cssNum('--ae-note-ms', 3000), TOAST_MS = cssNum('--toast-ms', 2800), TOAST_LONG_MS = cssNum('--toast-long-ms', 5000), TOAST_WORD_MS = cssNum('--toast-word-ms', 120);          // the site's two JS curves (EASE_OUT is the CSS --ease-out) and the length and lift of an Audio Editor switch (the CSS --ae-ms and --ae-lift, defined once in style.css)
 /* the one level of anything that does not apply right now (--inactive in the stylesheet), for what is drawn on a canvas */
 const INACTIVE = cssNum('--inactive', 0.45);
 const $ = (s, r = document) => r.querySelector(s);

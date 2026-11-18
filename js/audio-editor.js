@@ -261,7 +261,7 @@ function aeApply() {
     S.time = clamp(S.time, S.vStart, vEnd());
     normalizeTurns(); onTurnsChanged(); onTrimChanged(); syncControls(); saveSettings(); stageDirty = true;
     TL.staticDirty = true;
-    fxGet(soundSet().fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), TOAST_LONG_MS); });
+    fxGet(soundSet().fx).then(() => { stageDirty = true; TL.staticDirty = true; }, e => { dbg('Processing failed: ' + (e && e.message || e)); toast(tx('vid.fxfail'), 'long'); });
     toast(tx('vid.updated'));
   }
   closeAudioEditor();
@@ -859,7 +859,7 @@ async function aePlay() {
   try {
     if (dk) { DISK.fxUse(aeDiskFx(), { listen: AE.nrListen && !aeBp('noise'), slot: 'ply' }); ph = await DISK.play(ac, Math.floor(from * S.audio.sr), src, Object.assign({ fx: true, slot: 'ply' }, opt)); AE.dsSig = DISK.fxSigP; }
     else { AE.mem = memSound(ac, aeSrcBuffer()); ph = await soundPlay(ac, AE.mem, Math.floor(from * ac.sampleRate), src, opt); }
-  } catch (e) { clearTimeout(AE.startT); if (AE.playTok === tok) { AE.starting = false; aeWaitUI(false); } if (e !== STALE) { console.error(e); toast(tx('ae.playfail2') + ' ' + (e && e.message || ''), TOAST_LONG_MS); } return; }
+  } catch (e) { clearTimeout(AE.startT); if (AE.playTok === tok) { AE.starting = false; aeWaitUI(false); } if (e !== STALE) { console.error(e); toast(tx('ae.playfail2') + ' ' + (e && e.message || ''), 'long'); } return; }
   if (AE.playTok !== tok || !AE.d) { ph.stop(); return; }          // stopped, or the editor closed, while the first sound was being made
   AE.starting = false; clearTimeout(AE.startT); aeWaitUI(false);
   const g = ac.createGain(), tapC = ac.createGain(), out = ac.createGain(); out.gain.setValueAtTime(0, ac.currentTime); out.gain.setValueAtTime(0, ac.currentTime + 0.02); out.gain.linearRampToValueAtTime(1, ac.currentTime + 0.03); src.connect(out); out.connect(ac.destination); AE.out = out;          // silent for 20ms (the graph takes a moment to start), then eased in over 10ms, so starting mid-wave does not click
@@ -1373,17 +1373,17 @@ async function aeExport() {
     let file = null; if (dk) { await wr.done(); file = await DISK.fileDone(); }
     const name = ((S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio') + ' - Audio.wav';
     await saveFile(file ? file.slice(0, file.size, 'audio/wav') : new Blob(parts, { type: 'audio/wav' }), name); toast(tx('ae.saved.wav', { len: fmt(ve - vs), kind: bits === 32 ? '32-bit float' : bits + '-bit' }));
-  } catch (e) { failed = e; if (AE.expStop) { toast(tx('ae.expstop')); if (S.audio && S.audio.disk) DISK.fileDrop(); } else { console.error(e); toast(tx(e && /changed while exporting/.test(e.message) ? 'ae.expchanged' : 'ae.expfail'), TOAST_LONG_MS); } }
+  } catch (e) { failed = e; if (AE.expStop) { toast(tx('ae.expstop')); if (S.audio && S.audio.disk) DISK.fileDrop(); } else { console.error(e); toast(tx(e && /changed while exporting/.test(e.message) ? 'ae.expchanged' : 'ae.expfail'), 'long'); } }
   finally { const stopped = AE.expStop; $('#aeExpStop').hidden = true; AE.expStop = false; AE.exporting = false; aeRunEnd(failed ? (stopped ? 'stopped' : 'error') : 'done'); btn.classList.remove('exporting'); btn.style.removeProperty('--p'); lb.textContent = label; }
 }
 /* the draft as an M4A (AAC) file: the same trimmed, faded, leveled sound, encoded in the browser and wrapped in an MP4 container */
 const AAC_TOP = 0.985;          // the highest a decoded M4A may stand when the limiter is on (just under full scale; a peak between two samples can be a touch higher than the samples)
 async function aeExportM4a(d, ui) {
-  if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined') { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
+  if (typeof AudioEncoder === 'undefined' || typeof AudioData === 'undefined') { toast(tx('ae.nom4a'), 'long'); return; }
   const dk = !!S.audio.disk; ui('Processing'); const buf = dk ? (await fxGet(d.fx), { sampleRate: audSr(), numberOfChannels: audCh() }) : (await fxGet(d.fx)).buffer, sr = aeOutRate(buf), ch = Math.min(2, buf.numberOfChannels), vs = d.vStart, ve = aeEnd(d);
   const want = +(String(S.set.audioFormat).replace('m4a', '')) || 256; let kbps = want, cfg = await aacConfig(sr, ch, kbps * 1000);
   if (!cfg) for (const k of [320, 256, 192, 160, 128, 96, 64]) if (k < want && (cfg = await aacConfig(sr, ch, k * 1000))) { kbps = k; break; }          // this browser's encoder may stop short of the rate asked for (many stop at 192kbps): the best it can do is used, and the saved message says so
-  if (!cfg) { toast(tx('ae.nom4a'), TOAST_LONG_MS); return; }
+  if (!cfg) { toast(tx('ae.nom4a'), 'long'); return; }
   const mm = dk ? await aeMasterDisk(d, ch, true, ui) : await aeMasterFor(d, buf, ch, true, ui), total = mm.total;
   /* AAC does not keep peaks exactly: what a player decodes can stand a little higher than what went in. The limiter's ceiling leaves room for that, and with the limiter on the file is also checked:
      it is decoded as it is made, and if anything would reach full scale it is made once more, turned down by just that much. So a limited M4A never plays back clipped. */
@@ -1413,7 +1413,7 @@ async function aeExportM4a(d, ui) {
   const mx = made.mx, tg = aeTags(); if (tg) mx.setTags(tg);
   const blob = mx.finalize(); dbg('Audio export (M4A): asked the encoder for ' + cfg.bitrate / 1000 + ' kbps, it produced about ' + Math.round(mx.audioKbps()) + ' kbps');
   const name = ((S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio') + ' - Audio.m4a';
-  await saveFile(blob, name); toast(kbps === want ? tx('ae.saved.m4a', { len: fmt(ve - vs) }) : tx('ae.saved.m4alow', { len: fmt(ve - vs), got: kbps, want }), kbps === want ? undefined : TOAST_LONG_MS);
+  await saveFile(blob, name); toast(kbps === want ? tx('ae.saved.m4a', { len: fmt(ve - vs) }) : tx('ae.saved.m4alow', { len: fmt(ve - vs), got: kbps, want }), kbps === want ? undefined : 'long');
 }
 /* ---------------- Audio Editor tools: the rail, EQ, and Imager ---------------- */
 const FX_NAMES = { eq: 'EQ', imager: 'Imager' };
@@ -2424,9 +2424,9 @@ async function aeMatchLoad(file, kind) {
     }
     if (AE.match !== m) return;           // the editor was reset while this was loading
     m.busy = false;
-    if (!curve) { m.refName = ''; aeMatchUi(); toast(tx(kind === 'profile' ? 'ae.badprofile.long' : 'ae.measurefail'), TOAST_LONG_MS); return; }
+    if (!curve) { m.refName = ''; aeMatchUi(); toast(tx(kind === 'profile' ? 'ae.badprofile.long' : 'ae.measurefail'), 'long'); return; }
     m.ref = curve; aeMatchUi(); aeMatchApply(false);
-  } catch (e) { console.error(e); if (AE.match === m) { m.busy = false; m.refName = ''; aeMatchUi(); } toast(tx(kind === 'profile' ? 'ae.badprofile' : 'ae.readfail'), TOAST_LONG_MS); }
+  } catch (e) { console.error(e); if (AE.match === m) { m.busy = false; m.refName = ''; aeMatchUi(); } toast(tx(kind === 'profile' ? 'ae.badprofile' : 'ae.readfail'), 'long'); }
 }
 /* the band controls and EQ Match take turns: one folds shut (its height glides to nothing, grid 0fr) as the other opens, so the curve above grows and shrinks with them */
 function eqFold(sel, open) { const el = $(sel); el.classList.toggle('shut', !open); el.inert = !open; el.setAttribute('aria-hidden', String(!open)); }
@@ -2454,7 +2454,7 @@ function aeMatchBind() {
   $('#aeRefSave').addEventListener('click', async () => {
     let c = null; try { c = await aeOwnCurveA(); } catch (e) { console.error(e); } if (!c) { toast(tx('ae.nosound')); return; }
     const base = (S.credits.title.trim() || S.audio.name.replace(/\.[^.]+$/, '') || 'Audio').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Audio';
-    try { await saveFile(new Blob([curveToText(c, base)], { type: 'text/plain' }), base + ' - glisscore EQ profile.txt'); toast(tx('ae.profilesaved')); } catch (e) { toast(tx('ae.filefail'), TOAST_LONG_MS); }
+    try { await saveFile(new Blob([curveToText(c, base)], { type: 'text/plain' }), base + ' - glisscore EQ profile.txt'); toast(tx('ae.profilesaved')); } catch (e) { toast(tx('ae.filefail'), 'long'); }
   });
   $('#aeMatchAmt').addEventListener('input', () => { aeMatchUi(); if (AE.match && AE.match.ref) aeMatchApply(true); });
   $('#aeMatchAmt').addEventListener('change', () => { AE.sliding = false; });
@@ -2529,7 +2529,7 @@ async function aeEmLoad(file) {
     if (!pr) { AE.em = null; aeEmUi(); toast(tx('ae.emnosound')); return; }
     const lu = await LU.measure((pos, len, out) => { for (let c = 0; c < nch; c++) out.set(ch[c].subarray(pos, pos + len), c * len); }, buf.length, buf.sampleRate, nch, tick); if (AE.em !== em) return; emBar(em, 1);
     em.ref = { tone: pr.tone, side: pr.side, I: lu.I, LRA: lu.LRA }; em.busy = false; aeEmUi(); aeEmOwn();
-  } catch (e) { console.error(e); if (AE.em === em) { AE.em = null; aeEmUi(); } toast(tx('ae.readfail'), TOAST_LONG_MS); }
+  } catch (e) { console.error(e); if (AE.em === em) { AE.em = null; aeEmUi(); } toast(tx('ae.readfail'), 'long'); }
 }
 /* Emulate sets everything in one undo step and stays solid while the editor holds it; pressing it again puts the settings back as they were.
    Moving Amount or the three choices while it is solid sets it again from the same starting point */

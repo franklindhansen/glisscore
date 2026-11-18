@@ -578,10 +578,10 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .app.fs .top,.app.fs .panel{display:none!important}
 .app.fs .work{display:block;height:100%}
 .app.fs .stage-col{display:block;padding:0;height:100%}
-.app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:var(--black)}
+.app.fs .stage-wrap{position:absolute;inset:0;border:0;border-radius:0;background:var(--black);padding:var(--fs-top) var(--fs-right) var(--fs-bottom) var(--fs-left)}          /* the picture sits inside the safe area (the status bar, the home indicator, and the side insets) */
 /* the header and settings, copied where they were so they can fade as full screen begins (see fsGhosts) */
 .fs-ghost,.fs-ghost *{animation:none!important;transition:none!important}
-.app.fs{--fs-gap:var(--gap-set);--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}
+.app.fs{--fs-gap:var(--gap-set);--fs-top:env(safe-area-inset-top,0px);--fs-right:env(safe-area-inset-right,0px);--fs-bottom:env(safe-area-inset-bottom,0px);--fs-left:env(safe-area-inset-left,0px);--fs-edge:calc(var(--fs-gap) + var(--fs-bottom))}
 .app.fs .transport{position:absolute;z-index:20}
 .app.fs .fs-only{display:inline-flex!important}
 .app.fs #btnShowEditor,.app.fs.fs-min #btnHideEditor{display:none!important}
@@ -592,13 +592,13 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
 .fs-dock{display:inline-flex;flex-direction:row-reverse;align-items:center;gap:var(--gap-tight)}          /* the chevron comes after the words, as on every drop-down */
 .fs-dock svg{width:var(--icon-s);height:var(--icon-s);flex:none;transition:transform var(--t-hover) var(--spring-hover)}
 .fs-dock[aria-expanded=false] svg{transform:rotate(180deg)}
-.app.fs .timeline{position:absolute;left:var(--fs-gap);right:var(--fs-gap);bottom:var(--fs-edge);z-index:20;overflow:hidden;border:1px solid var(--glass-edge);border-radius:var(--r-win);
+.app.fs .timeline{position:absolute;left:calc(var(--fs-gap) + var(--fs-left));right:calc(var(--fs-gap) + var(--fs-right));bottom:var(--fs-edge);z-index:20;overflow:hidden;border:1px solid var(--glass-edge);border-radius:var(--r-win);
   background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow)}
 .app.fs .transport,.app.fs .timeline{opacity:0;pointer-events:none;transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--ease-out),bottom var(--ae-move) var(--ease-out),visibility 0s}
 .app.fs.fs-min .timeline{transform:translateY(calc(100% + var(--fs-edge) + var(--gap-head)));visibility:hidden;transition:opacity var(--ae-ms) var(--ease-ui),transform var(--ae-move) var(--ease-out),visibility 0s var(--ae-ms)}
 .app.fs.fs-active .transport,.app.fs.fs-active .timeline{opacity:1;pointer-events:auto}
-/* the zoom and full screen strip hovers just above the play bar, and follows it when the timeline grows, shrinks, or is hidden (--fs-trh is the play bar's height, set by script) */
-.app.fs .stage-strip{right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card) + var(--fs-trh) + var(--gap-head));opacity:0;pointer-events:none;transition:opacity var(--ae-ms) var(--ease-ui),bottom var(--ae-move) var(--ease-out)}
+/* the zoom and full screen strip hovers just above the play bar, and follows it when the timeline grows, shrinks, or is hidden (on a screen too short for the timeline, it stays at the top of the screen instead of leaving it) (--fs-trh is the play bar's height, set by script) */
+.app.fs .stage-strip{right:calc(var(--fs-gap) + var(--fs-right));bottom:min(calc(var(--tl-h) + var(--fs-edge) + var(--gap-card) + var(--fs-trh) + var(--gap-head)),calc(100% - var(--fs-top) - var(--fs-gap) - var(--fs)));opacity:0;pointer-events:none;transition:opacity var(--ae-ms) var(--ease-ui),bottom var(--ae-move) var(--ease-out)}
 .app.fs.fs-active .stage-strip{opacity:1;pointer-events:auto}
 .app.fs.fs-min .stage-strip{bottom:calc(var(--fs-edge) + var(--fs-trh) + var(--gap-head))}
 @media (prefers-reduced-motion:reduce){.app.fs .stage-strip{transition:none}}
@@ -619,7 +619,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .app{height:auto;min-height:100%;display:flex;flex-direction:column}
 }          /* the page itself: a box cannot ask about its own width, so its stacking stays on the screen's */
 @container app (max-width:960px){
-  .app.fs>*{--fs-gap:var(--gap-head);--fs-edge:calc(var(--fs-gap) + env(safe-area-inset-bottom,0px))}          /* the full-screen edge, for everything inside the page */
+  .app.fs>*{--fs-gap:var(--gap-head);--fs-edge:calc(var(--fs-gap) + var(--fs-bottom))}          /* the full-screen edge, for everything inside the page */
   .vsep{display:none}
   .app>*,.stage-col,.panel{flex:none}
   .work{display:contents}
@@ -628,8 +628,8 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .panel{order:3}
   .app.fs .transport .info{display:none}
   .app.fs .timeline{border-radius:var(--r-lg)}
-  .stage-wrap{height:min(62vw,420px)}
-  .stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 125px,320px))}      /* System has the selector and the preview, so the stage gets more height, but never so much that the Play button drops below a short window (125px is the header above the stage and the transport below it) */
+  .app:not(.fs) .stage-wrap{height:min(62vw,420px)}          /* the phone's in-page heights: full screen has its own (the whole screen), so they are scoped out of it here, at their source */
+  .app:not(.fs) .stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 125px,320px))}      /* System has the selector and the preview, so the stage gets more height, but never so much that the Play button drops below a short window (125px is the header above the stage and the transport below it) */
   .stage-wrap:has(>.empty:not([hidden])){height:auto;min-height:min(62vw,420px)}      /* the intro sets its own height, so a phone's narrow screen never clips its top or bottom */
   .stage-wrap:has(>.empty:not([hidden]))>#stage{display:none}
   .stage-wrap>.empty:not([hidden]){position:relative;inset:auto;flex:none;width:100%}
@@ -638,7 +638,7 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   .panel{border-left:0;border-top:1px solid var(--line);padding:var(--gap-card) clamp(var(--gap-field),5vw,var(--panel-side-max)) calc(var(--gap-group) + var(--gap-tight))}
   .panel .group,.panel .status{max-width:560px;margin-left:auto;margin-right:auto}
 }
-@container app (max-width:760px){.stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
+@container app (max-width:760px){.app:not(.fs) .stage-wrap.sys-split{height:min(110vw,640px,max(100vh - 215px,320px))}}      /* the header wraps to two rows here, so the stage has less room */
 
 /* ----- Reduced-motion preferences ----- */
 @media (prefers-reduced-motion:reduce){.toast,.bar i{transition:none}}
@@ -673,8 +673,9 @@ html.fs-lock,html.fs-lock body{overflow:hidden}
   --ease-out:cubic-bezier(.22,1,.36,1);
   --ease-ui:cubic-bezier(.2,.8,.2,1);
   --ease-color:cubic-bezier(.44,0,.56,1);
-  --toast-ms:4200ms;   /* how long a toast stays; JS reads it too (TOAST_MS) */
-  --toast-long-ms:6000ms;   /* a toast that needs more reading time, such as an error; JS reads it too (TOAST_LONG_MS) */
+  --toast-ms:2800ms;   /* how long a short toast stays; JS reads it too (TOAST_MS) */
+  --toast-long-ms:5000ms;   /* an error's toast, and the most any toast stays; JS reads it too (TOAST_LONG_MS) */
+  --toast-word-ms:120ms;   /* added for each word beyond a short message, up to --toast-long-ms; JS reads it too (TOAST_WORD_MS) */
   --ae-note-ms:3000ms;   /* how long a note on the picture stays (the stop note, the noise graph's "No hum found"); JS reads it too (AE_NOTE_MS) */
   --glass-blur:blur(22px) saturate(1.5);      /* the one blur for every glass element */
   --ae-quick:200ms;   /* a hover or color change, a tip, a toast, a chip */
@@ -746,12 +747,12 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 /* ==================== 14. HEADINGS, STATUS & SMOOTH STATES ==================== */
 /* group headings are real buttons (so the keyboard can reach them); a switched-off group cannot be folded */
 .fold-btn{display:flex;align-items:center;gap:var(--gap-head);padding:0;border:0;background:none;color:inherit;font:inherit;line-height:round(calc(var(--lh) * 1em),1px);cursor:pointer;text-align:left}
-.fold-btn::before{content:'';flex:none;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg) translate(-1px,-1px);transition:transform var(--t-hover) var(--spring-hover),opacity var(--ae-ms) var(--ease-color),border-color var(--ae-quick) var(--ease-color)}
-.group.collapsed .fold-btn::before{transform:rotate(-45deg)}
-.fold-btn:hover::before{border-color:var(--ink)}
+.fold-chev::before{content:'';flex:none;align-self:center;width:6px;height:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:rotate(45deg) translate(-1px,-1px);transition:transform var(--t-hover) var(--spring-hover),opacity var(--ae-ms) var(--ease-color),border-color var(--ae-quick) var(--ease-color)}          /* the fold chevron: the panel headings and both editors' tool bars share this one (down when open, right when closed; the turn is instant with reduced motion, below) */
+.fold-chev[aria-expanded=false]::before{transform:rotate(-45deg)}
+.fold-chev:hover::before{border-color:var(--ink)}
 .fold-btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-paper)}
 .group.off .fold-btn{cursor:default}
-.group.off .fold-btn::before{opacity:0}
+.group.off .fold-chev::before{opacity:0}
 /* the parts of a group keep their margins inside, so opening and closing never shifts anything at the start or the end */
 .group-body,.sub:not(.field):not(.colorrow):not(.line-style),#turnShadowBlock,details.adv{display:flow-root}
 .group>.group-head,.group>h3{transition:margin-bottom var(--ae-move) var(--ease-out)}
@@ -1247,6 +1248,12 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .ae-card.dim{opacity:var(--inactive)}
 .ae-rail{--rail-pad:8px;padding:var(--rail-pad);border:1px solid var(--line);border-radius:var(--r-lg);background:var(--panel2);gap:0}
 .ae-rail-cur,.pe-rail-cur{display:none}
+/* the narrow tool bar, one rule for both editors: the fold chevron, the tool's name in a panel heading's type, then the tool's button(s) on the right */
+.rail-bar{display:flex;align-items:center;padding-right:var(--gap-set)}
+.rail-cur{flex:1 1 0;min-width:0;align-items:baseline;gap:var(--gap-head);padding:var(--gap-set) 0 var(--gap-set) var(--gap-set);border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;font-size:var(--type-value);font-weight:600;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
+.rail-cur b{font-weight:600}
+.rail-cur output{margin-left:auto;font-size:var(--type-small);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums}
+.rail-bar>.btn,.rail-bar>.ae-abs{flex:none;margin-left:var(--gap-head)}
 .ae-rail-body{display:flex;flex-direction:column;flex:1 0 auto}
 .ae-rail-in{display:flex;flex-direction:column;gap:var(--gap-label);flex:1 0 auto}
 .ae-panes{display:flex;flex-direction:column}
@@ -1261,13 +1268,7 @@ input[type=range].bi::-moz-range-progress{background:transparent}
 .eq-match .field.dim{opacity:var(--inactive)}
 @container aedlg (max-width:728px){
   .ae-rail{display:block;padding:0}
-  .ae-rail-cur{display:flex;align-items:center;gap:var(--gap-card);width:100%;padding:var(--gap-set);border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
-  .ae-rail-cur span{color:var(--muted);font-size:var(--type-small);text-transform:uppercase;letter-spacing:.05em}
-  .ae-rail-cur b{font-weight:600}
-  .ae-rail-cur output{margin-left:auto;font-size:var(--type-small);color:var(--muted);font-variant-numeric:tabular-nums}
-  .ae-rail-cur svg{width:18px;height:18px;flex:none;color:var(--muted);transition:transform var(--ae-move) var(--spring-hover)}
-  .ae-rail-cur output:empty+svg{margin-left:auto}
-  .ae-rail.open .ae-rail-cur svg{transform:rotate(180deg)}
+  .ae-rail-cur{display:flex}
   .ae-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .ae-rail.open .ae-rail-body{grid-template-rows:1fr}
   .ae-rail-in{overflow:hidden;min-height:0;padding:0 var(--gap-head);flex-direction:column}
@@ -1604,7 +1605,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* glass that only full screen switches on keeps the off blur outside it (see --glass-off); the timeline and the tool window hold menus and tips, so they stay none outside full screen and their own opacity is never faded while their glass switches */
 .app .transport,#audioDlg .ed-head .btn,#audioDlg .ed-head .btn-group{-webkit-backdrop-filter:var(--glass-off);backdrop-filter:var(--glass-off)}
 /* the score player's controls: one glass row above the timeline, the same recipe as the Audio Editor's */
-.app.fs .transport{left:var(--fs-gap);right:var(--fs-gap);bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card));padding:var(--gap-head) var(--gap-field);gap:var(--gap-head);border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),var(--shadow-float);color:var(--ink);text-shadow:none;isolation:isolate}
+.app.fs .transport{left:calc(var(--fs-gap) + var(--fs-left));right:calc(var(--fs-gap) + var(--fs-right));bottom:calc(var(--tl-h) + var(--fs-edge) + var(--gap-card));padding:var(--gap-head) var(--gap-field);gap:var(--gap-head);border:1px solid var(--glass-edge);border-radius:var(--r-win);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),var(--shadow-float);color:var(--ink);text-shadow:none;isolation:isolate}
 .app.fs .transport .info,.app.fs .transport .time span{color:var(--muted)}
 .app.fs .transport .icon-btn,.app.fs .transport .btn{box-shadow:none}
 .app.fs .transport .icon-btn:not(.play),.app.fs .transport .btn:not(.primary){background:var(--panel2);border-color:var(--line);-webkit-backdrop-filter:none;backdrop-filter:none}
@@ -2241,16 +2242,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rail{border-radius:var(--r-lg) var(--r-lg) 0 0;border-bottom-color:var(--hairline)}
   .pe-win{border-top:0;border-radius:0 0 var(--r-lg) var(--r-lg)}
   .pe-rail{padding:0}          /* the tool list becomes a drop-down, as the Audio Editor's does: the same bar, chevron, and glide */
-  .pe-rail-cur{display:flex;align-items:center;gap:var(--gap-card);width:100%;padding:var(--gap-set);border:0;border-radius:var(--r-lg);background:none;color:var(--ink);font:inherit;line-height:round(calc(var(--lh) * 1em),1px);text-align:left;cursor:pointer}
-  .pe-rail-cur span{color:var(--muted);font-size:var(--type-small);text-transform:uppercase;letter-spacing:.05em}
-  .pe-rail-cur b{font-weight:600}
-  .pe-rail-cur svg{width:var(--icon-l);height:var(--icon-l);flex:none;margin-left:auto;color:var(--muted);transition:transform var(--ae-move) var(--spring-hover)}
+  .pe-rail-cur{display:flex}
   #peWin{--pe-narrow:1}          /* the script reads this to know the tool bar holds the tool's button (one place for the width) */
-  .pe-rail-bar{display:flex;align-items:center;position:relative;padding-right:calc(var(--gap-set) * 2 + var(--icon-l))}          /* the tool bar is the tool's heading, with its button on its line, as the Audio Editor's */
-  .pe-rail-cur{flex:1 1 0;min-width:0;width:auto;position:static;align-items:baseline}          /* the small "Tool" and the tool's name share one baseline, as the Audio Editor's bar */
-  .pe-rail-bar>.btn{flex:none;margin-left:var(--gap-head)}
-  .pe-rail-cur svg{position:absolute;right:var(--gap-set);top:50%;margin:calc(var(--icon-l) / -2) 0 0}
-  .pe-rail.open .pe-rail-cur svg{transform:rotate(180deg)}
   .pe-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .pe-rail.open .pe-rail-body{grid-template-rows:1fr}
   .pe-pt h3{display:none}          /* the drop-down above already names the tool, so the head keeps only its line and its buttons */
@@ -2274,7 +2267,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
 }
 @container pedlg (max-width:488px){
-  #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead,#pdfDlg .pe-rail-cur span{display:none}  #pdfDlg .pe-rail-cur{padding-right:var(--gap-head)}
+  #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead{display:none}
   #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
@@ -2677,14 +2670,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* Narrow layout (760px and under): the tool bar is the tool's heading, with Match gain and Bypass on its line; the pane's own title row goes */
 @container aedlg (max-width:728px){
   #audioDlg.head-in-bar .ae-top,#audioDlg.head-in-bar .ae-rule{display:none}
-  #audioDlg.head-in-bar .ae-rail-bar{display:flex;align-items:center;position:relative;padding-right:calc(var(--gap-set) * 2 + var(--icon-l))}
-  #audioDlg.head-in-bar .ae-rail-cur{flex:1 1 0;min-width:0;width:auto;position:static}
-  #audioDlg.head-in-bar .ae-rail-bar .ae-abs{flex:none;margin-left:var(--gap-head)}
   #audioDlg.head-in-bar .ae-rail-cur output{display:none}
-  #audioDlg.head-in-bar .ae-rail-cur svg{position:absolute;right:var(--gap-set);top:50%;margin:calc(var(--icon-l) / -2) 0 0}
 }
-@container aedlg (max-width:728px){#audioDlg.head-in-bar .ae-rail-cur{align-items:baseline}}
-/* where the cards stack (the dialog's width is 488px and under): labels become icons, the tool bar's "Tool" word goes, and the subtitles go. One collapsing button class, .ae-ib (an icon .ae-ic and a label .ae-lb), serves Match gain and Bypass in the head, and Spectra's Draw, Box, Band, Moment, Heal, and Reduce (words at full size, icons only here) */
+/* where the cards stack (the dialog's width is 488px and under): labels become icons and the subtitles go. One collapsing button class, .ae-ib (an icon .ae-ic and a label .ae-lb), serves Match gain and Bypass in the head, and Spectra's Draw, Box, Band, Moment, Heal, and Reduce (words at full size, icons only here) */
 .btn.small.ico{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}          /* a button that is only an icon (Trim silence): as wide as it is tall, at every width; its name is in its tooltip and aria-label */
 .btn.small.ico svg{width:var(--icon-s);height:var(--icon-s);flex:none}          /* the same glyph size as Full screen beside it and the video strips: a glyph on glass is --icon-s (14px) in every bar */
 .ae-ib .ae-ic{display:none}
@@ -2692,8 +2680,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   #audioDlg :is(.ae-bar,.ae-abs) .ae-ib.btn{min-width:var(--h-s);padding:0;display:inline-flex;align-items:center;justify-content:center}
   #audioDlg .ae-ib .ae-lb{display:none}          /* the buttons shrink to Lucide icons so a long tool name keeps one line */
   #audioDlg .ae-ib .ae-ic{display:block;width:16px;height:16px}
-  #audioDlg.head-in-bar .ae-rail-cur span{display:none}
-  #audioDlg.head-in-bar .ae-rail-cur{padding-right:var(--gap-head)}
   #audioDlg .ae-pt .ae-sub,#audioDlg .ed-lead{display:none}          /* a tool's one-line description and the window's subtitle give way */
 }
 

@@ -292,9 +292,9 @@ function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelecto
 /* while a job waits the cards dim to the shared inactive look; they still scroll. A result said over the pages (Split's) never dims them: the pages stay live, and the note goes at the first tick or click on them */
 function peDimCards() { $('#peWin').classList.toggle('waiting', !!PE.waiting); }
 document.addEventListener('pointerdown', e => { if (PE.toastOn && e.target.closest('#peWin .pe-grid')) peToast(''); }, true);
-function peToast(text, ms) {
+function peToast(text, kind) {
   const t = $('#peToast'); clearTimeout(t._t); if (!text) { t.classList.remove('show'); PE.toastOn = false; peDimCards(); return; }
-  t.textContent = text; t.classList.add('show'); PE.toastOn = true; peDimCards(); t._t = setTimeout(() => peToast(''), ms || TOAST_MS);
+  t.textContent = text; t.classList.add('show'); PE.toastOn = true; peDimCards(); t._t = setTimeout(() => peToast(''), toastMs(text, kind));
 }
 /* a tool's one Apply button: Apply starts the job, Applied (the shared pressed look) says it is done, and pressing it again undoes it */
 function peApplyBtn(sel, off, done) {
@@ -1286,7 +1286,7 @@ async function peExportPdf() {
     const blob = await buildPdfBlob(r, ui);
     const name = (S.pdf.name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Score') + ' - Edited.pdf';
     await saveFile(blob, name); toast(tx('pe.saved', { n: recipeKeep(r).length, mb: (blob.size / 1048576).toFixed(1) }));
-  } catch (e) { if (PE.expStop) toast(tx('pe.expstop')); else { console.error(e); toast(e && e.message === 'offline' ? tx('pe.offline') : tx('pe.savefail'), 5000); } }
+  } catch (e) { if (PE.expStop) toast(tx('pe.expstop')); else { console.error(e); toast(e && e.message === 'offline' ? tx('pe.offline') : tx('pe.savefail'), 'long'); } }
   finally { PE.exporting = false; PE.expStop = false; stop.hidden = true; btn.classList.remove('exporting'); btn.style.removeProperty('--p'); lb.textContent = label; if (PE.d) { const eb = $('#peExport'); eb.disabled = !!pdfWhy(); } else btn.disabled = false; }
 }
 const peLeave = () => PE.exporting ? askWarn('Close the editor?', 'Your PDF is still being exported. Closing the editor now stops the export and nothing is saved.', 'Stop export and close', 'Keep exporting') : Promise.resolve(true);

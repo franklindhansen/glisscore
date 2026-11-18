@@ -109,7 +109,7 @@ async function importSettings(file) {
   if (adopted && adopted.added) msg += ' ' + tx(adopted.added === 1 ? 'app.imp.added.one' : 'app.imp.added.many', { n: adopted.added });
   if (adopted && adopted.dropped) msg += ' ' + tx(adopted.dropped === 1 ? 'app.imp.dropped.one' : 'app.imp.dropped.many', { n: adopted.dropped });
   if (JSON.stringify(snap()) === was) { S.history.pop(); S.redo = redoWas; updateHistoryButtons(); }          // nothing changed: no step, and Redo stays
-  closeIO(); toast(msg, adopted && (adopted.added || adopted.dropped) ? 8000 : 4200);
+  closeIO(); toast(msg);
 }
 function initImportExport() {
   document.querySelectorAll('input[name=ioKind]').forEach(r => r.addEventListener('change', () => { swapText($('#ioKindHint'), IO_HINTS[ioKind()]); }));
@@ -338,7 +338,7 @@ function boot() {
   creditsBaseLoad().then(() => { stageDirty = true; });          // the credits' own font, drawn on the stage, has to be there before the first frame
   syncControls(); bindSettings(); readColors();
   try { previewR = new Renderer(stageCanvas, PageSource, { cap: 14, live: true }); }
-  catch (e) { toast(e.message, 8000); console.error(e); return; }
+  catch (e) { toast(e.message, 'long'); console.error(e); return; }
   previewR.onUpdate = () => { stageDirty = true; };
   layoutStage(); layoutTimeline(); updateButtons(); updateTimeUI(true); setChips();
   /* A resize wipes the timeline's canvas, so it is painted again in the same frame, before the browser shows it (a redraw left for the next frame showed one blank frame, a flash). */
@@ -388,7 +388,7 @@ function boot() {
   $('#expSave').addEventListener('click', async () => {
     if (!EXP.blob) return;
     try { const r = await saveFile(EXP.blob, EXP.name); if (r) toast(tx('app.saved')); }
-    catch (e) { toast(tx('app.savefail', { why: (e && e.message) || 'unknown error' }), 6000); }
+    catch (e) { toast(tx('app.savefail', { why: (e && e.message) || 'unknown error' }), 'long'); }
   });
 
   // drag & drop anywhere

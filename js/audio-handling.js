@@ -671,7 +671,7 @@ async function loadAudio(file) {
     if (dk) {
       const ac = ctxForRate(dk.sr); live(); setBusyFrac(0.98); playPrepare(ac);
       const movedMsg = adoptAudio(file, dk, dk.frames), clipMsg = dk.peak > 1.00006 ? ' ' + tx('aud.clips', { db: DB_TXT(20 * Math.log10(dk.peak)) }) : '';
-      toast(tx('aud.loaded', { len: fmt(dk.duration) }) + movedMsg + clipMsg, movedMsg || clipMsg ? 9000 : 4200); return;
+      toast(tx('aud.loaded', { len: fmt(dk.duration) }) + movedMsg + clipMsg); return;
     }
     const ab = await file.arrayBuffer(); live();
     const rate0 = sniffRateFile(ab), lossy = lossyLabel(file.name, sniffRateFile.alac), ac = ctxForRate(rate0 || sniffRate(new Uint8Array(ab, 0, Math.min(ab.byteLength, 262144))));          // containers first: the MP3 guess can mistake AAC or Ogg data for MP3 frames
@@ -688,12 +688,12 @@ async function loadAudio(file) {
     const clampMsg = lossy && !direct && fullScaleCount(buffer) >= 16 ? ' ' + tx('aud.clamped') : '';          // lossy files decoded by the browser only; 16 or more samples stuck at full scale is the sign
     const { peaks, peakMax: mx } = calcPeaks(buffer);          // waveform peaks: 100 per second
     const movedMsg = adoptAudio(file, { buffer, name: file.name, duration: buffer.duration, peaks, peakMax: mx, lossy }, buffer.length);
-    toast(tx('aud.loaded', { len: fmt(buffer.duration) }) + (sourceCh > 2 ? ' ' + tx('aud.mixed', { n: sourceCh }) : '') + movedMsg + clipMsg + clampMsg + longMsg, movedMsg || sourceCh > 2 || clipMsg || clampMsg || longMsg ? 9000 : 4200);
+    toast(tx('aud.loaded', { len: fmt(buffer.duration) }) + (sourceCh > 2 ? ' ' + tx('aud.mixed', { n: sourceCh }) : '') + movedMsg + clipMsg + clampMsg + longMsg);
   } catch (e) {
     if (e === STALE) return;
     console.error(e);
     const ext = ((file.name.match(/\.([^.]+)$/) || [])[1] || '').toLowerCase();
-    toast(file.size === 0 ? tx('aud.empty') : ['aif', 'aiff', 'caf', 'wma', 'amr'].includes(ext) ? tx('aud.badtype', { ext: ext.toUpperCase() }) : tx('aud.readfail'), 6500);
+    toast(file.size === 0 ? tx('aud.empty') : ['aif', 'aiff', 'caf', 'wma', 'amr'].includes(ext) ? tx('aud.badtype', { ext: ext.toUpperCase() }) : tx('aud.readfail'), 'long');
   } finally { if (mine === loadSeq) setBusy(''); }
 }
 

@@ -957,7 +957,7 @@ async function loadPdf(file) {
     console.error(e);
     const msg = e && e.name === 'PasswordException' ? tx('pdf.password') :
       (e && e.message && /did not load/.test(e.message)) ? e.message : tx('pdf.readfail');
-    toast(msg, 6000);
+    toast(msg, 'long');
   } finally { if (token === loadToken) setBusy(''); }
 }
 let thumbGen = 0;

@@ -619,7 +619,7 @@ function initGroupFolds() {
     const sum = document.createElement('p'); sum.className = 'group-sum'; head.after(sum);
     const body = document.createElement('div'); body.className = 'group-body'; body.id = 'gbody' + n; sum.after(body);
     Array.from(g.children).filter(el => ![head, sum, body].includes(el) && el.id !== 'btnExport' && el.id !== 'exportHint').forEach(el => body.appendChild(el));
-    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'fold-btn'; btn.textContent = h3.textContent; btn.setAttribute('aria-controls', body.id); btn.setAttribute('aria-expanded', 'true');
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'fold-btn fold-chev'; btn.textContent = h3.textContent; btn.setAttribute('aria-controls', body.id); btn.setAttribute('aria-expanded', 'true');
     h3.textContent = ''; h3.appendChild(btn);
     btn.addEventListener('click', e => {
       if (!g.classList.contains('off')) { g.classList.toggle('collapsed'); syncGroupBodies(); updateGroupSummaries(); }
@@ -1529,7 +1529,7 @@ async function saveThumbnail() {
     if (!blob || blob.size > 1.9 * 1024 * 1024) throw new Error('could not make the image under 2 MB');
     const name = ((S.credits.title.trim() || S.pdf.name || 'Score').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Score') + ' - Thumbnail.jpg';
     await saveFile(blob, name); toast(tx('vid.thumb', { mb: (blob.size / 1048576).toFixed(1) }));
-  } catch (e) { console.error(e); toast(tx('vid.thumbfail'), 5000); }
+  } catch (e) { console.error(e); toast(tx('vid.thumbfail'), 'long'); }
   finally { updateButtons(); }
 }
 /* Hovering (or focusing) Save current frame shows a small picture of the frame it would save, above the button */
