@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.37
+
+In the System layout, drag a system's left and right edges, add a system with one drag, and erase marks on the preview with the new eraser.
+
 ## 1.2.36
 
 The PDF Editor opens large PDFs faster.
