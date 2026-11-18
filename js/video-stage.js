@@ -340,9 +340,9 @@ class Renderer {
   }
   /* While the bars slide, a system too tall for the band is composed again each frame from its page's kept drawing at the size the band has now (nothing is drawn from the PDF), so it grows or shrinks with the bars.
      A system that fits in either band is not touched: its sheet is the same at both ends and does not move. */
-  lbTexture(idx) {
+  lbTexture(idx, force) {
     const lay = this.lay, now = sysFit(idx, lay.pw, lay.ph, true), rest = sysFit(idx, lay.pw, lay.ph);
-    if (Math.abs(now.s - rest.s) < 1e-6 && !this.lbT.has(idx)) return null;
+    if (!force && Math.abs(now.s - rest.s) < 1e-6 && !this.lbT.has(idx)) return null;
     const ent = sysKept(sysPage(idx)); if (!ent) return null;
     const gl = this.gl; let e = this.lbT.get(idx); if (!e) { e = { t: gl.createTexture(), cv: document.createElement('canvas') }; e.cv.width = lay.pw; e.cv.height = lay.ph; this.lbT.set(idx, e); }
     if (e.cv.width !== lay.pw || e.cv.height !== lay.ph) { e.cv.width = lay.pw; e.cv.height = lay.ph; }
@@ -350,7 +350,9 @@ class Renderer {
     gl.bindTexture(gl.TEXTURE_2D, e.t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, e.cv); this.setTexParams();
     return e.t;
   }
-  lbDrop(landed) { const gl = this.gl; this.lbT.forEach((e, idx) => { if (landed && !this.tex.has(idx) && sysOn()) return; gl.deleteTexture(e.t); e.cv.width = e.cv.height = 0; this.lbT.delete(idx); }); }          // landed: only the ones whose sharp sheet is in
+  /* a sheet made at once from its page's kept drawing while it is brushed (the eraser): it stays while hold is set, and after, until the sharp sheet has come */
+  handSheet(idx, hold) { if (!this.live) return; const t = this.lbTexture(idx, true); if (t) this.lbT.get(idx).hold = hold; }
+  lbDrop(landed) { const gl = this.gl; this.lbT.forEach((e, idx) => { if ((landed && e.hold) || (landed && !this.tex.has(idx) && sysOn())) return; gl.deleteTexture(e.t); e.cv.width = e.cv.height = 0; this.lbT.delete(idx); }); }          // landed: only the ones whose sharp sheet is in
   request(idx) {
     if (this.pending.has(idx)) return this.pending.get(idx);
     const key = this.sizeKey, lay = this.lay, gl = this.gl;
@@ -710,10 +712,20 @@ function szButtons() {
   $('#szOut').disabled = $('#szFit').disabled = SZ.z <= 1; $('#szIn').disabled = SZ.z >= SZ_MAX;
   $('#selZOut').disabled = $('#selZFit').disabled = SZS.z <= 1; $('#selZIn').disabled = SZS.z >= SZ_MAX;
 }
+/* The zoomed preview is cut off at its own half, as the selector's pane cuts its own (`.sys-sel` clips): the half is the stage inside the room the selector and divider take (the wrapper's padding). The clip is in the picture's own dots, the transform undone, so it holds at every zoom and pan. */
+function szClip() {
+  const cv = stageCanvas, wrap = $('#stageWrap'), z = SZ.z, W = cv.offsetWidth, H = cv.offsetHeight;
+  if (z <= 1 || !SPLIT.shown || !W || !H) { cv.style.removeProperty('--zoom-clip'); return; }
+  const pl = parseFloat(wrap.style.paddingLeft) || 0, pt = parseFloat(wrap.style.paddingTop) || 0, cx = cv.offsetLeft + W / 2, cy = cv.offsetTop + H / 2;
+  const L = Math.max(0, W / 2 + (pl - cx - SZ.x) / z), T = Math.max(0, H / 2 + (pt - cy - SZ.y) / z);
+  const R = Math.max(0, W / 2 - (wrap.clientWidth - cx - SZ.x) / z), B = Math.max(0, H / 2 - (wrap.clientHeight - cy - SZ.y) / z);
+  cv.style.setProperty('--zoom-clip', 'inset(' + [T, R, B, L].map(v => v.toFixed(2) + 'px').join(' ') + ')');
+}
 function szApply(smooth, st = SZ) {
   const { cv, cls } = szView(st); cv.style.transition = smooth && !reducedMotion() ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
   cv.style.transform = st.z === 1 ? '' : 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(3) + ')'; cls.classList.toggle('zoomed', st.z > 1);
   const wl = $(st === SZS ? '#selWaits' : '#stageWaits'); if (wl) pgWaitHost(wl, cv);          // the labels over the pages move with the picture
+  if (st === SZ) szClip();
   szButtons();
 }
 function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy) stays where it is
@@ -738,7 +750,7 @@ function szBind() {
   wrap.addEventListener('pointerdown', e => {
     if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]); const v = at(e);
     if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: v.z, v }; pan = null; wrap.setPointerCapture(e.pointerId); }
-    else if (v.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: v.x, oy: v.y, v }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
+    else if (v.z > 1 && e.button === 0 && (v === SZS || !ERASE.on || ERASE.space)) { pan = { x: e.clientX, y: e.clientY, ox: v.x, oy: v.y, v }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
   });
   wrap.addEventListener('pointermove', e => {
     if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
@@ -761,6 +773,7 @@ function drawStage() {
   if (S.time !== fadeSeenT) { if (fadeLookAt !== S.time) fadeLookAt = NaN; fadeSeenT = S.time; }          // any move that is not a scrub (or the end of playback) forgets the looked-at time, however it was made
   if (!Transport.playing && fadeLookAt !== S.time) st.fade = 1;      // the paused preview shows the full picture, except where you scrubbed to: there it shows the fade under the playhead
   previewR.render(st);
+  eraseSync();
   pageWaitSync(); if (previewR.fx.size) stageDirty = true;
   if (st.spread !== lastSpreadShown) { lastSpreadShown = st.spread; prefetchAround(); updateInfo(); }
   if (SPLIT.shown) selSync();          // System: the selector follows the playhead

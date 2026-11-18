@@ -314,7 +314,7 @@ function peStepLabel(a, b) {
 function mainStepLabel(a, b) {
   const parts = [];
   if (a.lay && b.lay && a.lay !== b.lay) parts.push('Page layout');
-  if (a.sys && b.sys && JSON.stringify(a.sys) !== JSON.stringify(b.sys)) parts.push('Systems');
+  if (a.sys && b.sys && JSON.stringify(a.sys) !== JSON.stringify(b.sys)) parts.push(sysStepName(a.sys, b.sys));
   if (a.set && b.set) parts.push(...setStepNames(a.set, b.set));
   if (a.pdf && b.pdf && recipeSig(a.pdf) !== recipeSig(b.pdf)) parts.push('PDF: ' + peStepLabel(a.pdf, b.pdf));
   else if (!!a.pdf !== !!b.pdf) parts.push(b.pdf ? 'PDF opened' : 'PDF removed');

@@ -40,41 +40,36 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const before = await sys(), h0 = await steps(); let s;
   ok('three systems are found first', before.length === 3, JSON.stringify(before));
   ok('marking is on without a button', await p.evaluate(() => !document.querySelector('#spMark')));
-  // a new system is made only by a double-click-and-drag on blank page; nothing else on blank page does anything
-  const ddrag = async (a, b2, gap = 80) => { await p.mouse.move(...a); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(gap); await p.mouse.down(); await p.mouse.move(...b2, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(500); };
+  // a new system is made by one press and drag on blank page; a click on blank page does nothing
   const same = async (name) => ok(name, JSON.stringify(await sys()) === JSON.stringify(before) && await steps() === h0, JSON.stringify(await sys()));
-  await drag(await at(0.03), await at(0.085)); await same('a plain drag on blank page does nothing');
   await click(await at(0.03)); await same('a single click on blank page does nothing');
-  await click(await at(0.03)); await p.waitForTimeout(600); await click(await at(0.09)); await same('two clicks apart (the old click-click mark) do nothing');
-  await ddrag(await at(0.03), await at(0.085), 600); await same('a second press after the double-click time is a plain drag');
-  { const a0 = await at(0.03), a1 = [a0[0], a0[1] + 12]; await p.mouse.move(...a0); await p.mouse.down(); await p.mouse.up(); await p.waitForTimeout(80); await p.mouse.move(...a1); await p.mouse.down(); await p.mouse.move(a1[0], a1[1] + 40, { steps: 6 }); await p.mouse.up(); await p.waitForTimeout(500); await same('a second press too far from the first is a plain drag'); }
+  await click(await at(0.03)); await p.waitForTimeout(600); await click(await at(0.09)); await same('two clicks apart do nothing');
   ok('blank page shows the plain pointer, not a crosshair', await p.evaluate(() => document.querySelector('#selCv').style.cursor !== 'crosshair'));
-  await ddrag(await at(0.03), await at(0.085));
+  await drag(await at(0.03), await at(0.085));
   s = await sys();
-  ok('double-click-and-drag marks a region the finder skipped', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
+  ok('a press and drag on blank page marks a region the finder skipped, with no double-click', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
   ok('it is one History step', await steps() === h0 + 1);
+  ok('the new Selection takes the page\'s usual left and right', await p.evaluate(() => { const l = SYS.byPage.get(0).systems, n = l[0], o = l[1]; return Math.abs(n.left - o.left) < 0.02 && Math.abs(n.right - o.right) < 0.02 && !n.hx; }));
   await p.click('#bUndo'); await p.waitForTimeout(500);
   ok('undo takes the mark away', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys()));
   await p.click('#bRedo'); await p.waitForTimeout(500);
   ok('redo brings it back', (await sys()).length === 4);
-  // double-click-and-drag over the second and third system replaces neither but pushes them
+  // a press and drag over the second and third system replaces neither but pushes them
   const q = await sys();
-  await ddrag(await at(q[2][0] - 0.03), await at(q[3][1] + 0.03));
+  await drag(await at(q[2][0] - 0.03), await at(q[3][1] + 0.03));
   s = await sys();
-  ok('a double-click-and-drag over systems pushes what it overlaps and removes nothing', s.length === q.length + 1 && s.every((r, i) => r[1] - r[0] >= 0.014 && (!i || r[0] >= s[i - 1][1] - 1e-6)) && s[s.length - 1][1] <= 1.0001 && s.some(r => r[0] < q[2][0] && r[1] > q[3][1] - 0.001), JSON.stringify(s));
+  ok('a drag from blank page over systems pushes what it overlaps and removes nothing', s.length === q.length + 1 && s.every((r, i) => r[1] - r[0] >= 0.014 && (!i || r[0] >= s[i - 1][1] - 1e-6)) && s[s.length - 1][1] <= 1.0001 && s.some(r => r[0] < q[2][0] && r[1] > q[3][1] - 0.001), JSON.stringify(s));
   ok('and is one step', await steps() === h0 + 2);
   await p.click('#bUndo'); await p.click('#bUndo'); await p.waitForTimeout(500);
   ok('two undos restore the found systems', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys()));
-  // touch: a double tap and drag marks the same way
+  // touch: a plain drag on blank page marks the same way
   { const cdp = await p.context().newCDPSession(p), pt = ([x, y]) => [{ x, y, id: 1 }]; await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true });
     const t = async (type, xy) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: xy ? pt(xy) : [] });
-    const b0 = await at(0.9), b1 = await at(0.96); await t('touchStart', b0); await t('touchMove', b1); await t('touchEnd'); await p.waitForTimeout(500); ok('touch: a plain drag on blank page does nothing', JSON.stringify(await sys()) === JSON.stringify(before));
-    const a0 = await at(0.03), a1 = await at(0.085); await t('touchStart', a0); await t('touchEnd'); await p.waitForTimeout(100); await t('touchStart', a0);
+    const a0 = await at(0.03), a1 = await at(0.085); await t('touchStart', a0);
     for (let i = 1; i <= 6; i++) await t('touchMove', [a0[0] + (a1[0] - a0[0]) * i / 6, a0[1] + (a1[1] - a0[1]) * i / 6]); await t('touchEnd'); await p.waitForTimeout(600);
-    s = await sys(); ok('touch: a double tap and drag marks a system', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
+    s = await sys(); ok('touch: a plain drag on blank page marks a system', s.length === 4 && s[0][0] < 0.04 && s[0][1] > 0.07, JSON.stringify(s));
     ok('a double tap allows a finger-sized gap, a double-click does not', await p.evaluate(() => dblNear(100, 20, 0, 'touch') && !dblNear(100, 20, 0, 'mouse') && dblNear(100, 4, 0, 'mouse') && !dblNear(500, 0, 0, 'touch')));
-    
-    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }); await p.waitForTimeout(300); await p.click('#bUndo'); await p.waitForTimeout(600); ok('touch: undo takes the touch mark away', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify([await sys(), await steps(), h0])); }
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }); await p.waitForTimeout(300); await p.click('#bUndo'); await p.waitForTimeout(600); ok('touch: undo takes the touch mark away', JSON.stringify(await sys()) === JSON.stringify(before), JSON.stringify(await sys())); }
   if (process.env.SHOTS) { await p.mouse.move(...(await at(0.37))); await p.waitForTimeout(200); await p.locator('#stageWrap').screenshot({ path: process.env.SHOTS + '/marks.png' }); await p.keyboard.press('Escape'); }
   // resize by the bottom edge
   const t = await sys(); await drag(await at(t[0][1]), await at(t[0][1] + 0.03));
@@ -131,13 +126,14 @@ function tiltPage(doc) {          // two systems, the whole page turned 1.5 degr
   const tb = await p.evaluate(() => { const r = SYS.byPage.get(2); return { tilt: r.tilt, n: r.systems.length, s: r.systems[0] }; });
   ok('the tilted page has its tilt and two systems', Math.abs(tb.tilt) > 0.5 && tb.n === 2, JSON.stringify(tb));
   await p.evaluate(() => { window.__scans = 0; const o = peScan; peScan = (...a) => { window.__scans++; return o(...a); }; });
-  const m1 = await p.evaluate(async tb => { const b = await sysMark(2, tb.s.top, tb.s.bottom); return b; }, tb);
-  ok('a mark on a tilted page lands on the same ink edges as the finder', m1 && Math.abs(m1.left - tb.s.left) < 0.012 && Math.abs(m1.right - tb.s.right) < 0.012, JSON.stringify([m1, tb.s]));
-  await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom + 0.01); }, tb);
-  ok('marks on a page whose staves are kept scan nothing', await p.evaluate(() => window.__scans === 0), String(await p.evaluate(() => window.__scans)));
+  const nudge = (dy) => p.evaluate(async dy => { const r = SYS.byPage.get(2), a = r.systems[0], pp = sysPush(r.systems.slice(), 'move', 0, dy); await sysPlace(2, pp.boxes, pp.out); return SYS.byPage.get(2).systems.find(s => s === a); }, dy);
+  const m1 = await nudge(0.01);
+  ok('a Selection moved on a tilted page lands on the same ink edges as the finder', m1 && Math.abs(m1.left - tb.s.left) < 0.012 && Math.abs(m1.right - tb.s.right) < 0.012, JSON.stringify([m1, tb.s]));
+  await nudge(0.01);
+  ok('moves on a page whose staves are kept scan nothing', await p.evaluate(() => window.__scans === 0), String(await p.evaluate(() => window.__scans)));
   await p.evaluate(() => { delete SYS.byPage.get(2).stv; window.__scans = 0; });          // a page restored from saved work has no kept staves: it is measured once
-  await p.evaluate(async tb => { await sysMark(2, tb.s.top, tb.s.bottom); await sysMark(2, tb.s.top, tb.s.bottom + 0.01); }, tb);
-  ok('a page with no kept staves is measured once for several marks', await p.evaluate(() => window.__scans === 1 && !!SYS.byPage.get(2).stv), String(await p.evaluate(() => window.__scans)));
+  await nudge(0.01); await nudge(0.01);
+  ok('a page with no kept staves is measured once for several moves', await p.evaluate(() => window.__scans === 1 && !!SYS.byPage.get(2).stv), String(await p.evaluate(() => window.__scans)));
   const sharp = await p.evaluate(async () => {          // the tallest row of ink: staff lines are sharpest when the page is level
     const peak = sc => { let m = 0; for (let y = 0; y < sc.h; y++) { let n = 0; for (let x = 0, i = y * sc.w; x < sc.w; x++, i++) n += sc.ink[i]; if (n > m) m = n; } return m; };
     const lv = await sysLevel(2), raw = await peScan(S.pdf.slots[2].src, SYS_W, null, 0.85, false); return [peak(lv), peak(raw)];

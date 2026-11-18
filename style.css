@@ -87,7 +87,7 @@
   --shadow-lift:0 8px 22px rgba(10,14,30,.25);   /* a card lifted off the page while it is dragged */
   --shadow-float:0 24px 48px -28px rgba(10,14,30,.6),0 0 0 .5px rgba(10,14,30,.08);   /* the full-screen bars and tool window, under the glass shadow */
   --shadow-inset:inset 0 1px 2px rgba(0,0,0,.09);   /* a recessed panel (the Balance meter) */
-  --icon-s:14px; --icon-m:16px; --icon-l:18px;          /* glyph sizes. --icon-s is the glyph on every glass bar (the video strips, Full screen, Trim silence), whatever the button around it; --icon-l is a stand-alone icon button's */
+  --brush:16px; --icon-s:14px; --icon-m:16px; --icon-l:18px;          /* glyph sizes. --icon-s is the glyph on every glass bar (the video strips, Full screen, Trim silence), whatever the button around it; --icon-l is a stand-alone icon button's */
 }
 
 /* ----- Dark mode: follows the device setting ----- */
@@ -190,6 +190,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .sys-sel[hidden],.sys-div[hidden]{display:none}
 #selCv{display:block;flex:none;touch-action:none}
 .sys-sel.zoomed{cursor:grab;touch-action:none}
+.stage-wrap.sys-split.zoomed #stage{clip-path:var(--zoom-clip,none)}          /* the zoomed preview stops at its own half, never over the divider or the selector */
 .sys-sel.pan-ready #selCv{cursor:grab!important}
 .sys-div{position:absolute;z-index:3;width:var(--div-w);background:var(--stage);cursor:col-resize;touch-action:none}
 .sys-div::before{content:"";position:absolute;left:calc((var(--div-w) - var(--hair)) / 2);top:0;bottom:0;width:var(--hair);background:var(--line);transition:background-color var(--ae-quick) var(--ease-color),box-shadow var(--ae-quick) var(--ease-color)}
@@ -532,7 +533,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae
 /* ==================== 10. FULL-SCREEN MODE ==================== */
 /* ----- Full-screen button ----- */
 .stage-strip,.sys-zoom,.sys-bar,.sys-nav{position:absolute;right:var(--fsm);bottom:var(--fsm);z-index:6;display:flex;align-items:center;gap:var(--gap-sub);height:var(--fs);padding:var(--gap-snug);box-sizing:border-box;border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),inset 0 0 0 1px var(--glass-edge),0 0 0 .5px var(--glass-ring)}
-.stage-strip[hidden],.sys-zoom[hidden],.sys-bar[hidden],.sys-nav[hidden]{display:none}
+.stage-strip[hidden],.sys-zoom[hidden],.sys-bar[hidden],.sys-nav[hidden],.stage-strip button[hidden],.stage-strip .stage-div[hidden]{display:none}
 .stage-strip button,.sys-zoom button,.sys-bar button,.sys-nav button{display:grid;place-items:center;width:var(--w-glass);height:100%;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);cursor:pointer;transition:background-color var(--ae-quick) var(--ease-color),color var(--ae-quick) var(--ease-color),transform .14s var(--ease-out)}
 .stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active,.sys-bar button:not(:disabled):active,.sys-nav button:not(:disabled):active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){.stage-strip button:not(:disabled):active,.sys-zoom button:not(:disabled):active{transform:none}}
@@ -540,7 +541,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae
 .stage-strip button:not(:disabled):hover,.sys-zoom button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-zoom button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
 .stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:var(--inactive);cursor:default}
 .stage-strip svg,.sys-zoom svg,.sys-bar svg,.sys-nav svg{width:var(--icon-s);height:var(--icon-s)}
-.sys-bar button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.sys-bar button[aria-pressed=true],.stage-strip button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
 /* the preset strip: one vertical glass strip at the top right (the current preset, a divider, Detect this page again); hovering or tapping the preset icon unfolds the four presets sideways from it */
 .sys-tools{position:absolute;top:var(--fsm);right:var(--fsm);z-index:6}
@@ -2748,3 +2749,9 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-learn .btn{min-width:0}
 .nr-foot{flex-wrap:wrap;column-gap:var(--gap-set)}          /* the two switches share the row, and stack when the card is too narrow for both */
 .nr-foot>label{display:flex;align-items:center;gap:var(--gap-card);font-size:var(--type-value);white-space:nowrap}
+
+/* the eraser: the brush's ring (a small round tip, the same size at every zoom) follows the pointer over the preview */
+.erase-ring{position:absolute;left:0;top:0;z-index:5;width:var(--brush);height:var(--brush);margin:calc(var(--brush) / -2) 0 0 calc(var(--brush) / -2);box-sizing:border-box;border-radius:50%;border:var(--hair) solid var(--accent);box-shadow:0 0 0 var(--hair) var(--accent-ink);pointer-events:none;will-change:transform}
+.erase-ring[hidden]{display:none}
+.stage-wrap.erasing,.stage-wrap.erasing.zoomed{cursor:none;touch-action:none}
+.stage-wrap.erasing.pan-ready{cursor:grab}

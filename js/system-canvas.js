@@ -153,7 +153,7 @@ function splitBind() {
 }
 
 /* ---------- the selector ---------- */
-const SEL = { mark: { space: false, over: false, live: null, blank: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
+const SEL = { mark: { space: false, over: false, live: null }, key: null, sig: '', bmp: null, bmpIdx: -1, bmpH: 0, bmpGen: -1, want: '', paper: null, paperKey: '', geo: null };
 /* the system the playhead is on: a credits card shows the nearest system instead */
 function selCurrent(ahead) {
   const n = S.spreads.length; if (!n) return null;
@@ -183,7 +183,7 @@ function selSync(force) {
   const sig = [key, cv.clientWidth, cv.clientHeight, S.set.margin, S.set.letterbox, S.set.aspect, S.set.res, SYS.byPage.size, SYS.gen, SYS.rev, S.pdf.gen || 0].join();
   if (!force && sig === SEL.sig) return;
   if (sysPage(key) !== sysPage(SEL.key == null ? -1 : SEL.key) && SZS.z !== 1) szReset(false, SZS);          // a new page starts at Fit
-  SEL.sig = sig; SEL.key = key; SEL.mark.blank = SEL.mark.live = null;
+  SEL.sig = sig; SEL.key = key; SEL.mark.live = null;
   const pages = selPages(), i = pages.findIndex(q => q.page === sysPage(key));
   const rec = SYS.byPage.get(sysPage(key)); document.querySelectorAll('input[name=selMode]').forEach(r => { r.checked = r.value === (rec && rec.full ? 'full' : 'systems'); r.disabled = !rec; }); { const sg = $('#selMode'); if (sg._place) sg._place(false); }
   selPgText(); $('#selPrev').disabled = i <= 0; $('#selNext').disabled = i < 0 || i >= pages.length - 1;
@@ -239,7 +239,7 @@ function selWaitSync(idx, found, ready, x, y, w, h) {
   else if (!ready) items.push(Object.assign(box, { text: tx('stage.rendering', { n }), short: tx('stage.rendering.short') }));
   pgWaitSet(host, items);
 }
-/* Marking, always on while System is: every system's top and bottom are handles (the left and right edges never are). Each one wears its reading-order number on its top left
+/* Marking, always on while System is: every system's four edges are handles. Each one wears its reading-order number on its top left
    corner, and the current one an × on its top right corner, on one line; both stay inside the pane on a page with no margin. While something is dragged the page is drawn as it
    will be (M.live), the moved one dashed and its neighbors already out of its way. */
 function selBadge(x, y, bw) {
@@ -248,7 +248,7 @@ function selBadge(x, y, bw) {
 }
 function selMarkPaint(g, list, box, X, Y, accent) {
   const { u, pa, k } = SEL.geo, M = SEL.mark, lw = Math.max(1, k * 0.75), L = M.live;
-  const show = L ? L.boxes.map((s, n) => ({ top: L.out[n][0], bottom: L.out[n][1], left: s ? s.left : 0, right: s ? s.right : 1, cur: n === L.cur, live: n === L.cur })) : list.map(s => ({ top: s.top, bottom: s.bottom, left: s.left, right: s.right, cur: s === box }));
+  const show = L ? L.boxes.map((s, n) => ({ top: L.out[n][0], bottom: L.out[n][1], left: n === L.cur && L.lr ? L.lr[0] : s ? s.left : 0, right: n === L.cur && L.lr ? L.lr[1] : s ? s.right : 1, cur: n === L.cur, live: n === L.cur })) : list.map(s => ({ top: s.top, bottom: s.bottom, left: s.left, right: s.right, cur: s === box }));
   g.save(); g.strokeStyle = accent;
   show.forEach((s, n) => {
     const x = X(s.left * pa), y = Y(s.top), bw = (s.right - s.left) * pa * u, bh = (s.bottom - s.top) * u;
@@ -296,25 +296,32 @@ function selPt(e) {
   const cv = $('#selCv'), geo = SEL.geo, b = cv.getBoundingClientRect(), sx = cv.width / b.width, px = (e.clientX - b.left) * sx, py = (e.clientY - b.top) * sx;
   return { x: (px - geo.ox) / geo.u, y: (py - geo.oy) / geo.u, px, py, tol: 6 * sx / geo.u };
 }
-/* what is under the pointer: the ×, a system's top or bottom edge, the inside of a system, or empty page */
+/* what is under the pointer: the ×, a system's top, bottom, left, or right edge, the inside of a system, or empty page. The × and the number badges keep the corners: an edge is not offered under a badge. */
 function selHit(e) {
   const geo = SEL.geo; if (!geo || SEL.key == null) return { t: 'new' };
   const p = selPt(e), r = SYS.byPage.get(geo.idx), list = r ? r.systems : [], { box } = geo, xc = selXPos();
   if (list.includes(box) && Math.hypot(p.px - xc[0], p.py - xc[1]) <= xc[2] + 3) return { t: 'del', box, p };
   let best = null, bd = Infinity;
   list.forEach(s => { if (p.x < -p.tol || p.x > geo.pa + p.tol) return; [['top', s.top], ['bottom', s.bottom]].forEach(([n, v]) => { const d = Math.abs(p.y - v) + ((n === 'bottom') === (p.y > v) ? p.tol * 0.01 : 0); if (d <= p.tol && d < bd) { bd = d; best = { t: n, box: s, p }; } }); });          // where two systems touch, the pointer's own side decides
+  const badge = (cx, cy, hw) => Math.abs(p.px - cx) <= hw + 3 && Math.abs(p.py - cy) <= xc[2] + 3;          // the number badge (its width follows its text; one or two figures) and the ×, at the top corners
+  list.forEach(s => {
+    if (p.y < s.top - p.tol || p.y > s.bottom + p.tol) return;
+    const nb = selBadge(geo.ox + s.left * geo.pa * geo.u, geo.oy + s.top * geo.u, 16 * geo.k), xb = selBadge(geo.ox + s.right * geo.pa * geo.u, geo.oy + s.top * geo.u);
+    if (badge(nb[0], nb[1], 8 * geo.k + 4 * geo.k) || (s === box && badge(xb[0], xb[1], xb[2]))) return;
+    [['left', s.left], ['right', s.right]].forEach(([n, v]) => { const d = Math.abs(p.x - v * geo.pa); if (d <= p.tol && d < bd) { bd = d; best = { t: n, box: s, p }; } });
+  });
   if (best) return best;
   const inside = list.find(s => p.y >= s.top && p.y <= s.bottom && p.x >= s.left * geo.pa && p.x <= s.right * geo.pa); if (inside) return { t: 'move', box: inside, p };
   return { t: 'new', p };
 }
 const selList = () => { const r = SEL.geo && SYS.byPage.get(SEL.geo.idx); return r ? r.systems : []; };
-/* a new system is made only by a double-click-and-drag on blank page: press, release, press again within the shared double-click time and distance (DBL_MS, DBL_PX, DBL_TOUCH_PX in core.js), then drag. A double-click on a system uses the same. */
-const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', move: 'move', new: 'default' };
+/* a new system is made by pressing on blank page and dragging; a double-click on a system (or an edge of one) puts it back to what was found, by the shared double-click time and distance (DBL_MS, DBL_PX, DBL_TOUCH_PX in core.js) */
+const SEL_CURSOR = { del: 'pointer', top: 'ns-resize', bottom: 'ns-resize', left: 'ew-resize', right: 'ew-resize', move: 'move', new: 'default' };
 let selPaintQ = 0; const selPaintSoon = () => { cancelAnimationFrame(selPaintQ); selPaintQ = requestAnimationFrame(selPaint); };
 function selMarkBind() {
   const pane = $('#sysSel'), cv = $('#selCv'), M = SEL.mark; let G = null;
-  $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.blank = M.live = null; sysRedetect(SEL.geo.idx); } });
-  /* a zoomed page pans by dragging while Space is held over it (a double-click-and-drag marks a new system); Space then does not play */
+  $('#spAgain').addEventListener('click', () => { if (SEL.geo && SEL.key != null) { M.live = null; sysRedetect(SEL.geo.idx); } });
+  /* a zoomed page pans by dragging while Space is held over it (a plain drag on blank page marks a new system); Space then does not play */
   const spaceSet = on => { M.space = on; pane.classList.toggle('pan-ready', on); };
   pane.addEventListener('pointerenter', () => { M.over = true; }); pane.addEventListener('pointerleave', () => { M.over = false; });
   document.addEventListener('keyup', e => { if (e.code === 'Space' && M.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
@@ -322,17 +329,17 @@ function selMarkBind() {
     if (M.space) return;
     if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null || sysBusy()) return;          // nothing is marked while systems are found
     e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
-    const h = selHit(e), b = M.blank; M.blank = null;
+    const h = selHit(e);
     G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, base: selList().slice() });
-    if (h.t === 'new') G.dbl = !!b && b.pg === G.pg && dblNear(performance.now() - b.t, e.clientX - b.x, e.clientY - b.y, e.pointerType);          // the second press of a double-click on blank page
   });
   cv.addEventListener('pointermove', e => {
-    if (!SEL.geo) return;
+    const geo = SEL.geo; if (!geo) return;
     const p = selPt(e);
     if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; return; }
     if (!G.moved && Math.hypot(e.clientX - G.sx, e.clientY - G.sy) < 4) return; G.moved = true;
     const y = clamp(p.y, 0, 1), t = G.t, i = G.base.indexOf(G.box);
-    if (t === 'new') { if (G.dbl) M.live = sysPush(G.base, 'new', 0, clamp(G.p.y, 0, 1), y); }          // a plain drag on blank page does nothing
+    if (t === 'new') M.live = sysPush(G.base, 'new', 0, clamp(G.p.y, 0, 1), y);
+    else if (i >= 0 && (t === 'left' || t === 'right')) { const sd = sysSides(G.box, t, p.x / geo.pa); M.live = { boxes: G.base, out: G.base.map(q => [q.top, q.bottom]), cur: i, lr: sd }; }          // only this Selection's side moves; the others stay
     else if (i >= 0 && (t === 'top' || t === 'bottom')) M.live = sysPush(G.base, t, i, y);
     else if (i >= 0 && t === 'move') M.live = sysPush(G.base, 'move', i, y - G.p.y);
     selPaintSoon();
@@ -343,9 +350,10 @@ function selMarkBind() {
     if (e.type === 'pointercancel' || !geo) { selPaintSoon(); return; }
     const t = g.t, idx = g.pg; if (idx !== geo.idx) { selPaintSoon(); return; }          // the page changed under the gesture
     if (t === 'del' && !g.moved) { sysRemove(idx, g.box); return; }
+    if (g.moved && L && L.lr) { sysEdgeSet(idx, g.box, L.lr[0], L.lr[1]); selPaintSoon(); return; }
     const big = L && L.out[L.cur][1] - L.out[L.cur][0] >= SYS_MINH;
     if (g.moved && L) { if (big) await sysPlace(idx, L.boxes, L.out); selPaintSoon(); return; }
-    if (t === 'new') { if (!g.moved && !g.dbl) M.blank = { t: performance.now(), x: e.clientX, y: e.clientY, pg: idx }; selPaintSoon(); return; }          // a click or a drag on blank page does nothing; a click is remembered as the first half of a double-click
+    if (t === 'new') { selPaintSoon(); return; }          // a click on blank page does nothing
     const now = performance.now(), tap = M.tap; M.tap = g.box ? { t: now, x: e.clientX, y: e.clientY, box: g.box, pg: idx } : null;
     if (tap && g.box && tap.box === g.box && tap.pg === idx && dblNear(now - tap.t, e.clientX - tap.x, e.clientY - tap.y, e.pointerType)) { M.tap = null; selClick(e); sysResetOne(idx, g.box).then(() => selPaintSoon()); return; }          // a double-click (or two quick taps) on a system or its edge: that one box goes back to what was found
     selClick(e);                                                  // a click on a system or its edge: the playhead goes there
@@ -354,7 +362,77 @@ function selMarkBind() {
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && SPLIT.shown && M.over && SZS.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); return; }
     if (!SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
-    if (e.key === 'Escape' && (M.blank || M.live)) { M.blank = M.live = null; G = null; selPaintSoon(); e.stopPropagation(); }
+    if (e.key === 'Escape' && M.live) { M.live = null; G = null; selPaintSoon(); e.stopPropagation(); }
     else if ((e.key === 'Delete' || e.key === 'Backspace') && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
   }, true);
+}
+
+
+/* ---------- the eraser: brushing marks off one system's sheet on the preview ---------- */
+/* Turned on from the strip (or E), the pointer brushes over the preview and the marks under it go, filled with the paper around them (`sysEraseDraw` in js/systems.js). The brush is a small round tip, the same size on screen at every zoom (--brush), with a ring showing it. Space-drag pans, the wheel and a pinch zoom, and Esc or a second press turns it off. The selector never shows it. */
+const ERASE = { on: false, space: false, over: false, G: null };
+/* the system whose sheet the preview shows at rest (null while a turn runs, on the credits card, on a Full page, or while systems are found) */
+function eraseTarget() {
+  if (!S.pdf || !sysOn() || sysBusy() || !previewR || !previewR.lay || !S.spreads.length) return null;
+  const fs = frameState(S.time), sp = S.spreads[fs.spread]; if (!sp || sp[1] < 0 || (fs.flip != null && fs.flip > 0 && fs.flip < 1)) return null;
+  const idx = sysPage(sp[1]), r = SYS.byPage.get(idx); if (!r || r.full || !r.systems.length) return null;
+  return { key: sp[1], idx, box: r.systems[Math.min(sysNo(sp[1]), r.systems.length - 1)] };
+}
+function eraseSet(on) {
+  on = !!on && !!eraseTarget(); if (ERASE.on === on) return;
+  if (!on) eraseCancel(); ERASE.on = on; const b = $('#szErase'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); $('#stageWrap').classList.toggle('erasing', on); if (!on) $('#eraseRing').hidden = true;
+}
+/* shown only in System; greyed (with its reason as the tooltip) where there is no system sheet to brush */
+function eraseSync() {
+  const b = $('#szErase'); if (!b) return; const show = sysOn() && !!S.pdf, t = show ? eraseTarget() : null;
+  if (b.hidden === show) { b.hidden = !show; $('#szEraseDiv').hidden = !show; try { layoutStage(); } catch (e) {} }          // the strip is wider or narrower, so the picture makes room again
+  b.disabled = show && !t; const tip = !show ? '' : t ? tx('sys.erase') : tx('sys.erase.why'); if (b.title !== tip) b.title = tip;
+  if (ERASE.on && !t) eraseSet(false);
+}
+/* a pointer on the preview as a point on the sheet's system: x across and y down as fractions of the page, and the brush's radius in page heights */
+function erasePt(e, T) {
+  const lay = previewR.lay, b = stageCanvas.getBoundingClientRect(), ux = lay.pw / b.width, uy = lay.ph / b.height, sx = (e.clientX - b.left) * ux, sy = (e.clientY - b.top) * uy;
+  const f = sysFit(T.key, lay.pw, lay.ph), box = f.box, x0 = Math.round((lay.pw - f.dw) / 2), y0 = Math.round((lay.ph - f.dh) / 2);
+  return { x: box.left + (sx - x0) / f.dw * (box.right - box.left), y: box.top + (sy - y0) / f.dh * (box.bottom - box.top), sx, sy, r: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--brush') || '16') / 2 * ux / f.s, u: ux };
+}
+function eraseCancel() {
+  const G = ERASE.G; ERASE.G = null; if (!G) return;
+  delete G.T.box.erLive; try { previewR.handSheet(G.T.idx, false); } catch (e) {} stageDirty = true;
+}
+function eraseBind() {
+  const wrap = $('#stageWrap'), ring = $('#eraseRing'), btn = $('#szErase');
+  btn.addEventListener('click', () => eraseSet(!ERASE.on));
+  const inPreview = e => !e.target.closest('#sysSel, #stageStrip, .sys-tools, #sysDiv, .sys-find-box, .empty');
+  const place = e => { if (!ERASE.on || ERASE.space || !inPreview(e)) { ring.hidden = true; return; } const r = wrap.getBoundingClientRect(); ring.hidden = false; ring.style.transform = 'translate(' + (e.clientX - r.left - wrap.clientLeft) + 'px,' + (e.clientY - r.top - wrap.clientTop) + 'px)'; };
+  wrap.addEventListener('pointermove', e => { ERASE.over = inPreview(e); place(e); if (ERASE.G && e.pointerId === ERASE.G.id) more(e); });
+  wrap.addEventListener('pointerleave', () => { ring.hidden = true; ERASE.over = false; });
+  const more = e => {
+    const G = ERASE.G, p = erasePt(e, G.T), last = G.pt; if (last && Math.hypot(p.sx - last.sx, p.sy - last.sy) < 2.5 * p.u) return;          // a new point only once the pointer has moved a little
+    G.pt = p; G.s.p.push(+p.x.toFixed(5), +p.y.toFixed(5)); G.T.box.erLive = G.s; try { previewR.handSheet(G.T.idx, true); } catch (er) {} stageDirty = true;
+  };
+  wrap.addEventListener('pointerdown', e => {
+    if (!ERASE.on) return;
+    if (ERASE.G) { eraseCancel(); return; }          // a second finger: a pinch, not a stroke
+    if (e.button !== 0 || ERASE.space || !inPreview(e)) return;
+    const T = eraseTarget(); if (!T) return; const b = stageCanvas.getBoundingClientRect(); if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) return;
+    if (Transport.playing) Transport.pause();
+    const p = erasePt(e, T); ERASE.G = { T, id: e.pointerId, s: { r: +p.r.toFixed(5), p: [] }, pt: null }; try { wrap.setPointerCapture(e.pointerId); } catch (er) {}
+    e.preventDefault(); more(e);
+  }, true);
+  const end = e => {
+    const G = ERASE.G; if (!G || e.pointerId !== G.id) return; ERASE.G = null;
+    const box = G.T.box; delete box.erLive;
+    if (e.type !== 'pointercancel' && G.s.p.length) { sysErase(G.T.idx, box, G.s); try { previewR.handSheet(G.T.idx, false); } catch (er) {} }
+    else { try { previewR.handSheet(G.T.idx, false); } catch (er) {} }
+    stageDirty = true;
+  };
+  wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
+  /* Esc turns it off; Space held over the zoomed preview makes a drag pan instead of erase */
+  const spaceSet = on => { ERASE.space = on; wrap.classList.toggle('pan-ready', on); if (on) ring.hidden = true; };
+  document.addEventListener('keydown', e => {
+    if (!ERASE.on) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); eraseSet(false); return; }
+    if (e.code === 'Space' && ERASE.over && SZ.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); }
+  }, true);
+  document.addEventListener('keyup', e => { if (e.code === 'Space' && ERASE.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
 }

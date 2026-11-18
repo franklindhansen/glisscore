@@ -374,14 +374,24 @@ function sysSync() {
 }
 /* Every found page for the project and the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]], f: 1 on Full page, h: systems held aside on Full page, a: 1 when found automatically, g: the picture it was found on}] */
 const sysToList = () => [...SYS.byPage.keys()].filter(i => S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
-  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => [q(b.top), q(b.bottom), q(b.left), q(b.right)], e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
+  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => { const o = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; if (b.hx || (b.er && b.er.length)) o.push(b.hx ? 1 : 0); if (b.er && b.er.length) o.push(b.er.map(t => [q(t.r)].concat(t.p.map(q)))); return o; }, e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
   if (r.full) e.f = 1; if (r.held && r.held.length) e.h = r.held.map(box); if (r.heldTurns && r.heldTurns.length) e.ht = r.heldTurns.map(q => [Math.round(q.t * 10000) / 10000, q.ph ? 1 : 0]); if (!SYS.hand.has(i)) e.a = 1; e.g = r.geo || sysGeo(S.pdf.slots[i]);
   return e;
 });
+/* a box's saved erasures: [[radius, x0, y0, x1, y1, ...]] in page units, each point 0 to 1 across and down; null when none is usable */
+function sysErClean(a) {
+  if (!Array.isArray(a)) return null; const out = [];
+  for (const t of a.slice(0, 2000)) {
+    if (!Array.isArray(t) || t.length < 3 || t.length > 20002 || t.length % 2 === 0 || !t.every(Number.isFinite)) continue;
+    const r = t[0], pts = t.slice(1); if (!(r > 0 && r <= 0.5) || !pts.every(v => v >= -0.5 && v <= 1.5)) continue;
+    out.push({ r, p: pts });
+  }
+  return out.length ? out : null;
+}
 /* only values this site understands; null when nothing usable */
 function sysListClean(list, n) {
   if (!Array.isArray(list) || list.length > 500) return null; const out = [], f = v => Number.isFinite(v) && v >= 0 && v <= 1;
-  const boxes = a => { const s = []; for (const b of Array.isArray(a) ? a.slice(0, 100) : []) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; s.push({ top: b[0], bottom: b[1], left: b[2], right: b[3] }); } return s; };
+  const boxes = a => { const s = []; for (const b of Array.isArray(a) ? a.slice(0, 100) : []) { if (!Array.isArray(b) || b.length < 4 || b.length > 6 || !b.slice(0, 4).every(f) || b[1] - b[0] < 0.01 || b[3] - b[2] <= 0) continue; const o = { top: b[0], bottom: b[1], left: b[2], right: b[3] }; if (b[4] === 1) o.hx = true; const er = sysErClean(b[5]); if (er) o.er = er; s.push(o); } return s; };
   for (const e of list) {
     if (!e || !Number.isInteger(e.p) || e.p < 1 || e.p > n || !Array.isArray(e.s) || e.s.length > 100) continue;
     const t = Number.isFinite(e.t) ? clamp(e.t, -15, 15) : 0, s = boxes(e.s), o = { p: e.p, t, s };
@@ -554,11 +564,30 @@ async function sysPlace(idx, boxes, out) {
   const moved = boxes.map((s, k) => !s || Math.abs(s.top - out[k][0]) > 1e-5 || Math.abs(s.bottom - out[k][1]) > 1e-5);
   if (!moved.some(Boolean)) return false;
   await sysDetectPage(idx);          // a page not found yet is found first, so its own systems are not lost
-  const edges = []; for (let k = 0; k < out.length; k++) edges.push(moved[k] ? await sysEdges(idx, out[k][0], out[k][1]) : null);
+  const edges = []; for (let k = 0; k < out.length; k++) edges.push(moved[k] && !(boxes[k] && boxes[k].hx) ? (boxes[k] ? await sysEdges(idx, out[k][0], out[k][1]) : await sysNewEdges(idx, out[k][0], out[k][1])) : null);          // sides set by hand stay; a new one takes the page's usual sides
   const r0 = SYS.byPage.get(idx); if (boxes.some(s => s && !(r0 && r0.systems.includes(s)))) return false;          // the page changed under the drag
   pushHistory(); const r = sysHandRec(idx);
-  r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }; return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
+  r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1] }; if (edges[k]) { q.left = edges[k][0]; q.right = edges[k][1]; } return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
   r.full = !r.systems.length; r.held = []; r.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+}
+/* the page's usual left and right for a new Selection: the middle of the sides of the systems already there (the finder's own measure of the band when there are none) */
+async function sysNewEdges(idx, top, bottom) {
+  const r = SYS.byPage.get(idx), list = r ? r.systems : [], med = a => { const v = a.slice().sort((x, y) => x - y); return v[v.length >> 1]; };
+  if (list.length) return [med(list.map(q => q.left)), med(list.map(q => q.right))];
+  return sysEdges(idx, top, bottom);
+}
+/* a Selection's sides as a drag would leave them: inside the page, never closer than a twentieth of the page's width */
+const SYS_MINW = 0.05;
+function sysSides(box, side, v) {
+  v = clamp(v, 0, 1);
+  return side === 'left' ? [clamp(v, 0, box.right - SYS_MINW), box.right] : [box.left, clamp(v, box.left + SYS_MINW, 1)];
+}
+/* a Selection's sides set by hand: one History step. They stay until the Selection is reset. */
+function sysEdgeSet(idx, box, left, right) {
+  const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box)) return false;
+  if (Math.abs(box.left - left) < 1e-5 && Math.abs(box.right - right) < 1e-5) return false;
+  pushHistory(); sysHandRec(idx); Object.assign(box, { left, right, hx: true });
+  SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
 /* Double-click a Selection: that one box returns to what the finder found for it, as one History step. The default is the found system that overlaps the box most (at least half of the smaller of the two); a box with no
    found system under it (one drawn by hand where nothing was found) does nothing. A neighbor in the way gives way as in a drag (sysPush). Resolves with whether anything changed. */
@@ -571,12 +600,53 @@ async function sysResetOne(idx, box) {
   if (!best) return false;
   const same = (x, y) => Math.abs(x - y) < 1e-5; if (same(box.top, best.top) && same(box.bottom, best.bottom) && same(box.left, best.left) && same(box.right, best.right)) return false;
   const base = r.systems.slice(), i = base.indexOf(box), a = sysPush(base, 'top', i, best.top), mid = base.map((q, k) => Object.assign({}, q, { top: a.out[k][0], bottom: a.out[k][1] })), b = sysPush(mid, 'bottom', i, best.bottom), out = b.out;
-  const edges = []; for (let k = 0; k < out.length; k++) edges.push(k !== i && (!same(out[k][0], base[k].top) || !same(out[k][1], base[k].bottom)) ? await sysEdges(idx, out[k][0], out[k][1]) : null);
+  const edges = []; for (let k = 0; k < out.length; k++) edges.push(k !== i && !base[k].hx && (!same(out[k][0], base[k].top) || !same(out[k][1], base[k].bottom)) ? await sysEdges(idx, out[k][0], out[k][1]) : null);
   const now = SYS.byPage.get(idx); if (now !== r || !r.systems.includes(box) || r.systems.length !== base.length) return false;
   if (!r.auto) r.auto = auto.map(q => Object.assign({}, q));          // kept, so Detect again and an undo can return to it
   pushHistory(); const rr = sysHandRec(idx);
-  base.forEach((s2, k) => { if (k === i) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: best.left, right: best.right }); else if (edges[k]) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }); });          // the same boxes, so a turn stays with its Selection
+  base.forEach((s2, k) => { if (k === i) { Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: best.left, right: best.right }); delete s2.hx; } else if (edges[k]) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }); else if (!same(out[k][0], s2.top) || !same(out[k][1], s2.bottom)) Object.assign(s2, { top: out[k][0], bottom: out[k][1] }); });          // the same boxes, so a turn stays with its Selection
   rr.systems = base.sort((x, y) => x.top - y.top); rr.full = false; rr.held = []; rr.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
+}
+/* ---------- erasures: strokes a person brushed over one system's sheet, drawn in the video only ---------- */
+/* A stroke is { r, p }: a brush radius in page heights and a line of points (x across and y down as fractions of the page, flat). It belongs to the Selection it was brushed on (box.er, never shared with the next system's sheet), is kept with the page's hand marks, and goes with the Selection. One stroke is one History step. */
+function sysErase(idx, box, stroke) {
+  const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box) || !stroke || !stroke.p.length) return false;
+  delete box.erLive; pushHistory(); sysHandRec(idx);
+  box.er = (box.er || []).concat([stroke]);          // a new list each time: a History step keeps the one it had
+  SYS.rev++; stageDirty = true; return true;
+}
+/* the name of a History step that changed the systems: Erase when only erasures changed */
+function sysStepName(a, b) {
+  const bare = m => JSON.stringify(m, (k, v) => k === 'er' ? undefined : v), has = m => m && m.systems.some(q => q.er && q.er.length), pages = [...new Set(Object.keys(a).concat(Object.keys(b)))];
+  const only = pages.every(i => a[i] && b[i] ? bare(a[i]) === bare(b[i]) : has(a[i] || b[i]));          // a page that had no hand marks yet is one that has erasures now
+  return only && JSON.stringify(a) !== JSON.stringify(b) ? tx('sys.erase.step') : 'Systems';
+}
+/* the paper beside a spot: the middle of the lightest quarter of a wide ring of dots around the brush (ink is darker than paper, and a mark bigger than the brush fills most of a near ring), so a clean page gives its exact white and a stained scan its own tone there. rr: the brush's radius in the page drawing's dots. */
+function sysErSample(ent, cx, cy, rr) {
+  const cv = ent.cv, R = Math.ceil(rr * 3.1) + 2, x0 = clamp(Math.floor(cx - R), 0, cv.width - 1), y0 = clamp(Math.floor(cy - R), 0, cv.height - 1), x1 = clamp(Math.ceil(cx + R), x0 + 1, cv.width), y1 = clamp(Math.ceil(cy + R), y0 + 1, cv.height), w = x1 - x0, h = y1 - y0;
+  const d = cv.getContext('2d').getImageData(x0, y0, w, h).data, list = [];
+  [1.25, 1.75, 2.4, 3.0].forEach((k, j) => { for (let a = 0; a < 14; a++) { const ang = a / 14 * 6.2832 + j * 0.45, X = Math.round(cx + Math.cos(ang) * rr * k) - x0, Y = Math.round(cy + Math.sin(ang) * rr * k) - y0; if (X < 0 || Y < 0 || X >= w || Y >= h) continue; const i = (Y * w + X) * 4; list.push([d[i], d[i + 1], d[i + 2]]); } });
+  if (!list.length) return null;
+  list.sort((p, q) => q[0] + q[1] + q[2] - p[0] - p[1] - p[2]);          // light to dark
+  const top = list.slice(0, Math.max(1, list.length >> 2)), mid = c => { const v = top.map(q => q[c]).sort((p, q) => p - q); return v[v.length >> 1]; };
+  return [mid(0), mid(1), mid(2)];
+}
+/* Draws a box's erasures on its sheet (c): along each stroke, round dabs of the paper sampled beside each point, feathered at the rim, inside the cut so the paper around the system is never patched. (x, y, f.dw, f.dh): where the system lies on the sheet; (sx, sy, sw, sh): the part of the page drawing it was cut from. */
+function sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper) {
+  const list = (box.er || []).concat(box.erLive ? [box.erLive] : []); if (!list.length) return;
+  const pw = ent.cv.width, ph = ent.cv.height, kx = f.dw / sw, ky = f.dh / sh; if (!ent.er) ent.er = new WeakMap();
+  c.save(); c.beginPath(); c.rect(x, y, f.dw, f.dh); c.clip();
+  list.forEach(t => {
+    const n = t.p.length >> 1, rr = Math.max(2, t.r * ph); let k = ent.er.get(t); if (!k) { k = { n: 0, cols: [] }; ent.er.set(t, k); }
+    for (let i = k.n; i < n; i++) k.cols[i] = sysErSample(ent, t.p[2 * i] * pw, t.p[2 * i + 1] * ph, rr); k.n = n;
+    const rs = Math.max(1, t.r * ph * kx), dab = (X, Y, col) => { const g = c.createRadialGradient(X, Y, 0, X, Y, rs), a = 'rgba(' + col.join(',') + ','; g.addColorStop(0, a + '1)'); g.addColorStop(0.8, a + '1)'); g.addColorStop(1, a + '0)'); c.fillStyle = g; c.fillRect(X - rs, Y - rs, 2 * rs, 2 * rs); };
+    const at = i => [(t.p[2 * i] * pw - sx) * kx + x, (t.p[2 * i + 1] * ph - sy) * ky + y], col = i => k.cols[i] || paper;
+    for (let i = 0; i < n; i++) {
+      const b = at(i); if (i) { const a = at(i - 1), ca = col(i - 1), cb = col(i), m = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / Math.max(1, rs * 0.3))); for (let q = 1; q < m; q++) { const u = q / m; dab(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, ca.map((v, j) => Math.round(v + (cb[j] - v) * u))); } }
+      dab(b[0], b[1], col(i));
+    }
+  });
+  c.restore();
 }
 /* a mark from top to bottom (page fractions), among the others */
 async function sysMark(idx, a, b) {
@@ -601,7 +671,8 @@ const SYS_WIDE = { key: '', v: 0 };
 function sysWide() {
   const pa = S.pdf.aspect, k = [SYS.rev, SYS.gen, SYS.byPage.size, pa, S.pdf.keep.join(',')].join('|');
   if (SYS_WIDE.key === k) return SYS_WIDE.v;
-  let wide = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { wide = Math.max(wide, (s.right - s.left) * pa); }); });
+  let wide = 0, any = 0; new Set(S.pdf.keep).forEach(i => { const r = SYS.byPage.get(i); if (r) r.systems.forEach(s => { const w = (s.right - s.left) * pa; any = Math.max(any, w); if (!s.hx) wide = Math.max(wide, w); }); });          // a system whose sides were set by hand shrinks alone and never sets the scale; a score with none found keeps the widest
+  if (!wide) wide = any;
   SYS_WIDE.key = k; SYS_WIDE.v = wide; return wide;
 }
 /* one scale for the whole score (frame dots per page height), set by the widest system and the Page margin; a system too tall for the room
@@ -678,6 +749,7 @@ function sysCompose(ent, f, W, H, cv) {
   [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {
     const g = c.createLinearGradient(q[4], q[5], q[6], q[7]); g.addColorStop(0, col(1)); g.addColorStop(1, col(0)); c.fillStyle = g; c.fillRect(q[0], q[1], q[2], q[3]);
   });
+  sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper);          // what was brushed out of this system, so the preview, the Letterbox slide, and the export all show it
   return cv;
 }
 async function sysSheet(key, W, H) {

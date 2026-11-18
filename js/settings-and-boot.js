@@ -326,7 +326,7 @@ function initUiExtras() {
   hint.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') return; const t = e.target.closest('.term'); if (t) { setGlow(t.dataset.glow); glowTimer = setTimeout(() => setGlow(null), 2400); } });
   $('#btnAudioStop').addEventListener('click', () => { loadSeq++; setBusy(''); toast(tx('app.stopped')); });          // the card has no loading chip above it, so it carries its own way to stop
   $('#chips').addEventListener('click', e => { if (e.target.closest('[data-pages]')) { openPdfEditor(); return; } if (e.target.closest('[data-audio]')) { openAudioEditor(); return; } const cn = e.target.closest('[data-cancel]'); if (cn) { if (cn.dataset.cancel === 'pdf') loadToken++; else loadSeq++; setBusy(''); toast(tx('app.stopped')); return; } const b = e.target.closest('[data-remove]'); if (!b) return; if (b.dataset.remove === 'pdf') removePdf(); else removeAudio(); });          // the X works while a file is still loading too
-  $('#btnFull').addEventListener('click', toggleFull); szBind(); splitBind(); selBind(); selMarkBind(); szApply(false);
+  $('#btnFull').addEventListener('click', toggleFull); szBind(); splitBind(); selBind(); selMarkBind(); eraseBind(); szApply(false);
   ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => { if (FS.on && FS.native && !fsEl()) setFull(false); }));
   ['mousemove', 'pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, wakeFs));
   document.addEventListener('touchstart', wakeFs, { passive: true });
@@ -437,6 +437,7 @@ function boot() {
     if (e.code === 'Space') { e.preventDefault(); Transport.toggle(); }
     else if (e.key === 't' || e.key === 'T') { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); tapTurn(); } }
     else if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && S.pdf) { e.preventDefault(); toggleFull(); }
+    else if ((e.key === 'e' || e.key === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey && sysOn() && eraseTarget()) { e.preventDefault(); eraseSet(!ERASE.on); }          // the eraser, in System where a system is shown
     else if (e.key === 'Escape' && FS.on && !FS.native) exitFull();
     else if ((e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.altKey && tag !== 'BUTTON' && tag !== 'A')) { e.preventDefault(); Transport.seek(S.vStart); TL.scroller.scrollLeft = 0; }   // Enter works like Return in Logic Pro: back to the start
     else if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); jumpMarker(e.key === 'ArrowLeft' ? -1 : 1); }   // Option or Alt with the arrows: to the previous or next marker
