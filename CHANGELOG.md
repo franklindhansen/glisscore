@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.35
+
+Fades now reach black at the end of an exported video and hold in the preview. Resized pages keep their own paper color, phone full screen fills the screen, and the narrow tool bar and message timing are tidier.
+
 ## 1.2.34
 
 General improvements and polish.
