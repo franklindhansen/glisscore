@@ -591,11 +591,13 @@ function paintDim(ctx, boxes, rot, cr, px, py, pw, ph) {
 function paperOf(cv, rect) {
   const r = rect ? [Math.max(0, Math.round(rect[0])), Math.max(0, Math.round(rect[1])), Math.round(rect[2]), Math.round(rect[3])] : [0, 0, cv.width, cv.height];
   r[2] = Math.min(r[2], cv.width - r[0]); r[3] = Math.min(r[3], cv.height - r[1]); if (r[2] < 1 || r[3] < 1) return [255, 255, 255];
-  const d = cv.getContext('2d').getImageData(r[0], r[1], r[2], r[3]).data, step = Math.max(1, Math.floor(d.length / 4 / 40000)), lum = [];
-  for (let i = 0; i < d.length; i += 4 * step) lum.push(d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8);
-  const top = lum.slice().sort((a, b) => a - b)[Math.floor(lum.length * 0.95)] || 255, cut = top * 0.9, ch = [[], [], []];
-  for (let i = 0; i < d.length; i += 4 * step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
-  return ch.map(a => a.length ? a.sort((x, y) => x - y)[a.length >> 1] : 255);
+  const d = cv.getContext('2d').getImageData(r[0], r[1], r[2], r[3]).data, step = 4 * Math.max(1, Math.floor(d.length / 4 / 40000));
+  const nth = (h, k) => { for (let v = 0, s = 0; v < 256; v++) { s += h[v]; if (s > k) return v; } return 255; };          // the k-th smallest value counted in h: what a sort would put at k, without sorting
+  const hl = new Uint32Array(256); let n = 0;
+  for (let i = 0; i < d.length; i += step) { hl[d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8]++; n++; }
+  const top = nth(hl, Math.floor(n * 0.95)) || 255, cut = top * 0.9, hc = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)]; let m = 0;
+  for (let i = 0; i < d.length; i += step) if ((d[i] * 77 + d[i + 1] * 150 + d[i + 2] * 29 >> 8) >= cut) { hc[0][d[i]]++; hc[1][d[i + 1]]++; hc[2][d[i + 2]]++; m++; }
+  return hc.map(h => m ? nth(h, m >> 1) : 255);
 }
 /* the paper color of a page (a slot), read once from its picture and kept until that picture changes (an edit, Clean, a new PDF each make a new canvas); white until a picture is in */
 const PAPER_OF = new WeakMap();

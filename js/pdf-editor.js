@@ -284,8 +284,8 @@ function peAddSettle(keep) {
 }
 /* ---- Crop margins, Split spreads, Straighten: they look at the pages (on this device) and set each page's crop or tilt ---- */
 let peRunId = 0;
-const peSay = (sel, t, err) => { const el = $(sel); if (el) { el.textContent = t; el.classList.toggle('err', !!(t && err)); } };
-function peClearStatus() { document.querySelectorAll('#peBand .pe-status').forEach(e => { e.textContent = ''; e.classList.remove('err'); }); }
+const peSay = (sel, t, err) => { const el = $(sel); if (el) { el.textContent = t; el.hidden = !t; el.classList.toggle('err', !!(t && err)); } };          // hidden goes with the text, so the narrow head can ask whether a line shows without :empty (which WebKit re-checks on every change in the window)
+function peClearStatus() { document.querySelectorAll('#peBand .pe-status').forEach(e => { e.textContent = ''; e.hidden = true; e.classList.remove('err'); }); }
 const peLock = on => { PE.busy = on; document.querySelectorAll('#peBand .btn, #peBar .btn, #peAddAt').forEach(b => { b.disabled = on; }); if (!on && PE.d) peState(); };
 /* a job's progress is one wait pill over the page grid (or the crop preview), never in a button: the buttons keep their size and word and are greyed while it runs. Crop's reading of the pages uses the same pill, since nothing can be cropped before it ends */
 function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelector('#pdfDlg .pe-body'), pc != null ? pc / 100 : peLoadNeed() ? 0 : null); peDimCards(); }          // when a tool's job ends, a page still waiting for its picture keeps the pill (it reads "Processing…" again)
@@ -770,7 +770,8 @@ function peLoadOn(card) { card.classList.add('loading'); if (!PE.lpT) peLoadPill
 const PE_WAIT_DELAY = 350;          // the video preview's own wait: the pill shows only when a page takes longer than this
 const peLoadNeed = () => {          // a page the user is looking at is waiting; a card far down the list that is still being made says nothing
   if ($('#pdfDlg').hidden) return false; if (PE.one != null) return !!document.querySelector('#peCropPg.loading');
-  const vp = $('#peWrap').getBoundingClientRect(); return Array.from(document.querySelectorAll('#peGrid .page-card.loading:not(.far)')).some(c => { const r = c.getBoundingClientRect(); return r.bottom > vp.top && r.top < vp.bottom; });
+  const wait = document.querySelectorAll('#peGrid .page-card.loading:not(.far)'); if (!wait.length) return false;          // nothing waiting: no layout is read (opening a long score would otherwise lay out its grid a second time)
+  const vp = $('#peWrap').getBoundingClientRect(); return Array.from(wait).some(c => { const r = c.getBoundingClientRect(); return r.bottom > vp.top && r.top < vp.bottom; });
 };
 function peLoadPill() {
   const body = document.querySelector('#pdfDlg .pe-body'); if (!body || PE.waiting) return;          // a tool's own job speaks through the same pill (peProg)

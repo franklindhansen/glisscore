@@ -2248,7 +2248,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rail.open .pe-rail-body{grid-template-rows:1fr}
   .pe-pt h3{display:none}          /* the drop-down above already names the tool, so the head keeps only its line and its buttons */
   #pdfDlg .pe-sub:not(.warn){display:none}          /* nor does the tool's subtitle get a row of its own under the drop-down; a warning still shows */
-  #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}
+  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}
   .pe-rail-in{overflow:hidden;min-height:0;padding:0 var(--gap-head)}
   .pe-rail.open .pe-rail-in{padding:0 var(--gap-head) var(--gap-card)}
 }
@@ -2268,7 +2268,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 @container pedlg (max-width:488px){
   #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead{display:none}
-  #pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not(:empty))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
+  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
 
