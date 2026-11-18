@@ -32,6 +32,9 @@ const record = (p, act) => p.evaluate(act => new Promise(res => {
         ok(tag + 'the picture frame moves one way to its final size in steps of under half the way', mono && (sm => sm.length >= 8 && Math.max(...sm) < Math.abs(span) * 0.5)(ws.slice(1).map((v, i) => Math.abs(v - ws[i])).filter((v, i) => rec[i + 1].t - rec[i].t <= 40)), JSON.stringify({ from: Math.round(ws[0]), to: Math.round(ws[ws.length - 1]) }));
       }
       await p.waitForTimeout(500);
+      // the copies carry the settings' choices; a copied choice that kept its group name would clear the real one, and every highlighted choice in the settings went blank
+      const segs = await p.evaluate(() => { const names = [...new Set([...document.querySelectorAll('.panel input[type=radio]')].map(r => r.name))]; return { cleared: names.filter(n => !document.querySelector('.panel input[name="' + n + '"]:checked')), dim: [...document.querySelectorAll('.panel .seg')].filter(s => s.offsetWidth && s.querySelector('.seg-pill').style.opacity !== '1').map(s => (s.closest('[id]') || s).id) }; });
+      ok(tag + 'every choice in the settings stays chosen and keeps its highlight', !segs.cleared.length && (dir === 'in' || !segs.dim.length), JSON.stringify(segs));
     }
     await ctx.close();
   }

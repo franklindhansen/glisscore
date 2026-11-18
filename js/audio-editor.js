@@ -1972,8 +1972,8 @@ function aeHead(name, dir) {
   const top = $('#aeTop'), head = $('#aeHead'), win = $('#aeWin'), set = () => { $('#aePaneTitle').textContent = AE_NAMES[name]; $('#aePaneSub').textContent = AE_SUBS[name]; $('#aePaneBeta').hidden = name !== 'emu'; };
   win.querySelectorAll('.ae-ghost').forEach(n => n.remove()); const was = head._slide ? paneNow(head) : null; (head._slide || []).forEach(a => a.cancel());
   if (!dir || reducedMotion() || !top.offsetHeight || $('#audioDlg').hidden) { set(); return; }
-  const ghost = head.cloneNode(true), lift = AE_LIFT, f = was || { o: 1, y: 0 };
-  ghost.removeAttribute('id'); ghost.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); ghost.classList.add('ae-ghost'); ghost.inert = true; ghost.setAttribute('aria-hidden', 'true'); top.appendChild(ghost); set();
+  const ghost = stillCopy(head), lift = AE_LIFT, f = was || { o: 1, y: 0 };
+  ghost.classList.add('ae-ghost'); ghost.inert = true; ghost.setAttribute('aria-hidden', 'true'); top.appendChild(ghost); set();
   const g = ghost.animate([{ transform: 'translateY(' + f.y + 'px)', opacity: f.o }, { transform: 'translateY(' + (-dir * lift) + 'px)', opacity: 0 }], { duration: AE_TOOL_MS * 0.55, easing: EASE_OUT, fill: 'forwards' }); g.onfinish = g.oncancel = () => ghost.remove();
   head._slide = [head.animate([{ transform: 'translateY(' + (dir * lift) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: AE_TOOL_MS * 0.85, delay: AE_TOOL_MS * 0.15, easing: EASE_OUT, fill: 'backwards' })];          // the title and its line arrive as the old ones leave; the divider line stays where it is
 }

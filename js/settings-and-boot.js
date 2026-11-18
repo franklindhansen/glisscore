@@ -232,8 +232,7 @@ function fsGhosts() {          // the header, the settings, the bar, and the tim
   const app = document.querySelector('.app');
   return ['.top', '.panel', '.transport', '.timeline'].map(sel => {
     const el = document.querySelector(sel), r = el && el.getBoundingClientRect(), cs = el && getComputedStyle(el); if (!r || r.width < 2 || r.height < 2 || cs.visibility === 'hidden' || +cs.opacity < 0.02) return null;
-    const g = document.createElement('div'), c = el.cloneNode(true);          // the copy sits in a stand-in for the app, so the rules that dress it in this layout (the glass bar in full screen) still apply
-    c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    const g = document.createElement('div'), c = stillCopy(el);          // the copy sits in a stand-in for the app, so the rules that dress it in this layout (the glass bar in full screen) still apply
     const from = el.querySelectorAll('canvas'); c.querySelectorAll('canvas').forEach((cv, k) => { const f = from[k]; if (!f) return; cv.width = f.width; cv.height = f.height; cv.getContext('2d').drawImage(f, 0, 0); });
     c.style.cssText = 'position:absolute;margin:0;inset:auto;left:0;top:0;transform:none;width:' + r.width + 'px;height:' + r.height + 'px;opacity:' + cs.opacity;
     g.className = app.className + ' fs-ghost'; g.inert = true; g.setAttribute('aria-hidden', 'true'); g.appendChild(c);

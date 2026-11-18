@@ -154,8 +154,7 @@ function peSlide(prev, name) {
 function peBodySnap() {
   const win = $('#peWin'), src = win.classList.contains('one') ? $('#peCropView') : $('#peWrap');
   if (!PE.chromed || reducedMotion() || !src.offsetHeight) return null;
-  const el = src.cloneNode(true), r = src.getBoundingClientRect(), from = src.querySelectorAll('canvas'), to = el.querySelectorAll('canvas');
-  el.removeAttribute('id'); el.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+  const el = stillCopy(src), r = src.getBoundingClientRect(), from = src.querySelectorAll('canvas'), to = el.querySelectorAll('canvas');
   from.forEach((c, i) => { const q = c.getBoundingClientRect(); if (q.bottom < r.top || q.top > r.bottom || !c.width) return; try { to[i].getContext('2d').drawImage(c, 0, 0); } catch (e) {} });
   el.classList.add('pe-snap'); el.style.display = getComputedStyle(src).display; el.setAttribute('aria-hidden', 'true'); el.inert = true;
   return { el, top: src.scrollTop };

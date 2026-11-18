@@ -9,6 +9,9 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const DBL_MS = 450, DBL_PX = 6, DBL_TOUCH_PX = 30;
 const dblNear = (dt, dx, dy, type) => dt < DBL_MS && Math.hypot(dx, dy) < (type === 'touch' ? DBL_TOUCH_PX : DBL_PX);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+/* a still copy of part of the page, for a motion that fades it out. It keeps no ids, and its choices lose their group names: a copied choice that shares a name
+   with the real one joins its group, and putting the copy on the page then clears the real choice (every highlighted choice in the settings went blank this way) */
+const stillCopy = el => { const c = el.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); c.querySelectorAll('input[name]').forEach(n => n.removeAttribute('name')); return c; };
 /* gives the page a turn without a timer: timers are slowed to one a second in a hidden tab or frame, and a long job that waits on them crawls */
 const tick = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => { c.port1.close(); r(); }; c.port2.postMessage(0); });
 const TIMEOUTS = { ensure: 30000, queue: 20000, flush: 180000, yield: 40, probe: 7000 };
