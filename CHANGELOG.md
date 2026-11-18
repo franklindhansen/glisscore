@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.34
+
+General improvements and polish.
+
 ## 1.2.33
 
 Pages in the PDF Editor now slide gently to their new places when you drag the Page size slider. File chip text is centered the same way as the rest of the app.
