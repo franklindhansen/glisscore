@@ -8,12 +8,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const dir = process.env.SCORES_DIR; if (!dir) { ok('skipped: SCORES_DIR is not set', true); return; }
   const files = fs.readdirSync(dir).filter(f => /\.pdf$/i.test(f)).sort(), out = process.env.OUT;
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(120000); const errs = []; p.on('pageerror', e => errs.push(e.message));
-  for (const f of files) {
+  for (const [k, f] of files.entries()) {
     await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await p.setInputFiles('#pdfIn', path.join(dir, f));
     await p.waitForFunction(() => S.pdf && S.pdf.keep.length, null, { timeout: 120000 }); await p.waitForTimeout(500);
     const n = await p.evaluate(() => S.pdf.keep.length), pages = [...Array(Math.min(n, 6)).keys()];
     const res = await p.evaluate(async pages => { const o = []; for (const i of pages) { const t = performance.now(), r = await sysDetectPage(i); o.push({ i, ms: Math.round(performance.now() - t), n: r.systems.length, staves: r.staves, tilt: r.tilt }); } return o; }, pages);
-    ok(f.slice(0, 2) + ' (' + n + ' pages)', res.every(r => r.ms < 8000), res.map(r => 'p' + (r.i + 1) + ' ' + r.n + 's/' + r.staves + 'st/' + r.tilt + 'deg/' + r.ms + 'ms').join('  '));
+    ok('score ' + (k + 1) + ' (' + n + ' pages)', res.every(r => r.ms < 8000), res.map(r => 'p' + (r.i + 1) + ' ' + r.n + 's/' + r.staves + 'st/' + r.tilt + 'deg/' + r.ms + 'ms').join('  '));
     if (out) {
       fs.mkdirSync(out, { recursive: true });
       for (const i of pages.slice(1, 4)) {
@@ -22,7 +22,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
           c.lineWidth = 2; r.systems.forEach((s, k) => { c.strokeStyle = k % 2 ? '#d22' : '#27c'; c.strokeRect(s.left * w, s.top * h, (s.right - s.left) * w, (s.bottom - s.top) * h); });
           return cv.toDataURL('image/png');
         }, i);
-        fs.writeFileSync(path.join(out, f.slice(0, 2) + '-p' + (i + 1) + '.png'), Buffer.from(url.split(',')[1], 'base64'));
+        fs.writeFileSync(path.join(out, 'score-' + (k + 1) + '-p' + (i + 1) + '.png'), Buffer.from(url.split(',')[1], 'base64'));
       }
     }
   }

@@ -2,7 +2,7 @@
 
 ## 1.2.33
 
-Pages in the PDF Editor now slide gently to their new places when the page size changes. File chip text is centered the same way as the rest of the app.
+Pages in the PDF Editor now slide gently to their new places when you drag the Page size slider. File chip text is centered the same way as the rest of the app.
 
 ## 1.2.32
 
@@ -14,7 +14,7 @@ Turns you place by hand stay where they are when a page is edited, and View chan
 
 ## 1.2.30
 
-New systems on a page are marked by double-clicking and dragging, and a double tap on a touch screen is more forgiving. The Audio Editor's tools no longer look faded in Safari full screen, and the drop message sits on a card.
+New systems on a page are marked by double-clicking and dragging, and a double tap on a touch screen is more forgiving. Full-screen controls in the video editor and the Audio Editor no longer look faded in Safari, and the drop message sits on a card.
 
 ## 1.2.29
 
@@ -30,7 +30,7 @@ Turning off Shadows now leaves the turning page unshaded. Page transition's leng
 
 ## 1.2.26
 
-Even file tiles, shared Bold and Italic and zoom groups, and a custom color field. Closed settings groups are better balanced, and the Shadows switch stays at the right.
+File tiles are even, Bold and Italic and the zoom buttons each sit in one group, and the color field takes a custom color. Closed settings groups are better balanced, and the Shadows switch stays at the right.
 
 ## 1.2.25
 

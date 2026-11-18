@@ -1,12 +1,15 @@
-# Audio Editor checks
+# Checks
 
-These run the Audio Editor in Chromium with Playwright. They check values, labels, layout (grid placement, widths, two columns, no page scroll) and the phone layout.
+These run the app in Chromium with Playwright. They check values, labels, layout (grid placement, widths, two columns, no page scroll), and the phone layout.
 
 Setup, once (outside the project, so no package files are added to it):
 
     mkdir -p ~/keyframes-tests && cd ~/keyframes-tests && npm init -y && npm i playwright-core@1.65.0 && npx playwright-core install chromium
 
 Use 1.65.0 or later. Chromium 129 (playwright-core 1.47) has a bug: a garbage collection right after a promise from `page.evaluate` settles makes the call fail with "Execution context was destroyed, most likely because of a navigation", though nothing navigated. On a busy machine it hits checks that move large page pictures at random.
+
+Then make the test files:
+
     python3 tests/make-fixtures.py
 
 Run one check, a group by its prefix, or everything. The script serves the app itself on a free port and stops that server when it ends, so never start one yourself:
@@ -21,7 +24,7 @@ Every check prints PASS or FAIL. The layout script checks four window sizes at o
 
 ## Audio Editor layout lines
 
-Three checks hold the Audio Editor's layout system in place. They share one measuring helper, `tests/lib/measure.js`: letter edges come from font metrics (never a marker element), buttons by their border box, sliders by their thumb. `audio-editor-measure` proves the helper against a screenshot's pixels.
+Three checks hold the Audio Editor's layout system in place. They share one measuring helper, `tests/lib/measure.js`: letter edges come from font metrics (never a marker element), buttons by their border box, and sliders by their thumb. `audio-editor-measure` proves the helper against a screenshot's pixels.
 
 - `audio-editor-grid-lines` measures every tool, in every state that changes a card, at seven window sizes and in full screen, with the rules in `tests/lib/layout-lines.js`. It names no card. Today's failures are listed one per line in `tests/audio-editor-layout-expected.txt` ("tool state size rule element"); the list may only shrink. The check fails on a failure that is not listed, and on a listed failure that now passes (it names the line to delete). Card heights at 1440x900 are in `tests/audio-editor-card-heights.txt`.
 - `audio-editor-stylesheet` reads `style.css` and fails on a new id-based spacing rule inside a tool pane or a new width media query on the Audio Editor, against `tests/audio-editor-stylesheet-allowed.txt`, which may only shrink the same way.
@@ -63,9 +66,7 @@ The app's code is the script files in `js/`, loaded by the tags in `index.html`.
 
     zsh tests/run-all.sh
 
-Runs every check below, eight at a time (`-j N` sets how many; `-j 1` runs them one after another), and prints one line each with its time, any FAIL lines, the five slowest scripts and the total (about 3.5 minutes). It serves the app itself. A check that reads the page a set time after an action and fails when the machine is busy goes in the `serial` list in `run-all.sh`, which runs it alone after the rest (today `tool-ring`, `menu-fade-out`, and `audio-editor-play-export`). `-o FILE` writes every PASS and FAIL line, sorted, to FILE; diff two of them to show two runs checked the same things.
-
-Test tones that peak above 0dB (`Test tone +3.3dB.mp3` and `.m4a`) go in the same local folder.
+Runs every check below, eight at a time (`-j N` sets how many; `-j 1` runs them one after another), and prints one line each with its time, any FAIL lines, the five slowest scripts, and the total (about 3.5 minutes). It serves the app itself. A check that reads the page a set time after an action and fails when the machine is busy goes in the `serial` list in `run-all.sh`, which runs it alone after the rest (today `tool-ring`, `menu-fade-out`, and `audio-editor-play-export`). `-o FILE` writes every PASS and FAIL line, sorted, to FILE; diff two of them to show two runs checked the same things.
 
 ## Disk store check
 
@@ -75,7 +76,7 @@ In Chromium:
 
     zsh tests/run-all.sh long-file-store
 
-This covers every kind of WAV (8, 16, 24 and 32-bit, 32 and 64-bit float, mono, surround, RF64, a data size of 0 or 0xFFFFFFFF) with small pieces, so reads cross many piece edges. Chromium scales 8 and 16-bit samples its own way, so those compare to within one step. This Chromium has no AAC, so the M4A decoder is stood in for there.
+This covers every kind of WAV (8, 16, 24, and 32-bit, 32 and 64-bit float, mono, surround, RF64, and a data size of 0 or 0xFFFFFFFF) with small pieces, so reads cross many piece edges. Chromium scales 8 and 16-bit samples its own way, so those compare to within one step. This Chromium has no AAC, so the M4A decoder is stood in for there.
 
 In Safari, for M4A and for real long recordings: open http://localhost:8123/tests/long-file-store.html, choose a file, then press Copy results. Files over 20 minutes skip the comparison with today's import, which would hold the whole recording in memory. Delete frees the disk space.
 
@@ -83,13 +84,13 @@ The Playback joins row plays ~35s from a random place into a silent render throu
 
 ## Tools on the disk store
 
-`audio-fx.js` works out noise reduction, Spectra, EQ and Imager for any stretch of a stored recording, in the disk store's worker. `long-file-fx.js` makes a recording, loads it the usual way and into the store, and checks the result two ways for a set of tool settings:
+`audio-fx.js` works out noise reduction, Spectra, EQ, and Imager for any stretch of a stored recording, in the disk store's worker. `long-file-fx.js` makes a recording, loads it the usual way and into the store, and checks the result two ways for a set of tool settings:
 
     zsh tests/run-all.sh long-file-fx
 
 Against today's whole-file result: noise reduction and Spectra must give every sample the same. EQ and Imager come within a stated distance (−80dB with the hardest EQ bands, −110dB for the Imager): today's are the browser's own filters, which round their memory as they go, and these keep full precision. Against itself: read in order in uneven blocks, and at far-off places from the start and then from checkpoints, every sample must be the same as one pass over the whole recording.
 
-Level, fades, the limiter, the loudness measurement and the waveform heights (highest sample and true peak of every 10ms) also run on the store. The script sets them against the app's own whole-file code run on the very same processed sound, so every number and every final sample must be the same. One exception: when the limiter only has work in places, the volume for a loudness target is found by running the limiter over those stretches alone; that must land within 0.01 LU of the app's whole run.
+Level, fades, the limiter, the loudness measurement, and the waveform heights (highest sample and true peak of every 10ms) also run on the store. The script sets them against the app's own whole-file code run on the very same processed sound, so every number and every final sample must be the same. One exception: when the limiter only has work in places, the volume for a loudness target is found by running the limiter over those stretches alone; that must land within 0.01 LU of the app's whole run.
 
 `long-file-store.html` runs the same on the chosen file (rows starting with Tools or Loudness, and the two rows ending "against today's"), so it can be tried on real recordings in Safari. The comparison with today's EQ and Imager only means something where the row Browser's silent render says untouched.
 
@@ -103,15 +104,15 @@ The Audio Editor and the video player can keep a WAV (or a stereo AAC M4A) on th
 
 Run `python3 tests/make-fixtures.py` first (it also writes `score.pdf`, a three-page score for the video player). The check loads the same 24-bit WAV both ways and compares: the waveform peaks, the editor's picture, the level numbers (peak, loudness, loudness through the limiter), the waveform with an EQ band and with noise reduction, noise learned from a stretch, and the stereo picture. It plays in the editor (a change of settings and Bypass while it plays), plays the video, jumps, starts before the audio, and checks that what is not on the store yet (EQ match) says so instead of failing. Chromium scales 16-bit samples its own way, so a 16-bit file is not used for the exact comparisons.
 
-Everything the editor and the video export do now works on the store; `diskNot` is no longer used.
+Everything the editor and the video export do works on the store.
 
 ## Audio export from the store
 
-WAV (16, 24 and 32-bit; RF64 over 4GB), FLAC and M4A export read the final samples from the store a stretch at a time (`aeMasterDisk`; the worker does the sample-rate conversion, fades, volume and limiter). WAV and FLAC are written into the store's folder and handed to the page as a file on disk, so a long recording never sits in memory; M4A is small enough to be built in memory as before.
+WAV (16, 24, and 32-bit; RF64 over 4GB), FLAC, and M4A export read the final samples from the store a stretch at a time (`aeMasterDisk`; the worker does the sample-rate conversion, fades, volume, and limiter). WAV and FLAC are written into the store's folder and handed to the page as a file on disk, so a long recording never sits in memory; M4A is small enough to be built in memory as before.
 
     zsh tests/run-all.sh audio-editor-export-disk
 
-Each file from the store must be byte for byte the file memory gives (WAV 16, 24 and 32-bit, trimmed, peak and loudness targets, with the limiter, at 44.1kHz and 96kHz, FLAC); 16-bit files carry random dither, so those are compared within 2 steps. With an EQ band the samples are within the filters' own rounding. The RF64 header is checked from `wavHead`. M4A is not covered (headless Chromium has no AAC encoder): try it in Safari.
+Each file from the store must be byte for byte the file memory gives (WAV 16, 24, and 32-bit, trimmed, peak and loudness targets, with the limiter, at 44.1kHz and 96kHz, and FLAC); 16-bit files carry random dither, so those are compared within 2 steps. With an EQ band the samples are within the filters' own rounding. The RF64 header is checked from `wavHead`. M4A is not covered (headless Chromium has no AAC encoder): try it in Safari.
 
 ## Video export from the store
 
@@ -120,7 +121,7 @@ With a long recording the video export reads the sound from the store (lossless 
     zsh tests/run-all.sh video-audio-disk
     zsh tests/run-all.sh video-mux-disk
 
-The first sets the video's sound from the store against memory (every sample). The second cuts a small H.264 clip with ffmpeg (must be installed) and checks that the file written into the store has the same streams, picture and sound as the one built in memory, including 64-bit places. The Chromium that Playwright installs has no H.264 encoder, so a whole video export can only be tried in Safari or Chrome.
+The first sets the video's sound from the store against memory (every sample). The second cuts a small H.264 clip with ffmpeg (must be installed) and checks that the file written into the store has the same streams, picture, and sound as the one built in memory, including 64-bit places. The Chromium that Playwright installs has no H.264 encoder, so a whole video export can only be tried in Safari or Chrome.
 
 ## Spectrogram from the store
 
@@ -145,7 +146,7 @@ FLAC is decoded by our own decoder inside the store's worker (`importFlac`, writ
     zsh tests/run-all.sh flac-disk
     zsh tests/run-all.sh mp3-disk
 
-Both need ffmpeg. The FLAC check encodes 15 kinds of file (16 and 24-bit, mono and stereo, every channel mode, block sizes from 192 to 4608, silence, 8 to 96kHz) and every sample must be the one ffmpeg decodes. The MP3 check compares rate, channels, length and samples with the browser's one-shot decoder for six kinds of file, plus a tag after the last frame and a file cut short.
+Both need ffmpeg. The FLAC check encodes 15 kinds of file (16 and 24-bit, mono and stereo, every channel mode, block sizes from 192 to 4608, silence, and 8 to 96kHz) and every sample must be the one ffmpeg decodes. The MP3 check compares rate, channels, length, and samples with the browser's one-shot decoder for six kinds of file, plus a tag after the last frame and a file cut short.
 
 ## Notes
 

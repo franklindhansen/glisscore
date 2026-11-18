@@ -1,14 +1,16 @@
 # *glisscore*
 
-Create score videos from a PDF and a recording.
+Score videos made easy.
+
+Turn a score PDF and a recording into a page-turning video.
 
 **Site:** [glisscore.com](https://glisscore.com) · **Source:** [github.com/franklindhansen/glisscore](https://github.com/franklindhansen/glisscore)
 
-Everything runs in your browser. Your files never leave your device.
+Everything runs locally in your browser. Your files never leave your device.
 
 ## Features
 
-- **Video editor.** Set each page turn, display your score as spreads, single pages, or systems, add credits, fade in and out, and export video.
+- **Video editor.** Drop in a PDF, mark page turns, and export an MOV. Show the score as spreads, single pages, or one system at a time, with credits and fades.
 - **PDF Editor.** Arrange, clean, re-kilter, crop, dim repeats, split spreads, re-size, and watermark pages. *No acrobatics required.*
 - **Audio Editor.** Reduce noise, heal blips, add EQ, adjust stereo width, level, and export audio.
 
@@ -36,7 +38,7 @@ Copyright © 2026 Franklin Hansen.
 
 The source code is licensed under the [GNU Affero General Public License, version 3 only](LICENSE). If you run a modified version as a public service, the AGPL requires you to offer your users the source of your changes.
 
-The name *glisscore*, its logo, wordmark, and icons, the glisscore.com domain and the "official" designation are **not** covered by that license. See [TRADEMARKS.md](TRADEMARKS.md) for what you may and may not do with them, including how to name a fork.
+The name *glisscore*, its logo, wordmark, and icons, the glisscore.com domain, and the "official" designation are **not** covered by that license. See [TRADEMARKS.md](TRADEMARKS.md) for what you may and may not do with them, including how to name a fork.
 
 ## Third-party software
 

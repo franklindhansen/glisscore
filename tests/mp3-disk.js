@@ -10,7 +10,7 @@ const cases = [
   ['stereo 128kbps without the Xing header', `${src} -c:a libmp3lame -b:a 128k -write_xing 0`],
   ['mono 96kbps, 32kHz', `${src} -af "pan=mono|c0=c0,aresample=32000" -c:a libmp3lame -b:a 96k`],
   ['stereo 64kbps, 22.05kHz (MPEG-2)', `${src} -af aresample=22050 -c:a libmp3lame -b:a 64k`],
-  ['joint stereo 320kbps with an ID3 tag', `${src} -c:a libmp3lame -b:a 320k -id3v2_version 3 -metadata title="Test tone" -metadata artist="Nobody"`]
+  ['joint stereo 320kbps with an ID3 tag', `${src} -c:a libmp3lame -b:a 320k -id3v2_version 3 -metadata title="Sine" -metadata artist="Nobody"`]
 ];
 (async () => {
   const br = await chromium.launch(); const errs = [];
