@@ -53,8 +53,9 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   // the number slides sideways, the way its card moves
   await p.evaluate(() => { peTool('pages'); }); await p.waitForTimeout(800);
   const before = await p.evaluate(() => { const o = PE.d.order.slice(); PE.d.order = [o[1], o[0], o[2]]; peRender(true); return o; });
+  const turnMs = await p.evaluate(() => PE_TURN_MS);
   const slides = await p.evaluate(() => document.getAnimations().filter(a => a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('pe-strip')).map(a => ({ id: +a.effect.target.closest('.page-card').dataset.id, ms: a.effect.getTiming().duration, first: a.effect.getKeyframes()[0].transform })));
-  ok('The number under a card slides sideways with it, in about 340ms', slides.length >= 2 && slides.every(s => s.ms <= 360), JSON.stringify(slides));
+  ok('The number under a card slides sideways with it, on the cards\' own clock', slides.length >= 2 && slides.every(s => s.ms === turnMs), JSON.stringify(slides));
   const startOf = id => { const m = /\((-?[\d.]+)/.exec((slides.find(s => s.id === id) || {}).first || ''); return m ? +m[1] : NaN; };          // the strip's first position: -50% (its number comes in from the left) or 0px
   ok('A number slides the way its card moved: a card that moves right sends its number right', startOf(before[0]) < 0 && startOf(before[1]) === 0, JSON.stringify({ before, slides }));
   // Crop: no room for margin
@@ -83,14 +84,14 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.evaluate(() => { openPdfEditor(); peTool('pages'); }); await p.waitForFunction(() => document.querySelectorAll('#peGrid .page-card').length === 60); await p.waitForTimeout(900);
   const big = await p.evaluate(() => { PE.d.order = PE.d.order.slice().reverse(); const t0 = performance.now(); peRender(true); const ms = performance.now() - t0; return { ms: Math.round(ms), slid: document.querySelectorAll('#peGrid .pe-strip').length }; });
   ok('A move of 60 pages starts its number slides within 100ms', big.ms < 100 && big.slid >= 50, JSON.stringify(big));
-  // the number stagger: 80ms apart for a few numbers, and the last one starts by 600ms however many change
+  // no stagger: every number that changes starts at once, on the cards' clock, however many change
   // the delays of the number slides that one render starts (animations made before the render are left out)
   const renderDelays = order => p.evaluate(async o => { const seen = new Set(document.getAnimations()); PE.d.order = o; peRender(true); await sleep(0); return document.getAnimations().filter(a => !seen.has(a) && a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('pe-strip')).map(a => a.effect.getTiming().delay).sort((a, b) => a - b); }, order);
   const dBig = await renderDelays(await p.evaluate(() => PE.d.order.slice().reverse()));
-  ok('A move of 60 pages: its last number starts by 600ms, and the first at once', dBig.length >= 50 && dBig[dBig.length - 1] <= 600 && dBig[0] === 0, JSON.stringify({ n: dBig.length, max: dBig[dBig.length - 1], min: dBig[0] }));
+  ok('A move of 60 pages: every number starts at once, with the cards', dBig.length >= 50 && dBig.every(v => v === 0), JSON.stringify({ n: dBig.length, max: dBig[dBig.length - 1], min: dBig[0] }));
   await p.waitForTimeout(1200);
   const dFew = await renderDelays([1, 2, 3, 4, 5, 0].concat((await p.evaluate(() => PE.d.order.slice(6)))));
-  ok('A move of 6 numbers keeps the 80ms gap: 0, 80, 160, 240, 320, 400', dFew.length === 6 && dFew.every((v, i) => Math.abs(v - i * 80) < 1), JSON.stringify(dFew));
+  ok('A move of 6 numbers: all six start at once, never one after another', dFew.length === 6 && dFew.every(v => v === 0), JSON.stringify(dFew));
   // swapping the first card with the one a row below it moves them up and down in the same column: down sends the number right, up sends it left
   const vert = await p.evaluate(() => {
     const o = PE.d.order.slice(), kids = Array.from(document.querySelector('#peGrid').children), cols = kids.filter(c => c.offsetTop === kids[0].offsetTop).length;

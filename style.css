@@ -2045,7 +2045,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
 .pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:var(--pe-edge) var(--pe-edge) var(--pe-edge-b);overscroll-behavior:contain}
-.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start}
+.pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start;justify-content:space-between}          /* the page size sets each card's width; whatever room is left in a row is shared between the cards, so every row ends flush with the grid's right edge */
+.pe-grid-wrap.pe-wrapping{overflow-x:hidden!important}          /* while cards slide off one edge and in from the other, the pages do not grow a sideways bar */
 .pe .page-card{display:flex;flex-direction:column;gap:var(--gap-head);padding:var(--gap-tight);border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color var(--ae-quick) var(--ease-color),transform var(--t-hover) var(--spring-hover)}
 .pe .page-card[aria-pressed]{border:0;background:none}
 .pe .pe-grid.arrange .page-card{cursor:grab}
@@ -2060,6 +2061,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 }
 .pe .page-card:not(.na):not(.pe-hole):active:not(:has(.pe-tools:active)){transform:scale(.97);transition-duration:.14s;transition-timing-function:var(--ease-out)}          /* pressing a card's own bar (Rotate, Repeat) does not shrink the card: the page must not move beneath the turn */
 .pe .page-card.off canvas{opacity:var(--inactive);filter:grayscale(1)}
+.pe .pe-grid.sized .page-card.far{content-visibility:auto;contain-intrinsic-block-size:var(--ih,0px)}          /* a card a screen or more away skips layout and paint; it keeps its true size (its picture's width, set once per column count, by its shape, plus the room around it) so the scroll bar never jumps. Cards near the view are not touched, so their shadows, tools, and lift are exactly as before. */
 .pe .page-card .pe-hid{position:absolute;left:50%;top:50%;display:none;place-items:center;width:var(--hid-k);height:var(--hid-k);margin:calc(-1 * var(--hid-k) / 2) 0 0 calc(-1 * var(--hid-k) / 2);border-radius:50%;background:var(--chip-bg);color:var(--chip-ink);box-shadow:var(--chip-shadow);pointer-events:none}
 .pe .page-card .pe-hid svg{width:17px;height:17px}
 .pe .page-card.hid .pe-hid{display:grid}
@@ -2071,19 +2073,26 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe .page-card.off .tick{background:var(--chip-bg);color:transparent;border-color:var(--chip-edge)}
 .pe .pe-grid:not(.ticks) .tick,.pe .page-card.na .tick{opacity:0;transform:scale(.6)}
 /* under each page its place in the video, and the page of the PDF when that differs */
-.pe-foot{display:flex;align-items:center;justify-content:center;gap:var(--gap-tight);min-height:20px;min-width:0}
-.pe-pos{display:grid;place-items:center;min-width:20px;height:20px;padding:0 var(--gap-tight);border-radius:99px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);font-size:var(--type-note);font-weight:600;font-variant-numeric:tabular-nums}
+.pe-foot{position:relative;display:flex;align-items:center;justify-content:center;gap:var(--gap-tight);min-height:20px;min-width:0}
+.pe-pos{--pos-d:20px;display:grid;place-items:center;min-width:var(--pos-d);height:var(--pos-d);padding:0 var(--gap-tight);border-radius:99px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);font-size:var(--type-note);font-weight:600;font-variant-numeric:tabular-nums}
+.pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}          /* a sliding digit's half of the strip; where the browser can trim text the rule below centers it exactly as the resting digit is, so the end of a slide changes nothing */
+@supports (text-box:trim-both cap alphabetic){          /* the digits are trimmed to their height by the browser (the shared trim, as the labels and big numbers are) and centered in the circle by an equal room above and below, so every number sits on the circle's center line; tabular figures keep every number of a length the same width */
+  .pe-pos:not(.slide),.pe-pos .pe-cell{display:block;box-sizing:border-box;height:var(--pos-d);padding-top:calc((var(--pos-d) - var(--trim-h)) / 2);text-align:center;text-box:trim-both cap alphabetic}
+  .pe-pos .pe-cell{height:100%}
+}
 .pe-pos:empty{display:none}
 .pe-foot .num{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--type-note);color:var(--muted)}
 .pe-foot .num{max-width:80px}
+.pe-cp{display:inline-flex;vertical-align:-.125em;margin-right:var(--gap-snug);font-style:normal}
+.pe-cp svg{width:1em;height:1em}          /* the copy glyph of a repeated page (the same one as the card's Repeat button), as tall as the digits beside it */
+@supports (text-box:trim-both cap alphabetic){.pe-foot .num{text-box:trim-both cap alphabetic;padding-block:var(--gap-label)}}          /* the tag's digits are trimmed to their height like the bubble's, so both share one center line; the padding keeps the copy glyph from being clipped */
 .pe-foot .num.same{max-width:0;opacity:0;margin-left:calc(-1 * var(--gap-tight))}
+.pe-foot .num.pe-num-out{position:absolute;margin:0;pointer-events:none}          /* a tag that goes: a still copy fading where it was, out of the layout, so the bubble glides to the middle at once */
 .pe-pos i{font-style:normal}
 /* sliding number: the two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends while the digits move */
 .pe-pos.slide{display:block;position:relative;width:var(--slide-w);padding:0;overflow:hidden;color:var(--ink)}
 .pe-measure{position:absolute;left:0;top:0;visibility:hidden;pointer-events:none}          /* sized by the pill's own rules, never seen; used only to measure a digit */
 .pe-pos .pe-strip{position:absolute;left:0;top:0;display:flex;width:200%;height:100%;will-change:transform}
-.pe-pos .pe-cell{flex:none;width:50%;height:100%;display:grid;place-items:center}
-.pe-pos .pe-cell + .pe-cell{box-shadow:inset 1px 0 0 color-mix(in srgb,var(--ink) 22%,transparent)}          /* a hairline where the two digits meet, like the edge of a tile; it crosses the pill only while the digits move */
 /* rotate and repeat float on the page while you point at it, in a small frosted bar */
 .pe-tools{position:absolute;left:50%;bottom:var(--gap-head);display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),inset 0 0 0 1px var(--glass-edge),0 0 0 .5px var(--glass-ring);opacity:0;transform:translate(-50%,4px);pointer-events:none;transition:opacity var(--ae-quick) var(--ease-ui),transform var(--t-hover) var(--spring-hover)}
 .pe .pe-grid.arrange .page-card:hover .pe-tools,.pe .pe-grid.arrange .page-card:focus-within .pe-tools{opacity:1;transform:translate(-50%,0);pointer-events:auto}
@@ -2103,8 +2112,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .page-card.pe-ghost{position:fixed;z-index:200;margin:0;pointer-events:none;background:none;transition:none;will-change:transform;transform-origin:50% 50%;cursor:grabbing}
 .page-card.pe-ghost canvas{box-shadow:var(--ghost-shadow)}
 .page-card.pe-ghost .tick,.page-card.pe-ghost .pe-tools{display:none}
+.page-card.pe-ghost .pe-foot{visibility:hidden}          /* you carry the page only; its number stays on its row's line and rolls there when you let go */
 .pe .page-card.pe-hole{background:color-mix(in srgb,var(--accent) 8%,transparent);outline:1.5px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-1px}
-.pe .page-card.pe-hole>*{visibility:hidden}
+.pe .page-card.pe-hole>.pe-thumb{visibility:hidden}          /* the place you lifted the page from keeps its number until the page lands somewhere */
+.pe .page-card.pe-landing{z-index:1;pointer-events:none}          /* the page you let go lands above the pages it passes */
 .pe-grid.pe-dragging .page-card{pointer-events:none;transition:none!important}
 .pe-drop{position:absolute;left:0;top:0;width:3px;border-radius:var(--r-mark);background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),0 0 10px var(--accent);opacity:0;pointer-events:none;will-change:transform;transition:opacity var(--ae-quick) linear}
 
@@ -2118,20 +2129,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-crop-pg{position:relative;overflow:hidden;background:var(--paper);border-radius:var(--r-mark);box-shadow:var(--page-shadow-lift);--z:1;will-change:transform}
 .pe-crop-pg canvas{transition:opacity var(--ae-ms) var(--ease-ui)}
 .pe-crop-pg.loading canvas{opacity:0}
+.pe-crop-pg{transition:opacity var(--ae-ms) var(--ease-ui)}
+.pe-crop-pg.loading{opacity:var(--inactive)}          /* a page still being drawn: the softened paper, and the wait pill over the pages (peLoadPill) carries the sweep */
 .pe-crop-pg .pe-wipe,.pe-crop-pg .pe-side{transition:opacity var(--ae-ms) var(--ease-ui)}
 .pe-crop-pg.loading .pe-wipe,.pe-crop-pg.loading .pe-side,.pe-crop-pg.loading .pe-crop-box{opacity:0}
-.pe-crop-pg.loading::after{content:'';position:absolute;top:0;bottom:0;left:0;width:55%;background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 9%,transparent) 50%,transparent);will-change:transform;animation:peSweepPg 2.6s linear infinite}
-@keyframes peSweepPg{from{transform:translateX(-100%)}to{transform:translateX(182%)}}          /* the large view's sweep: one band crossing the page, on the compositor (transform only) */
-/* a card that waits for its picture: one wash, and one bright band that sweeps across the whole grid. Every card's band is the same band: --s0 and --s1 place it by where the card sits in the grid, and --sd puts every card on the same clock, so the cards light up in step. Only transform and opacity move */
-.pe-sheen{position:absolute;inset:0;border-radius:var(--r-paper);overflow:hidden;pointer-events:none;opacity:0;transition:opacity var(--ae-ms) var(--ease-ui);background:color-mix(in srgb,var(--accent) 9%,var(--bg))}
-.pe-sheen::before{content:'';position:absolute;top:0;bottom:0;left:0;width:var(--sb);background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent) 26%,transparent) 50%,transparent);transform:translateX(var(--s0,-100%));will-change:transform}
-.pe .page-card.loading .pe-sheen,.pe .page-card.sheen-out .pe-sheen{opacity:1}
-.pe .page-card.loading .pe-sheen::before,.pe .page-card.sheen-out .pe-sheen::before{animation:peSweep 2.6s linear infinite;animation-delay:var(--sd,0s)}
-.pe .page-card.sheen-out:not(.loading) .pe-sheen{opacity:0}
-@keyframes peSweep{from{transform:translateX(var(--s0,-100%))}to{transform:translateX(var(--s1,100%))}}
-@media (prefers-reduced-motion:reduce){.pe-sheen::before{display:none}}
-@media (prefers-reduced-motion:reduce){.pe .page-card.loading .pe-thumb::after{animation:none}}
-@media (prefers-reduced-motion:reduce){.pe-crop-pg.loading::after{animation:none;opacity:0}}
 /* the back arrow and the zoom buttons float over the stage like the page's own corner button */
 .pe-glass{position:absolute;z-index:4;display:flex;gap:var(--gap-sub);padding:var(--gap-snug);border-radius:var(--r-card);background:var(--glass-bg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--glass-shadow),inset 0 0 0 1px var(--glass-edge),0 0 0 .5px var(--glass-ring)}
 .pe-back{left:var(--gap-set);top:var(--gap-set)}.pe-zoom,.pe-pgzoom{right:var(--gap-set);bottom:var(--gap-set)}
@@ -2451,7 +2452,7 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .hb.sw::before{content:'';flex:none;width:13px;height:8px;border-radius:99px;background:radial-gradient(circle at 74% 50%,var(--on-dark) 2.5px,transparent 2.7px),var(--accent)}
 .hb.sw{padding:0;border-color:transparent;background:none;font-weight:600}
 .pe .page-card.loading .tick{z-index:1}
-.pe .page-card.loading canvas{opacity:0}
+.pe .page-card.loading canvas{opacity:var(--inactive)}          /* a card waiting for its picture shows the softened paper, the same look as a page not ready in the video preview */
 
 /* video Fades: the shape picture fits the settings column */
 .fade-shape canvas{display:block;width:100%;height:84px}
@@ -2489,11 +2490,11 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg.afull .ed-head .btn-group>.btn[aria-pressed=true],#audioDlg.afull .ed-head .btn-group>.btn:hover:not([disabled]){background:var(--accent-soft)}
 
 /* Dim: boxes drawn on a page. The frame and handles are Crop's own; the area inside is faded like the finished page, and a round X at its center deletes it */
-.pe-dim-layer{position:absolute;inset:0;z-index:2;touch-action:none;cursor:crosshair}
+.pe-dim-layer{position:absolute;inset:0;z-index:2;touch-action:none;cursor:crosshair;container-type:size}          /* a size container: a box's X and handles are sized from the picture's own size in CSS, so they are right the moment a card is laid out, with no script */
 .pe-dim-layer[hidden]{display:none}
 .pe-win:not([data-mode="dim"]) .pe-dim-layer{display:none}
 .pe-win[data-mode="dim"] #peCropBox{display:none}
-.pe-dimbox{pointer-events:auto;box-shadow:none;background:var(--dim-fill);--hs:16px}
+.pe-dimbox{pointer-events:auto;box-shadow:none;background:var(--dim-fill);--bpx:min(calc(var(--bw,0) * 100cqw),calc(var(--bh,0) * 100cqh));--dz:clamp(6px,calc(var(--bpx) * .5),22px);--hs:clamp(5px,calc(var(--bpx) * .28),22px);--hl:clamp(10px,calc(var(--bpx) * .45),28px)}
 .pe-dimbox .h.nw,.pe-dimbox .h.ne,.pe-dimbox .h.se,.pe-dimbox .h.sw{width:var(--hs);height:var(--hs)}
 .pe-dimbox .h.n,.pe-dimbox .h.s{width:var(--hl);margin-left:calc(var(--hl)/-2)}
 .pe-dimbox .h.e,.pe-dimbox .h.w{height:var(--hl);margin-top:calc(var(--hl)/-2)}

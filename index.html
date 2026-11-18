@@ -96,8 +96,8 @@
     <!-- ----- FILE CHIPS: loaded PDF / audio names ----- -->
     <div class="chips" id="chips"></div>
     <!-- ----- BUTTONS: Open PDF + Audio ----- -->
-    <button class="btn" id="btnPdf" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg><span>Open PDF</span></button>
-    <button class="btn" id="btnAudio" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Open Audio</span></button>
+    <button class="btn" id="btnPdf" type="button" hidden><svg data-icon="pdf"></svg><span>Open PDF</span></button>
+    <button class="btn" id="btnAudio" type="button" hidden><svg data-icon="audio"></svg><span>Open Audio</span></button>
     </div>
     <!-- ----- BUTTON + MENU: Settings (About, How it works, Import / Export, Keyboard shortcuts, Restore defaults) ----- -->
     <div class="menu-wrap">
@@ -142,13 +142,13 @@
           <h2>Score videos made easy.</h2>
           <div class="starts">
             <div class="start-card" id="scScore">
-              <span class="sc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.7.7l3.6 3.6A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 18v-6l4-1v6"/><circle cx="8.5" cy="18" r="1.5"/><circle cx="12.5" cy="17" r="1.5"/></svg></span>
+              <span class="sc-ic" aria-hidden="true"><svg data-icon="pdf"></svg></span>
               <h3>Score video</h3>
               <p>Drop in a PDF, mark page turns, and export an MOV.</p>
               <div class="row"><button class="btn primary" id="btnPdf2" type="button">Open PDF</button></div>
             </div>
             <div class="start-card" id="scAudio">
-              <span class="sc-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg></span>
+              <span class="sc-ic" aria-hidden="true"><svg data-icon="audio"></svg></span>
               <h3 id="scAudT">Audio editor</h3>
               <p id="scAudD">Trim, shape, process, and export. No score needed.</p>
               <div class="row"><button class="btn primary" id="btnAudio2" type="button">Open audio</button><button class="btn" id="btnAudio3" type="button" hidden>Replace</button><button class="btn" id="btnAudioStop" type="button" hidden title="Stop loading this file">Stop</button></div>
@@ -908,7 +908,7 @@
     </div>
     <div class="row">
       <div class="ae-export push-left">
-        <button class="btn" id="aeExport" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Export audio</span></button>
+        <button class="btn" id="aeExport" type="button"><svg data-icon="download"></svg><span>Export audio</span></button>
         <button class="btn" id="aeExpStop" type="button" hidden>Stop export</button>
       </div>
       <button class="btn" id="aeCancel" type="button">Cancel</button>
@@ -1025,7 +1025,7 @@
     </div>
     <p class="sr" id="peLive" role="status" aria-live="polite"></p>
     <div class="row">
-      <div class="ae-export push-left"><button class="btn" id="peExport" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg><span>Export PDF</span></button>
+      <div class="ae-export push-left"><button class="btn" id="peExport" type="button"><svg data-icon="download"></svg><span>Export PDF</span></button>
       <button class="btn" id="peExpStop" type="button" hidden>Stop export</button></div>
       <button class="btn" id="peCancel" type="button">Cancel</button>
       <button class="btn primary" id="peDone" type="button">Done</button>

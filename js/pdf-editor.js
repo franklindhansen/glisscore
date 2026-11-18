@@ -289,7 +289,7 @@ const peSay = (sel, t, err) => { const el = $(sel); if (el) { el.textContent = t
 function peClearStatus() { document.querySelectorAll('#peBand .pe-status').forEach(e => { e.textContent = ''; e.classList.remove('err'); }); }
 const peLock = on => { PE.busy = on; document.querySelectorAll('#peBand .btn, #peBar .btn, #peAddAt').forEach(b => { b.disabled = on; }); if (!on && PE.d) peState(); };
 /* a job's progress is one wait pill over the page grid (or the crop preview), never in a button: the buttons keep their size and word and are greyed while it runs. Crop's reading of the pages uses the same pill, since nothing can be cropped before it ends */
-function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelector('#pdfDlg .pe-body'), pc == null ? null : pc / 100); peDimCards(); }
+function peProg(sel, pc) { PE.waiting = pc != null; aeWait(document.querySelector('#pdfDlg .pe-body'), pc != null ? pc / 100 : peLoadNeed() ? 0 : null); peDimCards(); }          // when a tool's job ends, a page still waiting for its picture keeps the pill (it reads "Processing…" again)
 /* while a job waits the cards dim to the shared inactive look; they still scroll. A result said over the pages (Split's) never dims them: the pages stay live, and the note goes at the first tick or click on them */
 function peDimCards() { $('#peWin').classList.toggle('waiting', !!PE.waiting); }
 document.addEventListener('pointerdown', e => { if (PE.toastOn && e.target.closest('#peWin .pe-grid')) peToast(''); }, true);
@@ -378,7 +378,9 @@ function peManualPlan() {
 }
 /* while Crop is open and the pages are read for their frames, the Crop button says so ("Processing 40%", filling as it goes) and it and the margin slider are greyed in Auto; the Crop button is only ever busy once you press it */
 function peCropReadSay(pc) {
-  const show = pc != null && !peHandMode(), was = !!PE.cropShown; PE.cropShown = show; peProg('#peCropAuto', show ? pc : null);
+  const show = pc != null && !peHandMode(), was = !!PE.cropShown; PE.cropShown = show;
+  if (show && !was) { const g = $('#peGrid'); g.style.transition = 'none'; peProg('#peCropAuto', pc); void getComputedStyle(g).opacity; g.style.transition = ''; }          // the processing look is there from the first painted frame: the grid's own fade is skipped when Auto starts reading, so no frame shows the pages at full strength
+  else peProg('#peCropAuto', show ? pc : null);
   if (show !== was && PE.d) peActs();          // the margin slider and the Crop button are greyed for as long as the button shows the work; Manual does not wait for it
 }
 /* the pages are read one after another while Crop is open; each card gets its frame as soon as it is known */
@@ -391,7 +393,7 @@ async function peCropRead() {
       const ids = peTargets(), left = ids.filter(i => !PE.raw.has(peRawKey(d.slots[i]))); if (!left.length) break;
       pc = PE.cropPc = Math.round((ids.length - left.length) / ids.length * 100); if (shown && !PE.busy) peCropReadSay(pc);
       const nx = PE.one != null && left.includes(PE.one) ? PE.one : left[0];          // the page open in the large view is read first, so its frame is there to drag
-      await peRawBox(d.slots[nx]); did++; if (!PE.d || PE.mode !== 'crop') return;
+      await peRawBox(d.slots[nx]); did++; if (!PE.d || PE.mode !== 'crop' || peHandMode()) return;          // a page that was being read when Manual was chosen is not drawn
       const c = $('#peGrid').querySelector('.page-card[data-id="' + nx + '"]'), s2 = PE.d.slots[nx]; if (c && s2) peDrawCard(c, s2); if (nx === PE.one) peOneFrame();
       if (did % 2 === 0) await yieldNow();
     }
@@ -517,7 +519,7 @@ async function peOneShow() {
   const d = PE.d, id = PE.one, sl = d.slots[id], me = ++PE.cropShowRun, pg = $('#peCropPg');
   const known = PE.asp && PE.asp.get(sl.src), pageKey = [id, sl.src, sl.skew || 0, sl.vskew || 0, sl.warp || 0, sl.bg || 0, sl.sp || 0, PE.mode === 'dim' ? '' : dimKey(sl), PE.mode !== 'crop' && sl.crop ? sl.crop.join(',') : '', S.pdf.gen || 0, PE.mode].join('|'), fresh = PE.shownKey !== pageKey;
   if (fresh) { peOneGhost(); peSweepEnd(); }
-  peOneFit(peOneAsp(sl, known || S.pdf.aspect), fresh && !!PE.shownKey); if (fresh) { pg.classList.add('loading'); PE.wipeRun = (PE.wipeRun || 0) + 1; } else pg.classList.add('busy');
+  peOneFit(peOneAsp(sl, known || S.pdf.aspect), fresh && !!PE.shownKey); if (fresh) { pg.classList.add('loading'); peLoadPill(); PE.wipeRun = (PE.wipeRun || 0) + 1; } else pg.classList.add('busy');
   const asp = await peAspectOf({ src: sl.src, rot: 0 }); if (me !== PE.cropShowRun || !PE.d) return;
   const [w, h] = peOneFit(peOneAsp(sl, asp), true) || [pg.offsetWidth, pg.offsetHeight], tilt = peTilted(sl), geo = slotGeo(sl, PE.mode === 'skew' ? null : PE.mode), k = Math.max(2, PE_ONE_PX / Math.max(w, h)), W2 = Math.round(w * k), H2 = Math.round(h * k);
   const put = (c, from) => { c.width = from.width; c.height = from.height; c.getContext('2d').drawImage(from, 0, 0); };
@@ -533,7 +535,7 @@ async function peOneShow() {
   if (me !== PE.cropShowRun || !PE.d) return;
   if (fresh && pg.getAnimations) { await Promise.all(pg.getAnimations().map(x => x.finished.catch(() => {}))); if (me !== PE.cropShowRun || !PE.d) return; }          // the box has reached the page's shape before its picture shows, so the picture is never squeezed into a shape on the way
   if (fresh) { put($('#peCropCv'), cv); if (o) put($('#peOneOrig'), o); } else peSweep(cv, o, me);
-  PE.shownKey = pageKey; pg.classList.remove('loading', 'busy'); if (fresh) peWipeIn();
+  PE.shownKey = pageKey; pg.classList.remove('loading', 'busy'); peLoadPill(); if (fresh) peWipeIn();
 }
 /* ---- zoom in the large view: buttons, + − 0, the wheel with Ctrl (or a pinch), two fingers, a double-click, and a drag to move the page once it is larger than the window ---- */
 const PE_ZMAX = 4;
@@ -667,11 +669,11 @@ function peCropBind() {
     wp.addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; e.preventDefault(); e.stopPropagation(); peWipeSet((PE.wipe || 0.5) + (e.key === 'ArrowLeft' ? -0.05 : 0.05)); }); }
   /* Add pages: choose, place, add */
   const kind = () => (document.querySelector('input[name=peAddKind]:checked') || {}).value || 'blank';
-  document.querySelectorAll('input[name=peAddKind]').forEach(r => r.addEventListener('change', () => swapText($('#peAddGo'), kind() === 'pdf' ? 'Choose PDF…' : 'Add page', true)));
+  document.querySelectorAll('input[name=peAddKind]').forEach(r => r.addEventListener('change', () => swapText($('#peAddGo'), kind() === 'pdf' ? 'Choose PDF…' : 'Insert', true)));
   $('#peAddGo').addEventListener('click', () => { if (kind() === 'pdf') $('#peAddIn').click(); else peAdd('blank'); });
   $('#peAddIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) peAdd('pdf', f); });
-  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = v => { zs.value = clamp(v, -50, 50); paintRange(zs); $('#peGrid').style.gridTemplateColumns = 'repeat(auto-fill,minmax(calc(var(--h-s) * ' + (zs.value <= 0 ? 3.9 + zs.value * 0.026 : 3.9 + zs.value * 0.074).toFixed(2) + '),1fr))';          /* set on the grid itself, not as a variable the cards inherit: a changed variable makes every card and everything in it work out its style again, which made the slider stutter with many pages */ $('#peZoomOut').disabled = +zs.value <= -50; $('#peZoomIn').disabled = +zs.value >= 50; };
-  zs.addEventListener('input', () => zsSet(+zs.value)); $('#peZoomOut').addEventListener('click', () => zsSet(+zs.value - 10)); $('#peZoomIn').addEventListener('click', () => zsSet(+zs.value + 10)); zsSet(+zs.value);          // the page-size slider, and its minus and plus, set the page cards' width
+  const zs = document.querySelector('#pdfDlg .pe-zoom-in'), zsSet = (v, now) => { zs.value = clamp(v, -50, 50); paintRange(zs); $('#peZoomOut').disabled = +zs.value <= -50; $('#peZoomIn').disabled = +zs.value >= 50; peZoomSet(+zs.value, now); };          // the thumb and fill follow the pointer at once; the grid takes the last value once a frame (peZoomSet)
+  zs.addEventListener('input', () => zsSet(+zs.value)); $('#peZoomOut').addEventListener('click', () => zsSet(+zs.value - 10)); $('#peZoomIn').addEventListener('click', () => zsSet(+zs.value + 10)); zsSet(+zs.value, true);          // the page-size slider, and its minus and plus, set the page cards' width
   peCleanBind(); peZoomBind(); $('#peSplitGo').addEventListener('click', peSplitGo); peApplyClick('#peSkewGo', peSkewGo, peSkewClear);
 }
 /* which pages look like two pages side by side (wider than tall); a cropped page counts by the part that is kept */
@@ -764,20 +766,22 @@ const peSvg = {
   del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>',
   wm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13"/><path d="M20 15.5a2.5 2.5 0 0 0-2.5-2.5h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z"/><path d="M5 22h14"/></svg>'
 };
-/* the cards still waiting share one sweep: each card's band is the grid's band as seen from where the card sits, and every card starts on the same clock */
-const PE_SWEEP_MS = 2600;
-function peLoadOn(card) {
-  card.classList.add('loading'); card.classList.remove('sheen-out');
-  card.querySelector('.pe-sheen').style.setProperty('--sd', ((document.timeline.currentTime % PE_SWEEP_MS) - PE_SWEEP_MS) + 'ms');
-}
-function peSheenSync() {
-  const grid = $('#peGrid'); if (!grid || !grid.clientWidth) return;
-  const gw = grid.clientWidth, band = clamp(Math.round(gw * 0.2), 120, 320), left = el => { let x = 0; for (let n = el; n && n !== grid; n = n.offsetParent) x += n.offsetLeft; return x; };
-  grid.querySelectorAll('.page-card.loading .pe-sheen').forEach(sh => { const x = left(sh); sh.style.setProperty('--sb', band + 'px'); sh.style.setProperty('--s0', (-band - x) + 'px'); sh.style.setProperty('--s1', (gw - x) + 'px'); });
+/* a card waiting for its picture shows the softened paper (the shared waiting look, at --inactive); the wait pill with the shared sweep is over the pages (peLoadPill), so a long load never looks frozen */
+function peLoadOn(card) { card.classList.add('loading'); if (!PE.lpT) peLoadPill(); }          // a pill already due need not be asked for by every card
+const PE_WAIT_DELAY = 350;          // the video preview's own wait: the pill shows only when a page takes longer than this
+const peLoadNeed = () => {          // a page the user is looking at is waiting; a card far down the list that is still being made says nothing
+  if ($('#pdfDlg').hidden) return false; if (PE.one != null) return !!document.querySelector('#peCropPg.loading');
+  const vp = $('#peWrap').getBoundingClientRect(); return Array.from(document.querySelectorAll('#peGrid .page-card.loading:not(.far)')).some(c => { const r = c.getBoundingClientRect(); return r.bottom > vp.top && r.top < vp.bottom; });
+};
+function peLoadPill() {
+  const body = document.querySelector('#pdfDlg .pe-body'); if (!body || PE.waiting) return;          // a tool's own job speaks through the same pill (peProg)
+  if (!peLoadNeed()) { clearTimeout(PE.lpT); PE.lpT = 0; aeWait(body, null); return; }
+  if (!PE.lpT) PE.lpT = setTimeout(() => { PE.lpT = 0; if (!PE.waiting && peLoadNeed()) aeWait(body, 0); }, PE_WAIT_DELAY);
 }
 function peThumbReady(src) {
   if (!PE.d || $('#pdfDlg').hidden) return;
-  document.querySelectorAll('#peGrid .page-card').forEach(c => { if (+c.dataset.src === src) { const sl = PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); if (c.classList.contains('loading')) { c.classList.add('sheen-out'); c.classList.remove('loading'); setTimeout(() => c.classList.remove('sheen-out'), 450); } } });
+  document.querySelectorAll('#peGrid .page-card').forEach(c => { if (+c.dataset.src === src) { const sl = PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); c.classList.remove('loading'); } });          // the picture fades in over the softened paper (the canvas's own opacity)
+  peLoadPill();
   if (PE.adding && !PE.busy && !document.querySelector('#peGrid .page-card.loading')) { PE.adding = false; if ($('#peAddStatus').textContent === 'Adding pages…') peSay('#peAddStatus', ''); }          // the line goes once the last new picture is in
 }
 /* a card's picture comes from the page's thumbnail, turned to match; drawn at twice its size on screen so it stays crisp */
@@ -785,7 +789,7 @@ const PE_CH = 280;
 const peCardSize = sl => { const w = Math.round(PE_CH * peAspect()); return (sl.rot || 0) % 180 ? [PE_CH, w] : [w, PE_CH]; };          // a page turned a quarter takes its own wide shape
 function peDrawCard(card, sl, frame) {
   const cv = card.querySelector('canvas'), rot = sl.rot || 0, side = rot % 180 !== 0, sz = peCardSize(sl);
-  cv.style.aspectRatio = sz[0] + ' / ' + sz[1];          // the card keeps its shape while its picture is freed
+  cv.style.aspectRatio = sz[0] + ' / ' + sz[1]; card._ar = sz[1] / sz[0];          // the card keeps its shape while its picture is freed
   if (card._far) { if (cv.width !== 1 || cv.height !== 1) { cv.width = 1; cv.height = 1; } return; }          // far off screen: a long score keeps pictures only for the cards near the view
   if (cv.width !== sz[0] || cv.height !== sz[1]) { cv.width = sz[0]; cv.height = sz[1]; }
   const x = cv.getContext('2d'), w = cv.width, h = cv.height;
@@ -812,78 +816,161 @@ const peRepaint = () => document.querySelectorAll('#peGrid .page-card').forEach(
 function peCard(id, sl) {
   const [w, ch] = peCardSize(sl), el = document.createElement('div');
   el.className = 'page-card'; el.dataset.id = id; el.dataset.src = sl.src; el.tabIndex = 0; el.setAttribute('role', 'listitem');
-  el.innerHTML = '<span class="pe-thumb"><canvas width="' + w + '" height="' + ch + '"></canvas><i class="pe-sheen" aria-hidden="true"></i><span class="tick" aria-hidden="true">' + checkIcon + '</span><span class="pe-hid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.7 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.6 3.6"/><path d="M6.6 6.6C3.6 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M14.1 14.1a3 3 0 0 1-4.2-4.2"/><path d="m2 2 20 20"/></svg></span><span class="pe-lvl" aria-hidden="true">Leveled</span>'
+  el.innerHTML = '<span class="pe-thumb"><canvas width="' + w + '" height="' + ch + '"></canvas><span class="tick" aria-hidden="true">' + checkIcon + '</span><span class="pe-hid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.7 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.6 3.6"/><path d="M6.6 6.6C3.6 8.4 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M14.1 14.1a3 3 0 0 1-4.2-4.2"/><path d="m2 2 20 20"/></svg></span><span class="pe-lvl" aria-hidden="true">Leveled</span>'
     + '<span class="pe-tools"><button type="button" data-act="open" aria-label="Open page" title="Open page">' + peSvg.open + '</button><button type="button" data-act="rot" aria-label="Rotate page" title="Rotate (R)">' + peSvg.rot + '</button><button type="button" data-act="dup" aria-label="Repeat page" title="Repeat (D)">' + peSvg.dup + '</button>'
     + (sl.c ? '<button type="button" data-act="del" aria-label="Remove this repeat" title="Remove repeat">' + peSvg.del + '</button>' : '') + '</span></span>'
-    + '<span class="pe-foot"><span class="pe-pos"></span><span class="num">p. ' + (sl.src + 1) + (sl.c ? ' · repeat' : '') + '</span></span>';
-  el._far = PE.nearN >= 24; PE.nearN++;          // the first screenful is drawn at once; the rest wait until the view comes near (peFarWatch)
-  peDrawCard(el, sl); if (!S.thumbs[sl.src]) peLoadOn(el); if (PE.mode === 'dim') dimMount(el.querySelector('.pe-thumb'), id); return el;          // no picture yet: the card shimmers until its thumbnail arrives
+    + '<span class="pe-foot"><span class="pe-pos"></span><span class="num">' + (sl.c ? '<i class="pe-cp" aria-hidden="true">' + peSvg.dup + '</i>' : '') + (sl.src + 1) + '</span></span>';
+  el._far = PE.nearN >= 24; el.classList.toggle('far', el._far); PE.nearN++;          // the first screenful is drawn at once; the rest wait until the view comes near (peFarWatch)
+  peDrawCard(el, sl); if (el._far) peIh(el); if (!S.thumbs[sl.src]) peLoadOn(el); if (PE.mode === 'dim') dimMount(el.querySelector('.pe-thumb'), id); return el;          // no picture yet: the card shimmers until its thumbnail arrives
 }
 /* the cards are built from the draft; when `anim` is set, cards that moved glide to their new places and new ones rise in (FLIP) */
 /* a card draws its picture only while it is within a screen or so of the view; scrolling away frees the picture (the canvas shrinks to a pixel, the shape stays), so a 200-page score never holds 200 full pictures */
+/* The page-size slider. Input events only store the value; one frame applies the last one. The cards are the width the slider says (fixed columns, left to right),
+   so they grow and shrink smoothly with the slider like any zoom; when the number of columns changes, the cards on screen glide from where they were to where they
+   are in one motion on the PDF Editor's one motion (PE_ONE_MS, PE_ONE_EASE, the same as the large view and a page changing shape), by transform only. The card
+   nearest the middle stays where it is on every step. */
+PE.zv = 0; PE.zooming = false; PE.redraw = new Set(); PE.cols = 0; PE.tw = 0; PE.chrome = 0; PE.cg = [];
+const peZsMin = v => +(v <= 0 ? 3.9 + v * 0.018 : 3.9 + v * 0.03).toFixed(2);          // 3.0 to 5.4 control heights wide (90 to 162px): small enough to see many pages, still wide enough for a three-digit number and a three-digit page tag on a repeat, never larger than the large view is for          // the card's width in control heights, rounded once so the template and the column count worked out here always agree
+const peZsTpl = v => { const w = 'calc(var(--h-s) * ' + peZsMin(v) + ')'; return 'repeat(auto-fill,minmax(min(' + w + ',100%),' + w + '))'; };          // set on the grid itself, not as a variable the cards inherit
+function peZoomSet(v, now) {
+  PE.zv = v;
+  if (now) { $('#peGrid').style.gridTemplateColumns = peZsTpl(v); peGridMetrics(); return; }
+  PE.zooming = true; clearTimeout(PE.zRest); PE.zRest = setTimeout(peZoomRest, 160);
+  if (!PE.zRaf) PE.zRaf = requestAnimationFrame(() => { PE.zRaf = 0; peGridFit(); });
+}
+function peZoomRest() {
+  PE.zooming = false; if (!$('#peGrid')) return;
+  const todo = Array.from(PE.redraw); PE.redraw.clear();
+  todo.forEach(c => { const sl = c.isConnected && PE.d && PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); });
+  peGridMetrics();
+}
+/* what a skipped (far) card needs to keep its true size: its picture's width from the slider, and the room around it, read again when the grid's width changes */
+function peGridMetrics() {
+  const grid = $('#peGrid'); if (!grid || !grid.isConnected) return;
+  const W = grid.getBoundingClientRect().width, card = grid.querySelector('.page-card:not(.far)'); if (!W || !card) { grid.classList.remove('sized'); return; }
+  const g = getComputedStyle(grid), c = getComputedStyle(card), foot = card.querySelector('.pe-foot');
+  PE.gm = { gap: parseFloat(g.columnGap) || 0, pad: parseFloat(c.paddingLeft) || 0, hs: parseFloat(g.getPropertyValue('--h-s')) || 30 };
+  PE.chrome = (parseFloat(c.rowGap) || 0) + foot.offsetHeight;          // the card's padding is added by the browser to a reserved size, so only the gap and the number's row are here
+  peFarSize(W); grid.classList.add('sized');
+}
+/* the columns the grid has at this width and slider value, and the reserved height of every far card (set on the card itself, so no card near the view works out its style again) */
+function peFarSize(W) {
+  const grid = $('#peGrid'), m = PE.gm; if (!m) return 0; W = W || grid.getBoundingClientRect().width; if (!W) return 0;
+  const w = Math.min(m.hs * peZsMin(PE.zv), W), c = Math.max(1, Math.floor((W + m.gap) / (w + m.gap)));
+  PE.cols = c; PE.tw = w - 2 * m.pad; grid.querySelectorAll('.page-card.far').forEach(peIh);
+  return c;
+}
+const peIh = el => { if (el._ar) el.style.setProperty('--ih', (Math.floor(Math.fround(Math.fround(Math.floor(PE.tw * 64) / 64) * Math.fround(el._ar)) * 64) / 64 + PE.chrome) + 'px'); };          // the picture's height as the browser lays it out (its width, then its height, in single precision and whole 64ths of a pixel, rounded down), so a skipped card is exactly as tall as a drawn one and a long grid does not drift
+function peGridFit() {
+  const grid = $('#peGrid'), wrap = $('#peWrap'), tpl = peZsTpl(PE.zv), W = grid.getBoundingClientRect().width, m = PE.gm;
+  if (!W || !m) { grid.style.gridTemplateColumns = tpl; return; }
+  const cols0 = PE.cols, cards = Array.from(grid.children), vp = wrap.getBoundingClientRect(), mid = vp.top + vp.height / 2;
+  const was = cards.map(el => el.getBoundingClientRect()), on = r => r.bottom > vp.top && r.top < vp.bottom;
+  let ai = -1, best = 1e9; was.forEach((r, i) => { if (on(r)) { const d = Math.abs(r.top + r.height / 2 - mid); if (d < best) { best = d; ai = i; } } });
+  const c = peFarSizeAt(W);
+  if (c !== cols0) { PE.cg.forEach(a => a.cancel()); PE.cg = []; }          // a glide still running starts the next one from where the card is: its place was read above, with the glide in it
+  grid.style.gridTemplateColumns = tpl; peFarSize(W);
+  if (ai >= 0) { const r = cards[ai].getBoundingClientRect(); wrap.scrollTop += (r.top + r.height / 2) - (was[ai].top + was[ai].height / 2); }          // the card nearest the middle stays where it was
+  if (c === cols0 || reducedMotion() || !cards.length || !cards[0].animate) return;          // every change of the number of columns, dragging included, is the bookshelf wrap (peShelf)
+  const now = cards.map(el => el.getBoundingClientRect()), go = [];          // every place is read first, then the glides start, so one layout serves them all
+  cards.forEach((el, i) => {
+    const a = was[i], n = now[i]; if (!on(a) && !on(n)) return;          // only cards on screen move
+    const tx = a.left + a.width / 2 - (n.left + n.width / 2), ty = a.top + a.height / 2 - (n.top + n.height / 2), sx = a.width / n.width, sy = a.height / n.height;
+    if (Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5 && Math.abs(sx - 1) < 0.005 && Math.abs(sy - 1) < 0.005) return;
+    go.push([el, a, n, tx, ty, sx, sy]);
+  });
+  const wrapping = go.some(g => Math.abs(g[4]) > Math.min(g[1].height, g[2].height) * 0.5); if (wrapping) wrap.classList.add('pe-wrapping');
+  go.forEach(([el, a, n, tx, ty, sx, sy]) => PE.cg.push(peShelf(el, a, n, tx, ty, sx, sy, vp)));
+  Promise.allSettled(PE.cg.map(x => x.finished)).then(() => { if (PE.cg.every(x => x.playState !== 'running')) wrap.classList.remove('pe-wrapping'); });
+}
+/* A card on the same row slides sideways to its new place. A card that changes row goes like a bookshelf: it slides off the edge of its row (the right edge going to a later row,
+   the left edge going to an earlier one) and comes in from the opposite edge of its new row, then settles. One motion on the PDF Editor's one length and ease; transform only. */
+function peShelf(el, a, n, tx, ty, sx, sy, vp) {
+  if (Math.abs(ty) <= Math.min(a.height, n.height) * 0.5) return el.animate([{ transform: 'translate(' + tx + 'px,' + ty + 'px) scale(' + sx + ',' + sy + ')' }, { transform: 'none' }], { duration: PE_ONE_MS, easing: PE_ONE_EASE });
+  const later = ty < 0, ncx = n.left + n.width / 2, edge = PE.gm ? PE.gm.gap + 10 : 24, out = later ? vp.right + edge + a.width / 2 : vp.left - edge - a.width / 2, inn = later ? vp.left - edge - n.width / 2 : vp.right + edge + n.width / 2, scaled = 'scale(' + sx + ',' + sy + ')';
+  return el.animate([
+    { transform: 'translate(' + tx + 'px,' + ty + 'px) ' + scaled, offset: 0, easing: 'ease-in' },
+    { transform: 'translate(' + (out - ncx) + 'px,' + ty + 'px) ' + scaled, offset: 0.5 },
+    { transform: 'translate(' + (inn - ncx) + 'px,0)', offset: 0.5, easing: EASE_OUT },
+    { transform: 'none', offset: 1 }], { duration: Math.round(PE_ONE_MS * 1.6) });
+}
+const peFarSizeAt = W => { const m = PE.gm, w = Math.min(m.hs * peZsMin(PE.zv), W); return Math.max(1, Math.floor((W + m.gap) / (w + m.gap))); };          // the number of columns the slider's value gives, before the grid is changed
 function peFarWatch() {
   if (PE.io) PE.io.disconnect();
-  if (!window.IntersectionObserver) { document.querySelectorAll('#peGrid .page-card').forEach(c => { c._far = false; }); peRepaint(); return; }
-  PE.io = new IntersectionObserver(es => es.forEach(e => { const c = e.target, far = !e.isIntersecting; if (c._far === far) return; c._far = far; const sl = PE.d && PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); }), { root: $('#peWrap'), rootMargin: '700px 0px' });
+  if (!window.IntersectionObserver) { document.querySelectorAll('#peGrid .page-card').forEach(c => { c._far = false; c.classList.remove('far'); }); peRepaint(); return; }
+  PE.io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      const c = e.target, far = !e.isIntersecting; if (c._far === far) return; c._far = far; if (far) peIh(c); c.classList.toggle('far', far);
+      if (PE.zooming) { PE.redraw.add(c); return; }          // while the slider moves no picture is drawn or freed; they follow once it rests (peZoomRest)
+      const sl = PE.d && PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl);
+    });
+  }, { root: $('#peWrap'), rootMargin: '700px 0px' });
   document.querySelectorAll('#peGrid .page-card').forEach(c => PE.io.observe(c));
 }
 function peRender(anim) {
   const grid = $('#peGrid'), d = PE.d, old = new Map();
   const oldI = new Map(); let oi = 0;
-  if (anim) Array.from(grid.children).forEach(c => { old.set(+c.dataset.id, c.getBoundingClientRect()); oldI.set(+c.dataset.id, oi++); });
+  if (anim) { PE.footWas = new Map(); Array.from(grid.children).forEach(c => { old.set(+c.dataset.id, c.getBoundingClientRect()); oldI.set(+c.dataset.id, oi++); PE.footWas.set(+c.dataset.id, peFootAt(c)); }); }          // the footers too, so the numbers on the new cards glide from where the old ones were
   PE.nearN = 0; const frag = document.createDocumentFragment(); d.order.forEach(id => frag.appendChild(peCard(id, d.slots[id])));
-  grid.textContent = ''; grid.appendChild(frag); peFarWatch();
+  grid.textContent = ''; grid.appendChild(frag); peFarWatch(); PE.cg = []; peGridMetrics(); peLoadPill();
   PE.dir = new Map();          // which way each card moved, so its number slides the same way
   if (anim) { let ni = 0; Array.from(grid.children).forEach(c => { const id = +c.dataset.id, was = old.get(id); if (was) { const now = c.getBoundingClientRect(); PE.dir.set(id, peNumDir(now.left - was.left, now.top - was.top, oldI.get(id), ni)); } ni++; }); }
-  PE.roll = !!anim; peState(); peSheenSync();
+  PE.roll = !!anim; peState();
   if (anim && !reducedMotion()) {
     Array.from(grid.children).forEach(c => {
       const was = old.get(+c.dataset.id), now = c.getBoundingClientRect();
       if (!was) c.animate([{ opacity: 0, transform: 'scale(.82)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: EASE_OUT });
-      else if (Math.abs(was.left - now.left) > 1 || Math.abs(was.top - now.top) > 1) c.animate([{ transform: 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.32,.72,0,1)' });
+      else if (Math.abs(was.left - now.left) > 1 || Math.abs(was.top - now.top) > 1) c.animate([{ transform: 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px)' }, { transform: 'none' }], peRollT());          // the numbers roll on this same clock
     });
   }
   if (PE.rustle) { PE.rustle = false; peRustle(grid); }
   if (PE.focusId != null) { const f = grid.querySelector('.page-card[data-id="' + PE.focusId + '"]'); if (f) f.focus({ preventScroll: false }); PE.focusId = null; }
 }
 /* everything that is only a state (ticks, numbers, counts, buttons) is set on the cards already there, so ticking a page never rebuilds the grid */
-/* the number under a card rolls to its new place (old one out, new one in) in step with the card's glide; the "p. 3" tag eases in or out when it starts or stops matching */
+/* The number under a card and the tag beside it change on the card's own glide (PE_TURN_MS on EASE_OUT, the clock every moving card uses), all at once and never one after
+   another, so everything lands in the same frame as the cards. The old digit slides out and the new one slides in the way the card moves, inside a bubble that already has its
+   final size, with the digits centered by the same rule as at rest, so nothing moves when the slide ends. The bubble and the tag glide from where they were in the footer to
+   where they are now (by transform only), and the tag only fades in or out. */
 PE.posWas = new Map(); PE.roll = false; PE.dir = new Map();
+const peRollT = () => ({ duration: PE_TURN_MS, easing: EASE_OUT });
 // which way a card's number slides: along the card's own sideways move when that move is clearly sideways,
 // otherwise by its place in reading order (later place = right, earlier place = left)
 function peNumDir(dx, dy, fromI, toI) {
   if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 4) return dx > 0 ? 1 : -1;
   return toI > fromI ? 1 : -1;
 }
-/* a sliding number: the old digit slides out and the new one slides in behind it, the way its card is moving (a card that moves right sends its number right).
-   The two digits sit side by side in a strip two digits wide, and the pill clips it, so the pill keeps its colour and round ends. About 340ms on the card's curve,
-   with a small detent at the end, so the digit clicks into place rather than stopping dead. */
+/* a sliding number: the two digits sit side by side in a strip two bubbles wide, and the bubble clips it, so the bubble keeps its colour and round ends while they move */
 function peNumSlideEnd(p, text) {
   if (p._slide) p._slide.cancel(); p._slide = null;
   p.classList.remove('slide'); p.style.removeProperty('--slide-w'); p.textContent = text;
 }
-function peNumSlide(p, from, to, delay, dir, w) {
+function peNumSlide(p, from, to, dir, w) {
   const cell = t => { const s = document.createElement('span'); s.className = 'pe-cell'; s.textContent = t; return s; };
   const strip = document.createElement('span'); strip.className = 'pe-strip';
   strip.append(...(dir > 0 ? [cell(to), cell(from)] : [cell(from), cell(to)]));          // a card moving right sends its number right, so the new digit comes in from the left
   p.textContent = ''; p.style.setProperty('--slide-w', w + 'px'); p.classList.add('slide'); p.append(strip);
-  const ease = 'cubic-bezier(.32,.72,0,1)';          // the card's own curve, so the digit travels with the card
-  const keys = dir > 0 ? ['translateX(-50%)', 'translateX(1px)', 'translateX(0)'] : ['translateX(0)', 'translateX(calc(-50% - 1px))', 'translateX(-50%)'];
-  const S = strip.animate(keys.map((transform, i) => ({ transform, offset: [0, .84, 1][i], easing: i ? 'ease-out' : ease })), { duration: 340, delay, fill: 'both' });
+  const S = strip.animate(dir > 0 ? [{ transform: 'translateX(-50%)' }, { transform: 'translateX(0)' }] : [{ transform: 'translateX(0)' }, { transform: 'translateX(-50%)' }], { ...peRollT(), fill: 'both' });
+  const [cin, cout] = dir > 0 ? strip.children : [strip.children[1], strip.children[0]], t = peRollT();
+  cout.animate([{ opacity: 1 }, { opacity: 0, offset: 0.6 }, { opacity: 0 }], { ...t, fill: 'both' }); cin.animate([{ opacity: 0 }, { opacity: 0, offset: 0.25 }, { opacity: 1 }], { ...t, fill: 'both' });          // the old digit fades as it leaves and the new one as it arrives, so no frame shows a cut-off half next to a whole one
   p._slide = S; S.onfinish = () => peNumSlideEnd(p, String(to));
 }
-function peRoll(p, nm, was, pos, same, delay = 0, dir = -1, w = 0) {
+function peRoll(p, nm, was, pos, same, dir, w) {
   if (pos !== was.pos) {
     if (p._slide) peNumSlideEnd(p, String(was.pos));          // a slide still running lands first, so a quick second move starts from the number on the card
-    if (pos && was.pos) peNumSlide(p, was.pos, pos, delay, dir, w);
-    else if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay, easing: EASE_OUT, fill: 'backwards' });
+    if (pos && was.pos) peNumSlide(p, was.pos, pos, dir, w);
+    else { p.textContent = pos || ''; if (pos) p.animate([{ opacity: 0, transform: 'scale(.7)' }, { opacity: 1, transform: 'none' }], peRollT()); }
   }
-  if (same !== was.same) nm.animate(same ? [{ opacity: 1, maxWidth: '80px' }, { opacity: 0, maxWidth: '0px' }] : [{ opacity: 0, maxWidth: '0px' }, { opacity: 1, maxWidth: '80px' }], { duration: 560, easing: 'cubic-bezier(.45,.05,.2,1)' });
+  if (same !== was.same && !same) nm.animate([{ opacity: 0 }, { opacity: 1 }], peRollT());
 }
+/* where the bubble's middle and the tag's left edge are in the footer, so both can glide from there after the change */
+const peFootAt = c => { const f = c.querySelector('.pe-foot').getBoundingClientRect(), p = c.querySelector('.pe-pos').getBoundingClientRect(), n = c.querySelector('.num').getBoundingClientRect(), k = f.width / (c.querySelector('.pe-foot').offsetWidth || 1) || 1;
+  return { p: (p.left + p.width / 2 - f.left) / k, nl: (n.left - f.left) / k, nt: (n.top - f.top) / k }; };          // k undoes a card's own scale (the page landing from the pointer)
 function peState() {
   const roll = PE.roll && !reducedMotion(); PE.roll = false;
   const d = PE.d, grid = $('#peGrid'), m = PE.mode, tm = peTickMode(), w = d.wm; let pos = 0, pool = 0, on = 0;
-  const rolls = [];          // the numbers that change, in reading order (left to right, top to bottom), so the flips run that way too
+  const rolls = [], at0 = new Map();          // the footers that change, and where their bubble and tag were before the change (one layout, read before anything is written)
+  if (roll) Array.from(grid.children).forEach(c => { const id = +c.dataset.id; if (PE.posWas.has(id)) at0.set(c, (PE.footWas && PE.footWas.get(id)) || peFootAt(c)); });
+  PE.footWas = null;
   grid.classList.toggle('ticks', m === 'pages' || tm); grid.classList.toggle('arrange', m === 'pages'); grid.classList.toggle('opens', peOneMode());
   if (m !== 'crop') grid.querySelectorAll('.shared').forEach(c => c.classList.remove('shared')); else PE.accent = getComputedStyle(grid).getPropertyValue('--accent').trim();
   Array.from(grid.children).forEach(c => {
@@ -895,18 +982,26 @@ function peState() {
     const p = c.querySelector('.pe-pos'), nm = c.querySelector('.num'), same = !sl.c && !sl.x && sl.src + 1 === pos, was = PE.posWas.get(+c.dataset.id), np = sl.x ? 0 : pos;
     if (!p._slide && !(roll && was && np !== was.pos)) p.textContent = np || '';          // a number that is about to slide keeps its old digit until its turn
     nm.classList.toggle('same', same); PE.posWas.set(+c.dataset.id, { pos: np, same });
-    if (roll && was) rolls.push([p, nm, was, np, same, PE.dir.get(+c.dataset.id)]);
+    if (roll && was && at0.has(c)) rolls.push([c, p, nm, was, np, same, PE.dir.get(+c.dataset.id)]);
     c.setAttribute('aria-label', 'Page ' + (sl.src + 1) + (sl.c ? ' (repeat)' : '') + (sl.x ? ', left out' : ', position ' + pos) + (tm && !na ? (yes ? ', selected' : ', not selected') : ''));
   });
-  const padW = 12;   // the pill's padding is 6px on each side (style.css, .pe-pos); keep in step with it
-  const oldW = new Map(rolls.map(r => [r[0], r[0].offsetWidth]));          // one layout: every pill's current width
-  const texts = [...new Set(rolls.map(r => String(r[3])))];
+  const texts = [...new Set(rolls.filter(r => r[4] !== r[3].pos).map(r => String(r[4])))];
   const probes = texts.map(t => { const s = document.createElement('span'); s.className = 'pe-pos pe-measure'; s.textContent = t; grid.append(s); return s; });
-  const newW = new Map(texts.map((t, i) => [t, probes[i].offsetWidth]));     // one more layout, after every probe is in
+  const newW = new Map(texts.map((t, i) => [t, probes[i].offsetWidth]));          // each new number's bubble at rest, padding included: the sliding bubble has this size from the start
   probes.forEach(s => s.remove());
-  const moving = rolls.filter(r => r[3] !== r[2].pos), at = new Map(moving.map((r, i) => [r[0], i]));          // only the numbers that really change take a turn
-  const gap = Math.min(80, 600 / Math.max(1, moving.length - 1));          // 80ms apart for a few numbers; for many, the last one starts by 600ms
-  rolls.forEach(([p, nm, was, np, same, dir]) => peRoll(p, nm, was, np, same, (at.get(p) || 0) * gap, dir || -1, Math.max(oldW.get(p), newW.get(String(np)) + padW)));          // one number at a time, in reading order (left to right, top to bottom), so the eye can follow each one
+  rolls.forEach(([c, p, nm, was, np, same, dir]) => {
+    peRoll(p, nm, was, np, same, dir || -1, newW.get(String(np)));
+    if (same && !was.same) {          // a tag that goes fades where it was, as a still copy, while the bubble glides to the middle
+      const g = nm.cloneNode(true), a = at0.get(c); g.classList.remove('same'); g.classList.add('pe-num-out'); g.setAttribute('aria-hidden', 'true'); g.style.left = a.nl + 'px'; g.style.top = a.nt + 'px';
+      c.querySelector('.pe-foot').append(g); g.animate([{ opacity: 1 }, { opacity: 0 }], { ...peRollT(), fill: 'forwards' }).onfinish = () => g.remove();
+    }
+  });
+  const at1 = rolls.map(r => peFootAt(r[0]));          // one more layout: where the bubble and the tag are now
+  rolls.forEach(([c, p, nm, was, np, same], i) => {
+    const a = at0.get(c), b = at1[i];
+    if (was.pos && np && Math.abs(a.p - b.p) > 0.25) p.animate([{ transform: 'translateX(' + (a.p - b.p) + 'px)' }, { transform: 'none' }], peRollT());
+    if (!was.same && !same && Math.abs(a.nl - b.nl) > 0.25) nm.animate([{ transform: 'translateX(' + (a.nl - b.nl) + 'px)' }, { transform: 'none' }], peRollT());
+  });
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
   const cnt = $('#peCount'); cnt.classList.remove('warn');
   if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
@@ -1090,18 +1185,15 @@ function peDragEnd(cancel) {
     });
   }
   if (changed && PE.d) { PE.roll = true; peState(); }          // the numbers flip as the page lands, not after it
-  const nx = dr.card.offsetLeft, ny = dr.card.offsetTop;                    // where the held page's place now is (one layout read)
-  const settle = () => {
-    dr.card.classList.remove('pe-hole'); g.remove();
-    dr.card.focus({ preventScroll: true });
-  };
+  const settle = () => { dr.card.classList.remove('pe-hole', 'pe-landing'); g.remove(); dr.card.focus({ preventScroll: true }); };
   if (calm) { settle(); return; }
-  const dx = nx - dr.rects[dr.from].x, dy = ny - dr.rects[dr.from].y - (wrap.scrollTop - dr.s0), at = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
-  // one smooth glide on the same clock and curve as the pages it passed, so nothing wobbles before it rests
-  const a = g.animate([
-    { transform: g.style.transform, scale: '.8' },
-    { transform: at, scale: '1' }
-  ], { duration: PE_TURN_MS, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+  /* the page itself lands, not the copy you carried: its picture glides from where the copy's picture is to its place, on the same clock and curve as the pages it passed.
+     Its number row never travels with it: every number stays on its row's line and rolls there with the others, so nothing is swapped or out of line when it comes to rest */
+  const gt = g.querySelector('.pe-thumb'), gr = gt.getBoundingClientRect(), lift = getComputedStyle(g.querySelector('canvas')).boxShadow, op = +getComputedStyle(g).opacity || 1; g.remove();
+  dr.card.classList.remove('pe-hole'); dr.card.classList.add('pe-landing');
+  const th = dr.card.querySelector('.pe-thumb'), cv = th.querySelector('canvas'), r = th.getBoundingClientRect(), k = gr.width / r.width;
+  const a = th.animate([{ transformOrigin: '0 0', transform: 'translate(' + (gr.left - r.left) + 'px,' + (gr.top - r.top) + 'px) scale(' + k + ')', opacity: op }, { transformOrigin: '0 0', transform: 'none', opacity: 1 }], peRollT());
+  if (cv) cv.animate([{ boxShadow: lift }, { boxShadow: getComputedStyle(cv).boxShadow }], peRollT());          // the lifted page's shadow settles into the resting one
   a.onfinish = a.oncancel = settle;
 }
 /* ---- Export PDF: the draft as a new PDF file (pages in your order, rotated, repeated, left out, watermarked) ---- */
@@ -1221,10 +1313,9 @@ function dimBoxEl(layer, v) {
   const x = el.querySelector('.pe-dimx'); x.addEventListener('pointerdown', e => e.stopPropagation()); x.addEventListener('click', e => { e.stopPropagation(); el.remove(); dimCommit(layer); });
   layer.appendChild(el); dimSet(layer, el, v); return el;
 }
-function dimSet(layer, el, v) {
-  el._v = v; const W = layer.clientWidth || 1, H = layer.clientHeight || 1, px = Math.min((v[2] - v[0]) * W, (v[3] - v[1]) * H);
-  el.style.left = v[0] * 100 + '%'; el.style.top = v[1] * 100 + '%'; el.style.width = (v[2] - v[0]) * 100 + '%'; el.style.height = (v[3] - v[1]) * 100 + '%';
-  el.style.setProperty('--dz', clamp(px * .5, 6, 22) + 'px'); el.style.setProperty('--hs', clamp(px * .28, 5, 22) + 'px'); el.style.setProperty('--hl', clamp(px * .45, 10, 28) + 'px');
+function dimSet(layer, el, v) {          // the box's place and share of the picture; its X and handles size themselves from the picture in CSS (.pe-dimbox), so nothing runs when a card changes size
+  el._v = v; el.style.left = v[0] * 100 + '%'; el.style.top = v[1] * 100 + '%'; el.style.width = (v[2] - v[0]) * 100 + '%'; el.style.height = (v[3] - v[1]) * 100 + '%';
+  el.style.setProperty('--bw', (v[2] - v[0]).toFixed(5)); el.style.setProperty('--bh', (v[3] - v[1]).toFixed(5));
 }
 /* put the page's boxes on a host (a card's picture, or the large view's page) and let the pointer draw, move, and resize them */
 function dimMount(host, id) {
@@ -1246,7 +1337,6 @@ function dimCommit(layer) {
 }
 function dimBind(layer) {
   layer._bound = true; let drag = null;
-  if (window.ResizeObserver) new ResizeObserver(() => layer.querySelectorAll('.pe-dimbox').forEach(el => dimSet(layer, el, el._v))).observe(layer);          // a layer built while hidden has no size yet: the X and handles are sized once it has one
   const pt = e => { const r = layer.getBoundingClientRect(); return [clamp((e.clientX - r.left) / Math.max(1, r.width), 0, 1), clamp((e.clientY - r.top) / Math.max(1, r.height), 0, 1)]; };
   const mins = () => [Math.max(0.005, DIM_MIN / Math.max(1, layer.clientWidth)), Math.max(0.005, DIM_MIN / Math.max(1, layer.clientHeight))];
   const select = el => layer.querySelectorAll('.pe-dimbox').forEach(b => b.classList.toggle('sel', b === el));
@@ -1290,7 +1380,8 @@ function peDimClear() {
 }
 function peBind() {
   const grid = $('#peGrid');
-  if (window.ResizeObserver) new ResizeObserver(peSheenSync).observe(grid);          // the cards' bands follow where the cards sit when the window or the number of columns changes
+  $('#peWrap').addEventListener('scroll', () => { if (!PE.scRaf && document.querySelector('#peGrid .page-card.loading')) PE.scRaf = requestAnimationFrame(() => { PE.scRaf = 0; peLoadPill(); }); }, { passive: true });          // a waiting page scrolled into view asks for the pill
+  if (window.ResizeObserver) new ResizeObserver(() => { const w = grid.getBoundingClientRect().width; if (w !== PE.gw) { PE.gw = w; if (!PE.zRaf) peGridMetrics(); } }).observe(grid);          // the cards' bands follow where the cards sit when the window or the number of columns changes
   grid.addEventListener('click', e => {
     if (PE.justDragged) return;
     const card = e.target.closest('.page-card'); if (!card) return;

@@ -1698,16 +1698,16 @@ function aeEqPanel() {
 /* Auto threshold: how loud the sound gets in the band's own region over the part you keep (read in pieces, so a long recording does not stall the page), and the threshold set where the louder tenth of it begins.
    It reads the recording as it is, before any band. */
 /* the one place a job's progress shows in the Audio Editor, outside Noise reduction's own graph: a wait pill centered on the picture the job changes (the EQ graph, the Emulator's graph). v is null for nothing, 0 for working with no number yet (a sweep), then the share done; a button never carries it. */
-function aeWait(stage, v) {
+function aeWait(stage, v, by) {
   if (!stage) return; let box = stage.querySelector(':scope>.sys-find-box.aw');
   if (!box) { if (v == null) return; box = document.createElement('div'); box.className = 'sys-find-box aw'; box.innerHTML = '<div class="wait-pill nr-wait" role="status" aria-live="polite"><span class="nr-wait-t">Processing<span class="nr-pct"></span></span><i class="wait-bar nr-prog-t" aria-hidden="true"><b></b></i></div>'; stage.appendChild(box); }
   const pill = box.firstChild, tr = pill.querySelector('.nr-prog-t'), pc = pill.querySelector('.nr-pct');
-  if (v == null) { pill.classList.remove('on'); sweepStop(tr); return; }
-  pill.classList.add('on'); if (v <= 0.001) sweepStart(tr); else sweepStop(tr);
+  if (v == null) { if (box.dataset.by && box.dataset.by !== (by || '')) return; pill.classList.remove('on'); delete box.dataset.by; sweepStop(tr); return; }          // only the job that turned the pill on turns it off: a screen refresh (EQ Match's) never clears another job's
+  box.dataset.by = by || ''; pill.classList.add('on'); if (v <= 0.001) sweepStart(tr); else sweepStop(tr);
   tr.firstChild.style.transform = 'scaleX(' + clamp(v, 0, 1).toFixed(3) + ')'; pc.textContent = v > 0.01 ? Math.round(v * 100) + '%' : '';
 }
 async function aeDynAuto(i, quiet) {
-  const d = AE.d, b = d && d.fx.eq.bands[i]; if (!b || !b.dyn || !S.audio || AE.dynBusy) return; AE.dynBusy = true; const t00 = performance.now(), btn = $('#aeBandThrAuto'), stage = $('#aeEqCv').parentNode; btn.disabled = true; aeWait(stage, 0);          // the wait pill over the EQ graph says it, as Noise reduction's does over its graph
+  const d = AE.d, b = d && d.fx.eq.bands[i]; if (!b || !b.dyn || !S.audio || AE.dynBusy) return; AE.dynBusy = true; const t00 = performance.now(), btn = $('#aeBandThrAuto'), stage = $('#aeEqCv').parentNode; btn.disabled = true; aeWait(stage, 0, 'auto');          // the wait pill over the EQ graph says it, as Noise reduction's does over its graph
   try {
     const sr = audSr(), nch = fxChannels(), sp = KFX.eqDynSpec(Object.assign({}, b, { dyn: { thr: 0, range: -6 } }), sr, 1), sc = sp.sc, place = KFX.eqPlace(b, nch), a0 = Math.floor(Math.max(0, d.vStart) * sr), a1 = Math.min(audLen(), Math.floor(aeEnd(d) * sr)), hist = new Float64Array(240), CH = 1 << 17;
     let t = [0, 0, 0, 0], u = [0, 0, 0, 0], p = 0, cnt = 0, total = 0, tick = performance.now();
@@ -1720,14 +1720,14 @@ async function aeDynAuto(i, quiet) {
         if (R && (place === 'st' || nch !== 2)) { const yb = sc[0] * xb + sc[1] * u[0] + sc[2] * u[1] - sc[3] * u[2] - sc[4] * u[3]; u[1] = u[0]; u[0] = xb; u[3] = u[2]; u[2] = yb; e = (e + yb * yb) / 2; }
         p += (e - p) * sp.kp; if (++cnt >= 16) { cnt = 0; const lv = 10 * Math.log10(p + 1e-14) + 3.0103; if (lv > -110) { hist[Math.min(239, Math.max(0, Math.round((lv + 120) * 2)))]++; total++; } }
       }
-      aeWait(stage, clamp((at + n - a0) / Math.max(1, a1 - a0), 0, 0.99));
+      aeWait(stage, clamp((at + n - a0) / Math.max(1, a1 - a0), 0, 0.99), 'auto');
       if (performance.now() - tick > 8) { await new Promise(r => setTimeout(r, 0)); tick = performance.now(); }
     }
-    aeWait(stage, 0.99); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent));          // a short recording is read in a blink; the bar stays long enough to be seen
+    aeWait(stage, 0.99, 'auto'); const spent = performance.now() - t00; if (spent < 400) await new Promise(r => setTimeout(r, 400 - spent));          // a short recording is read in a blink; the bar stays long enough to be seen
     if (total < 50) { if (!quiet) toast(tx('ae.dyn.nosound')); return; }
     let acc = 0, lvl = -120; for (let k = 0; k < 240; k++) { acc += hist[k]; if (acc >= total * 0.9) { lvl = k / 2 - 120; break; } }
     const thr = clamp(Math.round(lvl - 3), -80, 0); aeFx(fx => { const x = fx.eq.bands[i]; if (x && x.dyn) { if (!(x.dyn.auto != null && x.dyn.thr === x.dyn.auto)) x.dyn.prev = x.dyn.thr; x.dyn.auto = thr; x.dyn.thr = thr; } });
-  } catch (e) { console.error(e); } finally { AE.dynBusy = false; btn.disabled = false; aeWait(stage, null); }
+  } catch (e) { console.error(e); } finally { AE.dynBusy = false; btn.disabled = false; aeWait(stage, null, 'auto'); }
 }
 function aeEqBind() {
   const cv = $('#aeEqCv'), sel = $('#aeBandType');
@@ -2436,7 +2436,7 @@ function aeMatchUi() {
   eqFold('#aeMatchFold', open); eqFold('#aeBandFold', !open); $('#aeMatchBtn').setAttribute('aria-pressed', open);
   $('#aeRefEmpty').hidden = has || !!(m && m.busy); $('#aeRefChip').hidden = !(has || (m && m.busy));
   $('#aeRefName').textContent = has || (m && m.busy) ? m.refName : '';
-  $('#aeRefClear').disabled = busy; aeWait($('#aeEqCv').parentNode, busy ? 0 : null);          // the wait pill over the EQ graph, not the chip
+  $('#aeRefClear').disabled = busy; aeWait($('#aeEqCv').parentNode, busy ? 0 : null, 'match');          // the wait pill over the EQ graph, not the chip
   $('#aeAmtStep').classList.toggle('dim', !has); $('#aeMatchAmt').disabled = !has;
   $('#aeMatchAmtVal').textContent = $('#aeMatchAmt').value + '%'; paintRange($('#aeMatchAmt'));
   $('#aeRefSave').disabled = !S.audio; $('#aeRefBands').disabled = !(AE.d && AE.d.fx.eq.curve); $('#aeMatchBtn').classList.toggle('has', !!(AE.d && AE.d.fx.eq.curve) && !open); aeAnim();
@@ -2547,7 +2547,7 @@ function aeEmUi() {
   if (!$('#aeEmGo')) return; const em = AE.em, has = !!(em && em.ref), busy = !!(em && (em.busy || em.busyOwn)), live = emLive(), mono = fxChannels() < 2 || (has && !em.ref.side) || !!(em && em.own && em.own.side && em.own.side.every(v => v < EM_MONO));
   $('#aeEmEmpty').hidden = has || !!(em && em.busy); $('#aeEmChip').hidden = !(has || (em && em.busy));
   $('#aeEmName').textContent = has || (em && em.busy) ? em.name : '';
-  $('#aeEmClear').disabled = busy; aeWait($('#aeEmCv').parentNode, busy ? em.prog || 0 : null);          // the wait pill over the Emulator's graph, not the chip or the button
+  $('#aeEmClear').disabled = busy; aeWait($('#aeEmCv').parentNode, busy ? em.prog || 0 : null, 'em');          // the wait pill over the Emulator's graph, not the chip or the button
   $('#aeEmTakeStep').classList.toggle('dim', !has); $('#aeEmAmtStep').classList.toggle('dim', !has);
   ['#aeEmTone', '#aeEmWidth', '#aeEmLoud'].forEach(id => { $(id).disabled = !has; }); const wb = $('#aeEmWidth'); if (has && mono) wb.disabled = true; wb.title = has && mono ? 'Needs a stereo recording and a stereo reference' : 'Sets the Imager\'s width for the low, middle, and high notes';
   const amt = $('#aeEmAmt'); amt.disabled = !has; $('#aeEmAmtVal').textContent = amt.value + '%'; paintRange(amt);

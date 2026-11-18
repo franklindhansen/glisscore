@@ -1,4 +1,4 @@
-// PDF Editor motion audit: the loading sweep is one band across the grid (transform only, every card on one clock, gone with reduced motion), a card that finishes drops out cleanly,
+// PDF Editor motion audit: waiting cards share the one loading look (softened paper, one wait pill whose sweep moves by transform only, still with reduced motion), a card that finishes fades in cleanly,
 // and switching tools moves only what is designed: no page card moves, and the only layout properties that animate are the head's height and the tool list's highlight.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-motion-audit.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
@@ -15,39 +15,33 @@ const LAYOUT = /^(width|height|top|left|right|bottom|margin|padding|max-width|ma
     await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(900);
     return p;
   };
-  // everything on the grid waits for its picture
-  const wait = p => p.evaluate(() => { document.querySelectorAll('#peGrid .page-card').forEach(c => peLoadOn(c)); peSheenSync(); });
-  // where each card's band is on the grid right now (its place in the card plus the card's place in the grid), and how far into the sweep it is
-  const bands = p => p.evaluate(() => {
-    const grid = document.querySelector('#peGrid'), g = grid.getBoundingClientRect();
-    return [...grid.querySelectorAll('.page-card.loading .pe-sheen')].map(sh => {
-      const m = new DOMMatrix(getComputedStyle(sh, '::before').transform), r = sh.getBoundingClientRect(), a = sh.getAnimations({ subtree: true }).filter(x => x.effect.pseudoElement)[0];
-      return { gx: r.left - g.left + m.m41, props: a ? a.effect.getKeyframes().flatMap(k => Object.keys(k).filter(n => !['offset', 'easing', 'composite', 'computedOffset'].includes(n))) : null, running: a ? a.playState : null, t: a ? a.currentTime : null, d: a ? getComputedStyle(sh, '::before').animationDuration : null };
-    });
+  // everything on the grid waits for its picture: the softened paper on every card and one wait pill over the pages, with the shared sweep along its foot
+  const wait = p => p.evaluate(() => { document.querySelectorAll('#peGrid .page-card').forEach(c => peLoadOn(c)); });
+  const look = p => p.evaluate(() => {
+    const inactive = +getComputedStyle(document.documentElement).getPropertyValue('--inactive'), cards = [...document.querySelectorAll('#peGrid .page-card.loading')], pills = [...document.querySelectorAll('#pdfDlg .wait-pill.on')], bar = pills[0] && pills[0].querySelector('.wait-bar');
+    const a = bar ? document.getAnimations().filter(x => x.effect && x.effect.target === bar && x.effect.pseudoElement) : [];
+    return { inactive, n: cards.length, soft: cards.filter(c => Math.abs(+getComputedStyle(c.querySelector('canvas')).opacity - inactive) < 0.02).length, pills: pills.length, sweeping: !!bar && bar.classList.contains('sweeping'), anims: a.filter(x => x.playState === 'running').length, props: a.flatMap(x => x.effect.getKeyframes().flatMap(k => Object.keys(k).filter(n => !['offset', 'easing', 'composite', 'computedOffset'].includes(n)))), own: document.querySelectorAll('#peGrid .page-card *').length && [...document.querySelectorAll('#peGrid .page-card')].flatMap(c => c.getAnimations({ subtree: true })).filter(x => x.playState === 'running' && !(x instanceof CSSTransition)).length };
   });
-
   let p = await open(false);
-  await wait(p); await p.waitForTimeout(700);
-  let bs = await bands(p);
-  ok('every waiting card has a sweep', bs.length === 12 && bs.every(x => x.running === 'running'), bs.length + ' cards');
-  ok('the sweep moves only transform', bs.every(x => x.props && x.props.every(n => n === 'transform')), JSON.stringify([...new Set(bs.flatMap(x => x.props || []))]));
-  ok('all cards are on one clock', Math.max(...bs.map(x => x.t % 2600)) - Math.min(...bs.map(x => x.t % 2600)) < 40 || Math.max(...bs.map(x => x.t % 2600)) - Math.min(...bs.map(x => x.t % 2600)) > 2560, bs.map(x => Math.round(x.t % 2600)).join(','));
-  // one band across the grid: at one moment every card's band sits at the same place on the grid (within a few pixels of a frame's travel)
-  const spread = Math.max(...bs.map(x => x.gx)) - Math.min(...bs.map(x => x.gx));
-  ok('it is one band: every card shows the same place on the grid', spread < 40, 'spread ' + spread.toFixed(1) + 'px');
-  const g1 = await bands(p); await p.waitForTimeout(300); const g2 = await bands(p);
-  ok('the band travels', g2[0].gx - g1[0].gx > 20 || g2[0].gx - g1[0].gx < -1000, (g2[0].gx - g1[0].gx).toFixed(1) + 'px in 0.3s');
-  // a card that finishes drops out: its wash fades, then nothing is left running on it
+  await wait(p); await p.waitForTimeout(900);
+  let bs = await look(p);
+  ok('every waiting card shows the softened paper at the shared inactive level', bs.n === 12 && bs.soft === 12, JSON.stringify(bs));
+  ok('one wait pill is over the pages, with the shared sweep running', bs.pills === 1 && bs.sweeping && bs.anims >= 1, JSON.stringify(bs));
+  ok('the sweep moves only transform, and no card has a loading animation of its own', bs.props.every(n => n === 'transform') && bs.own === 0, JSON.stringify({ props: bs.props, own: bs.own }));
+  // a card that finishes fades its picture in over the softened paper, then nothing is left running on it; the pill goes with the last one
   await p.evaluate(() => { const c = document.querySelector('#peGrid .page-card'); peThumbReady(+c.dataset.src); });
-  const midOp = await p.evaluate(() => +getComputedStyle(document.querySelector('#peGrid .page-card .pe-sheen')).opacity);
+  await p.waitForTimeout(120); const midOp = await p.evaluate(() => +getComputedStyle(document.querySelector('#peGrid .page-card canvas')).opacity);
   await p.waitForTimeout(700);
-  const done = await p.evaluate(() => { const c = document.querySelector('#peGrid .page-card'), s = c.querySelector('.pe-sheen'); return { op: +getComputedStyle(s).opacity, anims: s.getAnimations({ subtree: true }).filter(x => x.playState === 'running').length, cls: c.className }; });
-  ok('a finished card fades its wash out (not a pop)', midOp > 0.05 && done.op === 0, 'mid ' + midOp.toFixed(2) + ', end ' + done.op);
-  ok('and nothing keeps running on it', done.anims === 0 && !/loading|sheen-out/.test(done.cls), JSON.stringify(done));
-  // the large view's sweep is transform only too
+  const done = await p.evaluate(() => { const c = document.querySelector('#peGrid .page-card'); return { op: +getComputedStyle(c.querySelector('canvas')).opacity, anims: c.getAnimations({ subtree: true }).filter(x => x.playState === 'running').length, cls: c.className }; });
+  ok('a finished card fades its picture in (not a pop)', midOp > bs.inactive + 0.02 && midOp < 1 && done.op === 1, 'mid ' + midOp.toFixed(2) + ', end ' + done.op);
+  ok('and nothing keeps running on it', done.anims === 0 && !/loading/.test(done.cls), JSON.stringify(done));
+  await p.evaluate(() => { document.querySelectorAll('#peGrid .page-card').forEach(c => peThumbReady(+c.dataset.src)); }); await p.waitForTimeout(700);
+  ok('the pill goes once the last picture is in', await p.evaluate(() => document.querySelectorAll('#pdfDlg .wait-pill.on').length === 0));
+  // the large view: the page being drawn is the softened paper with the same pill, and nothing of its own sweeps
   await p.evaluate(() => { peTool('crop'); }); await p.waitForTimeout(900); await p.evaluate(() => peOneOpen(PE.d.order[0])); await p.waitForTimeout(900);
-  const pg = await p.evaluate(async () => { const e = document.querySelector('#peCropPg'); e.classList.add('loading'); await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); const a = document.getAnimations().filter(x => x.effect.target === e && x.effect.pseudoElement); const r = { n: a.length, props: a.flatMap(x => x.effect.getKeyframes().flatMap(k => Object.keys(k).filter(n => !['offset', 'easing', 'composite', 'computedOffset'].includes(n)))) }; e.classList.remove('loading'); return r; });
-  ok('the large view sweeps with transform only', pg.n === 1 && pg.props.every(n => n === 'transform'), JSON.stringify(pg));
+  const pg = await p.evaluate(async () => { const e = document.querySelector('#peCropPg'), inactive = +getComputedStyle(document.documentElement).getPropertyValue('--inactive'); e.classList.add('loading'); peLoadPill(); await new Promise(r => setTimeout(r, 900));
+    const r = { op: +getComputedStyle(e).opacity, inactive, own: document.getAnimations().filter(x => x.effect.target === e && x.effect.pseudoElement).length, pill: document.querySelectorAll('#pdfDlg .wait-pill.on').length }; e.classList.remove('loading'); peLoadPill(); return r; });
+  ok('the large view shows the softened page with the shared pill and no sweep of its own', Math.abs(pg.op - pg.inactive) < 0.02 && pg.own === 0 && pg.pill === 1, JSON.stringify(pg));
   await p.context().close();
 
   // switching tools: only the designed motion
@@ -72,11 +66,11 @@ const LAYOUT = /^(width|height|top|left|right|bottom|margin|padding|max-width|ma
   ok('the only layout properties that animate belong to the head and the tool list highlight', layout.every(k => /^(#peBand height|#peRailSel (width|height))$/.test(k)), JSON.stringify(layout));
   await p.context().close();
 
-  // reduced motion: no sweep
+  // reduced motion: the sweep is held still
   p = await open(true);
-  await wait(p); await p.waitForTimeout(400);
-  const calm = await p.evaluate(() => { const s = document.querySelector('#peGrid .pe-sheen'); return { band: getComputedStyle(s, '::before').display, anims: document.getAnimations().filter(a => a.effect.pseudoElement && a.playState === 'running').length }; });
-  ok('with reduced motion the band is off and nothing sweeps', calm.band === 'none' && calm.anims === 0, JSON.stringify(calm));
+  await wait(p); await p.waitForTimeout(900);
+  const calm = await p.evaluate(() => { const bar = document.querySelector('#pdfDlg .wait-pill.on .wait-bar'); return { pill: !!bar, anims: document.getAnimations().filter(a => a.effect && a.effect.pseudoElement && a.playState === 'running').length }; });
+  ok('with reduced motion the pill shows and nothing sweeps', calm.pill && calm.anims === 0, JSON.stringify(calm));
   ok('no page errors', errs.length === 0, errs.join('; '));
   await b.close();
 })();

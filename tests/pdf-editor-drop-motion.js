@@ -1,4 +1,4 @@
-// Dropping a dragged page: the held page lands in one smooth glide, and the pages it passed slide to their new places on the same clock.
+// Dropping a dragged page: the held page itself lands in one smooth glide (no copy is swapped in at the end), and the pages it passed slide to their new places on the same clock.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-drop-motion.js
 const { chromium } = require('playwright-core');
 const { PDFDocument, rgb } = require('../vendor/pdf-lib.min.js');
@@ -14,11 +14,11 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const from = await at(3), to = await at(0);
   await p.mouse.move(from[0], from[1]); await p.mouse.down(); await p.mouse.move(to[2] + 8, to[1], { steps: 12 }); await p.mouse.up();
   const just = await p.evaluate(() => {
-    const ghost = document.querySelector('.pe-ghost'), gan = ghost ? ghost.getAnimations() : [];
+    const ghost = document.querySelector('.pe-ghost'), th = document.querySelector('#peGrid .page-card.pe-landing .pe-thumb'), gan = th ? th.getAnimations() : [];
     const slid = [...document.querySelectorAll('#peGrid .page-card')].filter(c => c.getAnimations().some(a => a.effect && a.effect.getKeyframes().some(k => /translate3d\(-?[\d.]+px/.test(k.transform || '')))).length;
     return { ghost: !!ghost, dur: gan[0] ? gan[0].effect.getTiming().duration : null, frames: gan[0] ? gan[0].effect.getKeyframes().length : 0, slid, slides: document.querySelectorAll('.pe-pos.slide').length };
   });
-  ok('the held page lands in one glide (two keyframes, the shared fade time)', just.ghost && just.dur === 260 && just.frames === 2, JSON.stringify(just));
+  ok('the held page lands itself in one glide (no carried copy left, its picture on two keyframes, the cards\' clock)', !just.ghost && just.dur === 260 && just.frames === 2, JSON.stringify(just));
   ok('the pages it passed slide to their places on the same clock', just.slid >= 2, JSON.stringify(just));
   ok('their numbers slide with their pages', just.slides >= 2, String(just.slides));
   await p.waitForTimeout(1500);          // the numbers slide one at a time, so the last one lands after the page
