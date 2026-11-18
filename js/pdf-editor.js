@@ -828,7 +828,7 @@ function peCard(id, sl) {
    so they grow and shrink smoothly with the slider like any zoom; when the number of columns changes, the cards on screen glide from where they were to where they
    are in one motion on the PDF Editor's one motion (PE_ONE_MS, PE_ONE_EASE, the same as the large view and a page changing shape), by transform only. The card
    nearest the middle stays where it is on every step. */
-PE.zv = 0; PE.zooming = false; PE.redraw = new Set(); PE.cols = 0; PE.tw = 0; PE.chrome = 0; PE.cg = [];
+PE.zv = 0; PE.zooming = false; PE.redraw = new Set(); PE.cols = 0; PE.tw = 0; PE.chrome = 0;
 const peZsMin = v => +(v <= 0 ? 3.9 + v * 0.018 : 3.9 + v * 0.03).toFixed(2);          // 3.0 to 5.4 control heights wide (90 to 162px): small enough to see many pages, still wide enough for a three-digit number and a three-digit page tag on a repeat, never larger than the large view is for          // the card's width in control heights, rounded once so the template and the column count worked out here always agree
 const peZsTpl = v => { const w = 'calc(var(--h-s) * ' + peZsMin(v) + ')'; return 'repeat(auto-fill,minmax(min(' + w + ',100%),' + w + '))'; };          // set on the grid itself, not as a variable the cards inherit
 function peZoomSet(v, now) {
@@ -861,37 +861,14 @@ function peFarSize(W) {
 }
 const peIh = el => { if (el._ar) el.style.setProperty('--ih', (Math.floor(Math.fround(Math.fround(Math.floor(PE.tw * 64) / 64) * Math.fround(el._ar)) * 64) / 64 + PE.chrome) + 'px'); };          // the picture's height as the browser lays it out (its width, then its height, in single precision and whole 64ths of a pixel, rounded down), so a skipped card is exactly as tall as a drawn one and a long grid does not drift
 function peGridFit() {
+  { const w = $('#peWrap'), g = Math.max(0, w.offsetWidth - w.clientWidth); if (g !== PE.gut) { PE.gut = g; w.style.setProperty('--pe-gutter', g + 'px'); } }          // the scroll bar's reserved room is part of the right margin, so with no bar showing the pages are as far from the right edge as from the left
   const grid = $('#peGrid'), wrap = $('#peWrap'), tpl = peZsTpl(PE.zv), W = grid.getBoundingClientRect().width, m = PE.gm;
   if (!W || !m) { grid.style.gridTemplateColumns = tpl; return; }
-  const cols0 = PE.cols, cards = Array.from(grid.children), vp = wrap.getBoundingClientRect(), mid = vp.top + vp.height / 2;
+  const cards = Array.from(grid.children), vp = wrap.getBoundingClientRect(), mid = vp.top + vp.height / 2;
   const was = cards.map(el => el.getBoundingClientRect()), on = r => r.bottom > vp.top && r.top < vp.bottom;
   let ai = -1, best = 1e9; was.forEach((r, i) => { if (on(r)) { const d = Math.abs(r.top + r.height / 2 - mid); if (d < best) { best = d; ai = i; } } });
-  const c = peFarSizeAt(W);
-  if (c !== cols0) { PE.cg.forEach(a => a.cancel()); PE.cg = []; }          // a glide still running starts the next one from where the card is: its place was read above, with the glide in it
   grid.style.gridTemplateColumns = tpl; peFarSize(W);
   if (ai >= 0) { const r = cards[ai].getBoundingClientRect(); wrap.scrollTop += (r.top + r.height / 2) - (was[ai].top + was[ai].height / 2); }          // the card nearest the middle stays where it was
-  if (c === cols0 || reducedMotion() || !cards.length || !cards[0].animate) return;          // every change of the number of columns, dragging included, is the bookshelf wrap (peShelf)
-  const now = cards.map(el => el.getBoundingClientRect()), go = [];          // every place is read first, then the glides start, so one layout serves them all
-  cards.forEach((el, i) => {
-    const a = was[i], n = now[i]; if (!on(a) && !on(n)) return;          // only cards on screen move
-    const tx = a.left + a.width / 2 - (n.left + n.width / 2), ty = a.top + a.height / 2 - (n.top + n.height / 2), sx = a.width / n.width, sy = a.height / n.height;
-    if (Math.abs(tx) < 0.5 && Math.abs(ty) < 0.5 && Math.abs(sx - 1) < 0.005 && Math.abs(sy - 1) < 0.005) return;
-    go.push([el, a, n, tx, ty, sx, sy]);
-  });
-  const wrapping = go.some(g => Math.abs(g[4]) > Math.min(g[1].height, g[2].height) * 0.5); if (wrapping) wrap.classList.add('pe-wrapping');
-  go.forEach(([el, a, n, tx, ty, sx, sy]) => PE.cg.push(peShelf(el, a, n, tx, ty, sx, sy, vp)));
-  Promise.allSettled(PE.cg.map(x => x.finished)).then(() => { if (PE.cg.every(x => x.playState !== 'running')) wrap.classList.remove('pe-wrapping'); });
-}
-/* A card on the same row slides sideways to its new place. A card that changes row goes like a bookshelf: it slides off the edge of its row (the right edge going to a later row,
-   the left edge going to an earlier one) and comes in from the opposite edge of its new row, then settles. One motion on the PDF Editor's one length and ease; transform only. */
-function peShelf(el, a, n, tx, ty, sx, sy, vp) {
-  if (Math.abs(ty) <= Math.min(a.height, n.height) * 0.5) return el.animate([{ transform: 'translate(' + tx + 'px,' + ty + 'px) scale(' + sx + ',' + sy + ')' }, { transform: 'none' }], { duration: PE_ONE_MS, easing: PE_ONE_EASE });
-  const later = ty < 0, ncx = n.left + n.width / 2, edge = PE.gm ? PE.gm.gap + 10 : 24, out = later ? vp.right + edge + a.width / 2 : vp.left - edge - a.width / 2, inn = later ? vp.left - edge - n.width / 2 : vp.right + edge + n.width / 2, scaled = 'scale(' + sx + ',' + sy + ')';
-  return el.animate([
-    { transform: 'translate(' + tx + 'px,' + ty + 'px) ' + scaled, offset: 0, easing: 'ease-in' },
-    { transform: 'translate(' + (out - ncx) + 'px,' + ty + 'px) ' + scaled, offset: 0.5 },
-    { transform: 'translate(' + (inn - ncx) + 'px,0)', offset: 0.5, easing: EASE_OUT },
-    { transform: 'none', offset: 1 }], { duration: Math.round(PE_ONE_MS * 1.6) });
 }
 const peFarSizeAt = W => { const m = PE.gm, w = Math.min(m.hs * peZsMin(PE.zv), W); return Math.max(1, Math.floor((W + m.gap) / (w + m.gap))); };          // the number of columns the slider's value gives, before the grid is changed
 function peFarWatch() {
@@ -911,7 +888,7 @@ function peRender(anim) {
   const oldI = new Map(); let oi = 0;
   if (anim) { PE.footWas = new Map(); Array.from(grid.children).forEach(c => { old.set(+c.dataset.id, c.getBoundingClientRect()); oldI.set(+c.dataset.id, oi++); PE.footWas.set(+c.dataset.id, peFootAt(c)); }); }          // the footers too, so the numbers on the new cards glide from where the old ones were
   PE.nearN = 0; const frag = document.createDocumentFragment(); d.order.forEach(id => frag.appendChild(peCard(id, d.slots[id])));
-  grid.textContent = ''; grid.appendChild(frag); peFarWatch(); PE.cg = []; peGridMetrics(); peLoadPill();
+  grid.textContent = ''; grid.appendChild(frag); peFarWatch(); peGridMetrics(); peLoadPill();
   PE.dir = new Map();          // which way each card moved, so its number slides the same way
   if (anim) { let ni = 0; Array.from(grid.children).forEach(c => { const id = +c.dataset.id, was = old.get(id); if (was) { const now = c.getBoundingClientRect(); PE.dir.set(id, peNumDir(now.left - was.left, now.top - was.top, oldI.get(id), ni)); } ni++; }); }
   PE.roll = !!anim; peState();

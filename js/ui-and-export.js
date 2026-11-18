@@ -34,7 +34,8 @@ function titleFlipMark() {
   });
 }
 /* the file's name without its ending (the chip shows the start of it and the ending as the format) and the format in capitals */
-const audioShort = n => String(n || '').replace(/\.[A-Za-z0-9]{1,5}$/, '');
+const fileBase = n => String(n || '').replace(/\.[A-Za-z0-9]{1,5}$/, '');          // a chip names the file without its extension (the format is its own small word)
+const chipDot = '<i class="chip-dot" aria-hidden="true"></i>';          // the quiet mark left of the editor glyph: this file has been edited
 const audioFmt = n => { const m = /\.([A-Za-z0-9]{1,5})$/.exec(n || ''); return m ? m[1].toUpperCase() : 'Audio'; };
 /* a button that shows progress keeps one width for every text it can carry, so a changing number never makes it shift or resize. Buttons that stand together (peers) share one width: the widest any of them can reach */
 function btnHold(b, texts, peers) {
@@ -72,13 +73,16 @@ function setChips() {
   const settled = k => setChips.holding && setChips.holding[k] ? ' settle' : '';          // a chip that replaces its loading twin does not rise in again, it settles
   if (!S.pdf && busyMsg && busyKind === 'pdf') { h += holder('pdf', busyName); seenNow.pdf = busyName; }
   if (S.pdf) {
-    const used = S.pdf.keep.length, edited = !recipeIsSimple(recipeOf()), meta = edited ? used + ' pp. (edited)' : used < S.pdf.n ? used + ' of ' + S.pdf.n + ' pp.' : S.pdf.n + ' pp.';
+    const used = S.pdf.keep.length, edited = !recipeIsSimple(recipeOf()) || used < S.pdf.n, meta = 'PDF';          // the file's format, as the audio chip says its own; no page count (what was removed or changed is the dot's to say)
     h += '<div class="chip' + fresh('pdf', S.pdf.name) + settled('pdf') + '" data-k="pdf"><button class="chip-icon" type="button" data-remove="pdf" aria-label="Remove score" title="Remove score"><span class="ic">' + svgIcon.pdf + '</span><span class="x">' + xIcon + '</span></button>'
-      + '<button class="chip-main" type="button" data-pages title="' + esc(S.pdf.name) + '. Click to open the PDF Editor." aria-label="' + esc(S.pdf.name) + ', ' + meta + '. Open the PDF Editor"><span class="chip-name">' + esc(S.pdf.name) + '</span><span class="pp-box"><small class="pp">' + meta + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
+      + '<button class="chip-main" type="button" data-pages title="' + esc(S.pdf.name) + '. Click to open the PDF Editor." aria-label="' + esc(S.pdf.name) + ', ' + meta + (edited ? ', edited' : '') + '. Open the PDF Editor"><span class="chip-label"><span class="chip-name">' + esc(fileBase(S.pdf.name)) + '</span><small class="chip-meta">' + meta + '</small></span>' + (edited ? chipDot : '') + '<span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
   }
   if (!S.audio && busyMsg && busyKind === 'audio' && S.pdf) { h += holder('audio', busyName); seenNow.audio = busyName; }          // with no score the progress is on the Open audio button instead, and the chip appears when the sound is ready
-  if (S.audio) h += '<div class="chip' + fresh('audio', S.audio.name) + settled('audio') + '" data-k="audio"><button class="chip-icon" type="button" data-remove="audio" aria-label="Remove audio" title="Remove audio"><span class="ic">' + svgIcon.audio + '</span><span class="x">' + xIcon + '</span></button>'
-    + '<button class="chip-main" type="button" data-audio title="' + esc(S.audio.name) + '. Click to open the Audio Editor." aria-label="' + esc(S.audio.name) + ', ' + fmt(S.audio.duration) + '. Open the Audio Editor"><span class="chip-name">' + esc(audioShort(S.audio.name)) + '</span><span class="pp-box stack"><small class="pp">' + esc(audioFmt(S.audio.name)) + '</small><small class="pp">' + fmt(S.audio.duration) + '</small><small class="pp-go">Editor</small></span><span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
+  if (S.audio) {
+    const aEdited = typeof aeFromApp === 'function' && !aeSame(aeFromApp(), AE_DEFAULT);          // the applied sound settings, trim, or fades differ from how the file came in
+    h += '<div class="chip' + fresh('audio', S.audio.name) + settled('audio') + '" data-k="audio"><button class="chip-icon" type="button" data-remove="audio" aria-label="Remove audio" title="Remove audio"><span class="ic">' + svgIcon.audio + '</span><span class="x">' + xIcon + '</span></button>'
+      + '<button class="chip-main" type="button" data-audio title="' + esc(S.audio.name) + '. Click to open the Audio Editor." aria-label="' + esc(S.audio.name) + (aEdited ? ', edited' : '') + '. Open the Audio Editor"><span class="chip-label"><span class="chip-name">' + esc(fileBase(S.audio.name)) + '</span><small class="chip-meta">' + esc(audioFmt(S.audio.name)) + '</small></span>' + (aEdited ? chipDot : '') + '<span class="chip-edit" aria-hidden="true">' + editIcon + '</span></button></div>';
+  }
   const oldW = {}; el.querySelectorAll('.chip.busy').forEach(c => { oldW[c.dataset.k] = c.getBoundingClientRect().width; });
   el.innerHTML = h; seen.pdf = S.pdf ? S.pdf.name : (seenNow.pdf || null); seen.audio = S.audio ? S.audio.name : (seenNow.audio || null);
   setChips.holding = { pdf: !S.pdf && !!seenNow.pdf, audio: !S.audio && !!seenNow.audio };

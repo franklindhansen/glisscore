@@ -35,7 +35,7 @@
   --pill-bg:rgba(14,17,40,.92);   /* the dark pill: the wait pill and the hints drawn on the waveform, the same in light and dark */
   --gap-card:10px;   /* the space between two cards, side by side or one above the other, in every tool window (the same in both directions) */
   --slider-h:20px;   /* a slider's own box: its track sits in the middle, and the thumb hangs below the track */
-  --pe-edge:20px; --pe-edge-b:28px; --pe-col-gap:14px;   /* the PDF Editor's outer room: the page grid's and the large view's sides, the gap between the tool list and the tool, and the grid's bottom; the gap between page columns */
+  --pe-gutter:0px; --chip-max:320px; --chip-dot:4px; --chip-dot-drop:0px; --pe-edge:20px; --pe-edge-b:28px; --pe-col-gap:14px;   /* the PDF Editor's outer room: the page grid's and the large view's sides, the gap between the tool list and the tool, and the grid's bottom; the gap between page columns */
   --gap-tight:6px; --gap-snug:3px; --tab-py:7px; --hint-py:5px;   /* the small gaps between the scale's steps: a page card's padding, the page number's row, a glass bar's padding, a tool tab's and a bar's top and bottom room, a hint's top and bottom */
   --h-glass:26px; --hid-k:30px; --wipe-k:26px; --crop-grip:28px;   /* a button on a glass bar, the mark on a page left out, the handle on the before-and-after line, and a crop frame's grip */
   --r-paper:4px;   /* the corner of a page's picture and of the sheen over it */
@@ -158,7 +158,7 @@ html *,html ::before,html ::after{line-height:round(calc(var(--lh) * 1em),1px)}
 .top .btn{flex:none}
 @media (max-width:1280px){.top #btnPdf span,.top #btnAudio span{display:none}.top #btnPdf,.top #btnAudio{padding-left:var(--gap-card);padding-right:var(--gap-card)}}
 .chip{display:inline-flex;align-items:center;gap:var(--gap-head);padding:var(--gap-tight) var(--gap-card);border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:var(--type-body)}
-.chip svg{width:15px;height:15px;flex:none;color:var(--muted)}
+.chip svg{width:var(--icon-m);height:var(--icon-m);flex:none;color:var(--muted)}          /* whole-pixel glyphs in whole-pixel boxes (16px in 18px, 14px in 20px), so every glyph lands on the chip's middle line and not half a pixel off it */
 .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip small{color:var(--muted);white-space:nowrap}
 .chip.busy{border-color:var(--accent)}
@@ -718,7 +718,6 @@ input[type=range]:hover::-moz-range-thumb{transform:scale(1.06)}
 .panel .group{transition:opacity var(--ae-ms) var(--ease-ui)}
 
 /* the PDF chip opens the page chooser: the page count is underlined, and "Choose pages" slides out on hover */
-.chip-main .pp{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:3px}
 .chip:has(.chip-main:hover){background-color:color-mix(in srgb,var(--accent) 7%,var(--panel2))}
 /* pop-ups fade and drift in */
 .exp-overlay:not([hidden]){animation:fade var(--ae-ms) var(--ease-ui)}
@@ -826,14 +825,15 @@ input[type=range]:disabled::-webkit-slider-thumb{transform:none}
 /* ==================== 16. FILE CHIPS (a steady size) ==================== */
 /* the name is cut with an ellipsis, and on hover the small text (page count or length) trades places with the action, in the same space,
    so a chip never changes size and can never run into the buttons beside it */
-.chip{max-width:240px}
-.chip-main .chip-name{min-width:0;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{max-width:var(--chip-max)}
+.chip-main .chip-label{display:flex;align-items:baseline;gap:var(--gap-head);min-width:0;overflow:visible}          /* the name and the format share one baseline, as words of two sizes on a line do, and stand on the chip's middle line as one group */
+.chip-main .chip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-main .chip-meta{flex:none;font-size:var(--type-axis);letter-spacing:.04em;font-variant-numeric:tabular-nums;color:var(--muted)}          /* one quiet fact after the name: the score's page count or the sound's format */
+.chip-main:hover .chip-meta,.chip-main:focus-visible .chip-meta{color:var(--ink)}
+@supports (text-box:trim-both cap alphabetic){.chip-main :is(.chip-name,.chip-meta){text-box:trim-both var(--trim-edge);padding-block:var(--gap-label)}.chip-main .chip-name{--trim-edge:var(--trim-edge-body)}}          /* the name and the format are trimmed (the format to its capitals, the name to its lowercase body, which most of a name is), so their middle is the glyphs' middle (the row centers them), as everywhere else, with room above and below so a descender or an ellipsis box never clips; Firefox does not trim yet and sits up to a pixel low */
+.chip-main .chip-dot{flex:none;align-self:center;transform:translateY(var(--chip-dot-drop));width:var(--chip-dot);height:var(--chip-dot);margin-right:calc(-1 * (var(--gap-label) + var(--gap-sub)));border-radius:50%;background:var(--muted);transition:background-color var(--ae-quick) var(--ease-color)}          /* edited: a small dot in the glyph's own grey, just left of the editor glyph (the glyph's own room is the gap) */
+.chip-main:hover .chip-dot,.chip-main:focus-visible .chip-dot{background:var(--ink)}
 .chip-main .pp-box{display:inline-grid;align-items:center;justify-items:start;overflow:visible}
-.pp-box>small{grid-area:1/1;transition:opacity var(--ae-ms) var(--ease-color),transform var(--ae-move) var(--ease-ui)}
-.pp-box .pp-go{opacity:0;transform:translateY(6px);color:var(--accent);font-weight:500}
-.chip-main:hover .pp,.chip-main:focus-visible .pp{opacity:0;transform:translateY(-6px)}
-.chip-main:hover .pp-go,.chip-main:focus-visible .pp-go{opacity:1;transform:none}
-@media (hover:none){.chip-main .pp{opacity:0}.chip-main .pp-go{opacity:1;transform:none}}
 
 /* ----- Editor polish: titles with a first-open line, header rows with a toggle, steady PDF Editor size, watermark mode ----- */
 .exp-overlay{overscroll-behavior:contain}
@@ -1054,19 +1054,14 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
 
 /* PDF Editor drag: the lifted page is composited on its own layer so it follows the pointer smoothly */
 /* a small sliders glyph at the end of each file chip: it says "there is more to do here" without a word, and glows twice when the file first loads */
-.chip-edit{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;margin-right:calc(-1 * var(--gap-label));border-radius:50%;color:var(--muted);transition:color var(--ae-quick) var(--ease-color),background-color var(--ae-quick) var(--ease-color),transform var(--t-hover) var(--spring-hover)}
-.chip-edit svg{width:13px;height:13px}
+.chip-edit{display:inline-grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;color:var(--muted);transition:color var(--ae-quick) var(--ease-color),background-color var(--ae-quick) var(--ease-color),transform var(--t-hover) var(--spring-hover)}
+.chip-edit svg{width:var(--icon-s);height:var(--icon-s)}
 .chip-main:hover .chip-edit,.chip-main:focus-visible .chip-edit{color:var(--ink);background:color-mix(in srgb,var(--ink) 9%,transparent);transform:rotate(90deg)}
 .chip.enter .chip-edit,.chip.settle .chip-edit{animation:chip-nudge 1.5s var(--ease-out) 1.2s 2}
 @keyframes chip-nudge{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ink) 28%,transparent);color:var(--ink)}70%{box-shadow:0 0 0 9px transparent;color:var(--ink)}100%{box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:reduce){.chip.enter .chip-edit,.chip.settle .chip-edit{animation:none}}
 
 /* ----- File chips: a new chip shows "Editor" first, then rolls over to the page count or length; hovering brings "Editor" back ----- */
-.chip.enter .pp,.chip.settle .pp{animation:pp-meta 3.6s var(--ease-ui) backwards}
-.chip.enter .pp-go,.chip.settle .pp-go{animation:pp-label 3.6s var(--ease-ui) backwards}
-@keyframes pp-label{0%,62%{opacity:1;transform:none}80%,100%{opacity:0;transform:translateY(6px)}}
-@keyframes pp-meta{0%,62%{opacity:0;transform:translateY(-6px)}80%,100%{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.chip.enter .pp,.chip.settle .pp,.chip.enter .pp-go,.chip.settle .pp-go{animation:none}}
 @media (max-width:520px){.dlg{padding:var(--gap-field) var(--gap-field)}}
 
 /* PDF Editor drag: the held page follows the pointer with no easing at all (the card's usual transform transition is what made it lag).
@@ -1084,7 +1079,6 @@ html.leaving body{opacity:0;transition-duration:.18s}
 .chip{position:relative}
 .chip:not(.busy)::before,.chip:not(.busy)::after{content:'';position:absolute;left:0;right:0;height:5px}      /* the strips sit just outside the chip, never over its buttons */
 .chip:not(.busy)::before{bottom:100%}.chip:not(.busy)::after{top:100%}
-.pp-box>small{will-change:transform,opacity;backface-visibility:hidden}
 
 /* a soft glass card groups related controls (the same frosted glass as the full-screen timeline) */
 /* the Keyboard shortcuts window is only as wide as its longest line, so nothing wraps */
@@ -2044,9 +2038,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-rz .rz-opt.cu .cu-field input{text-align:center}          /* the word and the blanks start where the other cards' names start */
 /* the pages */
 .pe-body{position:relative;flex:1 1 0;min-height:0;display:flex;flex-direction:column}
-.pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:var(--pe-edge) var(--pe-edge) var(--pe-edge-b);overscroll-behavior:contain}
+.pe-grid-wrap{flex:1 1 0;min-height:0;overflow:auto;scrollbar-gutter:stable;padding:var(--pe-edge) max(0px,calc(var(--pe-edge) - var(--pe-gutter))) var(--pe-edge-b) var(--pe-edge);overscroll-behavior:contain}          /* the room kept for the scroll bar counts as part of the right margin: the same space left and right whether or not the bar shows */
 .pe-grid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(116px,1fr));gap:var(--gap-group) var(--pe-col-gap);align-content:start;justify-content:space-between}          /* the page size sets each card's width; whatever room is left in a row is shared between the cards, so every row ends flush with the grid's right edge */
-.pe-grid-wrap.pe-wrapping{overflow-x:hidden!important}          /* while cards slide off one edge and in from the other, the pages do not grow a sideways bar */
 .pe .page-card{display:flex;flex-direction:column;gap:var(--gap-head);padding:var(--gap-tight);border:0;border-radius:var(--r-card);background:none;box-shadow:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:background-color var(--ae-quick) var(--ease-color),transform var(--t-hover) var(--spring-hover)}
 .pe .page-card[aria-pressed]{border:0;background:none}
 .pe .pe-grid.arrange .page-card{cursor:grab}
@@ -2340,11 +2333,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 #audioDlg .ed-head .btn[aria-pressed=true],#pdfDlg .ed-head .btn[aria-pressed=true],#audioDlg .ae-bar .btn[aria-pressed=true]{background:var(--accent-soft)}
 
 /* the finished audio chip: the start of the file's name, then the format over the length in small grey type, so it stays narrow */
-.chip-main .pp-box.stack{position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;height:18px}
-.chip-main .pp-box.stack small{font-size:var(--type-axis);line-height:9px;color:var(--muted);text-decoration:none}
-.chip-main .pp-box.stack .pp:first-child{font-weight:600;letter-spacing:.04em}
-.chip-main .pp-box.stack .pp-go{position:absolute;inset:0;display:flex;align-items:center;font-size:var(--type-caption);--lh:1}
-.chip[data-k=audio] .chip-name{max-width:9em}
 /* the Open audio button while the sound is read: it fills as it goes and says how far */
 .btn.loading{font-variant-numeric:tabular-nums;white-space:nowrap;position:relative;overflow:hidden;isolation:isolate;color:var(--accent-ink);cursor:progress;opacity:1;background:color-mix(in srgb,var(--accent) 48%,var(--panel2))}
 .btn.loading::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent);transform:translateX(calc(var(--p,0%) - 100%));transition:transform var(--ae-move) var(--ease-out);will-change:transform;pointer-events:none}          /* the fill is a layer slid in from the left (the wait pill's way), so it glides on the compositor while the page is busy; a new run is a new layer and starts empty */
@@ -2598,7 +2586,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 
   --trim-t:var(--cut-t);--trim-b:var(--cut-b);          /* --cut is always the metrics' trim, for text the browser cannot trim (a label that is a flex box holds its text in a box of no name) */
 }
-@supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}          /* trimmed by the browser, a box is its letters' height on a whole pixel */
+@supports (text-box:trim-both cap alphabetic){:root{--trim-t:0px;--trim-b:0px;--trim-h:round(var(--cap) * 1em, 1px)}}
+:root{--trim-edge-letters:cap alphabetic; --trim-edge-body:ex alphabetic; --trim-edge:var(--trim-edge-letters)}          /* where a trim ends, for text the browser trims: at the capitals (every label and number), or, for a word that is mostly lowercase (a file's name), at the lowercase body, so its middle is what you see as the middle */          /* trimmed by the browser, a box is its letters' height on a whole pixel */
 :is(#audioDlg,#pdfDlg) .ae-card :is(h4,.field>label>span:not(.mt-title),.field>label>output:not(.mt-body .field>label>output),.bal-meter>span,.pe-g>.t-lbl){text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
 #audioDlg .ae-card .lv-big{text-box:trim-both cap alphabetic;margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}          /* a big number is trimmed to its letters like any text */
 #audioDlg .ae-card>.lv-big{margin-block:auto 0;position:relative;top:calc((var(--trim-t) - var(--trim-b)) / 2)}          /* a big value that is a card's own part (Gain) is centered between the heading and the slider: the spare room is split evenly between its top and the slider's top (the card's last part already takes the rest), so there is equal room above and below its letters. Where the browser cannot trim text, the box has the font's spare room, which top gives back */
