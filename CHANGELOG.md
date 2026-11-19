@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.40
+
+The eraser stays available when you pause partway through a page turn, and the glass bars have a softer edge in dark mode.
+
 ## 1.2.39
 
 The eraser now works on the System selector, with a hover × to remove a single erasure.
