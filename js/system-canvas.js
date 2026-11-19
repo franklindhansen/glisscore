@@ -201,8 +201,8 @@ function selNeed(idx, hpx) {
     const x = c.getContext('2d', { alpha: false }); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
     await page.render({ canvasContext: x, viewport: vp, background: '#ffffff' }).promise; try { page.cleanup(); } catch (e) {}
     if (SEL.want !== want) return;
-    SEL.bmp = c; SEL.bmpIdx = idx; SEL.bmpH = hpx; SEL.bmpGen = gen; SEL.paper = null; SEL.want = ''; selPaint();
-  })().catch(() => { if (SEL.want === want) SEL.want = ''; });
+    SEL.bmp = c; SEL.bmpIdx = idx; SEL.bmpH = hpx; SEL.bmpGen = gen; SEL.paper = null; SEL.want = ''; SEL.retry = ''; selPaint();
+  })().catch(e => { console.warn('Selector page draw failed', e); if (SEL.want !== want) return; SEL.want = ''; if (SEL.retry !== want) { SEL.retry = want; setTimeout(selPaint, 300); } });          // one retry, so a failed draw never leaves the pane grey
 }
 /* The page, plain: it fits the pane with a small margin, the same size for every page. Each Selection is outlined (the current one bright, the others faint) and numbered in reading order. */
 function selPaint() {

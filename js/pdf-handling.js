@@ -71,7 +71,7 @@ function setPageLayout(v) {
   if (v === 'system') SYS.prev = S.set.pageLayout;
   S.set.pageLayout = v; saveSettings(); syncPageLayout(true);
   if (!S.pdf) return;
-  S.time = S.vStart; rebuildSpreads(true, true); onTurnsChanged();
+  S.time = S.vStart; rebuildSpreads(true, true); onTurnsChanged(); updateTimeUI(true);
   if (hadEdits) toast(tx('turns.layout'));
 }
 /* where the turn to the credits goes by default: finishing just as the audio ends */
