@@ -374,14 +374,24 @@ function sysSync() {
 }
 /* Every found page for the project and the settings file: [{p: page in the saved list, t: tilt, s: [[top, bottom, left, right]], f: 1 on Full page, h: systems held aside on Full page, a: 1 when found automatically, g: the picture it was found on}] */
 const sysToList = () => [...SYS.byPage.keys()].filter(i => S.pdf.slots[i]).sort((a, b) => a - b).map(i => {
-  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => { const o = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; if (b.hx || (b.er && b.er.length)) o.push(b.hx ? 1 : 0); if (b.er && b.er.length) o.push(b.er.map(t => [q(t.r)].concat(t.p.map(q)))); return o; }, e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
+  const r = SYS.byPage.get(i), q = v => Math.round(v * 10000) / 10000, box = b => { const o = [q(b.top), q(b.bottom), q(b.left), q(b.right)]; if (b.hx || (b.er && b.er.length)) o.push(b.hx ? 1 : 0); if (b.er && b.er.length) o.push(sysErSave(b.er, q)); return o; }, e = { p: i + 1, t: q(r.tilt || 0), s: r.systems.map(box) };
   if (r.full) e.f = 1; if (r.held && r.held.length) e.h = r.held.map(box); if (r.heldTurns && r.heldTurns.length) e.ht = r.heldTurns.map(q => [Math.round(q.t * 10000) / 10000, q.ph ? 1 : 0]); if (!SYS.hand.has(i)) e.a = 1; e.g = r.geo || sysGeo(S.pdf.slots[i]);
   return e;
 });
+/* Erasures as saved: one long unbroken stroke is written as several shorter ones (each repeats the last point of the one before, so the line has no gap), so every saved stroke is within what sysErClean accepts. On screen and in History it stays one stroke. */
+const SYS_ER_PTS = 5000, SYS_ER_MAX = 5000;
+function sysErSave(er, q) {
+  const out = [], step = 2 * (SYS_ER_PTS - 1);
+  for (const t of er) for (let i = 0; ; i += step) {
+    out.push([q(t.r)].concat(t.p.slice(i, i + 2 * SYS_ER_PTS).map(q)));
+    if (i + 2 * SYS_ER_PTS >= t.p.length) break;
+  }
+  return out.slice(0, SYS_ER_MAX);
+}
 /* a box's saved erasures: [[radius, x0, y0, x1, y1, ...]] in page units, each point 0 to 1 across and down; null when none is usable */
 function sysErClean(a) {
   if (!Array.isArray(a)) return null; const out = [];
-  for (const t of a.slice(0, 2000)) {
+  for (const t of a.slice(0, SYS_ER_MAX)) {
     if (!Array.isArray(t) || t.length < 3 || t.length > 20002 || t.length % 2 === 0 || !t.every(Number.isFinite)) continue;
     const r = t[0], pts = t.slice(1); if (!(r > 0 && r <= 0.5) || !pts.every(v => v >= -0.5 && v <= 1.5)) continue;
     out.push({ r, p: pts });

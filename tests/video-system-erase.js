@@ -121,6 +121,16 @@ const digital = async (paper) => {
     ok('it is saved with the page and read back', clean && clean[0].s[1].er && clean[0].s[1].er.length === 1 && clean[0].s[1].er[0].r > 0, JSON.stringify(list[0].s[1]).slice(0, 120));
     await p.evaluate(l => { sysFromList(sysListClean(l, 1)); }, list); await p.waitForTimeout(2500);
     st = await stats(key1); ok('after reopening, the mark is still erased', st.lo === 255, JSON.stringify(st));
+    // one very long stroke is saved in pieces that all load, with no gap and no lost point
+    ok('a stroke of 12,000 points and more strokes than the old limit all survive a save and reload', await p.evaluate(() => {
+      const b = SYS.byPage.get(0).systems[1], keep = b.er, p12 = [], q = v => Math.round(v * 10000) / 10000;
+      for (let i = 0; i < 12000; i++) p12.push(q(0.1 + 0.8 * (i % 100) / 100), q(0.1 + 0.8 * Math.floor(i / 100) / 120));
+      b.er = [{ r: 0.02, p: p12 }]; for (let i = 0; i < 2100; i++) b.er.push({ r: 0.01, p: [0.5, 0.5] });
+      const out = sysListClean(sysToList(), 1)[0].s[1].er; b.er = keep;
+      const first = out.filter(t => t.p.length > 2).slice(0, 3), pts = []; first.forEach((t, k) => pts.push(...(k ? t.p.slice(2) : t.p)));
+      const same = pts.length === 24000 && pts.every((v, i) => v === p12[i]);
+      return out.length === 3 + 2100 && same && out.every(t => t.r > 0);
+    }));
     // the export draws what the preview draws: the sheet the exporter asks for is the one measured above (sysSheet), and the preview's own composition is the same picture
     ok('the export and the preview compose the same sheet', await p.evaluate(async () => { const lay = previewR.lay, a = await sysSheet(sysKey(0, 1), lay.pw, lay.ph), f = sysFit(sysKey(0, 1), lay.pw, lay.ph), c = sysCompose(sysKept(0), f, lay.pw, lay.ph), x = a.getContext('2d').getImageData(0, 0, a.width, a.height).data, y = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; for (let i = 0; i < x.length; i += 4) if (x[i] !== y[i]) return false; return true; }));
     // the brush is the same size on screen at every zoom, and Space-drag pans while erasing
