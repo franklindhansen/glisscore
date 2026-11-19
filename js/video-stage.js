@@ -346,11 +346,11 @@ class Renderer {
     const ent = sysKept(sysPage(idx)); if (!ent) return null;
     const gl = this.gl; let e = this.lbT.get(idx); if (!e) { e = { t: gl.createTexture(), cv: document.createElement('canvas') }; e.cv.width = lay.pw; e.cv.height = lay.ph; this.lbT.set(idx, e); }
     if (e.cv.width !== lay.pw || e.cv.height !== lay.ph) { e.cv.width = lay.pw; e.cv.height = lay.ph; }
-    sysCompose(ent, now, lay.pw, lay.ph, e.cv);
+    sysCompose(ent, now, lay.pw, lay.ph, e.cv, true);
     gl.bindTexture(gl.TEXTURE_2D, e.t); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, e.cv); this.setTexParams();
     return e.t;
   }
-  /* a sheet made at once from its page's kept drawing while it is brushed (the eraser): it stays while hold is set, and after, until the sharp sheet has come */
+  /* a sheet made at once from its page's kept drawing while a stroke fades in or out (the eraser): it stays while hold is set, and after, until the sharp sheet has come */
   handSheet(idx, hold) { if (!this.live) return; const t = this.lbTexture(idx, true); if (t) this.lbT.get(idx).hold = hold; }
   lbDrop(landed) { const gl = this.gl; this.lbT.forEach((e, idx) => { if ((landed && e.hold) || (landed && !this.tex.has(idx) && sysOn())) return; gl.deleteTexture(e.t); e.cv.width = e.cv.height = 0; this.lbT.delete(idx); }); }          // landed: only the ones whose sharp sheet is in
   request(idx) {
@@ -561,7 +561,7 @@ class Renderer {
   }
   render_(st) {
     const gl = this.gl, lay = this.layout(); this.lay = lay; this.checkSize(lay); this.framePages = [];
-    if (this.live) { lbStep(); if (!LB.moving && this.lbT.size) this.lbDrop(true); }
+    if (this.live) { lbStep(); sysErFadeStep(this); if (!LB.moving && this.lbT.size) this.lbDrop(true); }
     gl.viewport(0, 0, this.W, this.H);
     const bg = hexToRgb(S.set.bg); gl.clearColor(bg[0], bg[1], bg[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const sp = S.spreads[st.spread]; if (!sp) return;
@@ -726,6 +726,7 @@ function szApply(smooth, st = SZ) {
   cv.style.transform = st.z === 1 ? '' : 'translate(' + st.x.toFixed(1) + 'px,' + st.y.toFixed(1) + 'px) scale(' + st.z.toFixed(3) + ')'; cls.classList.toggle('zoomed', st.z > 1);
   const wl = $(st === SZS ? '#selWaits' : '#stageWaits'); if (wl) pgWaitHost(wl, cv);          // the labels over the pages move with the picture
   if (st === SZ) szClip();
+  if (st === SZS && ERASE.hot) eraseHot(null);          // the picture moved: the × goes until the pointer finds a stroke again
   szButtons();
 }
 function szAt(nz, cx, cy, smooth, st = SZ) {          // the point under (cx, cy) stays where it is
@@ -750,7 +751,7 @@ function szBind() {
   wrap.addEventListener('pointerdown', e => {
     if (!live(e)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]); const v = at(e);
     if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, z: v.z, v }; pan = null; wrap.setPointerCapture(e.pointerId); }
-    else if (v.z > 1 && e.button === 0 && (v === SZS || !ERASE.on || ERASE.space)) { pan = { x: e.clientX, y: e.clientY, ox: v.x, oy: v.y, v }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
+    else if (v.z > 1 && e.button === 0) { pan = { x: e.clientX, y: e.clientY, ox: v.x, oy: v.y, v }; wrap.setPointerCapture(e.pointerId); wrap.classList.add('panning'); }
   });
   wrap.addEventListener('pointermove', e => {
     if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
@@ -773,10 +774,10 @@ function drawStage() {
   if (S.time !== fadeSeenT) { if (fadeLookAt !== S.time) fadeLookAt = NaN; fadeSeenT = S.time; }          // any move that is not a scrub (or the end of playback) forgets the looked-at time, however it was made
   if (!Transport.playing && fadeLookAt !== S.time) st.fade = 1;      // the paused preview shows the full picture, except where you scrubbed to: there it shows the fade under the playhead
   previewR.render(st);
-  eraseSync();
   pageWaitSync(); if (previewR.fx.size) stageDirty = true;
   if (st.spread !== lastSpreadShown) { lastSpreadShown = st.spread; prefetchAround(); updateInfo(); }
   if (SPLIT.shown) selSync();          // System: the selector follows the playhead
+  eraseSync();          // and the eraser button follows what the selector shows
 }
 
 /* ====================================================================

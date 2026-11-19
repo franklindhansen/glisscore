@@ -222,7 +222,9 @@ function selPaint() {
   if (ready) { g.fillStyle = '#fff'; g.fillRect(X(0), Y(0), pa * u, u); g.drawImage(SEL.bmp, X(0), Y(0), pa * u, u); }
   else g.drawImage(selSoft(idx), X(0), Y(0), pa * u, u);          // not made or not found yet: the page's softened thumbnail, never a white sheet
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3b5bdb', r = SYS.byPage.get(idx), list = r && found ? r.systems : [];
+  if (list.length) selErasePaint(g, list);          // what was erased: a highlight inside each system's cut
   selMarkPaint(g, list, box, X, Y, accent);
+  eraseChip();
   selWaitSync(idx, found, ready, X(0) / k, Y(0) / k, pa * u / k, u / k);
 }
 /* the page's thumbnail, softened, kept for the page shown */
@@ -248,6 +250,7 @@ function selBadge(x, y, bw) {
 }
 function selMarkPaint(g, list, box, X, Y, accent) {
   const { u, pa, k } = SEL.geo, M = SEL.mark, lw = Math.max(1, k * 0.75), L = M.live;
+  if (ERASE.on) { g.save(); g.strokeStyle = accent; g.globalAlpha = 0.4; g.lineWidth = lw; g.setLineDash([4 * k, 3 * k]); list.forEach(s => g.strokeRect(X(s.left * pa) + 0.5, Y(s.top) + 0.5, (s.right - s.left) * pa * u, (s.bottom - s.top) * u)); g.restore(); return; }          // while erasing, each Selection is a faint dashed outline: no fill, no number, no ×, and nothing to grab
   const show = L ? L.boxes.map((s, n) => ({ top: L.out[n][0], bottom: L.out[n][1], left: n === L.cur && L.lr ? L.lr[0] : s ? s.left : 0, right: n === L.cur && L.lr ? L.lr[1] : s ? s.right : 1, cur: n === L.cur, live: n === L.cur })) : list.map(s => ({ top: s.top, bottom: s.bottom, left: s.left, right: s.right, cur: s === box }));
   g.save(); g.strokeStyle = accent;
   show.forEach((s, n) => {
@@ -328,12 +331,14 @@ function selMarkBind() {
   pane.addEventListener('pointerdown', e => {
     if (M.space) return;
     if (e.button !== 0 || e.target !== cv || !SEL.geo || SEL.key == null || sysBusy()) return;          // nothing is marked while systems are found
+    if (ERASE.on) { eraseDown(e); return; }          // the eraser: systems are frozen, a drag brushes
     e.stopPropagation(); e.preventDefault(); cv.setPointerCapture(e.pointerId);
     const h = selHit(e);
     G = Object.assign(h, { sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId, pg: SEL.geo.idx, base: selList().slice() });
   });
   cv.addEventListener('pointermove', e => {
     const geo = SEL.geo; if (!geo) return;
+    if (ERASE.on) { eraseMove(e); return; }
     const p = selPt(e);
     if (!G) { cv.style.cursor = SEL_CURSOR[selHit(e).t] || ''; return; }
     if (!G.moved && Math.hypot(e.clientX - G.sx, e.clientY - G.sy) < 4) return; G.moved = true;
@@ -363,76 +368,123 @@ function selMarkBind() {
     if (e.code === 'Space' && SPLIT.shown && M.over && SZS.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); return; }
     if (!SPLIT.shown || (e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) return;
     if (e.key === 'Escape' && M.live) { M.live = null; G = null; selPaintSoon(); e.stopPropagation(); }
-    else if ((e.key === 'Delete' || e.key === 'Backspace') && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && !ERASE.on && SEL.geo && SEL.geo.box) { const r = SYS.byPage.get(SEL.geo.idx); if (r && r.systems.includes(SEL.geo.box)) { e.preventDefault(); e.stopPropagation(); sysRemove(SEL.geo.idx, SEL.geo.box); } }
   }, true);
 }
 
 
-/* ---------- the eraser: brushing marks off one system's sheet on the preview ---------- */
-/* Turned on from the strip (or E), the pointer brushes over the preview and the marks under it go, filled with the paper around them (`sysEraseDraw` in js/systems.js). The brush is a small round tip, the same size on screen at every zoom (--brush), with a ring showing it. Space-drag pans, the wheel and a pinch zoom, and Esc or a second press turns it off. The selector never shows it. */
-const ERASE = { on: false, space: false, over: false, G: null };
-/* the system whose sheet the preview shows at rest (null while a turn runs, on the credits card, on a Full page, or while systems are found) */
+/* ---------- the eraser: brushing marks off one system's sheet, on the selector ---------- */
+/* Turned on from the selector's bar (or E), a drag on a system makes a stroke that belongs to that system: the marks under it go from the video, filled with the paper around them (`sysEraseDraw` in js/systems.js). The selector shows the stroke as a highlight (strong while drawing, set once lifted, fainter with the eraser off) drawn inside the system's cut only; the video preview fades the patch in or out (`sysErFade`) and never shows the highlight. The brush is a small round tip, the same size on screen at every zoom (--brush), with a ring showing it. While it is on, the systems are frozen (no drag draws, moves, resizes, or deletes one). Space-drag pans, the wheel and a pinch zoom, and Esc or a second press turns it off. */
+const ERASE = { on: false, G: null, hot: null, hideT: 0 };
+/* the page the selector shows, when it has systems to brush (null while a turn runs, on the credits card, on a Full page, while systems are found, or with the selector hidden) */
 function eraseTarget() {
-  if (!S.pdf || !sysOn() || sysBusy() || !previewR || !previewR.lay || !S.spreads.length) return null;
+  if (!S.pdf || !sysOn() || !SPLIT.shown || sysBusy() || !SEL.geo || SEL.key == null || !S.spreads.length) return null;
   const fs = frameState(S.time), sp = S.spreads[fs.spread]; if (!sp || sp[1] < 0 || (fs.flip != null && fs.flip > 0 && fs.flip < 1)) return null;
-  const idx = sysPage(sp[1]), r = SYS.byPage.get(idx); if (!r || r.full || !r.systems.length) return null;
-  return { key: sp[1], idx, box: r.systems[Math.min(sysNo(sp[1]), r.systems.length - 1)] };
+  const idx = SEL.geo.idx, r = SYS.byPage.get(idx); if (!r || r.full || !r.systems.length) return null;
+  return { idx, list: r.systems };
 }
 function eraseSet(on) {
   on = !!on && !!eraseTarget(); if (ERASE.on === on) return;
-  if (!on) eraseCancel(); ERASE.on = on; const b = $('#szErase'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); $('#stageWrap').classList.toggle('erasing', on); if (!on) $('#eraseRing').hidden = true;
+  if (!on) { eraseCancel(); eraseHot(null); $('#eraseRing').hidden = true; }
+  ERASE.on = on; SEL.mark.live = null; $('#szErase').setAttribute('aria-pressed', on ? 'true' : 'false'); $('#sysSel').classList.toggle('erasing', on); selPaintSoon();
 }
-/* shown only in System; greyed (with its reason as the tooltip) where there is no system sheet to brush */
+/* greyed (with its reason as the tooltip) where there is no system to brush */
 function eraseSync() {
   const b = $('#szErase'); if (!b) return; const show = sysOn() && !!S.pdf, t = show ? eraseTarget() : null;
-  if (b.hidden === show) { b.hidden = !show; $('#szEraseDiv').hidden = !show; try { layoutStage(); } catch (e) {} }          // the strip is wider or narrower, so the picture makes room again
   b.disabled = show && !t; const tip = !show ? '' : t ? tx('sys.erase') : tx('sys.erase.why'); if (b.title !== tip) b.title = tip;
+  if (ERASE.G && (!t || t.idx !== ERASE.G.idx)) eraseCancel();
   if (ERASE.on && !t) eraseSet(false);
 }
-/* a pointer on the preview as a point on the sheet's system: x across and y down as fractions of the page, and the brush's radius in page heights */
-function erasePt(e, T) {
-  const lay = previewR.lay, b = stageCanvas.getBoundingClientRect(), ux = lay.pw / b.width, uy = lay.ph / b.height, sx = (e.clientX - b.left) * ux, sy = (e.clientY - b.top) * uy;
-  const f = sysFit(T.key, lay.pw, lay.ph), box = f.box, x0 = Math.round((lay.pw - f.dw) / 2), y0 = Math.round((lay.ph - f.dh) / 2);
-  return { x: box.left + (sx - x0) / f.dw * (box.right - box.left), y: box.top + (sy - y0) / f.dh * (box.bottom - box.top), sx, sy, r: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--brush') || '16') / 2 * ux / f.s, u: ux };
+/* a pointer as a point on the page (x across and y down as fractions of the page), and the brush's radius in page heights: --brush at screen size, so it does not change with the selector's zoom */
+function erasePt(e) {
+  const geo = SEL.geo, p = selPt(e), sx = $('#selCv').width / $('#selCv').getBoundingClientRect().width;
+  return { x: p.x / geo.pa, y: p.y, px: p.px, py: p.py, sx, r: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--brush') || '16') / 2 * sx / geo.u };
 }
-function eraseCancel() {
-  const G = ERASE.G; ERASE.G = null; if (!G) return;
-  delete G.T.box.erLive; try { previewR.handSheet(G.T.idx, false); } catch (e) {} stageDirty = true;
+const eraseBoxAt = (t, x, y) => t.list.find(b => sysInCut(b, x, y));
+/* the settled stroke under the pointer on a system: { box, stroke } (the newest first) */
+function eraseHit(e) {
+  const t = eraseTarget(); if (!t || !SEL.geo) return null; const geo = SEL.geo, p = erasePt(e), box = eraseBoxAt(t, p.x, p.y); if (!box || !box.er) return null;
+  const px = p.x * geo.pa, tol = 3 * p.sx / geo.u, d2 = (ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy, k = l ? clamp(((px - ax) * dx + (p.y - ay) * dy) / l, 0, 1) : 0, X = ax + k * dx - px, Y = ay + k * dy - p.y; return Math.hypot(X, Y); };
+  for (let n = box.er.length - 1; n >= 0; n--) {
+    const t2 = box.er[n], q = t2.p.length >> 1, lim = t2.r + tol; let near = false;
+    for (let i = 0; i < q && !near; i++) { const ax = t2.p[2 * i] * geo.pa, ay = t2.p[2 * i + 1]; if (i ? d2(t2.p[2 * i - 2] * geo.pa, t2.p[2 * i - 1], ax, ay) <= lim : Math.hypot(ax - px, ay - p.y) <= lim) near = true; }
+    if (near) return { box, stroke: t2 };
+  }
+  return null;
+}
+/* the × in the middle of the hovered stroke (the middle of the points inside the cut), or gone */
+function eraseHot(h) {
+  clearTimeout(ERASE.hideT); ERASE.hideT = 0; const same = (!h && !ERASE.hot) || (h && ERASE.hot && h.stroke === ERASE.hot.stroke);
+  ERASE.hot = h; eraseChip(); if (!same) selPaintSoon();
+}
+function eraseChip() {
+  const x = $('#eraseX'), H = ERASE.hot, geo = SEL.geo;
+  if (!ERASE.on || ERASE.G || !H || !geo || !selList().includes(H.box) || !(H.box.er || []).includes(H.stroke)) { x.hidden = true; if (H && !ERASE.G) ERASE.hot = null; return; }
+  const pts = []; for (let i = 0; i < H.stroke.p.length; i += 2) if (sysInCut(H.box, H.stroke.p[i], H.stroke.p[i + 1])) pts.push(H.stroke.p[i], H.stroke.p[i + 1]);
+  const m = pts.length ? (pts.length >> 2) << 1 : 0, ax = pts.length ? pts[m] : H.stroke.p[0], ay = pts.length ? pts[m + 1] : H.stroke.p[1];
+  const cv = $('#selCv'), b = cv.getBoundingClientRect(), pr = $('#sysSel').getBoundingClientRect(), cx = geo.ox + ax * geo.pa * geo.u, cy = geo.oy + ay * geo.u;
+  x.hidden = false; x.style.transform = 'translate(' + (b.left - pr.left + cx / cv.width * b.width).toFixed(1) + 'px,' + (b.top - pr.top + cy / cv.height * b.height).toFixed(1) + 'px)';
+}
+function eraseCancel() { if (!ERASE.G) return; ERASE.G = null; selPaintSoon(); }
+function eraseMore(e) {
+  const G = ERASE.G, geo = SEL.geo; if (!G || !geo || G.idx !== geo.idx) return;
+  if (G.pend) { if (Math.hypot(e.clientX - G.start[0], e.clientY - G.start[1]) < 4) return; G.pend = null; eraseMore({ clientX: G.start[0], clientY: G.start[1] }); }
+  const p = erasePt(e); if (!sysInCut(G.box, p.x, p.y)) return;          // only points inside the system's cut are kept; the stroke carries on when the pointer comes back in
+  if (G.last && Math.hypot(p.px - G.last[0], p.py - G.last[1]) < 2.5 * p.sx) return;          // a new point only once the pointer has moved a little
+  G.last = [p.px, p.py]; G.s.p.push(+p.x.toFixed(5), +p.y.toFixed(5)); selPaintSoon();
+}
+function eraseDown(e) {
+  const t = eraseTarget(); if (!t) return; if (ERASE.G) { eraseCancel(); return; }          // a second finger: not a stroke
+  e.stopPropagation(); e.preventDefault();
+  const p = erasePt(e), box = eraseBoxAt(t, p.x, p.y); if (!box) return;          // a start in a gap or off the page makes no mark
+  const hit = e.pointerType !== 'mouse' ? eraseHit(e) : null; eraseHot(null);
+  ERASE.G = { idx: t.idx, box, id: e.pointerId, s: { r: +p.r.toFixed(5), p: [] }, last: null, start: [e.clientX, e.clientY], pend: hit ? hit.stroke : null };          // a touch on a settled stroke shows its × (a drag from it still brushes)
+  try { $('#selCv').setPointerCapture(e.pointerId); } catch (er) {}
+  if (!ERASE.G.pend) eraseMore(e);
+}
+function eraseEnd(e) {
+  const G = ERASE.G; if (!G || e.pointerId !== G.id) return; ERASE.G = null; const geo = SEL.geo;
+  if (e.type !== 'pointercancel' && geo && G.idx === geo.idx && selList().includes(G.box)) {
+    if (G.pend) { eraseHot({ box: G.box, stroke: G.pend }); ERASE.tapT = performance.now(); }          // the × now sits under the finger: the click that follows this tap is not a press on it
+    else if (G.s.p.length) sysErase(G.idx, G.box, G.s);
+  }
+  selPaintSoon();
+}
+/* the ring at the pointer (muted where a stroke could not start), and the × for the stroke under a mouse */
+function eraseMove(e) {
+  const pane = $('#sysSel'), ring = $('#eraseRing'), M = SEL.mark;
+  if (ERASE.G && e.pointerId === ERASE.G.id) eraseMore(e);
+  const pr = pane.getBoundingClientRect(); ring.hidden = M.space; ring.style.transform = 'translate(' + (e.clientX - pr.left - pane.clientLeft) + 'px,' + (e.clientY - pr.top - pane.clientTop) + 'px)';
+  const t = eraseTarget(), p = SEL.geo && t ? erasePt(e) : null; ring.classList.toggle('no', !ERASE.G && !(p && eraseBoxAt(t, p.x, p.y)));
+  if (ERASE.G || e.pointerType !== 'mouse') return;
+  const h = eraseHit(e); if (h) eraseHot(h); else if (ERASE.hot && !ERASE.hideT) ERASE.hideT = setTimeout(() => { ERASE.hideT = 0; eraseHot(null); }, 220);
+}
+/* the highlight: every stroke of the page's systems, inside its own cut, never in the video */
+function selErasePaint(g, list) {
+  const { u, ox, oy, pa } = SEL.geo, cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim();
+  const live = col('--erase-live'), set = col(ERASE.on ? '--erase-mark' : '--erase-rest'), edge = col('--erase-edge'), G = ERASE.G, hot = ERASE.hot && ERASE.hot.stroke;
+  list.forEach(b => {
+    const all = (b.er || []).concat(G && G.box === b && G.s.p.length ? [G.s] : []); if (!all.length) return;
+    g.save(); g.beginPath(); g.rect(ox + b.left * pa * u, oy + b.top * u, (b.right - b.left) * pa * u, (b.bottom - b.top) * u); g.clip();
+    g.lineCap = g.lineJoin = 'round';
+    all.forEach(t => {
+      g.strokeStyle = G && t === G.s ? live : t === hot ? edge : set; g.lineWidth = 2 * t.r * u; g.beginPath();
+      for (let i = 0; i < t.p.length; i += 2) { const X = ox + t.p[i] * pa * u, Y = oy + t.p[i + 1] * u; if (i) g.lineTo(X, Y); else g.moveTo(X, Y); }
+      if (t.p.length === 2) g.lineTo(ox + t.p[0] * pa * u + 0.01, oy + t.p[1] * u);          // a single point is a dot
+      g.stroke();
+    });
+    g.restore();
+  });
 }
 function eraseBind() {
-  const wrap = $('#stageWrap'), ring = $('#eraseRing'), btn = $('#szErase');
+  const cv = $('#selCv'), pane = $('#sysSel'), ring = $('#eraseRing'), x = $('#eraseX'), btn = $('#szErase');
   btn.addEventListener('click', () => eraseSet(!ERASE.on));
-  const inPreview = e => !e.target.closest('#sysSel, #stageStrip, .sys-tools, #sysDiv, .sys-find-box, .empty');
-  const place = e => { if (!ERASE.on || ERASE.space || !inPreview(e)) { ring.hidden = true; return; } const r = wrap.getBoundingClientRect(); ring.hidden = false; ring.style.transform = 'translate(' + (e.clientX - r.left - wrap.clientLeft) + 'px,' + (e.clientY - r.top - wrap.clientTop) + 'px)'; };
-  wrap.addEventListener('pointermove', e => { ERASE.over = inPreview(e); place(e); if (ERASE.G && e.pointerId === ERASE.G.id) more(e); });
-  wrap.addEventListener('pointerleave', () => { ring.hidden = true; ERASE.over = false; });
-  const more = e => {
-    const G = ERASE.G, p = erasePt(e, G.T), last = G.pt; if (last && Math.hypot(p.sx - last.sx, p.sy - last.sy) < 2.5 * p.u) return;          // a new point only once the pointer has moved a little
-    G.pt = p; G.s.p.push(+p.x.toFixed(5), +p.y.toFixed(5)); G.T.box.erLive = G.s; try { previewR.handSheet(G.T.idx, true); } catch (er) {} stageDirty = true;
-  };
-  wrap.addEventListener('pointerdown', e => {
-    if (!ERASE.on) return;
-    if (ERASE.G) { eraseCancel(); return; }          // a second finger: a pinch, not a stroke
-    if (e.button !== 0 || ERASE.space || !inPreview(e)) return;
-    const T = eraseTarget(); if (!T) return; const b = stageCanvas.getBoundingClientRect(); if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) return;
-    if (Transport.playing) Transport.pause();
-    const p = erasePt(e, T); ERASE.G = { T, id: e.pointerId, s: { r: +p.r.toFixed(5), p: [] }, pt: null }; try { wrap.setPointerCapture(e.pointerId); } catch (er) {}
-    e.preventDefault(); more(e);
-  }, true);
-  const end = e => {
-    const G = ERASE.G; if (!G || e.pointerId !== G.id) return; ERASE.G = null;
-    const box = G.T.box; delete box.erLive;
-    if (e.type !== 'pointercancel' && G.s.p.length) { sysErase(G.T.idx, box, G.s); try { previewR.handSheet(G.T.idx, false); } catch (er) {} }
-    else { try { previewR.handSheet(G.T.idx, false); } catch (er) {} }
-    stageDirty = true;
-  };
-  wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
-  /* Esc turns it off; Space held over the zoomed preview makes a drag pan instead of erase */
-  const spaceSet = on => { ERASE.space = on; wrap.classList.toggle('pan-ready', on); if (on) ring.hidden = true; };
-  document.addEventListener('keydown', e => {
-    if (!ERASE.on) return;
-    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); eraseSet(false); return; }
-    if (e.code === 'Space' && ERASE.over && SZ.z > 1 && !(e.target.matches && e.target.matches('input, textarea, select, [contenteditable]'))) { e.preventDefault(); e.stopPropagation(); spaceSet(true); }
-  }, true);
-  document.addEventListener('keyup', e => { if (e.code === 'Space' && ERASE.space) spaceSet(false); }, true); window.addEventListener('blur', () => spaceSet(false));
+  cv.addEventListener('pointerleave', e => { ring.hidden = true; if (e.pointerType === 'mouse' && ERASE.hot && !ERASE.hideT && !x.matches(':hover')) ERASE.hideT = setTimeout(() => { ERASE.hideT = 0; eraseHot(null); }, 220); });
+  x.addEventListener('pointerenter', () => { clearTimeout(ERASE.hideT); ERASE.hideT = 0; });
+  x.addEventListener('pointerleave', () => { if (ERASE.hot && !ERASE.hideT) ERASE.hideT = setTimeout(() => { ERASE.hideT = 0; eraseHot(null); }, 220); });
+  ['pointerdown', 'pointerup'].forEach(n => x.addEventListener(n, e => e.stopPropagation()));          // a press on the × is not a click on the page under it
+  x.addEventListener('click', () => { if (performance.now() - (ERASE.tapT || -1e9) < 500) return; const H = ERASE.hot, geo = SEL.geo; eraseHot(null); if (H && geo) sysEraseRemove(geo.idx, H.box, H.stroke); });
+  cv.addEventListener('pointerup', eraseEnd); cv.addEventListener('pointercancel', eraseEnd);
+  document.addEventListener('keydown', e => { if (ERASE.on && e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); eraseSet(false); } }, true);          // Esc turns it off
+  x.title = tx('sys.erase.x'); x.setAttribute('aria-label', tx('sys.erase.x.aria'));
 }

@@ -87,6 +87,10 @@
   --shadow-lift:0 8px 22px rgba(10,14,30,.25);   /* a card lifted off the page while it is dragged */
   --shadow-float:0 24px 48px -28px rgba(10,14,30,.6),0 0 0 .5px rgba(10,14,30,.08);   /* the full-screen bars and tool window, under the glass shadow */
   --shadow-inset:inset 0 1px 2px rgba(0,0,0,.09);   /* a recessed panel (the Balance meter) */
+  --erase:#0f93b0;   /* the eraser's one hue (the highlight, the ring): a teal, apart from the accent. The paper is white in both themes, so it is one value in both */
+  --erase-live:color-mix(in srgb,var(--erase) 46%,transparent); --erase-mark:color-mix(in srgb,var(--erase) 32%,transparent); --erase-rest:color-mix(in srgb,var(--erase) 17%,transparent); --erase-edge:color-mix(in srgb,var(--erase) 80%,transparent);   /* a stroke on the selector: while drawing, set with the eraser on, set with it off, and under the pointer */
+  --erase-fade:380ms; --erase-x:16px;   /* the preview's patch fades in or out over this; the remove chip's visible size (its hit area is 24px) */
+  --erase-x-shadow:var(--glass-shadow),inset 0 0 0 1px var(--glass-edge),0 0 0 .5px var(--glass-ring);   /* the chip's edge on glass; dark mode drops the glass edge, which reads as a gray ring over the white paper */
   --brush:16px; --icon-s:14px; --icon-m:16px; --icon-l:18px;          /* glyph sizes. --icon-s is the glyph on every glass bar (the video strips, Full screen, Trim silence), whatever the button around it; --icon-l is a stand-alone icon button's */
 }
 
@@ -102,6 +106,7 @@
     --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.28);
     --glass-shadow:0 6px 18px -10px rgba(4,6,16,.38),inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.12);
     --glass-sheen-o:.25;
+    --erase-x-shadow:var(--chip-shadow);
   }
 }
 
@@ -116,6 +121,7 @@
   --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.28);
   --glass-shadow:0 6px 18px -10px rgba(4,6,16,.38),inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.12);
   --glass-sheen-o:.25;
+  --erase-x-shadow:var(--chip-shadow);
 }
 
 /* ==================== 2. BASE & RESET ==================== */
@@ -541,7 +547,7 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae
 .stage-strip button:not(:disabled):hover,.sys-zoom button:not(:disabled):hover,.sys-bar button:not(:disabled):hover,.sys-nav button:not(:disabled):hover,.stage-strip button:not(:disabled):focus-visible,.sys-zoom button:not(:disabled):focus-visible,.sys-bar button:not(:disabled):focus-visible,.sys-nav button:not(:disabled):focus-visible{background:var(--accent-soft);color:var(--accent)}
 .stage-strip button:disabled,.sys-zoom button:disabled,.sys-bar button:disabled,.sys-nav button:disabled{color:var(--muted);opacity:var(--inactive);cursor:default}
 .stage-strip svg,.sys-zoom svg,.sys-bar svg,.sys-nav svg{width:var(--icon-s);height:var(--icon-s)}
-.sys-bar button[aria-pressed=true],.stage-strip button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+.sys-bar button[aria-pressed=true],.stage-strip button[aria-pressed=true],.sys-nav button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .stage-wrap.sys-stack .sys-bar svg{transform:rotate(90deg)}
 /* the preset strip: one vertical glass strip at the top right (the current preset, a divider, Detect this page again); hovering or tapping the preset icon unfolds the four presets sideways from it */
 .sys-tools{position:absolute;top:var(--fsm);right:var(--fsm);z-index:6}
@@ -2750,8 +2756,14 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .nr-foot{flex-wrap:wrap;column-gap:var(--gap-set)}          /* the two switches share the row, and stack when the card is too narrow for both */
 .nr-foot>label{display:flex;align-items:center;gap:var(--gap-card);font-size:var(--type-value);white-space:nowrap}
 
-/* the eraser: the brush's ring (a small round tip, the same size at every zoom) follows the pointer over the preview */
-.erase-ring{position:absolute;left:0;top:0;z-index:5;width:var(--brush);height:var(--brush);margin:calc(var(--brush) / -2) 0 0 calc(var(--brush) / -2);box-sizing:border-box;border-radius:50%;border:var(--hair) solid var(--accent);box-shadow:0 0 0 var(--hair) var(--accent-ink);pointer-events:none;will-change:transform}
+/* the eraser, on the System selector: a ring at the pointer (a small round tip, the same size at every zoom), a muted one where a stroke cannot start, and a glass × in the middle of a hovered stroke */
+.erase-ring{position:absolute;left:0;top:0;z-index:5;width:var(--brush);height:var(--brush);margin:calc(var(--brush) / -2) 0 0 calc(var(--brush) / -2);box-sizing:border-box;border-radius:50%;border:var(--hair) solid var(--erase-edge);pointer-events:none;will-change:transform}
+.erase-ring.no{border-style:dashed;border-color:var(--muted);opacity:.8}
 .erase-ring[hidden]{display:none}
-.stage-wrap.erasing,.stage-wrap.erasing.zoomed{cursor:none;touch-action:none}
-.stage-wrap.erasing.pan-ready{cursor:grab}
+.sys-sel.erasing #selCv{cursor:none;touch-action:none}
+.sys-sel.erasing.pan-ready #selCv{cursor:grab!important}
+.erase-x{position:absolute;left:0;top:0;z-index:7;display:grid;place-items:center;width:24px;height:24px;translate:-50% -50%;padding:0;border:0;background:none;cursor:pointer;color:var(--ink);will-change:transform}
+.erase-x[hidden]{display:none}
+.erase-x-chip{display:grid;place-items:center;width:var(--erase-x);height:var(--erase-x);border-radius:50%;background:var(--glass-bg),var(--panel2);box-shadow:var(--erase-x-shadow);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);transition:color var(--ae-quick) var(--ease-color)}
+.erase-x-chip svg{width:8px;height:8px}
+.erase-x:hover .erase-x-chip,.erase-x:focus-visible .erase-x-chip{color:var(--danger)}

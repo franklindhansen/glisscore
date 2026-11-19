@@ -463,6 +463,7 @@ const sysSnap = () => { const o = {}; SYS.hand.forEach(i => { const r = SYS.byPa
 /* Goes back to a snapshot's marks; true when anything changed. A page that is not marked there returns to what was found (or is found again). */
 function sysRestore(m) {
   sysFresh(); if (JSON.stringify(m) === JSON.stringify(sysSnap())) return false;
+  const erAll = () => { const o = []; SYS.byPage.forEach((r, idx) => r.systems.forEach(b => (b.er || []).forEach(t => o.push({ t, idx, b })))); return o; }, erBefore = erAll();
   [...SYS.hand].forEach(i => {
     if (m[i]) return; SYS.hand.delete(i); const r = SYS.byPage.get(i);
     if (r && r.auto) { r.systems = r.auto; delete r.auto; r.full = !r.systems.length; r.held = []; r.heldTurns = []; } else SYS.byPage.delete(i);
@@ -471,6 +472,7 @@ function sysRestore(m) {
     const fresh = !SYS.byPage.has(+k), r = sysHandRec(+k); if (fresh) delete r.auto;          // a page that was cleared has no found result to go back to; it is found again
     r.systems = m[k].systems.map(q => Object.assign({}, q)); r.tilt = m[k].tilt; r.geo = m[k].geo; r.full = !!m[k].full; r.held = (m[k].held || []).map(q => Object.assign({}, q)); r.heldTurns = (m[k].ht || []).map(q => Object.assign({}, q));
   });
+  { const after = erAll(); after.filter(x => !erBefore.some(y => y.t === x.t)).forEach(x => sysErFade(x.t, 1, x.idx, x.b)); erBefore.filter(x => !after.some(y => y.t === x.t)).forEach(x => sysErFade(x.t, -1, x.idx, x.b)); }          // an undo or redo fades only the strokes that came or went
   SYS.rev++; stageDirty = true; return true;
 }
 /* One page measured again as a calculation: nothing is replaced, the page's record and its Selections are left as they are. Resolves with the finder's answer, or null when it was stopped. */
@@ -578,6 +580,7 @@ async function sysPlace(idx, boxes, out) {
   const r0 = SYS.byPage.get(idx); if (boxes.some(s => s && !(r0 && r0.systems.includes(s)))) return false;          // the page changed under the drag
   pushHistory(); const r = sysHandRec(idx);
   r.systems = boxes.map((s, k) => { if (!moved[k]) return s; const q = { top: out[k][0], bottom: out[k][1] }; if (edges[k]) { q.left = edges[k][0]; q.right = edges[k][1]; } return s ? Object.assign(s, q) : q; }).sort((x, y) => x.top - y.top);
+  r.systems.forEach(sysErFit);          // the points outside a changed cut are dropped, in this step
   r.full = !r.systems.length; r.held = []; r.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
 /* the page's usual left and right for a new Selection: the middle of the sides of the systems already there (the finder's own measure of the band when there are none) */
@@ -597,6 +600,7 @@ function sysEdgeSet(idx, box, left, right) {
   const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box)) return false;
   if (Math.abs(box.left - left) < 1e-5 && Math.abs(box.right - right) < 1e-5) return false;
   pushHistory(); sysHandRec(idx); Object.assign(box, { left, right, hx: true });
+  sysErFit(box);
   SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
 /* Double-click a Selection: that one box returns to what the finder found for it, as one History step. The default is the found system that overlaps the box most (at least half of the smaller of the two); a box with no
@@ -615,21 +619,63 @@ async function sysResetOne(idx, box) {
   if (!r.auto) r.auto = auto.map(q => Object.assign({}, q));          // kept, so Detect again and an undo can return to it
   pushHistory(); const rr = sysHandRec(idx);
   base.forEach((s2, k) => { if (k === i) { Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: best.left, right: best.right }); delete s2.hx; } else if (edges[k]) Object.assign(s2, { top: out[k][0], bottom: out[k][1], left: edges[k][0], right: edges[k][1] }); else if (!same(out[k][0], s2.top) || !same(out[k][1], s2.bottom)) Object.assign(s2, { top: out[k][0], bottom: out[k][1] }); });          // the same boxes, so a turn stays with its Selection
+  base.forEach(sysErFit);
   rr.systems = base.sort((x, y) => x.top - y.top); rr.full = false; rr.held = []; rr.heldTurns = []; SYS.rev++; stageDirty = true; sysSettle(); return true;
 }
-/* ---------- erasures: strokes a person brushed over one system's sheet, drawn in the video only ---------- */
-/* A stroke is { r, p }: a brush radius in page heights and a line of points (x across and y down as fractions of the page, flat). It belongs to the Selection it was brushed on (box.er, never shared with the next system's sheet), is kept with the page's hand marks, and goes with the Selection. One stroke is one History step. */
+/* ---------- erasures: strokes a person brushed over one system's sheet on the selector, drawn in the video only ---------- */
+/* A stroke is { r, p }: a brush radius in page heights and a line of points (x across and y down as fractions of the page, flat). It belongs to the Selection it was brushed on (box.er, never shared with the next system's sheet), is kept with the page's hand marks, and goes with the Selection. Only points inside the Selection's cut are kept: when the stroke is drawn, and again whenever the cut changes (sysErFit), for good. One stroke is one History step. */
 function sysErase(idx, box, stroke) {
   const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box) || !stroke || !stroke.p.length) return false;
-  delete box.erLive; pushHistory(); sysHandRec(idx);
+  pushHistory(); sysHandRec(idx);
   box.er = (box.er || []).concat([stroke]);          // a new list each time: a History step keeps the one it had
-  SYS.rev++; stageDirty = true; return true;
+  SYS.rev++; stageDirty = true; sysErFade(stroke, 1, idx, box); return true;
 }
-/* the name of a History step that changed the systems: Erase when only erasures changed */
+/* one stroke taken off its Selection (the × on the selector): one History step */
+function sysEraseRemove(idx, box, stroke) {
+  const r0 = SYS.byPage.get(idx); if (!r0 || !r0.systems.includes(box) || !(box.er || []).includes(stroke)) return false;
+  pushHistory(); sysHandRec(idx);
+  const rest = box.er.filter(t => t !== stroke); if (rest.length) box.er = rest; else delete box.er;
+  SYS.rev++; stageDirty = true; sysErFade(stroke, -1, idx, box); return true;
+}
+/* is a point inside a Selection's cut (its four sides, in page fractions)? */
+const sysInCut = (box, x, y) => x >= box.left - 1e-6 && x <= box.right + 1e-6 && y >= box.top - 1e-6 && y <= box.bottom + 1e-6;
+/* a Selection's strokes after its cut changed: the points outside the new cut are dropped for good (an undo brings them back, an extended cut shows nothing new) */
+function sysErFit(box) {
+  if (!box.er || !box.er.length) return;
+  let changed = false; const out = [];
+  for (const t of box.er) {
+    const p = []; for (let i = 0; i < t.p.length; i += 2) if (sysInCut(box, t.p[i], t.p[i + 1])) p.push(t.p[i], t.p[i + 1]);
+    if (p.length === t.p.length) out.push(t); else { changed = true; if (p.length) out.push({ r: t.r, p }); }
+  }
+  if (changed) { if (out.length) box.er = out; else delete box.er; }
+}
+/* The video preview shows a stroke arriving or going by fading only that patch, over --erase-fade (none under reduced motion). A fade is { stroke, dir: 1 in or -1 out, t0, ms, ent, cut }: the sheet of that Selection is composed again every frame (previewR.handSheet) with the stroke at its fade's opacity, then the sharp sheet takes over. A stroke that went is drawn from here until it has faded. */
+const SYS_ERF = { list: [] };
+const sysErCut = b => [b.left, b.top, b.right, b.bottom].join();
+function sysErFade(stroke, dir, page, box) {
+  const ms = reducedMotion() ? 0 : parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--erase-fade')) || 380, ent = ms ? sysKept(page) : null; if (!ent) return;
+  SYS_ERF.list = SYS_ERF.list.filter(q => q.stroke !== stroke); SYS_ERF.list.push({ stroke, dir, t0: performance.now(), ms, ent, page, cut: sysErCut(box) }); stageDirty = true;
+}
+function sysErAlpha(stroke) {
+  const q = SYS_ERF.list.find(x => x.stroke === stroke); if (!q) return 1;
+  const k = clamp((performance.now() - q.t0) / q.ms, 0, 1), e = 1 - Math.pow(1 - k, 3); return q.dir > 0 ? e : 1 - e;          // ease-out
+}
+/* each frame of the preview: the sheets that have a stroke fading are composed at its opacity; the one that finishes is composed once more as it ends */
+function sysErFadeStep(r) {
+  if (!SYS_ERF.list.length) return;
+  const t = performance.now(), live = [], gone = []; SYS_ERF.list.forEach(q => (t - q.t0 >= q.ms ? gone : live).push(q)); SYS_ERF.list = live;
+  const keys = new Map();
+  live.concat(gone).forEach(q => { const rec = SYS.byPage.get(q.page), n = rec ? rec.systems.findIndex(b => sysErCut(b) === q.cut) : -1; if (n >= 0) { const k = sysKey(q.page, n); keys.set(k, keys.get(k) || live.includes(q)); } });
+  keys.forEach((hold, k) => { r.handSheet(k, hold); if (!hold && !r.tex.has(k) && !r.pending.has(k)) r.request(k); });          // when the fade ends the sharp sheet is asked for, and it takes over
+  if (live.length) stageDirty = true;
+}
+/* the name of a History step that changed the systems: Erase or Remove erasure when only erasures changed */
 function sysStepName(a, b) {
   const bare = m => JSON.stringify(m, (k, v) => k === 'er' ? undefined : v), has = m => m && m.systems.some(q => q.er && q.er.length), pages = [...new Set(Object.keys(a).concat(Object.keys(b)))];
   const only = pages.every(i => a[i] && b[i] ? bare(a[i]) === bare(b[i]) : has(a[i] || b[i]));          // a page that had no hand marks yet is one that has erasures now
-  return only && JSON.stringify(a) !== JSON.stringify(b) ? tx('sys.erase.step') : 'Systems';
+  if (!only || JSON.stringify(a) === JSON.stringify(b)) return 'Systems';
+  const n = m => Object.values(m).reduce((u, r) => u + r.systems.reduce((v, q) => v + (q.er ? q.er.length : 0), 0), 0);
+  return tx(n(b) < n(a) ? 'sys.erase.remove' : 'sys.erase.step');
 }
 /* the paper beside a spot: the middle of the lightest quarter of a wide ring of dots around the brush (ink is darker than paper, and a mark bigger than the brush fills most of a near ring), so a clean page gives its exact white and a stained scan its own tone there. rr: the brush's radius in the page drawing's dots. */
 function sysErSample(ent, cx, cy, rr) {
@@ -642,19 +688,26 @@ function sysErSample(ent, cx, cy, rr) {
   return [mid(0), mid(1), mid(2)];
 }
 /* Draws a box's erasures on its sheet (c): along each stroke, round dabs of the paper sampled beside each point, feathered at the rim, inside the cut so the paper around the system is never patched. (x, y, f.dw, f.dh): where the system lies on the sheet; (sx, sy, sw, sh): the part of the page drawing it was cut from. */
-function sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper) {
-  const list = (box.er || []).concat(box.erLive ? [box.erLive] : []); if (!list.length) return;
+let SYS_ERT = null;          // the offscreen sheet a fading stroke is drawn on whole, then laid on at its opacity (so its overlapping dabs do not add up)
+function sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper, fade) {
+  let list = box.er || [];
+  if (fade && SYS_ERF.list.length) { const cut = sysErCut(box); list = list.concat(SYS_ERF.list.filter(q => q.dir < 0 && q.ent === ent && q.cut === cut && !list.includes(q.stroke)).map(q => q.stroke)); }          // a stroke that went is drawn until it has faded
+  if (!list.length) return;
   const pw = ent.cv.width, ph = ent.cv.height, kx = f.dw / sw, ky = f.dh / sh; if (!ent.er) ent.er = new WeakMap();
-  c.save(); c.beginPath(); c.rect(x, y, f.dw, f.dh); c.clip();
+  const clip = cx => { cx.save(); cx.beginPath(); cx.rect(x, y, f.dw, f.dh); cx.clip(); };
+  clip(c);
   list.forEach(t => {
+    const a = fade ? sysErAlpha(t) : 1; if (a <= 0.002) return;
+    let cx = c; if (a < 1) { if (!SYS_ERT) SYS_ERT = document.createElement('canvas'); if (SYS_ERT.width !== c.canvas.width || SYS_ERT.height !== c.canvas.height) { SYS_ERT.width = c.canvas.width; SYS_ERT.height = c.canvas.height; } cx = SYS_ERT.getContext('2d'); cx.clearRect(0, 0, SYS_ERT.width, SYS_ERT.height); clip(cx); }
     const n = t.p.length >> 1, rr = Math.max(2, t.r * ph); let k = ent.er.get(t); if (!k) { k = { n: 0, cols: [] }; ent.er.set(t, k); }
     for (let i = k.n; i < n; i++) k.cols[i] = sysErSample(ent, t.p[2 * i] * pw, t.p[2 * i + 1] * ph, rr); k.n = n;
-    const rs = Math.max(1, t.r * ph * kx), dab = (X, Y, col) => { const g = c.createRadialGradient(X, Y, 0, X, Y, rs), a = 'rgba(' + col.join(',') + ','; g.addColorStop(0, a + '1)'); g.addColorStop(0.8, a + '1)'); g.addColorStop(1, a + '0)'); c.fillStyle = g; c.fillRect(X - rs, Y - rs, 2 * rs, 2 * rs); };
+    const rs = Math.max(1, t.r * ph * kx), dab = (X, Y, col) => { const g = cx.createRadialGradient(X, Y, 0, X, Y, rs), q = 'rgba(' + col.join(',') + ','; g.addColorStop(0, q + '1)'); g.addColorStop(0.8, q + '1)'); g.addColorStop(1, q + '0)'); cx.fillStyle = g; cx.fillRect(X - rs, Y - rs, 2 * rs, 2 * rs); };
     const at = i => [(t.p[2 * i] * pw - sx) * kx + x, (t.p[2 * i + 1] * ph - sy) * ky + y], col = i => k.cols[i] || paper;
     for (let i = 0; i < n; i++) {
-      const b = at(i); if (i) { const a = at(i - 1), ca = col(i - 1), cb = col(i), m = Math.max(1, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / Math.max(1, rs * 0.3))); for (let q = 1; q < m; q++) { const u = q / m; dab(a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, ca.map((v, j) => Math.round(v + (cb[j] - v) * u))); } }
+      const b = at(i); if (i) { const p0 = at(i - 1), ca = col(i - 1), cb = col(i), m = Math.max(1, Math.ceil(Math.hypot(b[0] - p0[0], b[1] - p0[1]) / Math.max(1, rs * 0.3))); for (let q = 1; q < m; q++) { const u = q / m; dab(p0[0] + (b[0] - p0[0]) * u, p0[1] + (b[1] - p0[1]) * u, ca.map((v, j) => Math.round(v + (cb[j] - v) * u))); } }
       dab(b[0], b[1], col(i));
     }
+    if (cx !== c) { cx.restore(); c.globalAlpha = a; c.drawImage(SYS_ERT, 0, 0); c.globalAlpha = 1; }
   });
   c.restore();
 }
@@ -744,7 +797,7 @@ async function sysPageDraw(idx, s) {
   return job;
 }
 /* a sheet: the system cut from its page's kept drawing (ent) and laid on the page's paper, its edges feathered into it. f: the fit it is made for. */
-function sysCompose(ent, f, W, H, cv) {
+function sysCompose(ent, f, W, H, cv, fade) {
   const box = f.box, pw = ent.cv.width, ph = ent.cv.height; let sx = box.left * pw, sy = box.top * ph, sw = Math.max(1, (box.right - box.left) * pw), sh = Math.max(1, (box.bottom - box.top) * ph);
   if (Math.abs(sw / f.dw - 1) < 0.004 && Math.abs(sh / f.dh - 1) < 0.004) { sx = clamp(Math.round(sx), 0, Math.max(0, pw - f.dw)); sy = clamp(Math.round(sy), 0, Math.max(0, ph - f.dh)); sw = Math.min(f.dw, pw); sh = Math.min(f.dh, ph); }          // drawn at this very size: a dot for a dot, so it is as sharp as a drawing made for it
   const pk = [box.left, box.top, box.right, box.bottom].join(); let paper = ent.paper.get(pk);
@@ -759,7 +812,7 @@ function sysCompose(ent, f, W, H, cv) {
   [[x, y, F, f.dh, x, 0, x + F, 0], [x + f.dw - F, y, F, f.dh, x + f.dw, 0, x + f.dw - F, 0], [x, y, f.dw, F, 0, y, 0, y + F], [x, y + f.dh - F, f.dw, F, 0, y + f.dh, 0, y + f.dh - F]].forEach(q => {
     const g = c.createLinearGradient(q[4], q[5], q[6], q[7]); g.addColorStop(0, col(1)); g.addColorStop(1, col(0)); c.fillStyle = g; c.fillRect(q[0], q[1], q[2], q[3]);
   });
-  sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper);          // what was brushed out of this system, so the preview, the Letterbox slide, and the export all show it
+  sysEraseDraw(c, ent, box, f, x, y, sx, sy, sw, sh, paper, fade);          // what was brushed out of this system, so the preview, the Letterbox slide, and the export all show it
   return cv;
 }
 async function sysSheet(key, W, H) {
