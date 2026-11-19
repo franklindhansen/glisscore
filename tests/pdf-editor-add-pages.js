@@ -43,13 +43,13 @@ async function mk(name, sizes) { const d = await PDFDocument.create(); sizes.for
   ok('Importing a PDF with other sizes adds all its pages without a message', r.n === 8 && r.line === '' && r.at && r.go, JSON.stringify(r));
   ok('The imported pages keep their own sizes', (await sizeOf(6)).join() === '1224,1584' && (await sizeOf(7)).join() === '300,400', (await sizeOf(6)).join() + ' ' + (await sizeOf(7)).join());
 
-  // 3. when an import cannot work, the line says which cause: locked or unreadable (and the editor is free again)
+  // 3. when an import cannot work, the toast says which cause: locked or unreadable (and the editor is free again)
   const bad = path.join(os.tmpdir(), 'kf-add-bad.pdf'); fs.writeFileSync(bad, 'this is not a pdf at all');
   const lockedBytes = Buffer.from(Buffer.from(await PDFDocument.create().then(async d => { d.addPage([612, 792]); return d.save({ useObjectStreams: false }); })).toString('latin1').replace(/trailer\s*<</, 'trailer\n<< /Encrypt << /Filter /Standard /V 1 /R 2 /O (x) /U (x) /P -4 >>'), 'latin1'), locked = path.join(os.tmpdir(), 'kf-add-locked.pdf'); fs.writeFileSync(locked, lockedBytes);
-  const tryImport = async f => { const n0 = await p.evaluate(() => S.pdf.n); await p.evaluate(() => $('#peAddStatus').textContent = ''); await p.setInputFiles('#peAddIn', f); await p.waitForFunction(() => !PE.busy && $('#peAddStatus').textContent, null, { timeout: 20000 }).catch(() => {}); const r = await addState(); r.same = r.n === n0; r.err = await p.evaluate(() => $('#peAddStatus').classList.contains('err')); return r; };
+  const tryImport = async f => { const n0 = await p.evaluate(() => S.pdf.n); await p.evaluate(() => peToast('')); await p.setInputFiles('#peAddIn', f); await p.waitForFunction(() => !PE.busy && $('#peToast').classList.contains('show')); const r = await addState(); r.same = r.n === n0; r.error = await p.textContent('#peToast'); return r; };
   r = await tryImport(bad);
-  ok('An unreadable file says it is not a readable PDF, in red, and adds nothing', /not a readable PDF/i.test(r.line) && r.err && r.same && r.at && r.go, JSON.stringify(r));
+  ok('An unreadable file says it is not a readable PDF, in a toast and adds nothing', /not a readable PDF/i.test(r.error) && !r.line && r.same && r.at && r.go, JSON.stringify(r));
   r = await tryImport(locked);
-  ok('A locked file says it is locked, in red, and adds nothing', /locked/i.test(r.line) && !/read/i.test(r.line) && r.err && r.same && r.at && r.go, JSON.stringify(r));
+  ok('A locked file says it is locked, in a toast and adds nothing', /locked/i.test(r.error) && !/read/i.test(r.error) && !r.line && r.same && r.at && r.go, JSON.stringify(r));
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

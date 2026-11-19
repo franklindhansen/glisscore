@@ -3,7 +3,6 @@
    System canvas: the stage splits into selector | preview. The selector shows the page of the current system
    with the video frame drawn on it; the playhead and the selector follow each other.
    ==================================================================== */
-const DIV_W = 7;                                       // the divider's width
 const SPLIT_PRESETS = { spSel: 0.7, spEq: 0.5, spPrev: 0.3, spOnly: 0 };          // the selector's share of the stage: wide, equal, narrow, hidden
 /* the split is saved with the settings (the last one set comes back), and is never a History step */
 let splitSaveT = 0;
@@ -13,30 +12,53 @@ const splitOn = () => sysOn() && !!S.pdf && !$('.app').classList.contains('fs');
 /* Lays out the selector, the divider, and the presets for the stage's size; the preview fits in what is left (pl: room on the left, pt: room above).
    Narrow stages stack the halves, selector above. */
 function splitSync() {
-  const wrap = $('#stageWrap'), on = splitOn(), cw = wrap.clientWidth, chh = wrap.clientHeight;
-  const stack = cw < 600, show = on && SPLIT.f > 0.001, nav = $('.sys-nav'), need = stack ? 0 : Math.min(cw * 0.5, (SPLIT.navW || 0) + 2 * 10);          // the selector is never narrower than its own strip
-  const free = !!SPLIT.moving;          // while the divider glides to or from Hide, the selector narrows or widens all the way, so nothing jumps when it appears or goes
-  const sel = show ? (free ? Math.max(1, Math.round(clamp(SPLIT.f, 0, 0.9) * (stack ? chh : cw) * Math.max(1, need / Math.max(1, clamp(SPLIT.ref, 0.1, 0.9) * cw)))) : Math.max(Math.round(clamp(SPLIT.f, 0.1, 0.9) * (stack ? chh : cw)), Math.round(need))) : 0;
-  const was = SPLIT.shown; SPLIT.shown = show; SPLIT.stack = stack;
-  const pane = $('#sysSel'), div = $('#sysDiv'), cv = $('#selCv');
+  const wrap = $('#stageWrap'), cw = wrap.clientWidth, chh = wrap.clientHeight;
+  const on = splitOn(), show = on && SPLIT.f > 0.001, pane = $('#sysSel'), div = $('#sysDiv'), cv = $('#selCv');
+  const was = SPLIT.shown, free = !!SPLIT.moving, presets = $('#sysPresets');
+  const divider = parseFloat(getComputedStyle(wrap).getPropertyValue('--div-w'));
+  presets.hidden = !on;
+  let stack = cw < 600, sel = 0;
+  if (show) {
+    pane.hidden = false;
+    const controls = $('.sys-controls'), nav = $('.sys-nav'), zoom = $('#selZoom'), sizer = $('#selPgMax');
+    const css = getComputedStyle(controls), inset = parseFloat(css.left) + parseFloat(css.right);
+    const last = String(S.pdf.keep.length);
+    if (sizer.textContent !== last) sizer.textContent = last;
+    const need = () => Math.ceil(parseFloat(getComputedStyle(nav).width) + parseFloat(getComputedStyle(zoom).width) + parseFloat(css.columnGap) + inset);
+    pane.classList.remove('tight');
+    const full = need();
+    pane.classList.add('tight');
+    const compact = need();
+    const preview = $('#stageStrip'), previewRoom = preview.offsetWidth + inset + divider;
+    stack ||= cw < compact + previewRoom;
+    const span = stack ? chh : cw, share = Math.round(clamp(SPLIT.f, free ? 0 : 0.1, 0.9) * span);
+    const max = span - (stack ? preview.offsetHeight + inset + divider : previewRoom);
+    const min = stack ? 0 : compact;
+    SPLIT.minWidth = min;
+    const ref = Math.round(clamp(SPLIT.ref, 0.1, 0.9) * span);
+    const room = Math.max(1, stack ? cw : clamp(share, min, max));
+    const referenceWidth = stack ? cw : clamp(ref, min, max);
+    controls.style.minWidth = free && !stack ? Math.max(0, referenceWidth - inset) + 'px' : '';
+    pane.classList.toggle('tight', (free ? referenceWidth : room) < full);
+    pane.style.width = (stack ? cw : room) + 'px';
+    const presetRoom = stack && nav.offsetWidth + inset + presets.offsetWidth > cw ? presets.offsetHeight + parseFloat(css.rowGap) : 0;
+    const minHeight = controls.offsetHeight + 2 * parseFloat(css.bottom) + presetRoom;
+    sel = free ? Math.max(1, Math.round(share * (stack ? Math.max(1, minHeight / ref) : clamp(ref, min, max) / ref)))
+      : clamp(share, stack ? Math.ceil(minHeight) : min, max);
+  }
+  SPLIT.shown = show; SPLIT.stack = stack;
   const keep = !!(SPLIT.view && SPLIT.view.ghost);          // a selector that is closing by a glide stays until it has closed
-  pane.hidden = div.hidden = !show && !keep; $('#sysPresets').hidden = !on;
+  pane.hidden = div.hidden = !show && !keep;
   wrap.classList.toggle('sys-split', on); wrap.classList.toggle('sys-stack', on && stack);
   div.setAttribute('aria-orientation', stack ? 'horizontal' : 'vertical');
-  const pl = show && !stack ? sel + DIV_W : 0, pt = show && stack ? sel + DIV_W : 0;
+  const pl = show && !stack ? sel + divider : 0, pt = show && stack ? sel + divider : 0;
   wrap.style.paddingLeft = pl ? pl + 'px' : ''; wrap.style.paddingTop = pt ? pt + 'px' : '';
   if (show) {
     const pw = stack ? cw : sel, ph = stack ? sel : chh;
     Object.assign(pane.style, { left: '0', top: '0', width: pw + 'px', height: ph + 'px' });
-    Object.assign(div.style, stack ? { left: '0', right: '0', top: sel + 'px', bottom: '', width: '', height: DIV_W + 'px' } : { left: sel + 'px', right: '', top: '0', bottom: '0', width: DIV_W + 'px', height: '' });
+    Object.assign(div.style, stack ? { left: '0', right: '0', top: sel + 'px', bottom: '', width: '', height: divider + 'px' } : { left: sel + 'px', right: '', top: '0', bottom: '0', width: divider + 'px', height: '' });
     cv.style.width = pw + 'px'; cv.style.height = ph + 'px';
   } else if (was) { szReset(false, SZS); }
-  if (show) {          // the page strip and the zoom strip share the bottom row: at full size when the pane has room, tight (shorter label, closer buttons) when it does not, and the pane is never narrower than the tight pair
-    const pn = $('#sysSel'), zm = $('#selZoom'), both = () => nav.scrollWidth + zm.offsetWidth + 6;
-    pn.classList.remove('tight'); const full = both(); pn.classList.add('tight'); selPgText(); const tight = both();
-    const fits = (stack ? cw : sel) >= full + 3 * 10; pn.classList.toggle('tight', !fits); selPgText();
-    if (nav.scrollWidth > 20 && tight !== SPLIT.navW) { SPLIT.navW = tight; if (!stack && !free && sel < SPLIT.navW + 20) return splitSync(); }
-  }
   Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).setAttribute('aria-pressed', on && Math.abs(SPLIT_PRESETS[id] - (show ? SPLIT.f : 0)) < 0.02 ? 'true' : 'false'));
   presetCurrent(show ? SPLIT.f : 0);
   szButtons();
@@ -92,12 +114,22 @@ function viewGlide(to) {
   const ease = []; for (let i = 0; i <= VIEW_STEPS; i++) ease.push(AE_EASE(i / VIEW_STEPS));
   const frames = f => ease.map((p, i) => Object.assign({ offset: i / VIEW_STEPS }, f(p)));
   const rect = name => name === 'cv' ? { a: A.cv, b: B.cv } : { a: F ? F[name] : off(T[name]), b: T ? T[name] : off(F[name]) };          // the preview is always there; the selector's parts come from, or go to, just outside the pane
+  const stripGap = parseFloat(getComputedStyle($('.sys-controls')).columnGap);
+  const navPath = rect('nav');
   const place = (name, how) => {          // how: 'box' scales and moves a picture, 'l' and 'r' only move a strip by its left or right edge
     const base = lay[name], { a, b } = rect(name); if (base.w < 1 && how === 'box') return null;
     return frames(p => {
       const l = mix(a.l, b.l, p), t = mix(a.t, b.t, p), w = mix(a.w, b.w, p), h = mix(a.h, b.h, p);
       if (how === 'box') return { transformOrigin: '0 0', transform: 'translate(' + (l - base.l) + 'px,' + (t - base.t) + 'px) scale(' + w / base.w + ',' + h / base.h + ')' };
-      const x = how === 'r' ? l + w - (base.l + base.w) : l - base.l; return { transform: 'translate(' + x + 'px,' + (t - base.t) + 'px)' };
+      let x = how === 'r' ? l + w - (base.l + base.w) : l - base.l;
+      if (name === 'zoom') {
+        const navTop = mix(navPath.a.t, navPath.b.t, p);
+        if (t < navTop + lay.nav.h && t + base.h > navTop) {
+          const navRight = mix(navPath.a.l, navPath.b.l, p) + lay.nav.w;
+          x = Math.max(x, navRight + stripGap - base.l);
+        }
+      }
+      return { transform: 'translate(' + x + 'px,' + (t - base.t) + 'px)' };
     });
   };
   const A0 = F ? { w: visA.w, h: visA.h } : stack ? { w: B.pane.w, h: 0 } : { w: 0, h: B.pane.h }, B0 = T ? { w: B.pane.w, h: B.pane.h } : stack ? { w: A.pane.w, h: 0 } : { w: 0, h: A.pane.h };
@@ -150,6 +182,7 @@ function splitBind() {
   });
   Object.keys(SPLIT_PRESETS).forEach(id => $('#' + id).addEventListener('click', () => splitGlide(SPLIT_PRESETS[id])));
   presetBind();
+  document.fonts.ready.then(layoutStage);
 }
 
 /* ---------- the selector ---------- */
@@ -175,8 +208,12 @@ function selTimeOf(key) {
 }
 function selJump(key) { const t = selTimeOf(key); if (t != null) Transport.seek(t); }
 
-/* the page strip's label: "Page 13", or "p. 13" when the selector is too narrow for both strips at full size */
-function selPgText() { if (SEL.key == null || !S.pdf) return; $('#selPg').textContent = ($('#sysSel').classList.contains('tight') ? 'p. ' : 'Page ') + pageNo(SEL.key); }
+function selPgText() {
+  const number = String(pageNo(SEL.key)), value = $('#selPgValue');
+  if (value.textContent === number) return;
+  value.textContent = number;
+  $('#selPg').setAttribute('aria-label', 'Page ' + number);
+}
 function selSync(force) {
   if (!SPLIT.shown || !S.pdf) return;
   const key = selCurrent(true), cv = $('#selCv'); if (key == null) return;          // the selector moves on at the middle of a turn, not after it ends
@@ -210,9 +247,9 @@ function selPaint() {
   const k = Math.min(3, 2 * Math.max(1, window.devicePixelRatio || 1)), w = Math.max(2, Math.round(cv.clientWidth * k)), h = Math.max(2, Math.round(cv.clientHeight * k));
   if (cv.width !== w) cv.width = w; if (cv.height !== h) cv.height = h;
   const g = cv.getContext('2d'), idx = sysPage(key), pa = S.pdf.aspect, { W, H } = outputSize(), box = sysFit(key, W, H).box;
-  const m = 14 * k, wst = $('#stageWrap').style, fs = parseFloat(wst.getPropertyValue('--fs')) || 32, fm = parseFloat(wst.getPropertyValue('--fsm')) || 10;
+  const m = 14 * k, controls = $('.sys-controls'), css = getComputedStyle(controls);
   let u = Math.max(1, Math.min((w - 2 * m) / pa, h - 2 * m)), oy = (h - u) / 2;
-  const row = ((fs + fm) + 6) * k;          // the strips along the bottom never cover the page: when the page would reach them it gives them a row of their own, as the preview does
+  const row = (controls.offsetHeight + parseFloat(css.bottom) + parseFloat(css.rowGap)) * k;          // the strips along the bottom never cover the page: when the page would reach them it gives them a row of their own, as the preview does
   if (oy < row && h > row + 3 * m) { u = Math.max(1, Math.min((w - 2 * m) / pa, h - m - row)); oy = m + (h - m - row - u) / 2; }
   const ox = (w - u * pa) / 2, X = x => ox + x * u, Y = y => oy + y * u;
   SEL.geo = { u, ox, oy, idx, pa, w, h, box, k };

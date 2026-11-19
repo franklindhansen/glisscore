@@ -33,10 +33,10 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await type('3-5, 9'); ok('typing the same pages makes no step', (await steps()) === s0 + 1);
   await type('2–4'); ok('an en dash is accepted', (await act()) === '2,3,4', await act());
   await type(' 1 , 7-8 '); ok('spaces are allowed', (await act()) === '1,7,8', await act());
-  const st = await steps(), cur = await act();
+  const st = await steps(), cur = await act(), originalCount = await count();
   for (const [t, why] of [['13', 'a number past the last page'], ['abc', 'text it cannot read'], ['5-2', 'a backwards range'], ['', 'nothing'], ['1,,3', 'a stray comma'], ['0', 'page 0']]) {
     await type(t);
-    ok('"' + t + '" (' + why + ') changes nothing, restores the field, and says why', (await act()) === cur && (await steps()) === st && (await field()) === '1, 7-8' && await p.evaluate(() => $('#peCount').classList.contains('warn') && $('#peCount').textContent.length > 8), await count());
+    ok('"' + t + '" (' + why + ') changes nothing, restores the field, and says why', (await act()) === cur && (await steps()) === st && (await field()) === '1, 7-8' && (await count()) === originalCount && await p.evaluate(() => $('#peToast').classList.contains('show') && $('#peToast').textContent.length > 8), await count());
   }
   await p.fill('#pePages', '9'); await p.press('#pePages', 'Escape'); await p.waitForTimeout(200);
   ok('Escape puts the field back and keeps the editor open', (await field()) === '1, 7-8' && await p.evaluate(() => !$('#pdfDlg').hidden));

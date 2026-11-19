@@ -681,13 +681,13 @@ function layoutStage() {
   const wrap = $('#stageWrap'), r0 = wrap.getBoundingClientRect(), cs = getComputedStyle(wrap), pad = $('.app').classList.contains('fs') ? ['Top', 'Bottom', 'Left', 'Right'].map(k => parseFloat(cs['padding' + k]) || 0) : [0, 0, 0, 0];          // in full screen the safe area is the frame's padding: the picture fits inside it
   const r = { width: r0.width - pad[2] - pad[3], height: r0.height - pad[0] - pad[1] };
   if (r.width < 10 || r.height < 10) return;
-  const g = splitSync();          // System: the selector takes its share of the stage and the picture fits in what is left
-  const ar = ASPECTS[S.set.aspect] || 16 / 9;
-  const fit = h => { let w = r.width - 2 - g.pl, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
   const fz = clamp(Math.floor(r.height - 6), 22, 32), fm = clamp(Math.floor((r.height - fz) / 2), 3, 10), need = fz + fm + 2;          // in a very short window the button gets smaller and closer to the edge instead of hanging out of the box
   if (SZ.ar !== S.set.aspect) { if (SZ.ar != null && SZ.z !== 1) szReset(false); SZ.ar = S.set.aspect; }          // a new page size starts at Fit
   const sw = $('#stageStrip').offsetWidth || 150;
   wrap.style.setProperty('--fs', fz + 'px'); wrap.style.setProperty('--fsm', fm + 'px'); wrap.style.setProperty('--sw', sw + 'px');
+  const g = splitSync();          // System: the selector takes its share of the stage and the picture fits in what is left
+  const ar = ASPECTS[S.set.aspect] || 16 / 9;
+  const fit = h => { let w = r.width - 2 - g.pl, hh = w / ar; if (hh > h) { hh = h; w = hh * ar; } return [Math.floor(w), Math.floor(hh)]; };
   let [cw, ch] = fit(r.height - 2 - g.pt), room = 0;
   if (!$('#stageStrip').hidden && !$('.app').classList.contains('fs') && (r.width - g.pl - cw) / 2 < sw + fm && (r.height - g.pt - ch) / 2 < need && r.height - g.pt > need + 40) { room = need; [cw, ch] = fit(r.height - 2 - g.pt - room); }          // the zoom and full screen strip sits in the corner: where the picture would reach it, the picture gives it a row below
   wrap.style.paddingBottom = room ? room + 'px' : '';

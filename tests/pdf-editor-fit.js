@@ -28,7 +28,7 @@ const look = () => {
     for (const t of TOOLS) {
       await p.evaluate(t => peTool(t), t); await p.waitForTimeout(900); await snap(t, 'default');
       if (['clean', 'skew', 'split', 'crop', 'wm'].includes(t)) { await p.evaluate(() => document.querySelector('#peNone').click()); await p.waitForTimeout(500); await snap(t, 'nothing ticked (a reason shows)'); await p.evaluate(() => document.querySelector('#peAll').click()); await p.waitForTimeout(400); }
-      if (t === 'crop') { await p.evaluate(() => { const s = document.querySelector('#peCropSub'); s.classList.add('warn'); s.textContent = tx('pe.crop.full'); }); await p.waitForTimeout(300); await snap(t, 'the frame note'); await p.evaluate(() => { const s = document.querySelector('#peCropSub'); s.classList.remove('warn'); s.textContent = s.dataset.normal; }); }
+      if (t === 'crop') { await p.evaluate(() => peToast(tx('pe.crop.full'))); await p.waitForTimeout(300); await snap(t, 'the frame toast'); await p.evaluate(() => peToast('')); }
       if (t === 'split') { await p.waitForTimeout(1500); await snap(t, 'spreads found or not'); }
     }
     await p.close();

@@ -13,7 +13,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
     const f = now => {
       if (window.__on) {
         const pn = q('#sysSel'), cl = /inset\(([^)]*)\)/.exec(getComputedStyle(pn).clipPath), pv = cl ? cl[1].trim().split(/\s+/) : [], cut = parseFloat(pv.length > 1 ? pv[1] : pv[0]) || 0;
-        window.__rows.push({ t: now, view: !!SPLIT.view, cv: box(q('#stage')), pane: pn.hidden ? 0 : pn.offsetWidth - cut, page: pn.hidden ? null : box(q('#selCv')), nav: pn.hidden ? null : box(q('.sys-nav')), div: q('#sysDiv').hidden ? null : box(q('#sysDiv')) });
+        window.__rows.push({ t: now, view: !!SPLIT.view, cv: box(q('#stage')), pane: pn.hidden ? 0 : pn.offsetWidth - cut, page: pn.hidden ? null : box(q('#selCv')), nav: pn.hidden ? null : box(q('.sys-nav')), zoom: pn.hidden ? null : box(q('#selZoom')), div: q('#sysDiv').hidden ? null : box(q('#sysDiv')) });
       }
       requestAnimationFrame(f);
     }; requestAnimationFrame(f);
@@ -43,6 +43,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await click('spSel'); await settle();
   const mid = await take(async () => { await click('spOnly'); await p.waitForTimeout(160); await click('spEq'); });
   judge('spSel to spOnly, then spEq half way', mid);
+  await p.setViewportSize({ width: 1024, height: 800 });
+  await click('spEq'); await settle();
+  const compact = await take(() => click('spSel'));
+  const overlaps = compact.filter(({ nav, zoom }) => nav && zoom && nav[0] + nav[2] > zoom[0] + 0.5
+    && nav[1] < zoom[1] + zoom[3] && nav[1] + nav[3] > zoom[1]);
+  ok('the selector strips stay apart throughout a compact-to-wide View change', compact.length > 8 && !overlaps.length, overlaps.length + ' overlapping frames');
   // reduced motion: instant
   const rm = await b.newPage({ viewport: { width: 1300, height: 800 }, reducedMotion: 'reduce' }); await rm.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html?disk=0'); await rm.setInputFiles('#pdfIn', (process.env.S || 'tests/fixtures') + '/score.pdf');
   await rm.waitForFunction(() => S.pdf && S.pdf.keep.length > 0 && duration() > 2, null, { timeout: 60000 }); await rm.waitForTimeout(600);

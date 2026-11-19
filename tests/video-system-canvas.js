@@ -2,6 +2,7 @@
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/video-system-canvas.js
 const { chromium } = require('playwright-core');
 const { PDFDocument } = require('../vendor/pdf-lib.min.js');
+const { install } = require('./lib/measure');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
 const PW = 595, PH = 842;
 function staffPage(doc, n) {
@@ -42,7 +43,7 @@ function staffPage(doc, n) {
   const g3 = await geo();
   ok('a double-click glides it back to half and half', near(g3.sel[0], (g3.wrap[0] - 2) / 2, 3), JSON.stringify([g.sel[0], g3.sel[0]]));
   ok('the split is not a History step', (await hist()) === undoBefore);
-  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await preset(id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f + ' (never narrower than its two strips)', near(g.sel[0], Math.max(f * (g.wrap[0] - 2), id === 'spPrev' ? await p.evaluate(() => SPLIT.navW + 20) : 0), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
+  for (const [id, f] of [['spSel', 0.7], ['spPrev', 0.3]]) { await preset(id); await p.waitForTimeout(800); g = await geo(); ok('preset ' + id + ' gives the selector ' + f + ' (never narrower than its two strips)', near(g.sel[0], Math.max(f * (g.wrap[0] - 2), id === 'spPrev' ? await p.evaluate(() => SPLIT.minWidth) : 0), 4) && g.pressed[['spSel', 'spEq', 'spPrev', 'spOnly'].indexOf(id)] === 'true', JSON.stringify(g)); }
   await preset('spOnly'); await p.waitForTimeout(800); g = await geo();
   ok('Preview only hides the selector and gives the preview the stage', g.hidden && g.dh && g.st[2] > 700, JSON.stringify(g));
   await preset('spEq'); await p.waitForTimeout(800);
@@ -64,15 +65,15 @@ function staffPage(doc, n) {
   // linked both ways
   const at = i => p.evaluate(i => { const t = i === 0 ? S.vStart : S.turns[i - 1] - refOffset() + flipDur() + 0.01; Transport.seek(t); return t; }, i);
   await at(4); await p.waitForTimeout(500);
-  let s = await p.evaluate(() => ({ pg: document.querySelector('#selPg').textContent, key: SEL.key, prev: document.querySelector('#selPrev').disabled, next: document.querySelector('#selNext').disabled }));
-  ok('moving the playhead changes the selector\'s page and system', s.pg === 'Page 2' && s.key === 100001 + 1 - 1 + 0 || s.key === 1 + 100000, JSON.stringify(s));
+  let s = await p.evaluate(() => ({ pg: document.querySelector('#selPgValue').textContent, key: SEL.key, prev: document.querySelector('#selPrev').disabled, next: document.querySelector('#selNext').disabled }));
+  ok('moving the playhead changes the selector\'s page and system', s.pg === '2' && s.key === 100001, JSON.stringify(s));
   const box = await p.evaluate(() => { const cv = document.querySelector('#selCv'), r = cv.getBoundingClientRect(), geo = SEL.geo, sy = SYS.byPage.get(0).systems[2]; return { x: r.left + ((geo.ox + geo.u * geo.pa / 2) / cv.width) * r.width, y: r.top + ((geo.oy + geo.u * (sy.top + sy.bottom) / 2) / cv.height) * r.height }; });
   await p.evaluate(() => { Transport.seek(S.turns[3] - refOffset() + flipDur() + 0.01); }); await p.waitForTimeout(500);
   const box0 = await p.evaluate(() => { const cv = document.querySelector('#selCv'), r = cv.getBoundingClientRect(), geo = SEL.geo, sy = SYS.byPage.get(geo.idx).systems[0]; return { x: r.left + ((geo.ox + geo.u * geo.pa / 2) / cv.width) * r.width, y: r.top + ((geo.oy + geo.u * (sy.top + sy.bottom) / 2) / cv.height) * r.height, idx: geo.idx }; });
   await p.mouse.click(box0.x, box0.y); await p.waitForTimeout(500);
   ok('clicking a system jumps the playhead to it', await p.evaluate(() => sysPage(SEL.key) === 1 && sysNo(SEL.key) === 0 && Math.abs(S.time - (S.turns[2] - refOffset() + flipDur())) < 0.1), JSON.stringify(await p.evaluate(() => [SEL.key, S.time])));
   await p.click('#selNext'); await p.waitForTimeout(500);
-  ok('Next page moves to the next page', await p.evaluate(() => sysPage(SEL.key) === 2 && document.querySelector('#selPg').textContent === 'Page 3'));
+  ok('Next page moves to the next page', await p.evaluate(() => sysPage(SEL.key) === 2 && document.querySelector('#selPgValue').textContent === '3'));
   await p.click('#selPrev'); await p.click('#selPrev'); await p.waitForTimeout(500);
   ok('Previous page stops at the first, with the button greyed', await p.evaluate(() => sysPage(SEL.key) === 0 && document.querySelector('#selPrev').disabled));
   // the page is plain: no Preview frame, no glass, no dimming
@@ -153,10 +154,58 @@ function staffPage(doc, n) {
   ok('a narrow window stacks the halves, selector above', near(g.sel[0], g.wrap[0] - 2) && near(g.sel[1], (g.wrap[1] - 2) / 2) && g.selY < 3 && g.st[1] >= g.div[1] + g.div[3] - 1, JSON.stringify(g));
   ok('the divider turns and the glyphs rotate', g.div[3] === 7 && g.div[2] > 300 && await p.evaluate(() => getComputedStyle(document.querySelector('#sysPresets svg')).transform !== 'none'), JSON.stringify(g.div));
   ok('nothing is cut off at phone width', await p.evaluate(() => { const w = document.querySelector('#stageWrap').getBoundingClientRect(), bad = [...document.querySelectorAll('#stageStrip, .sys-nav, #stage')].filter(e => { const r = e.getBoundingClientRect(); return r.right > w.right + 1 || r.left < w.left - 1 || r.bottom > w.bottom + 1; }); return !bad.length && document.documentElement.scrollWidth <= innerWidth; }));
+  const collisions = [];
+  for (const width of [300, 320, 345, 390, 600, 640, 960, 961, 1000, 1024, 1080, 1440, 1920]) {
+    await p.setViewportSize({ width, height: 844 });
+    const bad = await p.evaluate(() => {
+      const box = selector => document.querySelector(selector).getBoundingClientRect();
+      const issues = [];
+      for (const share of [0.15, 0.3, 0.5, 0.7, 0.85]) {
+        splitSet(share);
+        const pane = box('#sysSel'), nav = box('.sys-nav'), zoom = box('#selZoom'), eraser = box('#szErase');
+        const hit = document.elementFromPoint(eraser.right - 2, eraser.top + eraser.height / 2);
+        const intersects = nav.right > zoom.left && zoom.right > nav.left && nav.bottom > zoom.top && zoom.bottom > nav.top;
+        const clipped = [nav, zoom].some(r => r.left < pane.left || r.right > pane.right || r.top < pane.top || r.bottom > pane.bottom);
+        if (intersects || clipped || hit?.closest('button')?.id !== 'szErase') issues.push({ share, intersects, clipped, hit: hit?.closest('button')?.id });
+        if (share === 0.5 && !SPLIT.stack && SPLIT.minWidth <= pane.width && SPLIT.minWidth <= Math.round($('#stageWrap').clientWidth / 2)
+          && Math.abs(pane.width - Math.round($('#stageWrap').clientWidth / 2)) > 1) issues.push({ share, equal: pane.width });
+      }
+      splitSet(0.5);
+      return issues;
+    });
+    if (bad.length) collisions.push({ width, bad });
+  }
+  ok('selector strips fit and the eraser stays clickable across widths and divider positions', !collisions.length, JSON.stringify(collisions));
+  await p.setViewportSize({ width: 390, height: 844 });
+  await p.waitForTimeout(300);
   await preset('spOnly'); await p.waitForTimeout(800);
   ok('Preview only fills the phone stage', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#stage').offsetWidth > 350));
   await pick('pageLayout', 'single'); await p.waitForTimeout(600);
   ok('leaving System takes the split away', await p.evaluate(() => document.querySelector('#sysSel').hidden && document.querySelector('#sysPresets').hidden && document.querySelector('#stageWrap').style.paddingTop === ''));
+  for (let i = 4; i < 10; i++) staffPage(doc, 1);
+  await p.setViewportSize({ width: 1024, height: 900 });
+  await p.setInputFiles('#pdfIn', { name: 'ten-pages.pdf', mimeType: 'application/pdf', buffer: Buffer.from(await doc.save()) });
+  await p.waitForFunction(() => S.pdf?.keep.length === 10);
+  await pick('pageLayout', 'system');
+  await p.evaluate(() => splitSet(0.5));
+  await p.waitForFunction(() => !sysBusy() && selPages().length === 10);
+  await p.evaluate(() => selJump(selPages()[8].key));
+  await p.getByRole('status', { name: 'Page 9', exact: true }).waitFor();
+  await p.evaluate(install);
+  const number = () => p.evaluate(() => {
+    const q = id => document.getElementById(id);
+    const letters = window.__mk.letters(q('selPgValue')), arrow = q('selNext').querySelector('svg').getBoundingClientRect();
+    return { value: q('selPgValue').textContent, arrow: arrow.left, width: q('selPg').getBoundingClientRect().width,
+      offset: (letters.capTop + letters.base - arrow.top - arrow.bottom) / 2 };
+
+  });
+  const nine = await number();
+  await p.click('#selNext');
+  await p.getByRole('status', { name: 'Page 10', exact: true }).waitFor();
+  const ten = await number();
+  ok('page numbers keep the arrow in place across digit counts and expose the full page label',
+    nine.value === '9' && ten.value === '10' && nine.arrow === ten.arrow && nine.width === ten.width, JSON.stringify({ nine, ten }));
+  ok('the page digits and arrow icons share a vertical center', Math.abs(nine.offset) <= 0.5 && Math.abs(ten.offset) <= 0.5, JSON.stringify({ nine, ten }));
   ok('no page errors', errs.length === 0, errs.join(' | '));
   await b.close();
 })();

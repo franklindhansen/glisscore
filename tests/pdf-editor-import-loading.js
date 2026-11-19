@@ -1,4 +1,4 @@
-// PDF Editor, importing a large PDF: new cards show the softened paper with the wait pill over the pages (no flat grey), the line says "Adding pages…", the new pages arrive ticked, at desktop and phone width.
+// PDF Editor, importing a large PDF: new cards show the softened paper with the wait pill over the pages (no flat grey), the new pages arrive ticked, at desktop and phone width.
 // Run with the app served on port 8123:  NODE_PATH=$HOME/keyframes-tests/node_modules node tests/pdf-editor-import-loading.js
 const { chromium } = require('playwright-core'), fs = require('fs'), os = require('os'), path = require('path'), { PDFDocument } = require('../vendor/pdf-lib.min.js');
 const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : ''));
@@ -16,13 +16,13 @@ async function mk(name, n) { const d = await PDFDocument.create(); for (let i = 
     await p.setInputFiles('#peAddIn', BIG); await p.waitForFunction(() => S.pdf.n === 43 && document.querySelectorAll('#peGrid .page-card').length === 43); await p.waitForFunction(() => !PE.waiting && !PE.busy && document.querySelector('#pdfDlg .wait-pill.on'), null, { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(400);          // the pill shows once a page has waited 350ms
     const s = await p.evaluate(() => { const cs = [...document.querySelectorAll('#peGrid .page-card')].slice(3); return { line: $('#peAddStatus').textContent, n: cs.length, shim: cs.filter(c => c.classList.contains('loading') && Math.abs(+getComputedStyle(c.querySelector('canvas')).opacity - +getComputedStyle(document.documentElement).getPropertyValue('--inactive')) < 0.02).length, pill: document.querySelectorAll('#pdfDlg .wait-pill.on').length, ticked: cs.filter(c => peTicked(+c.dataset.id)).length, overflow: document.documentElement.scrollWidth > innerWidth }; });
     await p.screenshot({ path: path.join(os.tmpdir(), 'kf-import-loading-' + label + '.png') });          // look at it: the numbers do not say how it reads
-    ok(label + ': while loading, the line says Adding pages…', s.line === 'Adding pages…', s.line);
+    ok(label + ': while loading, the wait pill leaves the Insert head clear', s.line === '', s.line);
     ok(label + ': every new card shows the softened paper, with one wait pill over the pages', s.n === 40 && s.shim === 40 && s.pill === 1, JSON.stringify(s));
     ok(label + ': the new pages are ticked', s.ticked === 40, JSON.stringify(s));
     ok(label + ': no page scroll sideways', !s.overflow);
     await p.evaluate(() => { window.__hold = false; }); await p.waitForFunction(() => !document.querySelector('#peGrid .page-card.loading') && !$('#peAddStatus').textContent);
     const e = await p.evaluate(async () => ({ line: $('#peAddStatus').textContent, n: document.querySelectorAll('#peGrid .page-card.loading').length, pill: (await new Promise(r => setTimeout(r, 400)), document.querySelectorAll('#pdfDlg .wait-pill.on').length), ticked: [...document.querySelectorAll('#peGrid .page-card')].filter(c => peTicked(+c.dataset.id)).length }));
-    ok(label + ': when the thumbnails arrive the softened paper, the pill, and the line go, and the ticks stay', e.line === '' && e.n === 0 && e.pill === 0 && e.ticked === 43, JSON.stringify(e));
+    ok(label + ': when the thumbnails arrive the softened paper and the pill go, and the ticks stay', e.line === '' && e.n === 0 && e.pill === 0 && e.ticked === 43, JSON.stringify(e));
     await p.close();
   }
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();

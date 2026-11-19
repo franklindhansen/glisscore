@@ -61,10 +61,10 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   // Crop: no room for margin
   await p.evaluate(() => { PE.d.order = [0, 1, 2]; peTool('crop'); }); await p.waitForTimeout(900);
   await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); });
-  const n1 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), pad: document.querySelector('#peCropPad').value, text: document.querySelector('#peCropSub').textContent }));
+  const n1 = await p.evaluate(() => ({ hidden: !($('#peToast').classList.contains('show') && $('#peToast').textContent === tx('pe.crop.full')), pad: document.querySelector('#peCropPad').value, text: $('#peToast').textContent }));
   ok('A margin that still has room gives no note', n1.hidden, JSON.stringify(n1));
   await p.evaluate(() => { const e = document.querySelector('#peCropPad'); e.value = 8; e.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(300);
-  const n2 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), box: peCropBox(PE.d.order[0]).box }));
+  const n2 = await p.evaluate(() => ({ hidden: !($('#peToast').classList.contains('show') && $('#peToast').textContent === tx('pe.crop.full')), box: peCropBox(PE.d.order[0]).box }));
   ok('When the frame cannot grow any more the note says so', n2.hidden === !(n2.box[0] < 0.002 && n2.box[2] > 0.998 && n2.box[1] < 0.002 && n2.box[3] > 0.998), JSON.stringify(n2));
   // another PDF
   const a1 = await p.evaluate(async () => { const sc = await peScan(0, 200, null); return { gen: S.pdf.gen, ink: sc.n, asp: PE.asp ? PE.asp.size : 0 }; });
@@ -75,8 +75,8 @@ async function makePdf(name, x0, x1, n = 3, top = 700, bot = 100) {
   await p.evaluate(() => { peTool('crop'); }); await p.waitForTimeout(900);
   await p.evaluate(async () => { for (let i = 0; i < 400 && (PE.cropReading || peTargets().some(id => !PE.raw.has(peRawKey(PE.d.slots[id])))); i++) await sleep(25); await sleep(250); const e = document.querySelector('#peCropPad'); e.value = 4; e.dispatchEvent(new Event('input', { bubbles: true })); });
   await p.waitForTimeout(400);
-  const n3 = await p.evaluate(() => ({ hidden: !document.querySelector('#peCropSub').classList.contains('warn'), text: document.querySelector('#peCropSub').textContent, box: peCropBox(PE.d.order[0]).box.map(v => +v.toFixed(3)) }));
-  ok('Music that fills the page: the note takes the subtitle line and says the margin has no room', !n3.hidden && /no margin to add/i.test(n3.text) , JSON.stringify(n3));
+  const n3 = await p.evaluate(() => ({ hidden: !($('#peToast').classList.contains('show') && $('#peToast').textContent === tx('pe.crop.full')), text: $('#peToast').textContent, box: peCropBox(PE.d.order[0]).box.map(v => +v.toFixed(3)) }));
+  ok('Music that fills the page: the toast says the margin has no room', !n3.hidden && /no margin to add/i.test(n3.text) , JSON.stringify(n3));
   // a big move: 60 pages, every order reversed, timed from the start of the render (the numbers and cards start together)
   await p.evaluate(() => closePdfEditor(false));
   const D = await makePdf('kf-view-d.pdf', 80, 530, 60);

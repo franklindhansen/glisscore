@@ -13,6 +13,19 @@ const K = '__keyframes';
   const near = (a, b) => Math.abs(a - b) < 0.02;
   const read = () => p.evaluate(K => { const k = window[K]; return { turns: k.S.turns.slice(), ph: k.S.ph.slice(), n: k.S.history.length, ve: k.vEnd(), ce: k.S.creditsEnd, dis: document.querySelector('#bToEnd').disabled, tip: document.querySelector('#bToEnd').title, hint: document.querySelector('#tlHint').textContent, toast: (document.querySelector('#toast') || {}).textContent || '' }; }, K);
   const setup = (turns, ph, time) => p.evaluate(([K, turns, ph, time]) => { const k = window[K]; k.S.turns = turns.slice(); k.S.ph = ph.slice(); k.S.history.length = 0; k.S.time = time; k.onTurnsChanged(); }, [K, turns, ph, time]);
+  const layout = () => p.evaluate(() => {
+    const tl = document.querySelector('.timeline').getBoundingClientRect();
+    const rect = selector => {
+      const { x, y, width, height } = document.querySelector(selector).getBoundingClientRect();
+      return { x: x - tl.x, y: y - tl.y, width, height };
+    };
+    const button = document.querySelector('#bToEnd');
+    return {
+      timeline: ['.tl-bar', '#tlScroll', '.tl-info .info-i'].map(rect),
+      // The press spring transforms the button without changing its layout slot.
+      button: [button.offsetLeft, button.offsetTop, button.offsetWidth, button.offsetHeight]
+    };
+  });
   const press = async () => { await p.click('#bToEnd'); await p.waitForTimeout(150); };
   const r0 = await read(); const n = r0.turns.length, vs = await p.evaluate(K => window[K].S.vStart, K);
   const D = await p.evaluate(K => window[K].turnGap(), K), off = await p.evaluate(K => window[K].refOffset(), K);
@@ -23,14 +36,17 @@ const K = '__keyframes';
   await setup(base, ph, base[2] + 1);
   let r = await read();
   ok('the button is live when turns lie after the playhead', r.dis === false, r.tip);
+  const wide = await layout();
   await press(); r = await read();
+  const wideAfter = await layout();
+  ok('the warning leaves the timeline geometry unchanged at desktop width', JSON.stringify(wideAfter) === JSON.stringify(wide), JSON.stringify({ wide, wideAfter }));
   ok('turns up to the playhead stay', r.turns.slice(0, 3).every((t, i) => near(t, base[i])), JSON.stringify(r.turns));
   ok('the later turns keep their order at the least gap', r.turns.slice(3).every((t, i, a) => i === 0 || near(t - a[i - 1], D)) && near(r.turns[3] - r.turns[2], D) === (r.turns[3] - r.turns[2] < D + 0.02), JSON.stringify(r.turns));
   ok('the last turn sits at the end of the video', near(r.turns[n - 1], r0.ve - D + off), r.turns[n - 1] + ' vs ' + (r0.ve - D + off));
   ok('moved turns are dashed, the others keep their state', r.ph.slice(3).every(Boolean) && r.ph.slice(0, 3).every(v => !v), JSON.stringify(r.ph));
-  ok('the hint line counts them', r.hint.startsWith((n - 3) + ' page turns still need placing'), r.hint);
+  ok('Timeline help still counts pending turns', r.hint.startsWith((n - 3) + ' page turns still need placing'), r.hint);
   ok('one History step', r.n === 1, String(r.n));
-  ok('the toast says how many moved', r.toast.includes((n - 3) + ' turns moved to the end'), r.toast);
+  ok('one toast reports the move and explains the dashed handles', r.toast === (n - 3) + ' turns moved to the end. Drag dashed handles into place.', r.toast);
 
   // Add page turn places the next one in order without pushing the rest
   await p.evaluate(([K, t]) => { const k = window[K]; k.S.time = t; k.Transport.now = () => t; k.tapTurn(); }, [K, base[2] + 2.5]);
@@ -49,6 +65,18 @@ const K = '__keyframes';
     ok('playhead after turn ' + (k + 1) + ': exactly ' + mv + ' turns move', r.ph.filter(Boolean).length === mv && r.turns.slice(0, k + 1).every((t, i) => near(t, base[i])), JSON.stringify(r.ph));
   }
 
+  await p.setViewportSize({ width: 425, height: 900 });
+  await setup(base, ph, (base[n - 2] + base[n - 1]) / 2);
+  await p.waitForTimeout(300);
+  const narrow = await layout();
+  await press(); r = await read();
+  ok('the single-turn warning uses the shared toast at narrow width', r.toast === '1 turn moved to the end. Drag dashed handles into place.', r.toast);
+  const narrowAfter = await layout();
+  ok('the warning leaves the timeline geometry unchanged at narrow width', JSON.stringify(narrowAfter) === JSON.stringify(narrow), JSON.stringify({ narrow, narrowAfter }));
+  await p.waitForFunction(() => !document.querySelector('#toast').classList.contains('show'));
+  ok('dismissing the toast leaves the timeline geometry unchanged', JSON.stringify(await layout()) === JSON.stringify(narrow));
+  await p.setViewportSize({ width: 1300, height: 900 });
+
   // nothing after the playhead
   await setup(base, ph, base[n - 1] + 0.5); r = await read();
   ok('greyed when no turn lies after the playhead, with the reason', r.dis === true && /after the playhead/i.test(r.tip), r.dis + ' ' + r.tip);
@@ -64,6 +92,19 @@ const K = '__keyframes';
   ok('credits: the credits turn is not dashed and the credits end marker is unchanged', r.ph[m - 1] === false && r.ph.slice(2, m - 1).every(Boolean) && r.ce === ce0, JSON.stringify(r.ph) + ' ' + r.ce + ' vs ' + ce0);
   await setup(cb, cb.map(() => false), cb[m - 2] + 0.5); r = await read();
   ok('credits: greyed when only the credits turn lies after the playhead', r.dis === true, r.tip);
+
+  await p.evaluate(() => {
+    S.set.creditsOn = false;
+    S.ph[0] = true;
+    onExportClick();
+  });
+  await p.locator('#warnTitle').filter({ hasText: 'No audio loaded' }).waitFor();
+  await p.click('#warnYes');
+  await p.locator('#warnTitle').filter({ hasText: 'Unplaced page turns' }).waitFor();
+  const exportWarning = await p.locator('#warnMsg').textContent();
+  ok('export confirmation uses the same instruction and explains the current positions',
+    exportWarning === '1 page turn is unplaced. Drag dashed handles into place. Export anyway uses the current positions.', exportWarning);
+  await p.click('#warnNo');
 
   ok('No script errors', errs.length === 0, errs.join(' | ')); await b.close();
 })();

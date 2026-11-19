@@ -42,7 +42,7 @@ function edLead(which, quip, once, hold) {
 function openPdfEditor() {
   if (!S.pdf) return;
   peClearStatus();
-  PE.d = recipeOf(); PE.splitSaid = ''; PE.waiting = false; PE.toastOn = false; PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.manTicks = false; PE.manSkip = null; PE.autoSkip = null; PE.handLast = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
+  PE.d = recipeOf(); PE.splitSaid = ''; PE.cropFull = false; PE.waiting = false; PE.toastOn = false; PE.wmSel = null; PE.wipeShown = false; PE.undo = []; PE.redo = []; PE.drag = null; PE.pending = null; PE.mode = 'pages'; PE.view = 'pages'; PE.skewSeen = new Map(); PE.one = null; PE.oneSig = ''; PE.orig = true; PE.rzCustom = false; PE.rzPend = undefined; PE.chromed = false; PE.skip = new Set(); PE.splitSel = null; PE.cropMode = 'auto'; PE.hand = new Map(); PE.manTicks = false; PE.manSkip = null; PE.autoSkip = null; PE.handLast = null; PE.busy = false; PE.raw = new Map(); PE.full = new Map(); PE.cl = { bg: 1, sp: 1 }; PE.rawOne = null; PE.posWas = new Map(); PE.zm = { z: 1, x: 0, y: 0 }; PE.zmFor = null; peWipeSet(0.5);
   [['peClBg', 1], ['peClSp', 1]].forEach(([n, v]) => document.querySelectorAll('input[name=' + n + ']').forEach(r => { r.checked = +r.value === v; }));
   document.querySelectorAll('input[name=peCropMode]').forEach(r => { r.checked = r.value === 'auto'; });
   document.querySelectorAll('#peBand .pe-tv').forEach(v => { v.hidden = v.dataset.tool !== 'pages'; v.classList.remove('sliding'); });
@@ -106,7 +106,7 @@ function peTool(name) {
   if (name === PE.mode || PE.drag) return;
   const redraw = PE.mode === 'crop' || name === 'crop' || PE.mode === 'dim' || name === 'dim' || PE.one != null, dir = peOrder().indexOf(name) > peOrder().indexOf(PE.mode) ? 1 : -1;          // only Crop draws the cards differently, so every other switch keeps them as they are
   const snap = redraw ? peBodySnap() : null;          // a copy is only needed when the pictures change; a still grid needs no second image
-  peClearStatus(); peToast(''); PE.splitSaid = '';
+  peClearStatus(); peToast(''); PE.splitSaid = ''; PE.cropFull = false;
   PE.mode = name; peCropTicks(); PE.one = null; PE.oneAuto = false; if (name === 'crop' && peHandMode()) { const t = peTargets(); if (t.length) { PE.one = t[0]; PE.oneAuto = true; } } /* Manual draws on one page, so coming back to Crop in Manual opens the first one again, as the Manual switch does */ PE.rzPend = undefined; PE.rzShape = undefined; if (name === 'resize') PE.rzCustom = false;
   if (redraw) peRender(false); else peState();
   peBodySlide(snap, dir);
@@ -208,16 +208,15 @@ function peActs() {
     peWhy('#peCleanStatus', none ? 'pe.why.page' : bare ? 'pe.why.choose' : '');
   }
   else if (PE.mode === 'skew') {
-    const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id])), line = $('#peSkewStatus');
+    const t = peTargets(), tried = !!t.length && t.every(id => PE.skewSeen.get(id) === peSkewKey(d.slots[id]));
     const fixed = tried && t.some(tilted); peApplyBtn('#peSkewGo', !t.length || (tried && !fixed), fixed);
     peWhy('#peSkewStatus', !t.length ? 'pe.why.page' : '', tried && !fixed ? 'pe.why.level' : '');
-    if (!busy && !tried && line.textContent === tx('pe.skew.none')) peSay('#peSkewStatus', '');          // the result line goes when the pages change
   }
   else if (PE.mode === 'split') { const none = !peSplitIds().length; set('#peSplitGo', none); peWhy('#peSplitStatus', none ? 'pe.why.spread' : ''); }
   else if (PE.mode === 'resize') { const off = !((PE.rzPend !== undefined && !rzSame(PE.rzPend, d.size)) || (PE.rzShape !== undefined && rzShown())); set('#peRzGo', off); peTip('#peRzGo', off ? 'pe.why.resize' : ''); }
   else if (PE.mode === 'wm') { const on = !!d.wm.on; peApplyBtn('#peWmAdd', !d.order.some(id => !d.slots[id].x && peWmSel(id)), on); }
   else if (PE.mode === 'crop') { const hand = peHandMode(), ids = peCropIds(), u = new Map(), mm = hand ? peManualPlan() : null, qs = hand ? [] : ids.map(id => peCropBox(id, u)), done = hand ? mm.size > 0 && [...mm].every(([id, b]) => String(peRound(b)) === String(d.slots[id].crop || '')) : ids.length && qs.every((q, i) => q && (!q.box || String(peRound(q.box)) === String(d.slots[ids[i]].crop || ''))); peCropNote(qs); const none = hand ? !mm.size : !ids.length; peApplyBtn('#peCropAuto', none || PE.cropShown, done && !none); $('#peCropPad').disabled = busy || !!PE.cropShown; peWhy('#peCropStatus', none ? (hand ? 'pe.why.draw' : 'pe.why.page') : '', ''); }
-  else if (PE.mode === 'pages') { const locked = !!pdfWhy(); set('#peAddGo', locked); $('#peAddAt').disabled = busy || locked; }
+  else if (PE.mode === 'pages') { const why = pdfWhy(); set('#peAddGo', !!why); $('#peAddGo').title = why; $('#peAddAt').disabled = busy || !!why; }
 }
 const peIsIdentityOrder = () => { const d = PE.d; return d.order.every((id, i) => id === i && !d.slots[id].x && !d.slots[id].rot && !d.slots[id].c && !d.slots[id].half); };
 /* in the narrow layout the tool's main button sits in the tool bar beside its name, as the Audio Editor's Bypass and Match gain do; wider, it stays in the tool's head */
@@ -241,29 +240,28 @@ function peRailSel(animate) {
 }
 /* ---- Add pages: the new pages are joined onto the end of a copy of the PDF kept in memory, and placed where you ask ---- */
 /* why Add pages and Export are unavailable for this PDF, or '' when they are available */
-const pdfWhy = () => S.pdf.locked ? 'Not available for a locked PDF.' : S.pdf.restricted ? 'Not available for a restricted PDF.' : '';
+const pdfWhy = () => S.pdf.locked ? tx('pe.why.locked') : S.pdf.restricted ? tx('pe.why.restricted') : '';
 function peAddFill() {
-  const sel = $('#peAddAt'), d = PE.d, keep = d.order.filter(id => !d.slots[id].x), prev = sel.value, locked = !!pdfWhy();
+  const sel = $('#peAddAt'), d = PE.d, keep = d.order.filter(id => !d.slots[id].x), prev = sel.value;
   sel.innerHTML = '<option value="start">Start</option>' + keep.slice(0, -1).map((id, i) => '<option value="' + id + '">After p. ' + (i + 1) + '</option>').join('') + '<option value="end">End</option>';
   sel.value = [...sel.options].some(o => o.value === prev) ? prev : 'end';
-  if (locked) peSay('#peAddStatus', pdfWhy());
 }
-/* the reason line names the cause: a locked file, a file that cannot be read, or the device running out of memory */
+/* the error names the cause: a locked file, a file that cannot be read, or the device running out of memory */
 function peAddWhy(e, which) {
   const m = String(e && e.message || e || '');
-  if (/encrypt/i.test(m)) return which + ' PDF is locked.';
-  if (e instanceof RangeError || /memory|allocation/i.test(m)) return 'Not enough memory to add pages. Try a smaller PDF.';
-  if (/pars|invalid|header|trailer|xref|object|stream/i.test(m)) return which === 'That' ? 'That file is not a readable PDF.' : 'This PDF could not be read to add pages.';
-  return 'Could not add pages.';
+  if (/encrypt/i.test(m)) return tx('pe.add.locked', { which });
+  if (e instanceof RangeError || /memory|allocation/i.test(m)) return tx('pe.add.memory');
+  if (/pars|invalid|header|trailer|xref|object|stream/i.test(m)) return tx(which === 'That' ? 'pe.add.notpdf' : 'pe.add.unread');
+  return tx('pe.add.fail');
 }
 async function peAdd(kind, file) {
-  const d = PE.d, L = await loadPdfLib().catch(() => null); if (!L) { peSay('#peAddStatus', 'Couldn’t load the PDF tools. Reload and try again.', true); return; }
-  peLock(true); peSay('#peAddStatus', kind === 'pdf' ? 'Adding pages…' : ''); PE.adding = kind === 'pdf'; peProg('#peAddGo', 0);
+  const d = PE.d, L = await loadPdfLib().catch(() => null); if (!L) { peToast(tx('pe.offline'), 'long'); return; }
+  peLock(true); peProg('#peAddGo', 0);
   try {
     const { PDFDocument } = L, base = await PDFDocument.load(new Uint8Array(await S.pdf.file.arrayBuffer()), { ignoreEncryption: true }), n0 = S.pdf.n; let added = 0; peProg('#peAddGo', 25);
     const at = $('#peAddAt').value, i0 = at === 'end' ? d.order.length : at === 'start' ? 0 : d.order.indexOf(+at) + 1, nb = d.order[i0 - 1] ?? d.order[0], nbSl = d.slots[nb], nbSrc = nbSl && nbSl.src < n0 ? nbSl.src : 0;          // a blank page is made like the page before it
     if (kind === 'blank') { const ref = base.getPage(nbSrc), vb = pdfVisibleBox(ref), side = ((ref.getRotation().angle || 0) % 180) !== 0; base.addPage(side ? [vb.height, vb.width] : [vb.width, vb.height]); added = 1; }
-    else { let other; try { other = await PDFDocument.load(new Uint8Array(await file.arrayBuffer())); } catch (e) { peSay('#peAddStatus', peAddWhy(e, 'That'), true); return; } const pgs = await base.copyPages(other, other.getPageIndices()); pgs.forEach(p => base.addPage(p)); added = pgs.length; }
+    else { let other; try { other = await PDFDocument.load(new Uint8Array(await file.arrayBuffer())); } catch (e) { peToast(peAddWhy(e, 'That'), 'long'); return; } const pgs = await base.copyPages(other, other.getPageIndices()); pgs.forEach(p => base.addPage(p)); added = pgs.length; }
     peProg('#peAddGo', 50); const bytes = await base.save(); peProg('#peAddGo', 75); const nf = new File([bytes], S.pdf.file.name, { type: 'application/pdf' }), lib = await getPdfjs(), doc = await lib.getDocument({ data: bytes.slice() }).promise;
     if (!PE.d || PE.d !== d) { try { doc.destroy(); } catch (e) {} return; }
     if (!PE.addBase) PE.addBase = { file: S.pdf.file, doc: S.pdf.doc, n: S.pdf.n, thumbs: S.thumbs.slice(), gen: S.pdf.gen || 0 };
@@ -273,8 +271,8 @@ async function peAdd(kind, file) {
     const like = kind === 'blank' && nbSl ? nbSl : null;          // the blank page takes the neighbor's turn and crop, so it ends up the same size on the page as the pages around it
     for (let i = 0; i < added; i++) { const ni = d.slots.length; d.slots.push({ src: n0 + i, rot: like ? like.rot || 0 : 0, x: false, c: false, nw: false, crop: like && like.crop ? like.crop.slice() : null, skew: 0, vskew: 0, warp: 0, bg: 0, sp: 0, half: '' }); d.order.splice(i0 + i, 0, ni); }
     PE.focusId = d.order[i0]; PE.rustle = true; peRender(true); peAddFill(); peProg('#peAddGo', 100); await new Promise(r => setTimeout(r, 260));          // the first new page is brought into view
-  } catch (e) { console.error(e); peSay('#peAddStatus', peAddWhy(e, 'This'), true); }
-  finally { peProg('#peAddGo', null); peLock(false); if (PE.adding && !document.querySelector('#peGrid .page-card.loading')) { PE.adding = false; if ($('#peAddStatus').textContent === 'Adding pages…') peSay('#peAddStatus', ''); } else if (PE.adding && $('#peAddStatus').textContent !== 'Adding pages…') PE.adding = false; }
+  } catch (e) { console.error(e); peToast(peAddWhy(e, 'This'), 'long'); }
+  finally { peProg('#peAddGo', null); peLock(false); }
 }
 /* leaving the editor without Done puts the original file back; with Done the joined copy stays */
 function peAddSettle(keep) {
@@ -438,13 +436,13 @@ function peCropClear() {
   const d = PE.d, ids = peTargets().filter(id => d.slots[id].crop && !d.slots[id].half); if (!ids.length) return;
   pePush(); ids.forEach(id => { d.slots[id].crop = null; }); PE.hand.clear(); PE.rustle = true; peRender(true); peSay('#peCropStatus', '');
 }
-/* Margin adds room around the music but never past the page edge: when the frame already reaches every edge there is nothing left to add, and the note says so */
+/* Margin adds room around the music but never past the page edge: when the frame already reaches every edge there is nothing left to add, and the toast says so */
 function peCropNote(qs) {
-  const sub = $('#peCropSub'), pad = +$('#peCropPad').value, full = !peHandMode() && pad > 0 && qs.length > 0 && qs.every(q => q && q.box && q.box[0] < 0.002 && q.box[1] < 0.002 && q.box[2] > 0.998 && q.box[3] > 0.998);
-  const t = full ? tx('pe.crop.full') : peCropSubText(sub); if (sub.classList.contains('warn') !== full || sub.textContent !== t) { sub.classList.toggle('warn', full); swapText(sub, t, true); }          // the note takes the subtitle's own line, so nothing moves
+  const pad = +$('#peCropPad').value;
+  const full = !peHandMode() && pad > 0 && qs.length > 0 && qs.every(q => q && q.box && q.box[0] < 0.002 && q.box[1] < 0.002 && q.box[2] > 0.998 && q.box[3] > 0.998);
+  if (full && !PE.cropFull) peToast(tx('pe.crop.full'));
+  PE.cropFull = full;
 }
-/* the subtitle's usual line, the same in Auto and Manual: the screen shows what to do, so no instruction is added */
-function peCropSubText(sub) { return sub.dataset.normal; }
 /* called whenever the window is drawn while Crop is open */
 function peCropRefresh() {
   const hand = peHandMode(); $('#peCropPadF').classList.toggle('dim', hand); $('#peCropSameF').hidden = hand;
@@ -697,11 +695,11 @@ async function peSplitGo() {
 /* ---- Clean: the choices are written onto the ticked pages; the pages are drawn cleaned from then on, and the export draws them cleaned from the original scan ---- */
 function peCleanGo() {
   const d = PE.d, ids = peTargets(), cl = PE.cl; if (!ids.length || (!cl.bg && !cl.sp)) return;
-  pePush(); ids.forEach(id => { d.slots[id].bg = cl.bg; d.slots[id].sp = cl.sp; }); PE.rustle = true; peRender(true); peSay('#peCleanStatus', tx('pe.clean.done', { pages: peN(ids.length), n: ids.length }));
+  pePush(); ids.forEach(id => { d.slots[id].bg = cl.bg; d.slots[id].sp = cl.sp; }); PE.rustle = true; peRender(true); peToast(tx('pe.clean.done', { pages: peN(ids.length), n: ids.length }));
 }
 function peCleanClear() {
   const d = PE.d, ids = peTargets().filter(id => peCleaned(d.slots[id])); if (!ids.length) return;
-  pePush(); ids.forEach(id => { d.slots[id].bg = 0; d.slots[id].sp = 0; }); PE.rustle = true; peRender(true); peSay('#peCleanStatus', '');
+  pePush(); ids.forEach(id => { d.slots[id].bg = 0; d.slots[id].sp = 0; }); PE.rustle = true; peRender(true); peToast('');
 }
 function peCleanBind() {
   [['peClBg', 'bg'], ['peClSp', 'sp']].forEach(([name, key]) => document.querySelectorAll('input[name=' + name + ']').forEach(r => {
@@ -725,14 +723,14 @@ async function peSkewGo() {
   const res = new Map();
   const ok = await peEach(ids, '#peSkewGo', async id => { res.set(id, await peLevelOne(d.slots[id])); });
   if (!ok) return;
-  if (!ids.some(id => { const [v, lv, wk, crop] = res.get(id), sl = d.slots[id]; return v !== (sl.skew || 0) || lv !== (sl.vskew || 0) || wk !== (sl.warp || 0) || (crop && String(crop) !== String(sl.crop || '')); })) { ids.forEach(id => PE.skewSeen.set(id, peSkewKey(d.slots[id]))); peSay('#peSkewStatus', tx('pe.skew.none')); peActs(); return; }          // nothing to level, so no step is added
+  if (!ids.some(id => { const [v, lv, wk, crop] = res.get(id), sl = d.slots[id]; return v !== (sl.skew || 0) || lv !== (sl.vskew || 0) || wk !== (sl.warp || 0) || (crop && String(crop) !== String(sl.crop || '')); })) { ids.forEach(id => PE.skewSeen.set(id, peSkewKey(d.slots[id]))); peToast(tx('pe.skew.none')); peActs(); return; }          // nothing to level, so no step is added
   pePush(); let n = 0; ids.forEach(id => { const [v, lv, wk, crop] = res.get(id), sl = d.slots[id]; sl.skew = v; sl.vskew = lv; sl.warp = wk; if (crop) sl.crop = crop; if (v || lv || wk) n++; });
-  ids.forEach(id => PE.skewSeen.set(id, peSkewKey(d.slots[id]))); PE.rustle = true; peRender(true); peSay('#peSkewStatus', n ? tx(n === 1 ? 'pe.skew.one' : 'pe.skew.many', { n }) : tx('pe.skew.none'));
+  ids.forEach(id => PE.skewSeen.set(id, peSkewKey(d.slots[id]))); PE.rustle = true; peRender(true); peToast(n ? tx(n === 1 ? 'pe.skew.one' : 'pe.skew.many', { n }) : tx('pe.skew.none'));
 }
 async function peSkewClear() {
   const d = PE.d, ids = peTargets().filter(id => peTilted(d.slots[id])), flat = { skew: 0, vskew: 0, warp: 0 }, res = new Map(); if (!ids.length) return;
   if (ids.some(id => d.slots[id].crop && !d.slots[id].half) && !await peEach(ids, '#peSkewClear', async id => { res.set(id, await peFollow(d.slots[id], flat)); })) return;
-  pePush(); ids.forEach(id => { const sl = d.slots[id]; Object.assign(sl, flat); if (res.get(id)) sl.crop = res.get(id); }); PE.rustle = true; peRender(true); peSay('#peSkewStatus', '');
+  pePush(); ids.forEach(id => { const sl = d.slots[id]; Object.assign(sl, flat); if (res.get(id)) sl.crop = res.get(id); }); PE.rustle = true; peRender(true); peToast('');
 }
 /* Watermark: tick the pages that get it, then press Watermark. Once it is on, the ticks and the settings change the pages at once. Changing a setting before it is added adds it to the ticked pages */
 function peWmSet(on) {
@@ -782,7 +780,6 @@ function peThumbReady(src) {
   if (!PE.d || $('#pdfDlg').hidden) return;
   document.querySelectorAll('#peGrid .page-card').forEach(c => { if (+c.dataset.src === src) { const sl = PE.d.slots[+c.dataset.id]; if (sl) peDrawCard(c, sl); c.classList.remove('loading'); } });          // the picture fades in over the softened paper (the canvas's own opacity)
   peLoadPill();
-  if (PE.adding && !PE.busy && !document.querySelector('#peGrid .page-card.loading')) { PE.adding = false; if ($('#peAddStatus').textContent === 'Adding pages…') peSay('#peAddStatus', ''); }          // the line goes once the last new picture is in
 }
 /* a card's picture comes from the page's thumbnail, turned to match; drawn at twice its size on screen so it stays crisp */
 const PE_CH = 280;
@@ -995,9 +992,7 @@ function peState() {
     if (!was.same && !same && Math.abs(a.nl - b.nl) > 0.25) nm.animate([{ transform: 'translateX(' + (a.nl - b.nl) + 'px)' }, { transform: 'none' }], peRollT());
   });
   PE.dir = new Map();          // used once, so a later move without a set direction never reuses this one
-  const cnt = $('#peCount'); cnt.classList.remove('warn');
-  if (pdfWhy()) { swapText(cnt, pdfWhy(), true); cnt.classList.add('warn'); }
-  else { const ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? peOf(d.order.filter(id => dimKey(d.slots[id])).length, d.order.filter(id => !d.slots[id].x).length) + ' pages dimmed' : ph ? peOf(on, pool) : m === 'pages' ? peOf(on, pool) + ' pages active' : peOf(on, pool) + ' selected', true); }          // a phone keeps just the numbers, to leave room for the Pages field
+  const cnt = $('#peCount'), ph = matchMedia('(max-width:520px)').matches; swapText(cnt, m === 'dim' ? peOf(d.order.filter(id => dimKey(d.slots[id])).length, d.order.filter(id => !d.slots[id].x).length) + ' pages dimmed' : ph ? peOf(on, pool) : m === 'pages' ? peOf(on, pool) + ' pages active' : peOf(on, pool) + ' selected', true);          // a phone keeps just the numbers, to leave room for the Pages field
   $('#peAll').hidden = $('#peNone').hidden = $('#peSelGrp').hidden = $('#pePages').hidden = m === 'dim'; $('#pePages').disabled = !!PE.busy; if (document.activeElement !== $('#pePages')) $('#pePages').value = pePagesText(); $('#peAll').disabled = !!PE.busy || on === pool; $('#peNone').disabled = !!PE.busy || (m === 'pages' ? on <= 1 : on === 0);
   peChrome(); rzRefresh();
   if (document.activeElement !== $('#peWmText')) $('#peWmText').value = w.text;
@@ -1007,7 +1002,7 @@ function peState() {
   document.querySelectorAll('input[name=peWmAngle]').forEach(r => { r.checked = r.value === preset; }); document.querySelectorAll('input[name=peWmMode]').forEach(r => { r.checked = r.value === w.mode; });
   { const deg = $('#peWmDeg'), host = deg.closest('.cu'); cuOpen(host, preset === 'custom'); if (document.activeElement !== deg) deg.value = PE.wmDeg == null ? '' : PE.wmDeg; const sg = host.closest('.seg'), pill = sg.querySelector('.seg-pill'); sg._place && sg._place(!!(pill && pill.style.opacity === '1' && pill.style.width)); }          // glide, so a click on Custom slides the pill as any choice does; the first placing as the tool opens does not
   $('#peWmOpacity').value = w.opacity; $('#peWmOpacityVal').textContent = w.opacity + '%'; paintRange($('#peWmOpacity'));
-  { const eb = $('#peExport'); eb.disabled = !!pdfWhy(); eb.removeAttribute('title'); }
+  { const eb = $('#peExport'), why = pdfWhy(); eb.disabled = !!why; eb.title = why; }
   $('#peUndo').disabled = !PE.undo.length; $('#peRedo').disabled = !PE.redo.length; $('#peReset').disabled = peIsIdentity() && !PE.hand.size; PE_HIST.refresh();
   if (m === 'crop') peCropRefresh();
 }
@@ -1041,12 +1036,12 @@ function peGlide(was, cv, ow) {
    A number is the PDF's own page number (the "p. 12" on a card: sl.src + 1), so it does not shift when pages are left out; it names every copy of that page. */
 const peOn = id => PE.mode === 'pages' ? !PE.d.slots[id].x : peTicked(id);
 const peCan = id => { const sl = PE.d.slots[id]; return PE.mode === 'pages' || !(sl.x || (PE.mode === 'split' && sl.half)); };
-const peWarn = txt => { const c = $('#peCount'); swapText(c, txt, true); c.classList.add('warn'); };
+const peWarn = txt => peToast(txt, 'long');
 const peTicksHistory = () => PE.mode === 'pages' || (PE.mode === 'wm' && PE.d.wm.on);          // the only places a tick is a History step
 /* sets each page in `want` (id -> on) in the current tool; false when it was refused, true when something changed */
 function peSetMany(want) {
   const d = PE.d, ids = [...want.keys()].filter(id => peCan(id) && peOn(id) !== want.get(id)); if (!ids.length) return null;
-  if (PE.mode === 'pages' && !d.order.some(id => ids.includes(id) ? want.get(id) : !d.slots[id].x)) { peWarn('Keep at least one page.'); return false; }
+  if (PE.mode === 'pages' && !d.order.some(id => ids.includes(id) ? want.get(id) : !d.slots[id].x)) { peWarn(tx('pe.keep1')); return false; }
   if (peTicksHistory()) pePush();
   if (PE.mode === 'pages') ids.forEach(id => { d.slots[id].x = !want.get(id); });
   else if (PE.mode === 'wm') { if (d.wm.on) ids.forEach(id => { d.slots[id].nw = !want.get(id); const c = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); if (c) peDrawCard(c, d.slots[id]); }); else { const z = PE.wmSel = PE.wmSel || new Set(d.order.filter(i => !d.slots[i].x)); ids.forEach(id => { if (want.get(id)) z.add(id); else z.delete(id); }); } }
@@ -1082,7 +1077,7 @@ function peAct(act, id) {
   const d = PE.d, sl = d.slots[id], card = $('#peGrid').querySelector('.page-card[data-id="' + id + '"]'); if (!sl) return;
   if (act === 'toggle') {
     if (PE.mode === 'pages') {
-      if (!sl.x && peIncluded() === 1) { const c = $('#peCount'); swapText(c, 'Keep at least one page.', true); c.classList.add('warn'); return; }
+      if (!sl.x && peIncluded() === 1) { peWarn(tx('pe.keep1')); return; }
       pePush(); sl.x = !sl.x; if (sl.x) edSay('pe', 'skip');
     } else if (peTickMode()) {
       if (sl.x || (PE.mode === 'split' && sl.half)) return;

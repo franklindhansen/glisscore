@@ -181,7 +181,8 @@ function turnsToEnd() {
   idx.forEach((g, k) => { S.turns[g] = top - (idx.length - 1 - k) * D; S.ph[g] = true; });
   S.turnsEdited = true; TL.sel = [];
   onTurnsChanged(); glideFrom(was);
-  toast(idx.length === 1 ? tx('vid.toend.one') : tx('vid.toend', { n: idx.length }));
+  const moved = idx.length === 1 ? tx('vid.toend.one') : tx('vid.toend', { n: idx.length });
+  toast(moved + ' ' + tx('place.dashed'));
 }
 function syncToEnd() {
   const b = $('#bToEnd'); if (!b) return;
@@ -894,12 +895,18 @@ function peTilt(sc) {
 }
 
 let loadToken = 0;
+/* the prompt's toast: it sits over the prompt and takes no room, so the prompt never moves; it stays as long as an error does */
+function pwSay(text) { const t = $('#pwToast'); clearTimeout(t._t); t.textContent = text; t.classList.toggle('show', !!text); if (text) t._t = setTimeout(() => t.classList.remove('show'), toastMs(text, 'long')); }
 /* a small window that asks for a PDF's password; resolves with the password, or null if you cancel */
 function askPdfPassword(name, wrong, restricted) {
   return new Promise(res => {
     const dlg = $('#pwDlg'), inp = $('#pwIn'); $('#pwFile').textContent = name; $('#pwTitle').textContent = restricted ? 'This PDF is restricted' : 'This PDF is locked'; $('#pwCancel').textContent = restricted ? 'Skip' : 'Cancel'; inp.value = ''; inp.type = 'password'; $('#pwEye').setAttribute('aria-pressed', 'false');
-    foldSet('#pwErrFold', !!wrong); setBusy('', ''); sheetShow(dlg); setTimeout(() => inp.focus({ preventScroll: true }), 50);
-    const done = v => { dlg.removeEventListener('click', onClick); inp.removeEventListener('keydown', onKey); document.removeEventListener('keydown', onEsc, true); sheetHide(dlg); inp.value = ''; res(v); };
+    const line = inp.closest('.pw-line');
+    if (wrong) inp.setAttribute('aria-invalid', 'true'); else inp.removeAttribute('aria-invalid');
+    setBusy('', ''); sheetShow(dlg); line.classList.toggle('shake', !!wrong); pwSay(wrong ? tx('pdf.wrongpass') : '');
+    const focus = setTimeout(() => inp.focus({ preventScroll: true }), 50);
+    // Keep the prompt in place while a submitted password is checked, so only the field moves on a retry.
+    const done = v => { dlg.removeEventListener('click', onClick); inp.removeEventListener('keydown', onKey); document.removeEventListener('keydown', onEsc, true); clearTimeout(focus); if (v == null) sheetHide(dlg); else dlg.inert = true; line.classList.remove('shake'); pwSay(''); inp.value = ''; res(v); };
     const onClick = e => { const b = e.target.closest('button'); if (!b) return; if (b.id === 'pwOk') { if (inp.value) done(inp.value); else inp.focus(); } else if (b.id === 'pwCancel') done(null); else if (b.id === 'pwEye') { const on = inp.type === 'password'; inp.type = on ? 'text' : 'password'; b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Hide password' : 'Show password'); } };
     const onKey = e => { if (e.key === 'Enter') { e.preventDefault(); if (inp.value) done(inp.value); } e.stopPropagation(); }, onEsc = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); } };
     dlg.addEventListener('click', onClick); inp.addEventListener('keydown', onKey); document.addEventListener('keydown', onEsc, true);
@@ -918,13 +925,14 @@ async function loadPdf(file) {
       catch (e) { if (!(e && e.name === 'PasswordException')) throw e; needed = true; pass = await askPdfPassword(file.name, wrong); if (pass == null) { if (token === loadToken) setBusy(''); return; } wrong = true; setBusy('Reading…', 'pdf', file.name.replace(/\.pdf$/i, '')); }
     }
     if (token !== loadToken) return;
+    if (needed) sheetHide($('#pwDlg'));
     if (!needed) {          // opens freely but forbids editing or assembling: ask for the owner password, or Skip to open it read-only
       const perms = await doc.getPermissions(); enc = perms != null; const F = lib.PermissionFlag || { MODIFY_CONTENTS: 8, ASSEMBLE: 1024 };
       if (perms && !(perms.includes(F.MODIFY_CONTENTS) && perms.includes(F.ASSEMBLE))) {
         restricted = true; let bad = false;
         for (;;) {
           const owner = await askPdfPassword(file.name, bad, true); if (token !== loadToken) return; if (owner == null) break;
-          try { const d2 = await lib.getDocument({ data: await bytes(), password: owner }).promise; doc = d2; restricted = false; break; }
+          try { const d2 = await lib.getDocument({ data: await bytes(), password: owner }).promise; doc = d2; restricted = false; sheetHide($('#pwDlg')); break; }
           catch (e) { if (!(e && e.name === 'PasswordException')) throw e; bad = true; }
         }
         setBusy('Reading…', 'pdf', file.name.replace(/\.pdf$/i, ''));
@@ -956,6 +964,7 @@ async function loadPdf(file) {
     S.savedTurns = adoptPriorTurns(prior) ? null : prior;
     makeThumbs(token);
   } catch (e) {
+    if (token === loadToken && $('#pwDlg').inert) sheetHide($('#pwDlg'));
     console.error(e);
     const msg = e && e.name === 'PasswordException' ? tx('pdf.password') :
       (e && e.message && /did not load/.test(e.message)) ? e.message : tx('pdf.readfail');

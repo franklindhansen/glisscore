@@ -9,12 +9,12 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   const b = await chromium.launch(), p = await b.newPage({ viewport: { width: 1300, height: 900 } }); p.setDefaultTimeout(30000); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://localhost:' + (process.env.PORT || 8123) + '/index.html'); await p.setInputFiles('#pdfIn', file); await p.waitForFunction(() => S.pdf && S.pdf.n === 3); await p.waitForTimeout(800);
   await p.evaluate(() => openPdfEditor()); await p.waitForTimeout(500);
-  const state = () => p.evaluate(() => ({ off: $('#peSkewGo').disabled, line: $('#peSkewStatus').textContent, tip: $('#peSkewGo').title }));
+  const state = () => p.evaluate(() => ({ off: $('#peSkewGo').disabled, line: $('#peSkewStatus').textContent, tip: $('#peSkewGo').title, toast: $('#peToast').classList.contains('show') ? $('#peToast').textContent : '' }));
   const settle = () => p.evaluate(async () => { for (let i = 0; i < 400 && PE.busy; i++) await sleep(25); await sleep(300); });
   await p.evaluate(() => peTool('skew')); await p.waitForTimeout(400);
   const fresh = await state(); ok('Before it runs, Re-kilter is available', !fresh.off, JSON.stringify(fresh));
   await p.evaluate(() => peSkewGo()); await settle();
-  const ran = await state(); ok('After finding the pages level, the button is greyed with "Already level."', ran.off && ran.line === 'Already level.', JSON.stringify(ran));
+  const ran = await state(); ok('After finding the pages level, the button is greyed with "Already level."', ran.off && ran.line === '' && ran.toast === 'Already level.', JSON.stringify(ran));
   await p.evaluate(() => peTool('crop')); await p.waitForTimeout(400); await p.evaluate(() => peTool('skew')); await p.waitForTimeout(400);
   const back = await state(); ok('Back from Crop, the greyed button still says "Already level." in its tooltip', back.off && back.tip === 'Already level.', JSON.stringify(back));
   // large view: a page found level says so; a page never tried still points to Re-kilter

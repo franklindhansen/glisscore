@@ -20,8 +20,7 @@ async function mk(name, n) { const d = await PDFDocument.create(); for (let i = 
   ok('A message does not survive reopening the editor', (await lines()).length === 0, (await lines()).join(' | '));
   await p.evaluate(() => { S.pdf.locked = true; peState(); });
   const ex = await p.evaluate(() => ({ dis: $('#peExport').disabled, title: $('#peExport').title, line: $('#peCount').textContent, cls: $('#peCount').className }));
-  ok('Export is greyed out and its reason shows on the bar line', ex.dis && /locked PDF/.test(ex.line) && /warn/.test(ex.cls), JSON.stringify(ex));
-  ok('The reason is not tooltip-only', ex.title === '', ex.title);
+  ok('Export is greyed out with its reason in the tooltip and the count stays visible', ex.dis && /locked PDF/.test(ex.title) && /\/ \d+/.test(ex.line) && !/warn/.test(ex.cls), JSON.stringify(ex));
   await p.evaluate(() => { S.pdf.locked = false; peState(); });
   ok('The bar line goes back to the count when Export is available', await p.evaluate(() => /\/ \d+/.test($('#peCount').textContent) && !$('#peCount').classList.contains('warn')));
   await p.evaluate(() => peSay('#peAddStatus', 'Could not add pages.', true));

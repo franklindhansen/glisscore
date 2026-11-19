@@ -26,7 +26,7 @@ const look = fs => {
   if (fs !== 'fs') { if (bar.scrollWidth > bar.clientWidth + 1) badBar.push('the bar scrolls sideways'); if (tr.scrollWidth > tr.clientWidth + 1) badTr.push('the transport scrolls sideways'); }
   // the bar's rows are balanced: the title's letters and the (i) share a middle with the buttons in their row, and the bar's room above its first row equals its room under its last
   { const R = e => e.getBoundingClientRect(), kids = [...bar.children].filter(live).map(e => e.matches('.tl-info') ? e.querySelector('.info-i') : e).filter(e => e && live(e)), L = window.__mk.letters(bar.querySelector('h2')), mid = e => (R(e).top + R(e).bottom) / 2;
-    if (L && !(bar.querySelector('.hint.warn') && getComputedStyle(bar.querySelector('.hint.warn')).display !== 'none')) {
+    if (L) {
       const tm = (L.capTop + L.base) / 2, row = kids.filter(e => !e.matches('h2') && R(e).top < L.base && R(e).bottom > L.capTop);
       for (const e of row) if (Math.abs(mid(e) - tm) > 0.5) badBar.push(name(e) + ' is ' + (mid(e) - tm).toFixed(1) + 'px off the title\'s middle');
       const cb = getComputedStyle(bar), br = R(bar), first = Math.min(...kids.map(e => R(e).top)), last = Math.max(...kids.map(e => R(e).bottom));

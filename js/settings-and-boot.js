@@ -137,7 +137,7 @@ async function onExportClick() {
   }
   const left = S.ph.filter(Boolean).length;
   if (left) {
-    const ok = await askWarn("Some page turns aren't placed yet", left + (left === 1 ? ' page turn is' : ' page turns are') + ' still a placeholder (dashed handle) and will be exported where ' + (left === 1 ? 'it' : 'they') + ' currently sit. Go back to place ' + (left === 1 ? 'it' : 'them') + ', or export anyway.', 'Export anyway');
+    const ok = await askWarn(tx('exp.unplaced.title'), tx(left === 1 ? 'exp.unplaced.one' : 'exp.unplaced.many', { n: left }) + ' ' + tx('place.dashed') + ' ' + tx('exp.unplaced.note'), 'Export anyway');
     if (!ok) return;
   }
   startExport();

@@ -32,7 +32,7 @@ const ok = (name, pass, info = '') => console.log((pass ? 'PASS ' : 'FAIL ') + n
   await p.evaluate(() => { const i = document.querySelector('#credFont'); i.value = 'Zzqx Notafont'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(1000);
   await p.evaluate(() => window.__release(null)); await p.waitForTimeout(600);
   const bad = await look();
-  ok('a font that is not found drops the bar and says so', !bad.busy && /Couldn.t find/.test(bad.text), JSON.stringify(bad));
+  ok('a font that is not found drops the bar and says so', !bad.busy && bad.text === 'Couldn’t load “Zzqx Notafont”. Check the name or your connection.',JSON.stringify(bad));
   await p.evaluate(() => { const i = document.querySelector('#credFont'); i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); }); await p.waitForTimeout(900);
   const clear = await look();
   ok('clearing the box clears the message and the bar', !clear.busy && clear.text === '', JSON.stringify(clear));

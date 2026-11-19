@@ -11,7 +11,7 @@ const fx = n => path.join(__dirname, 'fixtures', n);
   const askShown = async () => { try { await p.waitForSelector('#pwDlg:not([hidden])', { timeout: 5000 }); return true; } catch (e) { return false; } };
   const pick = async f => { await p.setInputFiles('#pdfIn', fx(f)); };
   const loaded = async () => { await p.waitForFunction(() => S.pdf, null, { timeout: 15000 }); await p.waitForTimeout(1200); };
-  const reasons = () => p.evaluate(() => { openPdfEditor(); return null; }).then(() => p.waitForFunction(() => PE.d)).then(() => p.waitForTimeout(400)).then(() => p.evaluate(() => { peTool('pages'); return null; })).then(() => p.waitForTimeout(500)).then(() => p.evaluate(() => ({ add: !$('#peAddGo').disabled, at: !$('#peAddAt').disabled, exp: !$('#peExport').disabled, lines: [...document.querySelectorAll('#peBand .pe-status, #peCount')].map(e => e.textContent).filter(Boolean).join(' | ') })));
+  const reasons = () => p.evaluate(() => { openPdfEditor(); return null; }).then(() => p.waitForFunction(() => PE.d)).then(() => p.waitForTimeout(400)).then(() => p.evaluate(() => { peTool('pages'); return null; })).then(() => p.waitForTimeout(500)).then(() => p.evaluate(() => ({ add: !$('#peAddGo').disabled, at: !$('#peAddAt').disabled, exp: !$('#peExport').disabled, tips: ['#peAddGo', '#peExport'].map(sel => $(sel).title) })));
 
   // 1. a restricted PDF asks for its owner password; Skip opens it read-only
   await pick('pdf-restricted.pdf');
@@ -19,7 +19,7 @@ const fx = n => path.join(__dirname, 'fixtures', n);
   ok('The prompt offers Skip', await dlgBtn('Skip').count() === 1 && await dlgBtn('Skip').isVisible());
   await dlgBtn('Skip').click(); await loaded();
   const r1 = await reasons();
-  ok('Skip opens it read-only: Add pages and Export are unavailable, each with a reason', !r1.add && !r1.at && !r1.exp && /restricted/i.test(r1.lines), JSON.stringify(r1));
+  ok('Skip opens it read-only: Add pages and Export are unavailable, each with a reason', !r1.add && !r1.at && !r1.exp && r1.tips.every(t => /restricted/i.test(t)), JSON.stringify(r1));
 
   const toastNow = () => p.evaluate(() => $('#toast').classList.contains('show') ? $('#toast').textContent : '');
   const fresh = async () => { await p.reload(); await p.waitForFunction(() => typeof loadPdf === 'function'); };
@@ -27,18 +27,26 @@ const fx = n => path.join(__dirname, 'fixtures', n);
 
   // 2. the owner password unlocks it; a wrong one can retry
   await fresh(); await pick('pdf-restricted.pdf'); await askShown();
+  const passwordLayout = () => p.evaluate(() => ['#pwDlg .dlg', '.pw-line', '#pwIn', '#pwOk', '#pwCancel'].map(sel => {
+    const el = $(sel);
+    return [el.offsetLeft, el.offsetTop, el.offsetWidth, el.offsetHeight];
+  }));
+  await p.waitForTimeout(350);
+  const beforeRetry = await passwordLayout();
   await type('nope');
-  ok('A wrong owner password says so and the prompt stays for a retry', await p.evaluate(() => getComputedStyle($('#pwDlg')).display !== 'none' && $('#pwErrFold').offsetHeight > 0 && !S.pdf));
+  ok('A wrong owner password says so and the prompt stays for a retry', await p.evaluate(() => getComputedStyle($('#pwDlg')).display !== 'none' && $('#pwIn').getAttribute('aria-invalid') === 'true' && $('#pwToast').classList.contains('show') && $('#pwToast').textContent === 'That password didn’t work.' && getComputedStyle($('#pwToast')).opacity === '1' && !S.pdf));
+  const afterRetry = await passwordLayout();
+  ok('The password retry keeps the input and buttons in place', JSON.stringify(afterRetry) === JSON.stringify(beforeRetry), JSON.stringify({ beforeRetry, afterRetry }));
   await type('boss'); await loaded();
   const r2 = await reasons();
-  ok('The right owner password opens it like an unrestricted PDF', r2.add && r2.at && r2.exp && r2.lines.replace(/[ |]/g, '').match(/restricted|locked/i) === null, JSON.stringify(r2));
+  ok('The right owner password opens it like an unrestricted PDF', r2.add && r2.at && r2.exp && r2.tips.every(t => !t), JSON.stringify(r2));
 
   // 3. a PDF that needs a password to open stays locked
   await fresh(); await pick('pdf-user-password.pdf'); await askShown();
   ok('A locked PDF asks for its password with Cancel, not Skip', await dlgBtn('Cancel').isVisible() && await dlgBtn('Skip').isHidden());
   await type('wrong'); await type('open'); await loaded();
   const r3 = await reasons();
-  ok('Opened with its password, Add pages and Export stay unavailable, with a reason', !r3.add && !r3.exp && /locked/i.test(r3.lines), JSON.stringify(r3));
+  ok('Opened with its password, Add pages and Export stay unavailable, with a reason', !r3.add && !r3.exp && r3.tips.every(t => /locked/i.test(t)), JSON.stringify(r3));
 
   // 4. a certificate-encrypted PDF gets the existing could-not-read message
   await fresh(); await pick('pdf-certificate.pdf'); await p.waitForTimeout(1500);
@@ -52,7 +60,7 @@ const fx = n => path.join(__dirname, 'fixtures', n);
     await p.evaluate(() => closePdfEditor()); await p.waitForTimeout(400);
     await pick('score.pdf'); await p.waitForFunction(() => S.pdf && S.pdf.name === 'score'); await p.waitForTimeout(1200);
     const r5 = await reasons();
-    ok('After ' + f + ', loading an unlocked PDF restores Add pages and Export and clears the reasons', r5.add && r5.at && r5.exp && !/Not available/.test(r5.lines), JSON.stringify(r5));
+    ok('After ' + f + ', loading an unlocked PDF restores Add pages and Export and clears the reasons', r5.add && r5.at && r5.exp && r5.tips.every(t => !t), JSON.stringify(r5));
   }
 
   // 6. a failed Export still shows its toast

@@ -253,16 +253,11 @@ function followPlayhead() {
 function updateHint() {
   const h = $('#tlHint'); if (!h) return;
   const left = S.ph.filter(Boolean).length;
-  if (left) {
-    h.classList.add('warn');
-    h.textContent = left + (left === 1 ? ' page turn still needs' : ' page turns still need') + ' placing (dashed handle' + (left === 1 ? '' : 's') + '). Drag ' + (left === 1 ? 'it' : 'them') + ' into place.';
-    return;
-  }
-  h.classList.remove('warn');
+  const pending = left ? tx(left === 1 ? 'tl.pending.one' : 'tl.pending.many', { n: left }) + ' ' + tx('place.dashed') + ' ' : '';
   const where = { start: 'starts', middle: 'is halfway through', end: 'finishes' }[S.set.ref], tr = S.set.transition, noun = tr === 'slide' ? 'slide' : 'page turn';
   const term = (k, t) => '<span class="term" data-glow="' + k + '" tabindex="0">' + t + '</span>';
-  if (tr === 'cut') { h.innerHTML = 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.'; return; }
-  h.innerHTML = 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', 'Length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
+  if (tr === 'cut') { h.innerHTML = pending + 'Drag a handle to set the moment the page changes. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.'; return; }
+  h.innerHTML = pending + 'Drag a handle to set the moment a ' + noun + ' ' + where + '. The lighter shaded area is the ' + (tr === 'slide' ? 'slide' : 'turn') + ' itself; make it longer or shorter with ' + term('turn', 'Length') + '. Click the ' + term('ruler', 'ruler') + ' to move the ' + term('playhead', 'playhead') + '. Drag the brackets at either end to trim or extend the video; Fit shows the video from bracket to bracket.';
 }
 /* Background and Ink color: one field (swatch, name, hex, chevron) that opens a menu of named colors and a picker (shade and brightness, then hue). A color from the list shows its name; the picker or a typed hex shows Custom. A saved color that is not on the list reopens as Custom. */
 const COLOR_SETS = {
@@ -483,7 +478,7 @@ function bindFontField(id, key, msgId) {
       if (input.value.trim() !== typed) return;                     // the box changed while it loaded; the lookup for the new text ends the bar
       box.classList.remove('busy'); sweepStop(bar);          // the bar finishes the pass it is on
       if (name) { S.set[key] = name; if (name !== typed) input.value = name; say(''); saveSettings(); updateLineStyles(); stageDirty = true; }
-      else say(validFontName(typed) ? "Couldn't find “" + typed + "” on Google Fonts (or you're offline). Check the spelling." : 'Use the font name exactly as it appears on fonts.google.com.', true);
+      else say(validFontName(typed) ? tx('font.notfound', { name: typed }) : tx('font.badname'), true);
     }, 450);
   });
 }
@@ -1329,7 +1324,7 @@ async function exportRealtime(o, fps, dur, ctl) {
       if (ctl.cancelled || t >= dur) break;
       const st = frameState(vS + t); if (gainNode) gainNode.gain.value = soundFadeAt(vS + t) * audioGain(); await rend.ensure(pagesFor(st)); rend.render(st);
       if (manual && now - lastReq >= 900 / fps) { vtrack.requestFrame(); lastReq = now; }
-      expUI('working', 'Processing', t / dur, 'This method records at normal speed, so it takes as long as your piece. Keep this tab open and in front.');
+      expUI('working', 'Processing', t / dur, tx('exp.keep.rec'));
       await new Promise(r => requestAnimationFrame(r));
     }
     if (!ctl.cancelled) {          // the true last frame (fully faded) is drawn and held for a few frames before the recorder stops
@@ -1356,7 +1351,7 @@ async function startExport(opts = {}) {
   const o = outputSize(), fps = S.set.fps, dur = Math.max(1, duration()), family = S.set.codec === 'hevc' ? 'hevc' : 'avc';
   const ctl = { cancelled: false }; EXP.ctl = ctl; EXP.blob = null; EXP.running = true; EXP.stage = 'starting'; EXP.stageT = performance.now();
   setExpOpen(true); foldSet('#expStallFold', false); $('#expMethod').textContent = '';
-  expUI('working', 'Processing', 0, 'Keep this tab open and in front until the export finishes.');
+  expUI('working', 'Processing', 0, tx('exp.keep'));
   dbg('===== EXPORT START ====='); envInfo().forEach(dbg);
   dbg('Settings: ' + JSON.stringify(S.set) + ' · ' + fmt(dur) + ' long · ' + S.spreads.length + ' spreads');
   clearInterval(EXP.wd);

@@ -461,12 +461,7 @@ input.switch:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .tl-info{display:block;margin-right:auto}
 .tl-bar .hint{position:absolute;left:var(--gap-field);top:calc(100% + var(--gap-sub));width:max-content;max-width:min(560px,calc(100% - 2 * var(--gap-field)));z-index:30;flex:none;min-width:0;padding:var(--gap-head) var(--gap-set);border-radius:var(--r-ctl);background:var(--ink);color:var(--bg);font-size:var(--type-small);--lh:1.4;box-shadow:var(--shadow);visibility:hidden;opacity:0;transform:translateY(4px);transition:opacity var(--ae-quick) var(--ease-ui),transform var(--ae-quick) var(--ease-ui),visibility 0s var(--ae-quick)}
 .tl-bar .hint::before{content:'';position:absolute;left:0;right:0;top:calc(-1 * var(--hint-bridge));height:var(--hint-bridge)}
-.tl-bar .hint.warn::before{display:none}
 .tl-info .info-i:hover+.hint,.tl-info .info-i:focus-visible+.hint,.tl-bar .hint.open,.tl-bar .hint:hover{visibility:visible;opacity:1;transform:none;transition-delay:0s}
-/* warnings stay visible inline, since they need action */
-.tl-info:has(.hint.warn){display:contents}
-.tl-info:has(.hint.warn) .info-i{display:none}
-.tl-bar .hint.warn{display:block;visibility:visible;opacity:1;transform:none;position:static;width:auto;max-width:none;flex:1;min-width:200px;padding:0;background:none;box-shadow:none;border-radius:0;color:var(--turn);font-size:var(--type-small)}
 .vsep{align-self:center;width:1px;height:20px;margin:0 var(--gap-label);background:var(--line)}
 .zoom{display:flex;align-items:center;gap:var(--gap-tight);color:var(--muted);font-size:var(--type-body)}
 .zoom input{width:var(--zoom-w)}
@@ -560,18 +555,20 @@ body.dragging .dropveil{opacity:1;visibility:visible;transition:opacity var(--ae
 .sys-tools .sp-fly{position:absolute;top:0;right:calc(100% + var(--gap-tight));bottom:auto;overflow:hidden;max-width:0;opacity:0;visibility:hidden;pointer-events:none;transition:max-width var(--ae-quick) var(--ease-out),opacity var(--ae-quick) var(--ease-out),visibility 0s var(--ae-quick)}
 .sys-tools.open .sp-fly{max-width:160px;opacity:1;visibility:visible;pointer-events:auto;transition-delay:0s}
 @media (prefers-reduced-motion:reduce){.sys-tools .sp-fly{transition:none}}
-.sys-nav{right:auto;left:var(--fsm)}
-.sys-sel.tight .sys-nav .sys-pg{padding:0 var(--gap-snug)}
+.sys-controls{position:absolute;inset:auto var(--fsm) var(--fsm);z-index:6;display:flex;align-items:center;flex-wrap:wrap;gap:var(--gap-tight);pointer-events:none}
+.sys-controls>.sys-nav,.sys-controls>.sys-zoom{position:relative;inset:auto;flex:none;pointer-events:auto}
+.sys-controls>.sys-zoom{margin-left:auto}
 .sys-sel.tight .sys-nav .seg label{padding:0 var(--gap-tight)}
 .sys-sel.tight .sys-zoom button.txt{padding:0 var(--gap-tight)}
-.sys-sel.tight .sys-nav,.sys-sel.tight .sys-zoom{gap:var(--hair)}          /* both strips shrink together when the selector is narrow, so they always share one row */
+.sys-sel.tight .sys-nav,.sys-sel.tight .sys-zoom{gap:var(--hair)}          /* both strips tighten together before they wrap */
 .sys-bar[hidden],.sys-nav[hidden]{display:none}
-.sys-nav{max-width:calc(100% - 2 * var(--fsm))}
 .sys-nav .seg{flex:none;height:calc(var(--fs) - 2 * var(--gap-snug))}
 .sys-nav .seg label{display:grid;place-items:center;padding:0 var(--field-pad-x)}
 .sys-nav .seg label span{display:grid;place-items:center}
 .sys-nav button,.sys-nav .seg{flex:none}
-.sys-nav .sys-pg{display:grid;align-items:center;height:100%;padding:0 var(--gap-tight);box-sizing:border-box;--lh:1;font-size:var(--type-small);font-weight:600;white-space:nowrap;color:var(--ink)}          /* the label fills the strip's height and centers its figures between the edges, like the buttons beside it */
+.sys-nav .sys-pg{display:grid;place-items:center;height:100%;padding:0 var(--gap-snug);box-sizing:border-box;--lh:1;font-size:var(--type-small);font-weight:600;white-space:nowrap;color:var(--ink);font-variant-numeric:tabular-nums}          /* the label fills the strip's height and centers its figures between the edges, like the buttons beside it */
+.sys-pg>span{grid-area:1/1;text-box:trim-both var(--trim-edge);margin-block:var(--trim-t) var(--trim-b);height:var(--trim-h)}
+#selPgMax{visibility:hidden}
 .stage-div{flex:none;width:var(--hair);height:var(--icon-s);margin:0 var(--gap-snug);background:var(--line)}
 .stage-wrap.zoomed{cursor:grab}.stage-wrap.panning{cursor:grabbing}
 .stage-wrap.zoomed{touch-action:none}
@@ -983,7 +980,6 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .hist-wrap{grid-area:his}
   .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end}
-  .tl-bar .hint.warn{grid-column:1/-1}
 }
 @container tl (max-width:520px){          /* the zoom group is wider than the old slider, so from here it takes the top row with the title and the history buttons drop to the turn tools' row */
   .tl-bar{grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-areas:"ttl inf . zm" "trn trn trn his"}
@@ -1002,7 +998,6 @@ input.switch:checked:not(:disabled):active::before{transform:translateX(11px)}
   .tl-bar .tl-turns{grid-area:trn;justify-self:start}
   .tl-bar .zoom{grid-area:zm;justify-self:end;min-width:0}
   .tl-bar .zoom input{width:clamp(var(--zoom-min),calc(100vw - var(--zoom-off)),var(--zoom-w))}
-  .tl-bar .hint.warn{grid-column:1/-1}
   .tl-bar .hist.up{left:auto;right:0}
   .tl-bar .tl-turns>.btn{padding:0 var(--gap-label)}
 }
@@ -1961,6 +1956,10 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 /* the pages make room for the one you hold */
 
 .pw-line{position:relative;display:flex}
+#pwDlg .dlg{position:relative}
+.pw-toast{position:absolute;left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);z-index:2;pointer-events:none;text-align:center;white-space:nowrap}          /* a toast over the prompt: it takes no room, so the prompt never moves */
+.pw-toast.show{transform:translate(-50%,-50%)}
+@media (prefers-reduced-motion:no-preference){.pw-line.shake{animation:ledshake var(--ae-ms) var(--ease-out)}}
 .pw-line input{flex:1;min-width:0;padding-right:calc(var(--h-s) + var(--gap-head))}
 .pw-eye{position:absolute;right:var(--gap-label);top:50%;width:30px;height:30px;margin-top:calc(var(--h-s) / -2);display:grid;place-items:center;border:0;border-radius:var(--r-ctl);background:none;color:var(--muted);cursor:pointer;transition:color var(--ae-quick) var(--ease-color),background-color var(--ae-quick) var(--ease-color)}
 .pw-eye svg{width:17px;height:17px}.pw-eye:hover{color:var(--ink);background:var(--hover-grey)}.pw-eye[aria-pressed="true"]{color:var(--accent)}
@@ -2000,7 +1999,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-grid-wrap.pe-snap{overflow:auto!important;background:none}
 .pe-pt{min-width:0}
 .pe-pt h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pe-sub.warn{color:var(--turn-ink)}
 .pe-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pe-status{font-variant-numeric:tabular-nums;white-space:nowrap}
 .pe-status:empty{display:none}
@@ -2202,7 +2200,6 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
 .pe-count{min-width:5ch;margin-right:auto;font-size:var(--type-body);color:var(--muted);font-variant-numeric:tabular-nums}
 .pe-bar .pe-pages{flex:0 1 auto;box-sizing:border-box;width:100px;min-width:0;height:var(--h-s);margin:0 var(--gap-tight) 0 var(--gap-head);padding:0 var(--field-pad-x);border-radius:var(--r-sm);font-size:var(--type-body);font-variant-numeric:tabular-nums}
 .pe-bar .pe-pages:disabled{opacity:var(--inactive);cursor:not-allowed}
-.pe-count.warn{color:var(--turn-ink);font-weight:600}
 .pe-bar .btn:disabled{color:var(--muted);opacity:var(--inactive)}
 .pe-bar .btn-group[hidden]{display:none}
 .pe-win.one .pe-bar,.pe-win[data-mode="resize"] .pe-bar{display:none}
@@ -2254,8 +2251,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rail-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--ae-move) var(--ease-out)}
   .pe-rail.open .pe-rail-body{grid-template-rows:1fr}
   .pe-pt h3{display:none}          /* the drop-down above already names the tool, so the head keeps only its line and its buttons */
-  #pdfDlg .pe-sub:not(.warn){display:none}          /* nor does the tool's subtitle get a row of its own under the drop-down; a warning still shows */
-  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}
+  #pdfDlg .pe-sub{display:none}          /* nor does the tool's subtitle get a row of its own under the drop-down */
+  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}
   .pe-rail-in{overflow:hidden;min-height:0;padding:0 var(--gap-head)}
   .pe-rail.open .pe-rail-in{padding:0 var(--gap-head) var(--gap-card)}
 }
@@ -2274,8 +2271,8 @@ input.switch:disabled{cursor:progress;opacity:var(--inactive)}
   .pe-rz .rz-grid{grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
 }
 @container pedlg (max-width:488px){
-  #pdfDlg .pe-sub:not(.warn),#pdfDlg .ed-lead{display:none}
-  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-sub.warn)):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
+  #pdfDlg .pe-sub,#pdfDlg .ed-lead{display:none}
+  #pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-acts>.btn:not([hidden]))),#pdfDlg .pe-phead:not(:has(.pe-status:not([hidden]))):not(:has(.pe-acts>.btn:not([hidden])))+.ae-rule{display:none}}          /* with its line and its button gone, a head with nothing left in it goes too */          /* as in the Audio Editor at this width: a tool's one-line description and the window's subtitle give way (a warning stays) */
 @container pedlg (max-width:512px){.pe-cards{grid-template-columns:minmax(0,1fr)}.pe-cards .ae-card>.pe-g{width:100%}.pe-cards .seg label{padding-inline:var(--gap-label)}}          /* Watermark's two cards stack once three choices side by side would no longer fit their words in half the width */
 @container pedlg (max-width:288px){.pe-bar{padding-right:var(--gap-label)}.pe-bar .pe-pages{width:calc(var(--h-s) * 2.6);margin:0 0 0 var(--gap-label);padding:0 var(--gap-head)}.pe-bar .btn.small{padding-left:var(--gap-head);padding-right:var(--gap-head)}.pe-bar .btn-group .vsep{margin:0 var(--gap-sub)}}
 
