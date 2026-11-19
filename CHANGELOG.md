@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.43
+
+A wrong password now shows its message over the prompt, and the field shakes. The prompt no longer grows when it appears.
+
 ## 1.2.42
 
 General improvements and polish.
