@@ -103,7 +103,7 @@
     --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --ok-ink:#2fb872;
     --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
-    --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.28);
+    --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
     --glass-shadow:0 6px 18px -10px rgba(4,6,16,.38),inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.12);
     --glass-sheen-o:.25;
     --erase-x-shadow:var(--chip-shadow);
@@ -118,7 +118,7 @@
   --fade:#e58bd6; --turn:#f59e3b; --turn-soft:rgba(255,176,46,.30); --play:#ff6a5f; --cred:#4fd1bd; --cred-soft:rgba(79,209,189,.26); --turn-ink:#f59e3b; --turn-sys:#98a3b8; --ok-ink:#2fb872;
   --stage:#0d0f13; --block:#252b37; --wave:#6f7fe0; --danger:#ff7b8a;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
-  --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.28);
+  --glass-bg:linear-gradient(180deg,rgba(40,46,66,.62),rgba(24,28,42,.56)); --glass-edge:rgba(255,255,255,.14);
   --glass-shadow:0 6px 18px -10px rgba(4,6,16,.38),inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(255,255,255,.12);
   --glass-sheen-o:.25;
   --erase-x-shadow:var(--chip-shadow);

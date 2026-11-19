@@ -379,7 +379,7 @@ const ERASE = { on: false, G: null, hot: null, hideT: 0 };
 /* the page the selector shows, when it has systems to brush (null while a turn runs, on the credits card, on a Full page, while systems are found, or with the selector hidden) */
 function eraseTarget() {
   if (!S.pdf || !sysOn() || !SPLIT.shown || sysBusy() || !SEL.geo || SEL.key == null || !S.spreads.length) return null;
-  const fs = frameState(S.time), sp = S.spreads[fs.spread]; if (!sp || sp[1] < 0 || (fs.flip != null && fs.flip > 0 && fs.flip < 1)) return null;
+  const fs = frameState(S.time), sp = S.spreads[fs.spread]; if (!sp || sp[1] < 0) return null;          // the selector shows a page whatever the turn is doing, so a paused playhead partway through a turn can still erase
   const idx = SEL.geo.idx, r = SYS.byPage.get(idx); if (!r || r.full || !r.systems.length) return null;
   return { idx, list: r.systems };
 }
@@ -437,6 +437,7 @@ function eraseDown(e) {
   const t = eraseTarget(); if (!t) return; if (ERASE.G) { eraseCancel(); return; }          // a second finger: not a stroke
   e.stopPropagation(); e.preventDefault();
   const p = erasePt(e), box = eraseBoxAt(t, p.x, p.y); if (!box) return;          // a start in a gap or off the page makes no mark
+  if (Transport.playing) Transport.pause();          // the selector follows the playhead, so a stroke holds it still
   const hit = e.pointerType !== 'mouse' ? eraseHit(e) : null; eraseHot(null);
   ERASE.G = { idx: t.idx, box, id: e.pointerId, s: { r: +p.r.toFixed(5), p: [] }, last: null, start: [e.clientX, e.clientY], pend: hit ? hit.stroke : null };          // a touch on a settled stroke shows its × (a drag from it still brushes)
   try { $('#selCv').setPointerCapture(e.pointerId); } catch (er) {}

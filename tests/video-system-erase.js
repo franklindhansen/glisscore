@@ -233,6 +233,11 @@ const digital = async (paper) => {
     await p.evaluate(() => sysSetFull(0, true)); await p.waitForTimeout(800);
     ok('on a Full page the eraser is greyed with its reason as the tooltip', await p.evaluate(() => { const b = document.querySelector('#szErase'); return b.disabled && b.title === 'Choose a system to erase on.'; }));
     await p.evaluate(() => sysSetFull(0, false)); await p.waitForTimeout(600);
+    // paused partway through a page turn: the selector still shows a page, so the eraser stays usable (and a stroke there works)
+    await p.evaluate(() => { const D = flipDur(); Transport.seek(S.turns[0] - refOffset() + D * 0.5); }); await p.waitForTimeout(700);
+    const mid2 = await p.evaluate(() => { const f = frameState(S.time); return { flip: f.flip, grey: document.querySelector('#szErase').disabled, tgt: !!eraseTarget() }; });
+    ok('paused partway through a turn the eraser is enabled', mid2.flip > 0 && mid2.flip < 1 && !mid2.grey && mid2.tgt, JSON.stringify(mid2));
+    await p.evaluate(() => { S.turns.length && Transport.seek(0); }); await p.waitForTimeout(500);
     // the narrow, stacked layout and the guard
     await p.setViewportSize({ width: 520, height: 900 }); await p.waitForTimeout(900);
     ok('narrow: the eraser fits in the selector\'s bar', await p.evaluate(() => { const b = document.querySelector('#szErase').getBoundingClientRect(), s = document.querySelector('.sys-nav').getBoundingClientRect(); return b.width > 0 && b.left >= s.left - 0.5 && b.right <= s.right + 0.5; }));
