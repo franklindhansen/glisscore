@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.41
+
+The System selector no longer stays blank after a page fails to draw, and the time readout updates when you change the page layout.
+
 ## 1.2.40
 
 The eraser stays available when you pause partway through a page turn, and the glass bars have a softer edge in dark mode.
