@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.42
+
+General improvements and polish.
+
 ## 1.2.41
 
 The System selector no longer stays blank after a page fails to draw, and the time readout updates when you change the page layout.
