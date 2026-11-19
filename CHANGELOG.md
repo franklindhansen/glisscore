@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.39
+
+The eraser now works on the System selector, with a hover × to remove a single erasure.
+
 ## 1.2.38
 
 Very long eraser strokes are now kept when you reopen a project.
