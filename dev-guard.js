@@ -1,4 +1,4 @@
-// Development only: loaded by index.html on localhost and never uploaded (it is not in deploy.sh's list).
+// Development only: loaded by index.html on localhost and never uploaded (it is not in the upload list).
 /* UI guard (localhost only): reports a button that breaks the design language. A button is one of the control heights (--h-xs, --h-s, --h-m, --h-l), never taller than one line of its own text,
    keeps its width while it shows progress, is a whole number of pixels tall, and is no wider than its text unless a minimum width holds it on purpose. A card's content stays inside the card's padding box
    (reported only when it stays outside for a moment, so a fold that is still gliding open is not reported). Reports are page errors, so every check that watches for them sees them. */
